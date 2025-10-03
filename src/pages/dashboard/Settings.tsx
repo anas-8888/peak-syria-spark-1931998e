@@ -11,8 +11,8 @@ const Settings = () => {
     <div className="p-8 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2">الإعدادات</h1>
-        <p className="text-muted-foreground">إدارة إعدادات المتجر والحساب</p>
+        <h1 className="text-3xl font-bold mb-2">Settings</h1>
+        <p className="text-muted-foreground">Manage store and account settings</p>
       </div>
 
       {/* Profile Settings */}
@@ -23,19 +23,19 @@ const Settings = () => {
               <User className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle>معلومات الحساب</CardTitle>
-              <CardDescription>تحديث معلومات الملف الشخصي الخاص بك</CardDescription>
+              <CardTitle>Account Information</CardTitle>
+              <CardDescription>Update your profile information</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">الاسم الكامل</Label>
-              <Input id="name" placeholder="أدخل اسمك الكامل" defaultValue="مدير النظام" />
+              <Label htmlFor="name">Full Name</Label>
+              <Input id="name" placeholder="Enter your full name" defaultValue="System Admin" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">البريد الإلكتروني</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -45,12 +45,12 @@ const Settings = () => {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="phone">رقم الهاتف</Label>
+            <Label htmlFor="phone">Phone Number</Label>
             <Input id="phone" placeholder="+963 123 456 789" defaultValue="+963 123 456 789" />
           </div>
           <Button className="gap-2">
             <Save className="h-4 w-4" />
-            حفظ التغييرات
+            Save Changes
           </Button>
         </CardContent>
       </Card>
@@ -63,29 +63,29 @@ const Settings = () => {
               <Shield className="h-5 w-5 text-red-500" />
             </div>
             <div>
-              <CardTitle>الأمان</CardTitle>
-              <CardDescription>إدارة كلمة المرور والأمان</CardDescription>
+              <CardTitle>Security</CardTitle>
+              <CardDescription>Manage password and security</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="current">كلمة المرور الحالية</Label>
+            <Label htmlFor="current">Current Password</Label>
             <Input id="current" type="password" placeholder="••••••••" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="new">كلمة المرور الجديدة</Label>
+              <Label htmlFor="new">New Password</Label>
               <Input id="new" type="password" placeholder="••••••••" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirm">تأكيد كلمة المرور</Label>
+              <Label htmlFor="confirm">Confirm Password</Label>
               <Input id="confirm" type="password" placeholder="••••••••" />
             </div>
           </div>
           <Button variant="destructive" className="gap-2">
             <Shield className="h-4 w-4" />
-            تحديث كلمة المرور
+            Update Password
           </Button>
         </CardContent>
       </Card>
@@ -98,40 +98,40 @@ const Settings = () => {
               <Bell className="h-5 w-5 text-blue-500" />
             </div>
             <div>
-              <CardTitle>الإشعارات</CardTitle>
-              <CardDescription>إدارة تفضيلات الإشعارات</CardDescription>
+              <CardTitle>Notifications</CardTitle>
+              <CardDescription>Manage notification preferences</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">إشعارات الطلبات الجديدة</p>
-              <p className="text-sm text-muted-foreground">تلقي إشعار عند وصول طلب جديد</p>
+              <p className="font-medium">New Order Notifications</p>
+              <p className="text-sm text-muted-foreground">Receive alerts when new orders arrive</p>
             </div>
             <Switch defaultChecked />
           </div>
           <Separator />
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">إشعارات المخزون المنخفض</p>
-              <p className="text-sm text-muted-foreground">تنبيه عند انخفاض مخزون المنتجات</p>
+              <p className="font-medium">Low Stock Alerts</p>
+              <p className="text-sm text-muted-foreground">Get notified when products are running low</p>
             </div>
             <Switch defaultChecked />
           </div>
           <Separator />
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">إشعارات المدفوعات</p>
-              <p className="text-sm text-muted-foreground">تلقي تحديثات حول المعاملات المالية</p>
+              <p className="font-medium">Payment Notifications</p>
+              <p className="text-sm text-muted-foreground">Receive updates about financial transactions</p>
             </div>
             <Switch defaultChecked />
           </div>
           <Separator />
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">النشرة الإخبارية</p>
-              <p className="text-sm text-muted-foreground">تلقي آخر الأخبار والتحديثات</p>
+              <p className="font-medium">Newsletter</p>
+              <p className="text-sm text-muted-foreground">Receive latest news and updates</p>
             </div>
             <Switch />
           </div>
@@ -146,31 +146,31 @@ const Settings = () => {
               <Globe className="h-5 w-5 text-green-500" />
             </div>
             <div>
-              <CardTitle>إعدادات المتجر</CardTitle>
-              <CardDescription>إدارة معلومات المتجر</CardDescription>
+              <CardTitle>Store Settings</CardTitle>
+              <CardDescription>Manage store information</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="storeName">اسم المتجر</Label>
+            <Label htmlFor="storeName">Store Name</Label>
             <Input id="storeName" defaultValue="PEAK Syria" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="storeEmail">البريد الإلكتروني للمتجر</Label>
+            <Label htmlFor="storeEmail">Store Email</Label>
             <Input id="storeEmail" type="email" defaultValue="info@peaksyria.com" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="storePhone">هاتف المتجر</Label>
+            <Label htmlFor="storePhone">Store Phone</Label>
             <Input id="storePhone" defaultValue="+963 11 123 4567" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="address">العنوان</Label>
-            <Input id="address" defaultValue="دمشق، سوريا" />
+            <Label htmlFor="address">Address</Label>
+            <Input id="address" defaultValue="Damascus, Syria" />
           </div>
           <Button className="gap-2">
             <Save className="h-4 w-4" />
-            حفظ الإعدادات
+            Save Settings
           </Button>
         </CardContent>
       </Card>
@@ -183,27 +183,27 @@ const Settings = () => {
               <Palette className="h-5 w-5 text-purple-500" />
             </div>
             <div>
-              <CardTitle>المظهر</CardTitle>
-              <CardDescription>تخصيص مظهر لوحة التحكم</CardDescription>
+              <CardTitle>Appearance</CardTitle>
+              <CardDescription>Customize dashboard appearance</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">الوضع الليلي</p>
-              <p className="text-sm text-muted-foreground">تفعيل الوضع الداكن للواجهة</p>
+              <p className="font-medium">Dark Mode</p>
+              <p className="text-sm text-muted-foreground">Enable dark theme for the interface</p>
             </div>
             <Switch />
           </div>
           <Separator />
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">اللغة</p>
-              <p className="text-sm text-muted-foreground">العربية</p>
+              <p className="font-medium">Language</p>
+              <p className="text-sm text-muted-foreground">English</p>
             </div>
             <Button variant="outline" size="sm">
-              تغيير
+              Change
             </Button>
           </div>
         </CardContent>

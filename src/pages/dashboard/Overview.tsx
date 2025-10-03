@@ -11,29 +11,29 @@ import { Badge } from "@/components/ui/badge";
 
 const stats = [
   {
-    title: "إجمالي المبيعات",
-    value: "٤٥٠،٠٠٠،٠٠٠",
-    unit: "ل.س",
+    title: "Total Revenue",
+    value: "450,000,000",
+    unit: "SYP",
     change: "+12.5%",
     trend: "up",
     icon: DollarSign,
   },
   {
-    title: "الطلبات الجديدة",
+    title: "New Orders",
     value: "156",
     change: "+8.2%",
     trend: "up",
     icon: ShoppingBag,
   },
   {
-    title: "المنتجات",
+    title: "Products",
     value: "342",
     change: "+2.4%",
     trend: "up",
     icon: Package,
   },
   {
-    title: "معدل النمو",
+    title: "Growth Rate",
     value: "15.8%",
     change: "-2.1%",
     trend: "down",
@@ -44,34 +44,34 @@ const stats = [
 const recentOrders = [
   {
     id: "#12845",
-    customer: "أحمد محمد",
+    customer: "Ahmad Mohammad",
     product: "Peak Basketball Pro X",
-    amount: "٢،٥٠٠،٠٠٠ ل.س",
-    status: "تم التسليم",
+    amount: "2,500,000 SYP",
+    status: "Delivered",
     statusColor: "bg-green-500",
   },
   {
     id: "#12844",
-    customer: "سارة علي",
+    customer: "Sara Ali",
     product: "Peak Running Elite",
-    amount: "١،٨٠٠،٠٠٠ ل.س",
-    status: "قيد التوصيل",
+    amount: "1,800,000 SYP",
+    status: "In Transit",
     statusColor: "bg-blue-500",
   },
   {
     id: "#12843",
-    customer: "محمود خالد",
+    customer: "Mahmoud Khaled",
     product: "Peak Court Master",
-    amount: "٢،٢٠٠،٠٠٠ ل.س",
-    status: "قيد المعالجة",
+    amount: "2,200,000 SYP",
+    status: "Processing",
     statusColor: "bg-yellow-500",
   },
   {
     id: "#12842",
-    customer: "ليلى حسن",
+    customer: "Layla Hassan",
     product: "Peak Speed Runner",
-    amount: "١،٩٠٠،٠٠٠ ل.س",
-    status: "تم التسليم",
+    amount: "1,900,000 SYP",
+    status: "Delivered",
     statusColor: "bg-green-500",
   },
 ];
@@ -81,8 +81,8 @@ const Overview = () => {
     <div className="p-8 space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2">نظرة عامة</h1>
-        <p className="text-muted-foreground">مرحباً بك في لوحة التحكم الخاصة بـ PEAK Syria</p>
+        <h1 className="text-3xl font-bold mb-2">Overview</h1>
+        <p className="text-muted-foreground">Welcome to your PEAK Syria dashboard</p>
       </div>
 
       {/* Stats Grid */}
@@ -108,7 +108,7 @@ const Overview = () => {
                   <p className="text-3xl font-bold">
                     {stat.value}
                     {stat.unit && (
-                      <span className="text-sm font-normal text-muted-foreground mr-2">
+                      <span className="text-sm font-normal text-muted-foreground ml-2">
                         {stat.unit}
                       </span>
                     )}
@@ -125,7 +125,7 @@ const Overview = () => {
                       )}
                       {stat.change}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">عن الشهر الماضي</span>
+                    <span className="text-xs text-muted-foreground">vs last month</span>
                   </div>
                 </div>
               </CardContent>
@@ -137,7 +137,7 @@ const Overview = () => {
       {/* Recent Orders */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">الطلبات الأخيرة</CardTitle>
+          <CardTitle className="text-xl">Recent Orders</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -157,12 +157,12 @@ const Overview = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-6">
-                  <div className="text-left">
-                    <p className="text-sm text-muted-foreground">رقم الطلب</p>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Order ID</p>
                     <p className="font-semibold">{order.id}</p>
                   </div>
-                  <div className="text-left">
-                    <p className="text-sm text-muted-foreground">المبلغ</p>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Amount</p>
                     <p className="font-semibold">{order.amount}</p>
                   </div>
                   <div className="flex items-center gap-2">

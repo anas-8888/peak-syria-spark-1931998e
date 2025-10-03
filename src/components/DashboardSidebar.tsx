@@ -13,11 +13,11 @@ import { Button } from "@/components/ui/button";
 import peakLogo from "@/assets/peak-logo.svg";
 
 const menuItems = [
-  { title: "نظرة عامة", path: "/dashboard", icon: LayoutDashboard, end: true },
-  { title: "المنتجات", path: "/dashboard/products", icon: Package, end: false },
-  { title: "الطلبات", path: "/dashboard/orders", icon: ShoppingBag, end: false },
-  { title: "المدفوعات", path: "/dashboard/payments", icon: CreditCard, end: false },
-  { title: "الإعدادات", path: "/dashboard/settings", icon: Settings, end: false },
+  { title: "Overview", path: "/dashboard", icon: LayoutDashboard, end: true },
+  { title: "Products", path: "/dashboard/products", icon: Package, end: false },
+  { title: "Orders", path: "/dashboard/orders", icon: ShoppingBag, end: false },
+  { title: "Payments", path: "/dashboard/payments", icon: CreditCard, end: false },
+  { title: "Settings", path: "/dashboard/settings", icon: Settings, end: false },
 ];
 
 const DashboardSidebar = () => {
@@ -85,8 +85,8 @@ const DashboardSidebar = () => {
       {!collapsed && (
         <div className="p-4 border-t border-border">
           <div className="bg-primary/10 rounded-lg p-3 text-center">
-            <p className="text-sm font-semibold text-primary mb-1">لوحة التحكم</p>
-            <p className="text-xs text-muted-foreground">PEAK Syria Admin</p>
+            <p className="text-sm font-semibold text-primary mb-1">Admin Panel</p>
+            <p className="text-xs text-muted-foreground">PEAK Syria</p>
           </div>
         </div>
       )}

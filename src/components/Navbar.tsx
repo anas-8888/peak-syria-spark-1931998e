@@ -99,7 +99,7 @@ const Navbar = () => {
               <Search className="h-5 w-5" />
             </Button>
             <Link to="/dashboard">
-              <Button variant="ghost" size="icon" title="لوحة التحكم">
+              <Button variant="ghost" size="icon" title="Dashboard">
                 <User className="h-5 w-5" />
               </Button>
             </Link>
@@ -176,7 +176,7 @@ const Navbar = () => {
                 <Search className="h-5 w-5" />
               </Button>
               <Link to="/dashboard">
-                <Button variant="ghost" size="icon" title="لوحة التحكم">
+                <Button variant="ghost" size="icon" title="Dashboard">
                   <User className="h-5 w-5" />
                 </Button>
               </Link>

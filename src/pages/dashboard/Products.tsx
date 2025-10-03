@@ -21,37 +21,37 @@ const products = [
   {
     id: 1,
     name: "Peak Basketball Pro X",
-    category: "أحذية كرة السلة",
-    price: "٢،٥٠٠،٠٠٠ ل.س",
+    category: "Basketball Shoes",
+    price: "2,500,000 SYP",
     stock: 45,
-    status: "متوفر",
+    status: "In Stock",
     image: productShoes1,
   },
   {
     id: 2,
     name: "Peak Running Elite",
-    category: "أحذية الجري",
-    price: "١،٨٠٠،٠٠٠ ل.س",
+    category: "Running Shoes",
+    price: "1,800,000 SYP",
     stock: 32,
-    status: "متوفر",
+    status: "In Stock",
     image: productShoes2,
   },
   {
     id: 3,
     name: "Peak Court Master",
-    category: "أحذية كرة السلة",
-    price: "٢،٢٠٠،٠٠٠ ل.س",
+    category: "Basketball Shoes",
+    price: "2,200,000 SYP",
     stock: 8,
-    status: "مخزون منخفض",
+    status: "Low Stock",
     image: productShoes3,
   },
   {
     id: 4,
     name: "Peak Training Shirt",
-    category: "ملابس رياضية",
-    price: "٨٥٠،٠٠٠ ل.س",
+    category: "Apparel",
+    price: "850,000 SYP",
     stock: 0,
-    status: "نفذ من المخزون",
+    status: "Out of Stock",
     image: productApparel1,
   },
 ];
@@ -68,12 +68,12 @@ const Products = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">إدارة المنتجات</h1>
-          <p className="text-muted-foreground">عرض وإدارة جميع المنتجات في المتجر</p>
+          <h1 className="text-3xl font-bold mb-2">Product Management</h1>
+          <p className="text-muted-foreground">View and manage all products in the store</p>
         </div>
         <Button className="gap-2">
           <Plus className="h-4 w-4" />
-          إضافة منتج جديد
+          Add New Product
         </Button>
       </div>
 
@@ -82,16 +82,16 @@ const Products = () => {
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
             <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="ابحث عن منتج..."
+                placeholder="Search for a product..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-10"
+                className="pl-10"
               />
             </div>
-            <Button variant="outline">التصنيفات</Button>
-            <Button variant="outline">الحالة</Button>
+            <Button variant="outline">Categories</Button>
+            <Button variant="outline">Status</Button>
           </div>
         </CardContent>
       </Card>
@@ -99,18 +99,18 @@ const Products = () => {
       {/* Products Table */}
       <Card>
         <CardHeader>
-          <CardTitle>المنتجات ({filteredProducts.length})</CardTitle>
+          <CardTitle>Products ({filteredProducts.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-right">المنتج</TableHead>
-                <TableHead className="text-right">التصنيف</TableHead>
-                <TableHead className="text-right">السعر</TableHead>
-                <TableHead className="text-right">المخزون</TableHead>
-                <TableHead className="text-right">الحالة</TableHead>
-                <TableHead className="text-right">الإجراءات</TableHead>
+                <TableHead>Product</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -138,15 +138,15 @@ const Products = () => {
                           : "text-green-600"
                       }`}
                     >
-                      {product.stock} قطعة
+                      {product.stock} units
                     </span>
                   </TableCell>
                   <TableCell>
                     <Badge
                       variant={
-                        product.status === "متوفر"
+                        product.status === "In Stock"
                           ? "default"
-                          : product.status === "مخزون منخفض"
+                          : product.status === "Low Stock"
                           ? "secondary"
                           : "destructive"
                       }

@@ -16,61 +16,61 @@ import {
 const orders = [
   {
     id: "#12845",
-    customer: "أحمد محمد",
+    customer: "Ahmad Mohammad",
     email: "ahmed@example.com",
     products: 3,
-    total: "٤،٥٠٠،٠٠٠ ل.س",
-    status: "تم التسليم",
+    total: "4,500,000 SYP",
+    status: "Delivered",
     statusColor: "default",
-    date: "٢٠٢٥/٠١/١٥",
+    date: "2025/01/15",
   },
   {
     id: "#12844",
-    customer: "سارة علي",
+    customer: "Sara Ali",
     email: "sara@example.com",
     products: 2,
-    total: "٣،٦٠٠،٠٠٠ ل.س",
-    status: "قيد التوصيل",
+    total: "3,600,000 SYP",
+    status: "In Transit",
     statusColor: "secondary",
-    date: "٢٠٢٥/٠١/١٤",
+    date: "2025/01/14",
   },
   {
     id: "#12843",
-    customer: "محمود خالد",
+    customer: "Mahmoud Khaled",
     email: "mahmoud@example.com",
     products: 1,
-    total: "٢،٢٠٠،٠٠٠ ل.س",
-    status: "قيد المعالجة",
+    total: "2,200,000 SYP",
+    status: "Processing",
     statusColor: "secondary",
-    date: "٢٠٢٥/٠١/١٤",
+    date: "2025/01/14",
   },
   {
     id: "#12842",
-    customer: "ليلى حسن",
+    customer: "Layla Hassan",
     email: "layla@example.com",
     products: 4,
-    total: "٦،٨٠٠،٠٠٠ ل.س",
-    status: "تم التسليم",
+    total: "6,800,000 SYP",
+    status: "Delivered",
     statusColor: "default",
-    date: "٢٠٢٥/٠١/١٣",
+    date: "2025/01/13",
   },
   {
     id: "#12841",
-    customer: "عمر يوسف",
+    customer: "Omar Yousef",
     email: "omar@example.com",
     products: 2,
-    total: "٣،٢٠٠،٠٠٠ ل.س",
-    status: "ملغي",
+    total: "3,200,000 SYP",
+    status: "Cancelled",
     statusColor: "destructive",
-    date: "٢٠٢٥/٠١/١٢",
+    date: "2025/01/12",
   },
 ];
 
 const statusIcons = {
-  "تم التسليم": CheckCircle,
-  "قيد التوصيل": Truck,
-  "قيد المعالجة": Package,
-  ملغي: XCircle,
+  Delivered: CheckCircle,
+  "In Transit": Truck,
+  Processing: Package,
+  Cancelled: XCircle,
 };
 
 const Orders = () => {
@@ -86,8 +86,8 @@ const Orders = () => {
     <div className="p-8 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2">إدارة الطلبات</h1>
-        <p className="text-muted-foreground">عرض ومتابعة جميع الطلبات</p>
+        <h1 className="text-3xl font-bold mb-2">Order Management</h1>
+        <p className="text-muted-foreground">View and track all orders</p>
       </div>
 
       {/* Stats */}
@@ -99,7 +99,7 @@ const Orders = () => {
                 <Package className="h-6 w-6 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">إجمالي الطلبات</p>
+                <p className="text-sm text-muted-foreground">Total Orders</p>
                 <p className="text-2xl font-bold">156</p>
               </div>
             </div>
@@ -112,7 +112,7 @@ const Orders = () => {
                 <Truck className="h-6 w-6 text-yellow-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">قيد التوصيل</p>
+                <p className="text-sm text-muted-foreground">In Transit</p>
                 <p className="text-2xl font-bold">28</p>
               </div>
             </div>
@@ -125,7 +125,7 @@ const Orders = () => {
                 <CheckCircle className="h-6 w-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">مكتملة</p>
+                <p className="text-sm text-muted-foreground">Completed</p>
                 <p className="text-2xl font-bold">118</p>
               </div>
             </div>
@@ -138,7 +138,7 @@ const Orders = () => {
                 <XCircle className="h-6 w-6 text-red-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">ملغاة</p>
+                <p className="text-sm text-muted-foreground">Cancelled</p>
                 <p className="text-2xl font-bold">10</p>
               </div>
             </div>
@@ -150,12 +150,12 @@ const Orders = () => {
       <Card>
         <CardContent className="pt-6">
           <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="ابحث عن طلب برقم الطلب أو اسم العميل..."
+              placeholder="Search by order ID or customer name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10"
+              className="pl-10"
             />
           </div>
         </CardContent>
@@ -164,19 +164,19 @@ const Orders = () => {
       {/* Orders Table */}
       <Card>
         <CardHeader>
-          <CardTitle>الطلبات ({filteredOrders.length})</CardTitle>
+          <CardTitle>Orders ({filteredOrders.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-right">رقم الطلب</TableHead>
-                <TableHead className="text-right">العميل</TableHead>
-                <TableHead className="text-right">المنتجات</TableHead>
-                <TableHead className="text-right">الإجمالي</TableHead>
-                <TableHead className="text-right">الحالة</TableHead>
-                <TableHead className="text-right">التاريخ</TableHead>
-                <TableHead className="text-right">الإجراءات</TableHead>
+                <TableHead>Order ID</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Products</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -191,7 +191,7 @@ const Orders = () => {
                         <p className="text-sm text-muted-foreground">{order.email}</p>
                       </div>
                     </TableCell>
-                    <TableCell>{order.products} منتجات</TableCell>
+                    <TableCell>{order.products} items</TableCell>
                     <TableCell className="font-semibold">{order.total}</TableCell>
                     <TableCell>
                       <Badge variant={order.statusColor as any} className="gap-2">
