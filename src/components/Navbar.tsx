@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ShoppingCart, Menu, X, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import peakLogo from "@/assets/peak-logo-official.png";
+import peakLogo from "@/assets/peak-logo.svg";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -26,8 +26,8 @@ const Navbar = () => {
           <Link to="/" className="flex items-center space-x-2 group">
             <img 
               src={peakLogo} 
-              alt="PEAK Logo" 
-              className="h-12 w-auto transition-transform duration-300 group-hover:scale-110"
+              alt="PEAK Official Logo" 
+              className="h-14 w-auto transition-transform duration-300 group-hover:scale-110"
             />
           </Link>
 
