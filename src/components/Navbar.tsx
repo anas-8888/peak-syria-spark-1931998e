@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ShoppingCart, Menu, X, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import peakLogo from "@/assets/peak-logo-official.png";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -23,32 +24,11 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group">
-            <div className="relative">
-              {/* PEAK Triangle Logo */}
-              <svg
-                width="48"
-                height="48"
-                viewBox="0 0 100 100"
-                className="transition-transform duration-300 group-hover:scale-110"
-              >
-                <path
-                  d="M50 10 L90 90 L10 90 Z"
-                  fill="hsl(var(--primary))"
-                  className="group-hover:fill-primary/90 transition-colors"
-                />
-                <text
-                  x="50"
-                  y="70"
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize="24"
-                  fontWeight="bold"
-                  fontFamily="Arial, sans-serif"
-                >
-                  P
-                </text>
-              </svg>
-            </div>
+            <img 
+              src={peakLogo} 
+              alt="PEAK Logo" 
+              className="h-12 w-auto transition-transform duration-300 group-hover:scale-110"
+            />
           </Link>
 
           {/* Desktop Navigation */}
