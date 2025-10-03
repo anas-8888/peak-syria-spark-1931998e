@@ -111,14 +111,22 @@ const AIAssistant = () => {
     <>
       {/* Chat Button */}
       {!isOpen && (
-        <Button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 ltr:left-6 rtl:right-6 z-50 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white px-6 py-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 animate-bounce-slow"
-          size="lg"
-        >
-          <Bot className="h-6 w-6 ltr:mr-2 rtl:ml-2" />
-          <span className="font-semibold">{t("ai.chatWithUs")}</span>
-        </Button>
+        <div className="fixed bottom-6 ltr:left-6 rtl:right-6 z-50 group">
+          <Button
+            onClick={() => setIsOpen(true)}
+            className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary text-white p-4 rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-110 group-hover:px-6"
+            size="icon"
+          >
+            <Bot className="h-5 w-5 group-hover:ltr:mr-2 group-hover:rtl:ml-2 transition-all" />
+            <span className="hidden group-hover:inline-block font-semibold text-sm whitespace-nowrap">
+              {t("ai.chatWithUs")}
+            </span>
+          </Button>
+          {/* Notification Badge */}
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
+            AI
+          </span>
+        </div>
       )}
 
       {/* Chat Window */}
