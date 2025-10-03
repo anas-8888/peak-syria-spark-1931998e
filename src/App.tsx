@@ -18,6 +18,12 @@ import Signup from "./pages/Signup";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import Dashboard from "./pages/Dashboard";
+import Overview from "./pages/dashboard/Overview";
+import Products from "./pages/dashboard/Products";
+import Orders from "./pages/dashboard/Orders";
+import Payments from "./pages/dashboard/Payments";
+import DashboardSettings from "./pages/dashboard/Settings";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +48,14 @@ function App() {
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                {/* Dashboard Routes */}
+                <Route path="/dashboard" element={<Dashboard />}>
+                  <Route index element={<Overview />} />
+                  <Route path="products" element={<Products />} />
+                  <Route path="orders" element={<Orders />} />
+                  <Route path="payments" element={<Payments />} />
+                  <Route path="settings" element={<DashboardSettings />} />
+                </Route>
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

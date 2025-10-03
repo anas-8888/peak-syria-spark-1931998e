@@ -1,0 +1,97 @@
+import { useState } from "react";
+import { NavLink } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingBag,
+  CreditCard,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import peakLogo from "@/assets/peak-logo.svg";
+
+const menuItems = [
+  { title: "نظرة عامة", path: "/dashboard", icon: LayoutDashboard, end: true },
+  { title: "المنتجات", path: "/dashboard/products", icon: Package, end: false },
+  { title: "الطلبات", path: "/dashboard/orders", icon: ShoppingBag, end: false },
+  { title: "المدفوعات", path: "/dashboard/payments", icon: CreditCard, end: false },
+  { title: "الإعدادات", path: "/dashboard/settings", icon: Settings, end: false },
+];
+
+const DashboardSidebar = () => {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <aside
+      className={`${
+        collapsed ? "w-20" : "w-64"
+      } bg-card border-l border-border transition-all duration-300 flex flex-col relative`}
+    >
+      {/* Logo */}
+      <div className="h-20 flex items-center justify-center border-b border-border">
+        {!collapsed && (
+          <img src={peakLogo} alt="PEAK Logo" className="h-12 w-auto" />
+        )}
+        {collapsed && (
+          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-xl">P</span>
+          </div>
+        )}
+      </div>
+
+      {/* Toggle Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute -left-3 top-24 bg-card border border-border rounded-full shadow-md hover:bg-accent z-10"
+        onClick={() => setCollapsed(!collapsed)}
+      >
+        {collapsed ? (
+          <ChevronLeft className="h-4 w-4" />
+        ) : (
+          <ChevronRight className="h-4 w-4" />
+        )}
+      </Button>
+
+      {/* Menu Items */}
+      <nav className="flex-1 p-4 space-y-2">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              end={item.end}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                }`
+              }
+            >
+              <Icon className="h-5 w-5 flex-shrink-0" />
+              {!collapsed && (
+                <span className="font-medium whitespace-nowrap">{item.title}</span>
+              )}
+            </NavLink>
+          );
+        })}
+      </nav>
+
+      {/* Footer */}
+      {!collapsed && (
+        <div className="p-4 border-t border-border">
+          <div className="bg-primary/10 rounded-lg p-3 text-center">
+            <p className="text-sm font-semibold text-primary mb-1">لوحة التحكم</p>
+            <p className="text-xs text-muted-foreground">PEAK Syria Admin</p>
+          </div>
+        </div>
+      )}
+    </aside>
+  );
+};
+
+export default DashboardSidebar;
