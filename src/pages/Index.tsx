@@ -7,6 +7,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, TrendingUp, Zap, Shield } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import productShoes1 from "@/assets/product-shoes-1.jpg";
 import productShoes2 from "@/assets/product-shoes-2.jpg";
 import productShoes3 from "@/assets/product-shoes-3.jpg";
@@ -61,13 +62,14 @@ const featuredProducts = [
   },
 ];
 
-const categories = [
-  { name: "Basketball", icon: TrendingUp, description: "Pro-level basketball gear" },
-  { name: "Running", icon: Zap, description: "Performance running shoes" },
-  { name: "Apparel", icon: Shield, description: "Premium athletic wear" },
-];
-
 const Index = () => {
+  const { t } = useLanguage();
+
+  const categories = [
+    { name: t("category.basketball"), icon: TrendingUp, description: t("category.basketballDesc"), path: "basketball" },
+    { name: t("category.running"), icon: Zap, description: t("category.runningDesc"), path: "running" },
+    { name: t("category.apparel"), icon: Shield, description: t("category.apparelDesc"), path: "apparel" },
+  ];
   return (
     <div className="min-h-screen bg-background">
       <PromoBanner />
@@ -79,9 +81,9 @@ const Index = () => {
       <section className="py-16 md:py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 animate-fade-in">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Featured Collection</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t("home.featuredTitle")}</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Discover our handpicked selection of premium sportswear
+              {t("home.featuredDesc")}
             </p>
           </div>
 
@@ -100,7 +102,7 @@ const Index = () => {
           <div className="text-center">
             <Link to="/products">
               <Button variant="default" size="lg" className="group">
-                View All Products
+                {t("home.viewAll")}
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
@@ -112,8 +114,8 @@ const Index = () => {
       <section className="py-16 bg-muted/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 animate-fade-in">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Shop by Category</h2>
-            <p className="text-muted-foreground text-lg">Find your perfect sport</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t("home.categoryTitle")}</h2>
+            <p className="text-muted-foreground text-lg">{t("home.categoryDesc")}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -122,7 +124,7 @@ const Index = () => {
               return (
                 <Link
                   key={category.name}
-                  to={`/products?category=${category.name.toLowerCase()}`}
+                  to={`/products?category=${category.path}`}
                   style={{ animationDelay: `${index * 150}ms` }}
                   className="group bg-card p-8 rounded-lg shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fade-in overflow-hidden relative"
                 >
@@ -138,7 +140,7 @@ const Index = () => {
                     </div>
                     <p className="text-muted-foreground mb-4">{category.description}</p>
                     <div className="flex items-center text-primary font-semibold group-hover:gap-3 transition-all">
-                      Explore Collection
+                      {t("home.explore")}
                       <ArrowRight className="ml-1 h-5 w-5 group-hover:translate-x-2 transition-transform duration-300" />
                     </div>
                   </div>
@@ -163,22 +165,22 @@ const Index = () => {
               <div className="bg-primary/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <Shield className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="text-2xl font-bold mb-3">100% Authentic</h3>
-              <p className="text-secondary-foreground/80 text-lg">Official PEAK distributor in Syria</p>
+              <h3 className="text-2xl font-bold mb-3">{t("trust.authentic")}</h3>
+              <p className="text-secondary-foreground/80 text-lg">{t("trust.authenticDesc")}</p>
             </div>
             <div className="animate-fade-in" style={{ animationDelay: "150ms" }}>
               <div className="bg-primary/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <Zap className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="text-2xl font-bold mb-3">Fast Delivery</h3>
-              <p className="text-secondary-foreground/80 text-lg">Quick shipping across Syria</p>
+              <h3 className="text-2xl font-bold mb-3">{t("trust.delivery")}</h3>
+              <p className="text-secondary-foreground/80 text-lg">{t("trust.deliveryDesc")}</p>
             </div>
             <div className="animate-fade-in" style={{ animationDelay: "300ms" }}>
               <div className="bg-primary/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <TrendingUp className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="text-2xl font-bold mb-3">Premium Quality</h3>
-              <p className="text-secondary-foreground/80 text-lg">World-class sportswear</p>
+              <h3 className="text-2xl font-bold mb-3">{t("trust.quality")}</h3>
+              <p className="text-secondary-foreground/80 text-lg">{t("trust.qualityDesc")}</p>
             </div>
           </div>
         </div>

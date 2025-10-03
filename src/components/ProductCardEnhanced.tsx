@@ -3,6 +3,8 @@ import { ShoppingCart, Eye, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ProductCardEnhancedProps {
   id: number;
@@ -30,6 +32,8 @@ const ProductCardEnhanced = ({
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState(colors[0]);
   const [isFavorite, setIsFavorite] = useState(false);
+  const { formatPrice } = useCurrency();
+  const { t } = useLanguage();
 
   const colorMap: Record<string, string> = {
     black: "#000000",
@@ -76,7 +80,7 @@ const ProductCardEnhanced = ({
               className="w-5/6 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-150"
             >
               <ShoppingCart className="mr-2 h-5 w-5" />
-              Add to Cart
+              {t("product.addToCart")}
             </Button>
           </div>
 
@@ -84,7 +88,7 @@ const ProductCardEnhanced = ({
           <div className="absolute top-3 left-3 flex flex-col gap-2">
             {isNew && (
               <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold uppercase shadow-lg animate-scale-in">
-                New
+                {t("product.new")}
               </div>
             )}
           </div>
@@ -133,7 +137,7 @@ const ProductCardEnhanced = ({
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t">
-            <span className="text-xl font-bold text-primary">{price.toLocaleString()} SYP</span>
+            <span className="text-xl font-bold text-primary">{formatPrice(price)}</span>
             <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10">
               View Details
             </Button>
@@ -156,7 +160,7 @@ const ProductCardEnhanced = ({
                 <p className="text-sm text-muted-foreground uppercase">{category}</p>
                 <h2 className="text-2xl font-bold">{name}</h2>
               </div>
-              <div className="text-3xl font-bold text-primary">{price.toLocaleString()} SYP</div>
+              <div className="text-3xl font-bold text-primary">{formatPrice(price)}</div>
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
                   <span key={i} className={`text-lg ${i < Math.floor(rating) ? "text-primary" : "text-muted-foreground"}`}>
@@ -166,7 +170,7 @@ const ProductCardEnhanced = ({
                 <span className="text-sm text-muted-foreground ml-2">({rating} / 5)</span>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Available Colors:</h4>
+                <h4 className="font-semibold mb-2">{t("product.colors")}:</h4>
                 <div className="flex gap-2">
                   {colors.map((color) => (
                     <div
@@ -178,7 +182,7 @@ const ProductCardEnhanced = ({
                 </div>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Available Sizes:</h4>
+                <h4 className="font-semibold mb-2">{t("product.sizes")}:</h4>
                 <div className="flex flex-wrap gap-2">
                   {sizes.map((size) => (
                     <div key={size} className="border-2 border-border px-3 py-1 rounded-md">
