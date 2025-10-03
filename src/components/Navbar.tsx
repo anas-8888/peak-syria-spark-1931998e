@@ -1,56 +1,85 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ShoppingCart, Menu, X, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+
+  const navLinks = [
+    { name: "All Products", path: "/products" },
+    { name: "Basketball", path: "/products?category=basketball" },
+    { name: "Running", path: "/products?category=running" },
+    { name: "Casual", path: "/products?category=apparel" },
+    { name: "About", path: "/about" },
+  ];
+
+  const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 bg-secondary/95 backdrop-blur-md border-b border-primary/20">
+    <nav className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 group">
+          <Link to="/" className="flex items-center space-x-2 group">
             <div className="relative">
-              <div className="text-3xl font-black tracking-tight">
-                <span className="text-primary group-hover:text-primary/90 transition-colors">PEAK</span>
-              </div>
-              <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+              {/* PEAK Triangle Logo */}
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 100 100"
+                className="transition-transform duration-300 group-hover:scale-110"
+              >
+                <path
+                  d="M50 10 L90 90 L10 90 Z"
+                  fill="hsl(var(--primary))"
+                  className="group-hover:fill-primary/90 transition-colors"
+                />
+                <text
+                  x="50"
+                  y="70"
+                  textAnchor="middle"
+                  fill="white"
+                  fontSize="24"
+                  fontWeight="bold"
+                  fontFamily="Arial, sans-serif"
+                >
+                  P
+                </text>
+              </svg>
             </div>
-            <div className="hidden sm:block h-6 w-px bg-primary/30" />
-            <span className="hidden sm:block text-sm font-semibold text-secondary-foreground/70 uppercase tracking-wider">
-              Syria
-            </span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-secondary-foreground hover:text-primary transition-colors font-medium">
-              Home
-            </Link>
-            <Link to="/products" className="text-secondary-foreground hover:text-primary transition-colors font-medium">
-              Products
-            </Link>
-            <Link to="/about" className="text-secondary-foreground hover:text-primary transition-colors font-medium">
-              About
-            </Link>
-            <Link to="/contact" className="text-secondary-foreground hover:text-primary transition-colors font-medium">
-              Contact
-            </Link>
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`text-sm font-medium transition-colors hover:text-primary relative ${
+                  isActive(link.path) ? "text-primary" : "text-foreground/70"
+                }`}
+              >
+                {link.name}
+                {isActive(link.path) && (
+                  <span className="absolute -bottom-6 left-0 w-full h-0.5 bg-primary" />
+                )}
+              </Link>
+            ))}
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-2">
             <Button variant="ghost" size="icon">
-              <Search className="h-5 w-5 text-secondary-foreground" />
+              <Search className="h-5 w-5" />
             </Button>
             <Button variant="ghost" size="icon">
-              <User className="h-5 w-5 text-secondary-foreground" />
+              <User className="h-5 w-5" />
             </Button>
             <Link to="/cart">
               <Button variant="ghost" size="icon" className="relative">
-                <ShoppingCart className="h-5 w-5 text-secondary-foreground" />
+                <ShoppingCart className="h-5 w-5" />
                 <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                   0
                 </span>
@@ -60,7 +89,7 @@ const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-secondary-foreground"
+            className="md:hidden"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -69,36 +98,20 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 space-y-4 animate-fade-in">
-            <Link
-              to="/"
-              className="block text-secondary-foreground hover:text-primary transition-colors font-medium py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link
-              to="/products"
-              className="block text-secondary-foreground hover:text-primary transition-colors font-medium py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Products
-            </Link>
-            <Link
-              to="/about"
-              className="block text-secondary-foreground hover:text-primary transition-colors font-medium py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              About
-            </Link>
-            <Link
-              to="/contact"
-              className="block text-secondary-foreground hover:text-primary transition-colors font-medium py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Contact
-            </Link>
-            <div className="flex items-center space-x-4 pt-4 border-t border-primary/20">
+          <div className="md:hidden py-4 space-y-4 animate-fade-in border-t">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`block text-sm font-medium py-2 ${
+                  isActive(link.path) ? "text-primary" : "text-foreground/70"
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {link.name}
+              </Link>
+            ))}
+            <div className="flex items-center space-x-4 pt-4 border-t">
               <Button variant="ghost" size="icon">
                 <Search className="h-5 w-5" />
               </Button>

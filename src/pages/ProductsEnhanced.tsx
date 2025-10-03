@@ -1,3 +1,4 @@
+import PromoBanner from "@/components/PromoBanner";
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import ProductCardEnhanced from "@/components/ProductCardEnhanced";
@@ -173,6 +174,7 @@ const ProductsEnhanced = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <PromoBanner />
       <Navbar />
 
       {/* Page Header */}

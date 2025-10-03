@@ -1,3 +1,4 @@
+import PromoBanner from "@/components/PromoBanner";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import ProductCardEnhanced from "@/components/ProductCardEnhanced";
@@ -69,6 +70,7 @@ const categories = [
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
+      <PromoBanner />
       <Navbar />
       <HeroSection />
       <WhatsAppButton />

@@ -10,26 +10,26 @@ All colors MUST be HSL.
   :root {
     /* PEAK Brand Colors - Sporty & Premium */
     --background: 0 0% 100%;
-    --foreground: 0 0% 5%;
+    --foreground: 0 0% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 5%;
+    --card-foreground: 0 0% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 5%;
+    --popover-foreground: 0 0% 10%;
 
     /* PEAK Red - Primary Brand Color */
-    --primary: 0 82% 51%;
+    --primary: 0 86% 51%;
     --primary-foreground: 0 0% 100%;
 
     /* Dark backgrounds for contrast */
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 0 0% 98%;
+    --secondary-foreground: 0 0% 10%;
 
     --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted-foreground: 0 0% 40%;
 
-    --accent: 0 82% 51%;
+    --accent: 0 86% 51%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
