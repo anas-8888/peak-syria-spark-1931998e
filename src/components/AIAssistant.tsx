@@ -113,7 +113,7 @@ const AIAssistant = () => {
       {!isOpen && (
         <Button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 ltr:right-24 rtl:left-24 z-50 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white px-6 py-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 animate-bounce-slow"
+          className="fixed bottom-6 ltr:left-6 rtl:right-6 z-50 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white px-6 py-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 animate-bounce-slow"
           size="lg"
         >
           <Bot className="h-6 w-6 ltr:mr-2 rtl:ml-2" />
@@ -123,7 +123,7 @@ const AIAssistant = () => {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 ltr:right-6 rtl:left-6 z-50 w-96 max-w-[calc(100vw-2rem)] h-[600px] bg-card border border-border rounded-2xl shadow-2xl flex flex-col animate-scale-in">
+        <div className="fixed bottom-6 ltr:left-6 rtl:right-6 z-50 w-96 max-w-[calc(100vw-2rem)] h-[600px] bg-card border border-border rounded-2xl shadow-2xl flex flex-col animate-scale-in">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-primary/80 text-white p-4 rounded-t-2xl flex items-center justify-between">
             <div className="flex items-center gap-3">
