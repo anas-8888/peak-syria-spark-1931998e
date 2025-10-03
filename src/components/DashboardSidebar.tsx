@@ -15,6 +15,7 @@ import {
   Warehouse,
   Truck,
   Megaphone,
+  Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import peakLogo from "@/assets/peak-logo.svg";
@@ -36,13 +37,35 @@ const menuItems = [
 
 const DashboardSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <aside
-      className={`${
-        collapsed ? "w-20" : "w-64"
-      } bg-card border-l border-border transition-all duration-300 flex flex-col relative`}
-    >
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="lg:hidden fixed top-4 right-4 z-50 p-2 bg-card border border-border rounded-lg shadow-lg"
+      >
+        <Menu className="h-6 w-6" />
+      </button>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`${
+          collapsed ? "w-20" : "w-64"
+        } bg-card border-l border-border transition-all duration-300 flex flex-col relative
+        fixed lg:static inset-y-0 right-0 z-40 lg:z-0
+        ${mobileOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
+        `}
+      >
       {/* Logo */}
       <div className="h-20 flex items-center justify-center border-b border-border">
         {!collapsed && (
@@ -105,6 +128,7 @@ const DashboardSidebar = () => {
         </div>
       )}
     </aside>
+    </>
   );
 };
 
