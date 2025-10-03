@@ -4,9 +4,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, X, ArrowLeft, ShoppingBag } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import productShoes1 from "@/assets/product-shoes-1.jpg";
 
 const Cart = () => {
+  const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const [cartItems, setCartItems] = useState([
     { id: 1, name: "Peak Basketball Pro X", price: 2500000, quantity: 1, image: productShoes1, size: "42" },
   ]);
@@ -33,20 +37,20 @@ const Cart = () => {
 
       <div className="container mx-auto px-4 py-8">
         <Link to="/products" className="inline-flex items-center text-primary hover:text-primary/80 mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Continue Shopping
+          <ArrowLeft className="ltr:mr-2 rtl:ml-2 h-4 w-4" />
+          {t("cart.continueShopping")}
         </Link>
 
-        <h1 className="text-3xl md:text-4xl font-bold mb-8">Shopping Cart</h1>
+        <h1 className="text-3xl md:text-4xl font-bold mb-8">{t("cart.title")}</h1>
 
         {cartItems.length === 0 ? (
           <div className="text-center py-16">
             <ShoppingBag className="h-24 w-24 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-2xl font-semibold mb-2">Your cart is empty</h2>
-            <p className="text-muted-foreground mb-6">Add some products to get started</p>
+            <h2 className="text-2xl font-semibold mb-2">{t("cart.empty")}</h2>
+            <p className="text-muted-foreground mb-6">{t("cart.emptyDesc")}</p>
             <Link to="/products">
               <Button variant="default" size="lg">
-                Start Shopping
+                {t("cart.startShopping")}
               </Button>
             </Link>
           </div>
@@ -62,7 +66,7 @@ const Cart = () => {
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <h3 className="font-semibold">{item.name}</h3>
-                        <p className="text-sm text-muted-foreground">Size: {item.size}</p>
+                        <p className="text-sm text-muted-foreground">{t("cart.size")}: {item.size}</p>
                       </div>
                       <Button
                         variant="ghost"
@@ -95,8 +99,8 @@ const Cart = () => {
                         </Button>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-primary">{(item.price * item.quantity).toLocaleString()} SYP</p>
-                        <p className="text-xs text-muted-foreground">{item.price.toLocaleString()} each</p>
+                        <p className="font-bold text-primary">{formatPrice(item.price * item.quantity)}</p>
+                        <p className="text-xs text-muted-foreground">{formatPrice(item.price)} each</p>
                       </div>
                     </div>
                   </div>
@@ -107,30 +111,34 @@ const Cart = () => {
             {/* Order Summary */}
             <div className="lg:col-span-1">
               <div className="bg-card p-6 rounded-lg shadow-sm sticky top-24">
-                <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+                <h2 className="text-xl font-bold mb-4">{t("checkout.orderSummary")}</h2>
                 
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-semibold">{subtotal.toLocaleString()} SYP</span>
+                    <span className="text-muted-foreground">{t("cart.subtotal")}</span>
+                    <span className="font-semibold">{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Shipping</span>
-                    <span className="font-semibold">{shipping.toLocaleString()} SYP</span>
+                    <span className="text-muted-foreground">{t("cart.shipping")}</span>
+                    <span className="font-semibold">{formatPrice(shipping)}</span>
                   </div>
                   <div className="border-t pt-3 flex justify-between">
-                    <span className="text-lg font-bold">Total</span>
-                    <span className="text-lg font-bold text-primary">{total.toLocaleString()} SYP</span>
+                    <span className="text-lg font-bold">{t("cart.total")}</span>
+                    <span className="text-lg font-bold text-primary">{formatPrice(total)}</span>
                   </div>
                 </div>
 
-                <Button variant="hero" size="lg" className="w-full mb-3">
-                  Proceed to Checkout
-                </Button>
+                <Link to="/checkout">
+                  <Button variant="hero" size="lg" className="w-full mb-3">
+                    {t("cart.checkout")}
+                  </Button>
+                </Link>
                 
-                <Button variant="outline" size="lg" className="w-full">
-                  Continue Shopping
-                </Button>
+                <Link to="/products">
+                  <Button variant="outline" size="lg" className="w-full">
+                    {t("cart.continueShopping")}
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

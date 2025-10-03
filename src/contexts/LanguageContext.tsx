@@ -52,6 +52,71 @@ const translations = {
     // Currency
     "currency.syp": "SYP",
     "currency.usd": "USD",
+    
+    // Cart & Checkout
+    "cart.title": "Shopping Cart",
+    "cart.empty": "Your cart is empty",
+    "cart.emptyDesc": "Add some products to get started",
+    "cart.continueShopping": "Continue Shopping",
+    "cart.startShopping": "Start Shopping",
+    "cart.size": "Size",
+    "cart.quantity": "Quantity",
+    "cart.subtotal": "Subtotal",
+    "cart.shipping": "Shipping",
+    "cart.total": "Total",
+    "cart.checkout": "Proceed to Checkout",
+    
+    // Checkout
+    "checkout.title": "Checkout",
+    "checkout.contactInfo": "Contact Information",
+    "checkout.email": "Email",
+    "checkout.phone": "Phone Number",
+    "checkout.shippingAddress": "Shipping Address",
+    "checkout.fullName": "Full Name",
+    "checkout.address": "Address",
+    "checkout.city": "City",
+    "checkout.postalCode": "Postal Code",
+    "checkout.paymentMethod": "Payment Method",
+    "checkout.cashOnDelivery": "Cash on Delivery",
+    "checkout.creditCard": "Credit/Debit Card",
+    "checkout.placeOrder": "Place Order",
+    "checkout.orderSummary": "Order Summary",
+    
+    // Payment
+    "payment.title": "Payment",
+    "payment.processing": "Processing Payment",
+    "payment.success": "Payment Successful!",
+    "payment.failed": "Payment Failed",
+    "payment.cardNumber": "Card Number",
+    "payment.cardName": "Name on Card",
+    "payment.expiryDate": "Expiry Date",
+    "payment.cvv": "CVV",
+    "payment.pay": "Pay Now",
+    
+    // Order Tracking
+    "tracking.title": "Order Tracking",
+    "tracking.orderNumber": "Order Number",
+    "tracking.trackOrder": "Track Order",
+    "tracking.status": "Order Status",
+    "tracking.placed": "Order Placed",
+    "tracking.confirmed": "Confirmed",
+    "tracking.shipped": "Shipped",
+    "tracking.delivered": "Delivered",
+    "tracking.estimatedDelivery": "Estimated Delivery",
+    
+    // Auth
+    "auth.login": "Login",
+    "auth.signup": "Sign Up",
+    "auth.email": "Email",
+    "auth.password": "Password",
+    "auth.confirmPassword": "Confirm Password",
+    "auth.forgotPassword": "Forgot Password?",
+    "auth.dontHaveAccount": "Don't have an account?",
+    "auth.alreadyHaveAccount": "Already have an account?",
+    "auth.loginButton": "Login",
+    "auth.signupButton": "Create Account",
+    "auth.or": "or",
+    "auth.continueWithGoogle": "Continue with Google",
   },
   ar: {
     // Navbar
@@ -94,6 +159,71 @@ const translations = {
     // Currency
     "currency.syp": "ل.س",
     "currency.usd": "دولار",
+    
+    // Cart & Checkout
+    "cart.title": "سلة التسوق",
+    "cart.empty": "سلتك فارغة",
+    "cart.emptyDesc": "أضف بعض المنتجات للبدء",
+    "cart.continueShopping": "متابعة التسوق",
+    "cart.startShopping": "ابدأ التسوق",
+    "cart.size": "المقاس",
+    "cart.quantity": "الكمية",
+    "cart.subtotal": "المجموع الفرعي",
+    "cart.shipping": "التوصيل",
+    "cart.total": "المجموع الإجمالي",
+    "cart.checkout": "إتمام الطلب",
+    
+    // Checkout
+    "checkout.title": "إتمام الطلب",
+    "checkout.contactInfo": "معلومات الاتصال",
+    "checkout.email": "البريد الإلكتروني",
+    "checkout.phone": "رقم الهاتف",
+    "checkout.shippingAddress": "عنوان التوصيل",
+    "checkout.fullName": "الاسم الكامل",
+    "checkout.address": "العنوان",
+    "checkout.city": "المدينة",
+    "checkout.postalCode": "الرمز البريدي",
+    "checkout.paymentMethod": "طريقة الدفع",
+    "checkout.cashOnDelivery": "الدفع عند الاستلام",
+    "checkout.creditCard": "بطاقة ائتمان",
+    "checkout.placeOrder": "تأكيد الطلب",
+    "checkout.orderSummary": "ملخص الطلب",
+    
+    // Payment
+    "payment.title": "الدفع",
+    "payment.processing": "جاري معالجة الدفع",
+    "payment.success": "تم الدفع بنجاح!",
+    "payment.failed": "فشل الدفع",
+    "payment.cardNumber": "رقم البطاقة",
+    "payment.cardName": "الاسم على البطاقة",
+    "payment.expiryDate": "تاريخ الانتهاء",
+    "payment.cvv": "رمز الأمان",
+    "payment.pay": "ادفع الآن",
+    
+    // Order Tracking
+    "tracking.title": "تتبع الطلب",
+    "tracking.orderNumber": "رقم الطلب",
+    "tracking.trackOrder": "تتبع الطلب",
+    "tracking.status": "حالة الطلب",
+    "tracking.placed": "تم تقديم الطلب",
+    "tracking.confirmed": "تم التأكيد",
+    "tracking.shipped": "قيد الشحن",
+    "tracking.delivered": "تم التوصيل",
+    "tracking.estimatedDelivery": "موعد التوصيل المتوقع",
+    
+    // Auth
+    "auth.login": "تسجيل الدخول",
+    "auth.signup": "إنشاء حساب",
+    "auth.email": "البريد الإلكتروني",
+    "auth.password": "كلمة المرور",
+    "auth.confirmPassword": "تأكيد كلمة المرور",
+    "auth.forgotPassword": "نسيت كلمة المرور؟",
+    "auth.dontHaveAccount": "ليس لديك حساب؟",
+    "auth.alreadyHaveAccount": "لديك حساب بالفعل؟",
+    "auth.loginButton": "تسجيل الدخول",
+    "auth.signupButton": "إنشاء حساب",
+    "auth.or": "أو",
+    "auth.continueWithGoogle": "المتابعة مع جوجل",
   },
 };
 
