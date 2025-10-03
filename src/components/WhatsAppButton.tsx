@@ -12,7 +12,7 @@ const WhatsAppButton = () => {
     >
       <Button
         size="lg"
-        className="bg-[#25D366] hover:bg-[#20BA5A] text-white px-6 py-6 rounded-full shadow-2xl hover:shadow-[0_0_40px_rgba(37,211,102,0.6)] transition-all duration-300 group-hover:scale-110 animate-glow-pulse"
+        className="bg-[#25D366] hover:bg-[#20BA5A] text-white px-6 py-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-110"
       >
         <MessageCircle className="h-6 w-6 ltr:mr-2 rtl:ml-2" />
         <span className="font-semibold hidden sm:inline">WhatsApp</span>

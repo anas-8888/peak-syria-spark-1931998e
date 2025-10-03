@@ -111,7 +111,7 @@ const AIAssistant = () => {
     <>
       {/* Chat Button */}
       {!isOpen && (
-        <div className="fixed bottom-6 ltr:left-6 rtl:right-6 z-50 group">
+        <div className="fixed bottom-24 ltr:right-6 rtl:left-6 z-50 group">
           <Button
             onClick={() => setIsOpen(true)}
             className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary text-white p-4 rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-110 group-hover:px-6"
@@ -123,7 +123,7 @@ const AIAssistant = () => {
             </span>
           </Button>
           {/* Notification Badge */}
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
+          <span className="absolute -top-1 ltr:-right-1 rtl:-left-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
             AI
           </span>
         </div>
@@ -131,7 +131,7 @@ const AIAssistant = () => {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 ltr:left-6 rtl:right-6 z-50 w-96 max-w-[calc(100vw-2rem)] h-[600px] bg-card border border-border rounded-2xl shadow-2xl flex flex-col animate-scale-in">
+        <div className="fixed bottom-6 ltr:right-6 rtl:left-6 z-50 w-96 max-w-[calc(100vw-2rem)] h-[600px] bg-card border border-border rounded-2xl shadow-2xl flex flex-col animate-scale-in">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-primary/80 text-white p-4 rounded-t-2xl flex items-center justify-between">
             <div className="flex items-center gap-3">
