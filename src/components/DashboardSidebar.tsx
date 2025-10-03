@@ -8,6 +8,13 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Users,
+  BarChart3,
+  Star,
+  Tag,
+  Warehouse,
+  Truck,
+  Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import peakLogo from "@/assets/peak-logo.svg";
@@ -17,6 +24,13 @@ const menuItems = [
   { title: "Products", path: "/dashboard/products", icon: Package, end: false },
   { title: "Orders", path: "/dashboard/orders", icon: ShoppingBag, end: false },
   { title: "Payments", path: "/dashboard/payments", icon: CreditCard, end: false },
+  { title: "Customers", path: "/dashboard/customers", icon: Users, end: false },
+  { title: "Analytics", path: "/dashboard/analytics", icon: BarChart3, end: false },
+  { title: "Reviews", path: "/dashboard/reviews", icon: Star, end: false },
+  { title: "Discounts", path: "/dashboard/discounts", icon: Tag, end: false },
+  { title: "Inventory", path: "/dashboard/inventory", icon: Warehouse, end: false },
+  { title: "Shipping", path: "/dashboard/shipping", icon: Truck, end: false },
+  { title: "Marketing", path: "/dashboard/marketing", icon: Megaphone, end: false },
   { title: "Settings", path: "/dashboard/settings", icon: Settings, end: false },
 ];
 

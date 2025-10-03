@@ -23,6 +23,13 @@ import Overview from "./pages/dashboard/Overview";
 import Products from "./pages/dashboard/Products";
 import Orders from "./pages/dashboard/Orders";
 import Payments from "./pages/dashboard/Payments";
+import Customers from "./pages/dashboard/Customers";
+import Analytics from "./pages/dashboard/Analytics";
+import Reviews from "./pages/dashboard/Reviews";
+import Discounts from "./pages/dashboard/Discounts";
+import Inventory from "./pages/dashboard/Inventory";
+import Shipping from "./pages/dashboard/Shipping";
+import Marketing from "./pages/dashboard/Marketing";
 import DashboardSettings from "./pages/dashboard/Settings";
 
 const queryClient = new QueryClient();
@@ -54,6 +61,13 @@ function App() {
                   <Route path="products" element={<Products />} />
                   <Route path="orders" element={<Orders />} />
                   <Route path="payments" element={<Payments />} />
+                  <Route path="customers" element={<Customers />} />
+                  <Route path="analytics" element={<Analytics />} />
+                  <Route path="reviews" element={<Reviews />} />
+                  <Route path="discounts" element={<Discounts />} />
+                  <Route path="inventory" element={<Inventory />} />
+                  <Route path="shipping" element={<Shipping />} />
+                  <Route path="marketing" element={<Marketing />} />
                   <Route path="settings" element={<DashboardSettings />} />
                 </Route>
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
