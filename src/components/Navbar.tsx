@@ -11,11 +11,17 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="text-2xl font-bold">
-              <span className="text-primary">PEAK</span>
-              <span className="text-primary-foreground"> Syria</span>
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="relative">
+              <div className="text-3xl font-black tracking-tight">
+                <span className="text-primary group-hover:text-primary/90 transition-colors">PEAK</span>
+              </div>
+              <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
             </div>
+            <div className="hidden sm:block h-6 w-px bg-primary/30" />
+            <span className="hidden sm:block text-sm font-semibold text-secondary-foreground/70 uppercase tracking-wider">
+              Syria
+            </span>
           </Link>
 
           {/* Desktop Navigation */}

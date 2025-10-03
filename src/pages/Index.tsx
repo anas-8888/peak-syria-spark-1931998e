@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import ProductCard from "@/components/ProductCard";
+import ProductCardEnhanced from "@/components/ProductCardEnhanced";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
@@ -8,14 +8,56 @@ import { Link } from "react-router-dom";
 import { ArrowRight, TrendingUp, Zap, Shield } from "lucide-react";
 import productShoes1 from "@/assets/product-shoes-1.jpg";
 import productShoes2 from "@/assets/product-shoes-2.jpg";
+import productShoes3 from "@/assets/product-shoes-3.jpg";
+import productShoes4 from "@/assets/product-shoes-4.jpg";
 import productApparel1 from "@/assets/product-apparel-1.jpg";
 import productApparel2 from "@/assets/product-apparel-2.jpg";
 
 const featuredProducts = [
-  { id: 1, name: "Peak Basketball Pro X", price: 2500000, image: productShoes1, category: "Basketball", isNew: true },
-  { id: 2, name: "Peak Running Elite", price: 1800000, image: productShoes2, category: "Running", isNew: true },
-  { id: 3, name: "Peak Performance Hoodie", price: 1200000, image: productApparel1, category: "Apparel", isNew: false },
-  { id: 4, name: "Peak Sports Jersey", price: 950000, image: productApparel2, category: "Apparel", isNew: false },
+  { 
+    id: 1, 
+    name: "Peak Basketball Pro X", 
+    price: 2500000, 
+    image: productShoes1, 
+    category: "Basketball", 
+    isNew: true,
+    colors: ["black", "red"],
+    sizes: ["40", "41", "42", "43"],
+    rating: 4.8,
+  },
+  { 
+    id: 2, 
+    name: "Peak Running Elite", 
+    price: 1800000, 
+    image: productShoes2, 
+    category: "Running", 
+    isNew: true,
+    colors: ["black", "white"],
+    sizes: ["40", "41", "42", "43"],
+    rating: 4.6,
+  },
+  { 
+    id: 5, 
+    name: "Peak Court Master", 
+    price: 2200000, 
+    image: productShoes3, 
+    category: "Basketball", 
+    isNew: false,
+    colors: ["white", "red"],
+    sizes: ["40", "41", "42", "43"],
+    rating: 4.9,
+  },
+  { 
+    id: 6, 
+    name: "Peak Speed Runner", 
+    price: 1900000, 
+    image: productShoes4, 
+    category: "Running", 
+    isNew: true,
+    colors: ["gray", "black"],
+    sizes: ["40", "41", "42", "43"],
+    rating: 4.7,
+  },
 ];
 
 const categories = [
@@ -42,8 +84,14 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
+            {featuredProducts.map((product, index) => (
+              <div 
+                key={product.id}
+                style={{ animationDelay: `${index * 100}ms` }}
+                className="animate-fade-in"
+              >
+                <ProductCardEnhanced {...product} />
+              </div>
             ))}
           </div>
 
@@ -59,32 +107,38 @@ const Index = () => {
       </section>
 
       {/* Categories */}
-      <section className="py-16 bg-muted">
+      <section className="py-16 bg-muted/50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 animate-fade-in">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Shop by Category</h2>
             <p className="text-muted-foreground text-lg">Find your perfect sport</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {categories.map((category) => {
+            {categories.map((category, index) => {
               const Icon = category.icon;
               return (
                 <Link
                   key={category.name}
                   to={`/products?category=${category.name.toLowerCase()}`}
-                  className="group bg-card p-8 rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  style={{ animationDelay: `${index * 150}ms` }}
+                  className="group bg-card p-8 rounded-lg shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fade-in overflow-hidden relative"
                 >
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="bg-primary/10 p-3 rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <Icon className="h-6 w-6 text-primary group-hover:text-primary-foreground" />
+                  {/* Background gradient effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="bg-primary/10 p-4 rounded-full group-hover:bg-primary group-hover:scale-110 transition-all duration-300">
+                        <Icon className="h-8 w-8 text-primary group-hover:text-primary-foreground transition-colors" />
+                      </div>
+                      <h3 className="text-2xl font-bold group-hover:text-primary transition-colors">{category.name}</h3>
                     </div>
-                    <h3 className="text-2xl font-bold">{category.name}</h3>
-                  </div>
-                  <p className="text-muted-foreground mb-4">{category.description}</p>
-                  <div className="flex items-center text-primary font-semibold group-hover:gap-2 transition-all">
-                    Explore
-                    <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    <p className="text-muted-foreground mb-4">{category.description}</p>
+                    <div className="flex items-center text-primary font-semibold group-hover:gap-3 transition-all">
+                      Explore Collection
+                      <ArrowRight className="ml-1 h-5 w-5 group-hover:translate-x-2 transition-transform duration-300" />
+                    </div>
                   </div>
                 </Link>
               );
@@ -94,29 +148,35 @@ const Index = () => {
       </section>
 
       {/* Trust Section */}
-      <section className="py-16 bg-secondary text-secondary-foreground">
-        <div className="container mx-auto px-4">
+      <section className="relative py-20 bg-secondary text-secondary-foreground overflow-hidden">
+        {/* Animated background */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary rounded-full blur-3xl animate-pulse delay-1000" />
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div className="animate-fade-in">
-              <div className="bg-primary/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-8 w-8 text-primary" />
+            <div className="animate-fade-in" style={{ animationDelay: "0ms" }}>
+              <div className="bg-primary/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                <Shield className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="text-xl font-bold mb-2">100% Authentic</h3>
-              <p className="text-secondary-foreground/70">Official PEAK distributor in Syria</p>
+              <h3 className="text-2xl font-bold mb-3">100% Authentic</h3>
+              <p className="text-secondary-foreground/80 text-lg">Official PEAK distributor in Syria</p>
             </div>
-            <div className="animate-fade-in">
-              <div className="bg-primary/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Zap className="h-8 w-8 text-primary" />
+            <div className="animate-fade-in" style={{ animationDelay: "150ms" }}>
+              <div className="bg-primary/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                <Zap className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Fast Delivery</h3>
-              <p className="text-secondary-foreground/70">Quick shipping across Syria</p>
+              <h3 className="text-2xl font-bold mb-3">Fast Delivery</h3>
+              <p className="text-secondary-foreground/80 text-lg">Quick shipping across Syria</p>
             </div>
-            <div className="animate-fade-in">
-              <div className="bg-primary/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <TrendingUp className="h-8 w-8 text-primary" />
+            <div className="animate-fade-in" style={{ animationDelay: "300ms" }}>
+              <div className="bg-primary/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                <TrendingUp className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Premium Quality</h3>
-              <p className="text-secondary-foreground/70">World-class sportswear</p>
+              <h3 className="text-2xl font-bold mb-3">Premium Quality</h3>
+              <p className="text-secondary-foreground/80 text-lg">World-class sportswear</p>
             </div>
           </div>
         </div>

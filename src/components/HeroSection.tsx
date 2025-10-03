@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import heroImage1 from "@/assets/hero-athlete-1.jpg";
@@ -52,20 +52,21 @@ const HeroSection = () => {
           </div>
 
           <div className="relative h-full container mx-auto px-4 flex items-center">
-            <div className="max-w-2xl animate-fade-in">
-              <h2 className="text-primary text-sm md:text-base font-bold uppercase tracking-[0.3em] mb-4">
+            <div className="max-w-2xl space-y-6">
+              <h2 className="text-primary text-sm md:text-base font-bold uppercase tracking-[0.3em] mb-4 animate-slide-in-left">
                 New Arrival
               </h2>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-secondary-foreground mb-6 leading-tight">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-secondary-foreground mb-6 leading-tight animate-slide-up">
                 {slide.title}
               </h1>
-              <p className="text-xl md:text-2xl text-secondary-foreground/80 mb-8">
+              <p className="text-xl md:text-2xl text-secondary-foreground/80 mb-8 animate-fade-in" style={{ animationDelay: "200ms" }}>
                 {slide.subtitle}
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
                 <Link to={slide.link}>
-                  <Button variant="hero" size="xl">
+                  <Button variant="hero" size="xl" className="group">
                     {slide.cta}
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
                 <Link to="/products">
