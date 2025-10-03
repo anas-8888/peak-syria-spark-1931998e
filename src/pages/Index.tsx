@@ -4,6 +4,7 @@ import HeroSection from "@/components/HeroSection";
 import ProductCardEnhanced from "@/components/ProductCardEnhanced";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import AIAssistant from "@/components/AIAssistant";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, TrendingUp, Zap, Shield } from "lucide-react";
@@ -76,6 +77,7 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <WhatsAppButton />
+      <AIAssistant />
 
       {/* Featured Products */}
       <section className="py-16 md:py-20">

@@ -4,6 +4,8 @@ import Navbar from "@/components/Navbar";
 import ProductCardEnhanced from "@/components/ProductCardEnhanced";
 import ProductFilters from "@/components/ProductFilters";
 import Footer from "@/components/Footer";
+import WhatsAppButton from "@/components/WhatsAppButton";
+import AIAssistant from "@/components/AIAssistant";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LayoutGrid, List } from "lucide-react";
@@ -284,6 +286,8 @@ const ProductsEnhanced = () => {
         </div>
       </section>
 
+      <WhatsAppButton />
+      <AIAssistant />
       <Footer />
     </div>
   );

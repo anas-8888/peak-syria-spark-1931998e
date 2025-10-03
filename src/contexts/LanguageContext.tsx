@@ -117,6 +117,14 @@ const translations = {
     "auth.signupButton": "Create Account",
     "auth.or": "or",
     "auth.continueWithGoogle": "Continue with Google",
+    
+    // AI Assistant
+    "ai.chatWithUs": "Chat with us",
+    "ai.askQuestion": "Ask a question...",
+    "ai.send": "Send",
+    "ai.typing": "AI is typing...",
+    "ai.welcome": "Hello! How can I help you today?",
+    "ai.close": "Close",
   },
   ar: {
     // Navbar
@@ -224,6 +232,14 @@ const translations = {
     "auth.signupButton": "إنشاء حساب",
     "auth.or": "أو",
     "auth.continueWithGoogle": "المتابعة مع جوجل",
+    
+    // AI Assistant
+    "ai.chatWithUs": "تحدث معنا",
+    "ai.askQuestion": "اسأل سؤالاً...",
+    "ai.send": "إرسال",
+    "ai.typing": "المساعد يكتب...",
+    "ai.welcome": "مرحباً! كيف يمكنني مساعدتك اليوم؟",
+    "ai.close": "إغلاق",
   },
 };
 
