@@ -9,7 +9,7 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <h3 className="text-2xl font-bold mb-4">
-              <span className="text-primary">PEAK</span> Syria
+              <span className="text-primary">PEAssK</span> Syria
             </h3>
             <p className="text-secondary-foreground/70 mb-4">
               Official distributor of PEAK sportswear in Syria. Premium quality, authentic products.
