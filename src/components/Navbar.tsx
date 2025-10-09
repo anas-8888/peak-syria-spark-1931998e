@@ -21,14 +21,17 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border shadow-sm w-full">
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
+        <div className="flex items-center justify-between h-16 sm:h-18 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group flex-shrink-0">
             <img 
               src={peakLogo} 
               alt="PEAK Official Logo" 
-              className="h-8 sm:h-12 md:h-16 lg:h-20 w-auto transition-transform duration-300 group-hover:scale-110"
+              className="h-12 sm:h-14 md:h-16 lg:h-20 w-auto transition-transform duration-300 group-hover:scale-110"
             />
+            <div className="flex items-center">
+              <span className="text-sm sm:text-base md:text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-primary via-red-500 to-primary tracking-[0.25em] uppercase animate-pulse" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>SYRIA</span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}

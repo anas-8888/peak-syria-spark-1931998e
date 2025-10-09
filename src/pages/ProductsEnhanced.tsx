@@ -33,7 +33,7 @@ const allProducts: Product[] = [
   {
     id: 1,
     name: "Peak Basketball Pro X",
-    price: 2500000,
+    price: 45,
     image: productShoes1,
     category: "Basketball",
     isNew: true,
@@ -44,7 +44,7 @@ const allProducts: Product[] = [
   {
     id: 2,
     name: "Peak Running Elite",
-    price: 1800000,
+    price: 35,
     image: productShoes2,
     category: "Running",
     isNew: true,
@@ -55,7 +55,7 @@ const allProducts: Product[] = [
   {
     id: 3,
     name: "Peak Performance Hoodie",
-    price: 1200000,
+    price: 25,
     image: productApparel1,
     category: "Apparel",
     isNew: false,
@@ -66,7 +66,7 @@ const allProducts: Product[] = [
   {
     id: 4,
     name: "Peak Sports Jersey",
-    price: 950000,
+    price: 20,
     image: productApparel2,
     category: "Apparel",
     isNew: false,
@@ -77,7 +77,7 @@ const allProducts: Product[] = [
   {
     id: 5,
     name: "Peak Court Master",
-    price: 2200000,
+    price: 42,
     image: productShoes3,
     category: "Basketball",
     isNew: false,
@@ -88,7 +88,7 @@ const allProducts: Product[] = [
   {
     id: 6,
     name: "Peak Speed Runner",
-    price: 1900000,
+    price: 38,
     image: productShoes4,
     category: "Running",
     isNew: true,
@@ -99,7 +99,7 @@ const allProducts: Product[] = [
   {
     id: 7,
     name: "Peak Training Jacket",
-    price: 1500000,
+    price: 30,
     image: productApparel3,
     category: "Apparel",
     isNew: false,
@@ -110,7 +110,7 @@ const allProducts: Product[] = [
   {
     id: 8,
     name: "Peak Athletic Tank",
-    price: 750000,
+    price: 15,
     image: productApparel4,
     category: "Apparel",
     isNew: false,
@@ -121,7 +121,7 @@ const allProducts: Product[] = [
   {
     id: 9,
     name: "Peak Hoops Legend",
-    price: 2800000,
+    price: 50,
     image: productShoes1,
     category: "Basketball",
     isNew: true,
@@ -132,7 +132,7 @@ const allProducts: Product[] = [
   {
     id: 10,
     name: "Peak Marathon Pro",
-    price: 2100000,
+    price: 40,
     image: productShoes2,
     category: "Running",
     isNew: false,
@@ -149,7 +149,7 @@ const ProductsEnhanced = () => {
     categories: [] as string[],
     colors: [] as string[],
     sizes: [] as string[],
-    priceRange: [0, 3000000] as [number, number],
+    priceRange: [0, 50] as [number, number],
   });
 
   const maxPrice = Math.max(...allProducts.map((p) => p.price));

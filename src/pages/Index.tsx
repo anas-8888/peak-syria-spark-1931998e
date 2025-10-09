@@ -19,7 +19,7 @@ const featuredProducts = [
   { 
     id: 1, 
     name: "Peak Basketball Pro X", 
-    price: 2500000, 
+    price: 45, 
     image: productShoes1, 
     category: "Basketball", 
     isNew: true,
@@ -30,7 +30,7 @@ const featuredProducts = [
   { 
     id: 2, 
     name: "Peak Running Elite", 
-    price: 1800000, 
+    price: 35, 
     image: productShoes2, 
     category: "Running", 
     isNew: true,
@@ -41,7 +41,7 @@ const featuredProducts = [
   { 
     id: 5, 
     name: "Peak Court Master", 
-    price: 2200000, 
+    price: 42, 
     image: productShoes3, 
     category: "Basketball", 
     isNew: false,
@@ -52,7 +52,7 @@ const featuredProducts = [
   { 
     id: 6, 
     name: "Peak Speed Runner", 
-    price: 1900000, 
+    price: 38, 
     image: productShoes4, 
     category: "Running", 
     isNew: true,

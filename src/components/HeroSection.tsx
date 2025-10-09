@@ -63,13 +63,13 @@ const HeroSection = () => {
   };
 
   return (
-    <section 
-      ref={sectionRef}
-      className="relative h-[350px] sm:h-[450px] md:h-[550px] lg:h-[650px] xl:h-[750px] overflow-hidden bg-secondary w-full"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
+     <section 
+       ref={sectionRef}
+       className="relative h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] xl:h-[800px] overflow-hidden bg-secondary w-full"
+       onTouchStart={handleTouchStart}
+       onTouchMove={handleTouchMove}
+       onTouchEnd={handleTouchEnd}
+     >
       {slides.map((slide, index) => (
         <div
           key={index}
@@ -88,52 +88,61 @@ const HeroSection = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
           </div>
 
-          <div className="relative h-full w-full px-3 sm:px-4 md:px-6 lg:px-8 flex items-center">
-            <div className="w-full max-w-2xl lg:max-w-3xl space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-6">
-              <h2 className="text-primary text-xs sm:text-sm lg:text-base font-bold uppercase tracking-[0.05em] sm:tracking-[0.1em] md:tracking-[0.2em] lg:tracking-[0.3em] mb-1 sm:mb-2 md:mb-4 animate-slide-in-left">
-                New Arrival
-              </h2>
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-2 sm:mb-3 md:mb-4 lg:mb-6 leading-tight animate-slide-up">
-                {slide.title}
-              </h1>
-              <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl text-white/90 mb-3 sm:mb-4 md:mb-6 lg:mb-8 animate-fade-in" style={{ animationDelay: "200ms" }}>
-                {slide.subtitle}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
-                <Link to={slide.link} className="w-full sm:w-auto">
-                  <Button variant="hero" size="sm" className="group w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9">
-                    {slide.cta}
-                    <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
-                <Link to="/products" className="w-full sm:w-auto">
-                  <Button variant="outlineWhite" size="sm" className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9">
-                    View All
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
+           <div className="relative h-full w-full px-4 sm:px-6 md:px-8 lg:px-12 flex items-center">
+             <div className="w-full max-w-3xl lg:max-w-4xl space-y-4 sm:space-y-5 md:space-y-6 lg:space-y-8">
+               <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-4 py-2 text-primary text-sm font-semibold animate-slide-in-left">
+                 <span className="text-xs sm:text-sm">✨</span>
+                 New Arrival
+               </div>
+               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight animate-slide-up">
+                 {slide.title}
+               </h1>
+               <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 font-medium animate-fade-in" style={{ animationDelay: "200ms" }}>
+                 {slide.subtitle}
+               </p>
+               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
+                 <Link to={slide.link} className="w-full sm:w-auto">
+                   <Button 
+                     variant="hero" 
+                     size="lg" 
+                     className="group w-full sm:w-auto text-sm sm:text-base h-10 sm:h-12 px-6 sm:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                   >
+                     {slide.cta}
+                     <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+                   </Button>
+                 </Link>
+                 <Link to="/products" className="w-full sm:w-auto">
+                   <Button 
+                     variant="outlineWhite" 
+                     size="lg"
+                     className="w-full sm:w-auto text-sm sm:text-base h-10 sm:h-12 px-6 sm:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                   >
+                     View All
+                   </Button>
+                 </Link>
+               </div>
+             </div>
+           </div>
         </div>
       ))}
 
-      {/* Navigation Arrows - Smaller on mobile, larger on desktop */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-1 sm:left-2 md:left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-1.5 sm:p-2 md:p-3 rounded-full transition-all duration-300 hover:scale-110 items-center justify-center"
-        aria-label="Previous slide"
-      >
-        <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
-      </button>
-      <button
-        onClick={nextSlide}
-        className="absolute right-1 sm:right-2 md:right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-1.5 sm:p-2 md:p-3 rounded-full transition-all duration-300 hover:scale-110 items-center justify-center"
-        aria-label="Next slide"
-      >
-        <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
-      </button>
+       {/* Navigation Arrows - Smaller on mobile */}
+       <button
+         onClick={prevSlide}
+         className="absolute left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1.5 sm:p-3 md:p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg"
+         aria-label="Previous slide"
+       >
+         <ChevronLeft className="h-3 w-3 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+       </button>
+       <button
+         onClick={nextSlide}
+         className="absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1.5 sm:p-3 md:p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg"
+         aria-label="Next slide"
+       >
+         <ChevronRight className="h-3 w-3 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+       </button>
 
-      {/* Mobile Navigation - Swipe indicators */}
+      {/* Mobile Navigation - Smaller indicators */}
       <div className="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
         {slides.map((_, index) => (
           <button
@@ -141,8 +150,8 @@ const HeroSection = () => {
             onClick={() => setCurrentSlide(index)}
             className={`transition-all duration-300 ${
               index === currentSlide 
-                ? "h-1.5 w-5 bg-red-500 rounded-full" 
-                : "h-1.5 w-1.5 bg-gray-400 hover:bg-gray-300 rounded-full"
+                ? "h-1.5 w-4 bg-primary rounded-full" 
+                : "h-1.5 w-1.5 bg-white/40 hover:bg-white/60 rounded-full"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />
