@@ -37,7 +37,7 @@ const Cart = () => {
 
       <div className="container mx-auto px-4 py-8">
         <Link to="/products" className="inline-flex items-center text-primary hover:text-primary/80 mb-6">
-          <ArrowLeft className="ltr:mr-2 rtl:ml-2 h-4 w-4" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           {t("cart.continueShopping")}
         </Link>
 

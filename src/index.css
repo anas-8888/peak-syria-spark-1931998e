@@ -103,34 +103,98 @@ All colors MUST be HSL.
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
   }
 
-  /* Arabic Font */
-  html[lang="ar"] body {
-    font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  }
-
-  /* RTL Enhancements */
-  html[dir="rtl"] {
-    direction: rtl;
-  }
-
-  html[dir="rtl"] .space-x-2 > * + * {
-    margin-right: 0.5rem;
-    margin-left: 0;
-  }
-
-  html[dir="rtl"] .space-x-4 > * + * {
-    margin-right: 1rem;
-    margin-left: 0;
-  }
-
-  html[dir="rtl"] .space-x-8 > * + * {
-    margin-right: 2rem;
-    margin-left: 0;
-  }
 
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
+  }
+
+  /* Full width layout */
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  /* Responsive improvements */
+  @media (max-width: 640px) {
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+  }
+
+  /* Prevent horizontal scroll but allow full width */
+  body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  /* Fix scrollbar overlap issues */
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  /* Custom scrollbar styling to prevent overlap */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  /* Ensure content doesn't overlap with scrollbar */
+  .container, .max-w-4xl, .max-w-7xl {
+    padding-right: 12px;
+  }
+
+  /* Fix for mobile devices */
+  @media (max-width: 768px) {
+    .container, .max-w-4xl, .max-w-7xl {
+      padding-right: 8px;
+    }
+  }
+
+  /* Better touch targets for mobile */
+  @media (max-width: 768px) {
+    button, a {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Mobile hero section improvements */
+    .hero-section {
+      background-attachment: scroll;
+    }
+    
+    /* Prevent zoom on input focus */
+    input, textarea, select {
+      font-size: 16px;
+    }
+    
+    /* Improve touch scrolling */
+    * {
+      -webkit-overflow-scrolling: touch;
+    }
   }
 
   /* Custom scrollbar */

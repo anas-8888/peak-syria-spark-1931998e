@@ -18,7 +18,7 @@ import {
   Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import peakLogo from "@/assets/peak-logo.svg";
+import peakLogo from "@/assets/peak-logo.png";
 
 const menuItems = [
   { title: "Overview", path: "/dashboard", icon: LayoutDashboard, end: true },

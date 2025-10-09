@@ -36,7 +36,7 @@ const Checkout = () => {
 
       <div className="container mx-auto px-4 py-8">
         <Link to="/cart" className="inline-flex items-center text-primary hover:text-primary/80 mb-6">
-          <ArrowLeft className="ltr:mr-2 rtl:ml-2 h-4 w-4" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           {t("cart.title")}
         </Link>
 
@@ -90,17 +90,17 @@ const Checkout = () => {
               <div className="bg-card p-6 rounded-lg shadow-sm">
                 <h2 className="text-xl font-bold mb-4">{t("checkout.paymentMethod")}</h2>
                 <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <div className="flex items-center space-x-3 rtl:space-x-reverse p-4 border rounded-lg cursor-pointer hover:bg-accent/5">
+                  <div className="flex items-center space-x-3 p-4 border rounded-lg cursor-pointer hover:bg-accent/5">
                     <RadioGroupItem value="cash" id="cash" />
                     <Label htmlFor="cash" className="flex items-center cursor-pointer flex-1">
-                      <Banknote className="ltr:mr-2 rtl:ml-2 h-5 w-5" />
+                      <Banknote className="mr-2 h-5 w-5" />
                       {t("checkout.cashOnDelivery")}
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-3 rtl:space-x-reverse p-4 border rounded-lg cursor-pointer hover:bg-accent/5">
+                  <div className="flex items-center space-x-3 p-4 border rounded-lg cursor-pointer hover:bg-accent/5">
                     <RadioGroupItem value="card" id="card" />
                     <Label htmlFor="card" className="flex items-center cursor-pointer flex-1">
-                      <CreditCard className="ltr:mr-2 rtl:ml-2 h-5 w-5" />
+                      <CreditCard className="mr-2 h-5 w-5" />
                       {t("checkout.creditCard")}
                     </Label>
                   </div>

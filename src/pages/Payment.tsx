@@ -34,7 +34,7 @@ const Payment = () => {
 
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <Link to="/checkout" className="inline-flex items-center text-primary hover:text-primary/80 mb-6">
-          <ArrowLeft className="ltr:mr-2 rtl:ml-2 h-4 w-4" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           {t("checkout.title")}
         </Link>
 
@@ -54,7 +54,7 @@ const Payment = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <Label htmlFor="cardNumber" className="flex items-center">
-                <CreditCard className="ltr:mr-2 rtl:ml-2 h-4 w-4" />
+                <CreditCard className="mr-2 h-4 w-4" />
                 {t("payment.cardNumber")}
               </Label>
               <Input
@@ -114,7 +114,7 @@ const Payment = () => {
             </Button>
 
             <p className="text-xs text-center text-muted-foreground">
-              <Lock className="inline h-3 w-3 ltr:mr-1 rtl:ml-1" />
+              <Lock className="inline h-3 w-3 mr-1" />
               Your payment information is secure and encrypted
             </p>
           </form>

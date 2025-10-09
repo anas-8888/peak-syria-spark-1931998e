@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="bg-secondary text-secondary-foreground border-t border-primary/20">
-      <div className="container mx-auto px-4 py-12">
+    <footer className="bg-secondary text-secondary-foreground border-t border-primary/20 w-full">
+      <div className="w-full px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div>

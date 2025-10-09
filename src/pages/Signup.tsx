@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/contexts/LanguageContext";
-import peakLogo from "@/assets/peak-logo.svg";
+import peakLogo from "@/assets/peak-logo.png";
 
 const Signup = () => {
   const { t } = useLanguage();
@@ -99,7 +99,7 @@ const Signup = () => {
 
             {/* Google Signup */}
             <Button variant="outline" size="lg" className="w-full">
-              <svg className="ltr:mr-2 rtl:ml-2 h-5 w-5" viewBox="0 0 24 24">
+              <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
