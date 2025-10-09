@@ -9,7 +9,7 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <h3 className="text-2xl font-bold mb-4">
-              <span className="text-primary">PEAssK</span> Syria
+              <span className="text-primary">PEAK</span> Syria
             </h3>
             <p className="text-secondary-foreground/70 mb-4">
               Official distributor of PEAK sportswear in Syria. Premium quality, authentic products.
@@ -103,8 +103,19 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-primary/20 mt-8 pt-8 text-center text-secondary-foreground/60 text-sm">
+        <div className="border-t border-primary/20 mt-8 pt-8 text-center text-secondary-foreground/60 text-sm space-y-2">
           <p>&copy; {new Date().getFullYear()} PEAK Syria. All rights reserved. Powered by passion for sports.</p>
+          <p className="text-xs">
+            Developed by{" "}
+            <a 
+              href="https://nexa-group.net" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors font-semibold"
+            >
+              NEXA GROUP
+            </a>
+          </p>
         </div>
       </div>
     </footer>
