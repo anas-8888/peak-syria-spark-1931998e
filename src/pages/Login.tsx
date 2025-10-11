@@ -8,14 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import peakLogo from "@/assets/peak-logo.png";
 
 const Login = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { signIn, user } = useAuth();
-  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,15 +32,14 @@ const Login = () => {
     const { error } = await signIn(email, password);
     
     if (error) {
-      toast({
-        title: "خطأ في تسجيل الدخول",
+      toast.error("Login Failed", {
         description: error.message,
-        variant: "destructive"
+        duration: 4000,
       });
     } else {
-      toast({
-        title: "تم تسجيل الدخول بنجاح",
-        description: "مرحباً بك!"
+      toast.success("Welcome Back! 🎉", {
+        description: "You've successfully signed in",
+        duration: 3000,
       });
     }
     

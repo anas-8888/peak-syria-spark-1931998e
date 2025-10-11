@@ -1,7 +1,16 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Menu, X, Search, LogOut, LogIn } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, LogOut, LogIn, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import peakLogo from "@/assets/peak-logo.png";
 
@@ -76,15 +85,50 @@ const Navbar = () => {
               </Button>
             </Link>
             {user ? (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => signOut()} 
-                className="gap-2 rounded-full px-4 py-2 border-2 hover:bg-accent/50 transition-all duration-300 hover:scale-105 font-semibold"
-              >
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="gap-2 rounded-full px-3 py-2 h-auto hover:bg-accent/50 transition-all duration-300 hover:scale-105"
+                  >
+                    <Avatar className="h-8 w-8 border-2 border-primary/20">
+                      <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold text-sm">
+                        {user.user_metadata?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-semibold hidden xl:inline-block">
+                      {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-semibold leading-none">
+                        {user.user_metadata?.full_name || "User"}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => signOut()}
+                    className="cursor-pointer text-red-600 focus:text-red-600"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <div className="flex items-center gap-2">
                 <Link to="/login">
@@ -158,15 +202,37 @@ const Navbar = () => {
                 </Button>
               </Link>
               {user ? (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => signOut()} 
-                  className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
-                </Button>
+                <div className="flex flex-col gap-2 w-full px-4">
+                  <div className="flex items-center justify-center gap-2 p-2 bg-accent/50 rounded-full">
+                    <Avatar className="h-10 w-10 border-2 border-primary/20">
+                      <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold">
+                        {user.user_metadata?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-semibold text-sm">
+                      {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                    </span>
+                  </div>
+                  <Link to="/dashboard" className="w-full">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold"
+                    >
+                      <User className="h-4 w-4" />
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => signOut()} 
+                    className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold text-red-600 hover:text-red-600"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </div>
               ) : (
                 <div className="flex flex-col gap-2 w-full px-4">
                   <Link to="/login" className="w-full">

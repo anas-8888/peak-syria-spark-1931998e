@@ -8,14 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import peakLogo from "@/assets/peak-logo.png";
 
 const Signup = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { signUp, user } = useAuth();
-  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -32,19 +31,17 @@ const Signup = () => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
-      toast({
-        title: "خطأ",
-        description: "كلمات المرور غير متطابقة",
-        variant: "destructive"
+      toast.error("Password Mismatch", {
+        description: "Passwords do not match. Please try again.",
+        duration: 4000,
       });
       return;
     }
 
     if (password.length < 6) {
-      toast({
-        title: "خطأ",
-        description: "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
-        variant: "destructive"
+      toast.error("Weak Password", {
+        description: "Password must be at least 6 characters long",
+        duration: 4000,
       });
       return;
     }
@@ -54,15 +51,14 @@ const Signup = () => {
     const { error } = await signUp(email, password, fullName);
     
     if (error) {
-      toast({
-        title: "خطأ في إنشاء الحساب",
+      toast.error("Signup Failed", {
         description: error.message,
-        variant: "destructive"
+        duration: 4000,
       });
     } else {
-      toast({
-        title: "تم إنشاء الحساب بنجاح",
-        description: "مرحباً بك في PEAK!"
+      toast.success("Account Created! 🎊", {
+        description: "Welcome to PEAK! Let's get started.",
+        duration: 3000,
       });
     }
     
