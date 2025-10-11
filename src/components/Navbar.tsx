@@ -55,30 +55,58 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center space-x-1 xl:space-x-2">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Search className="h-4 w-4" />
+          <div className="hidden lg:flex items-center gap-2 xl:gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-10 w-10 rounded-full hover:bg-accent/50 transition-all duration-300 hover:scale-110"
+            >
+              <Search className="h-5 w-5" />
             </Button>
             <Link to="/cart">
-              <Button variant="ghost" size="icon" className="relative h-9 w-9">
-                <ShoppingCart className="h-4 w-4" />
-                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="relative h-10 w-10 rounded-full hover:bg-accent/50 transition-all duration-300 hover:scale-110"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-primary to-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
                   0
                 </span>
               </Button>
             </Link>
             {user ? (
-              <Button variant="ghost" size="sm" onClick={() => signOut()} className="gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => signOut()} 
+                className="gap-2 rounded-full px-4 py-2 border-2 hover:bg-accent/50 transition-all duration-300 hover:scale-105 font-semibold"
+              >
                 <LogOut className="h-4 w-4" />
-                تسجيل خروج
+                Sign Out
               </Button>
             ) : (
-              <Link to="/login">
-                <Button variant="hero" size="sm" className="gap-2">
-                  <LogIn className="h-4 w-4" />
-                  تسجيل دخول
-                </Button>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link to="/login">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="gap-2 rounded-full px-4 py-2 hover:bg-accent/50 transition-all duration-300 hover:scale-105 font-semibold"
+                  >
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    className="gap-2 rounded-full px-6 py-2 bg-gradient-to-r from-primary via-red-500 to-primary bg-[length:200%_100%] hover:bg-[position:100%_0] transition-all duration-500 hover:scale-105 font-semibold shadow-lg hover:shadow-xl"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
 
@@ -109,30 +137,58 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            <div className="flex flex-col items-center justify-center space-y-3 pt-4 border-t">
-              <Button variant="ghost" size="icon" className="h-10 w-10">
+            <div className="flex flex-col items-center justify-center gap-3 pt-4 border-t">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-12 w-12 rounded-full hover:bg-accent/50"
+              >
                 <Search className="h-5 w-5" />
               </Button>
               <Link to="/cart">
-                <Button variant="ghost" size="icon" className="relative h-10 w-10">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="relative h-12 w-12 rounded-full hover:bg-accent/50"
+                >
                   <ShoppingCart className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-primary to-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold">
                     0
                   </span>
                 </Button>
               </Link>
               {user ? (
-                <Button variant="ghost" size="sm" onClick={() => signOut()} className="gap-2 w-full">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => signOut()} 
+                  className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold"
+                >
                   <LogOut className="h-4 w-4" />
-                  تسجيل خروج
+                  Sign Out
                 </Button>
               ) : (
-                <Link to="/login" className="w-full">
-                  <Button variant="hero" size="sm" className="gap-2 w-full">
-                    <LogIn className="h-4 w-4" />
-                    تسجيل دخول
-                  </Button>
-                </Link>
+                <div className="flex flex-col gap-2 w-full px-4">
+                  <Link to="/login" className="w-full">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold"
+                    >
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link to="/signup" className="w-full">
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      className="gap-2 w-full rounded-full bg-gradient-to-r from-primary via-red-500 to-primary bg-[length:200%_100%] font-semibold shadow-lg"
+                    >
+                      <LogIn className="h-4 w-4" />
+                      Sign Up
+                    </Button>
+                  </Link>
+                </div>
               )}
             </div>
           </div>
