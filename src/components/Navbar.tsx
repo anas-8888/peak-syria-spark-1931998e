@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ShoppingCart, Menu, X, Search, LogOut, LogIn, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,40 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import peakLogo from "@/assets/peak-logo.png";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [fullName, setFullName] = useState("");
+
+  useEffect(() => {
+    if (user) {
+      loadProfile();
+    }
+  }, [user]);
+
+  const loadProfile = async () => {
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("avatar_url, full_name")
+        .eq("id", user?.id)
+        .single();
+
+      if (data) {
+        setAvatarUrl(data.avatar_url || "");
+        setFullName(data.full_name || "");
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error);
+    }
+  };
 
   const navLinks = [
     { name: "All Products", path: "/products" },
@@ -92,12 +118,13 @@ const Navbar = () => {
                     className="gap-2 rounded-full px-3 py-2 h-auto hover:bg-accent/50 transition-all duration-300 hover:scale-105"
                   >
                     <Avatar className="h-8 w-8 border-2 border-primary/20">
+                      <AvatarImage src={avatarUrl} alt={fullName} />
                       <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold text-sm">
-                        {user.user_metadata?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                        {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <span className="font-semibold hidden xl:inline-block">
-                      {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                      {fullName || user.email?.split('@')[0]}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -105,7 +132,7 @@ const Navbar = () => {
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-semibold leading-none">
-                        {user.user_metadata?.full_name || "User"}
+                        {fullName || "User"}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {user.email}
@@ -205,12 +232,13 @@ const Navbar = () => {
                 <div className="flex flex-col gap-2 w-full px-4">
                   <div className="flex items-center justify-center gap-2 p-2 bg-accent/50 rounded-full">
                     <Avatar className="h-10 w-10 border-2 border-primary/20">
+                      <AvatarImage src={avatarUrl} alt={fullName} />
                       <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold">
-                        {user.user_metadata?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                        {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <span className="font-semibold text-sm">
-                      {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                      {fullName || user.email?.split('@')[0]}
                     </span>
                   </div>
                   <Link to="/profile" className="w-full">
