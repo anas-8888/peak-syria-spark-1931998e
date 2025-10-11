@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -7,26 +7,66 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import peakLogo from "@/assets/peak-logo.png";
 
 const Signup = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { signUp, user } = useAuth();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
-      alert("Passwords don't match!");
+      toast({
+        title: "خطأ",
+        description: "كلمات المرور غير متطابقة",
+        variant: "destructive"
+      });
       return;
     }
 
-    // Mock signup - in production, this would call an API
-    console.log("Signup attempt:", { email, password });
-    navigate("/");
+    if (password.length < 6) {
+      toast({
+        title: "خطأ",
+        description: "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    
+    const { error } = await signUp(email, password, fullName);
+    
+    if (error) {
+      toast({
+        title: "خطأ في إنشاء الحساب",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "تم إنشاء الحساب بنجاح",
+        description: "مرحباً بك في PEAK!"
+      });
+    }
+    
+    setLoading(false);
   };
 
   return (
@@ -44,6 +84,19 @@ const Signup = () => {
 
             {/* Signup Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <Label htmlFor="fullName">الاسم الكامل</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  className="mt-1"
+                  placeholder="أدخل اسمك الكامل"
+                />
+              </div>
+
               <div>
                 <Label htmlFor="email">{t("auth.email")}</Label>
                 <Input
@@ -85,8 +138,8 @@ const Signup = () => {
                 />
               </div>
 
-              <Button type="submit" variant="hero" size="lg" className="w-full">
-                {t("auth.signupButton")}
+              <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
+                {loading ? "جاري إنشاء الحساب..." : t("auth.signupButton")}
               </Button>
             </form>
 

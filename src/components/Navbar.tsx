@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Menu, X, Search, User } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import peakLogo from "@/assets/peak-logo.png";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   const navLinks = [
     { name: "All Products", path: "/products" },
@@ -57,11 +59,6 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" className="h-9 w-9">
               <Search className="h-4 w-4" />
             </Button>
-            <Link to="/dashboard">
-              <Button variant="ghost" size="icon" title="Dashboard" className="h-9 w-9">
-                <User className="h-4 w-4" />
-              </Button>
-            </Link>
             <Link to="/cart">
               <Button variant="ghost" size="icon" className="relative h-9 w-9">
                 <ShoppingCart className="h-4 w-4" />
@@ -70,6 +67,19 @@ const Navbar = () => {
                 </span>
               </Button>
             </Link>
+            {user ? (
+              <Button variant="ghost" size="sm" onClick={() => signOut()} className="gap-2">
+                <LogOut className="h-4 w-4" />
+                تسجيل خروج
+              </Button>
+            ) : (
+              <Link to="/login">
+                <Button variant="hero" size="sm" className="gap-2">
+                  <LogIn className="h-4 w-4" />
+                  تسجيل دخول
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -99,15 +109,10 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            <div className="flex items-center justify-center space-x-4 pt-4 border-t">
+            <div className="flex flex-col items-center justify-center space-y-3 pt-4 border-t">
               <Button variant="ghost" size="icon" className="h-10 w-10">
                 <Search className="h-5 w-5" />
               </Button>
-              <Link to="/dashboard">
-                <Button variant="ghost" size="icon" title="Dashboard" className="h-10 w-10">
-                  <User className="h-5 w-5" />
-                </Button>
-              </Link>
               <Link to="/cart">
                 <Button variant="ghost" size="icon" className="relative h-10 w-10">
                   <ShoppingCart className="h-5 w-5" />
@@ -116,6 +121,19 @@ const Navbar = () => {
                   </span>
                 </Button>
               </Link>
+              {user ? (
+                <Button variant="ghost" size="sm" onClick={() => signOut()} className="gap-2 w-full">
+                  <LogOut className="h-4 w-4" />
+                  تسجيل خروج
+                </Button>
+              ) : (
+                <Link to="/login" className="w-full">
+                  <Button variant="hero" size="sm" className="gap-2 w-full">
+                    <LogIn className="h-4 w-4" />
+                    تسجيل دخول
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         )}

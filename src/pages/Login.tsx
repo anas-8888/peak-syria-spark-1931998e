@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -7,19 +7,45 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import peakLogo from "@/assets/peak-logo.png";
 
 const Login = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { signIn, user } = useAuth();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login - in production, this would call an API
-    console.log("Login attempt:", { email, password });
-    navigate("/");
+    setLoading(true);
+    
+    const { error } = await signIn(email, password);
+    
+    if (error) {
+      toast({
+        title: "خطأ في تسجيل الدخول",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "تم تسجيل الدخول بنجاح",
+        description: "مرحباً بك!"
+      });
+    }
+    
+    setLoading(false);
   };
 
   return (
@@ -69,8 +95,8 @@ const Login = () => {
                 </Link>
               </div>
 
-              <Button type="submit" variant="hero" size="lg" className="w-full">
-                {t("auth.loginButton")}
+              <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
+                {loading ? "جاري تسجيل الدخول..." : t("auth.loginButton")}
               </Button>
             </form>
 

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import ProductsEnhanced from "./pages/ProductsEnhanced";
 import ProductDetail from "./pages/ProductDetail";
@@ -37,13 +38,14 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <CurrencyProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
+      <BrowserRouter>
+        <AuthProvider>
+          <LanguageProvider>
+            <CurrencyProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/products" element={<ProductsEnhanced />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
@@ -72,11 +74,12 @@ function App() {
                 </Route>
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </CurrencyProvider>
-      </LanguageProvider>
+                </Routes>
+              </TooltipProvider>
+            </CurrencyProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }
