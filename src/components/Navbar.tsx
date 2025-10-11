@@ -114,9 +114,9 @@ const Navbar = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/dashboard" className="cursor-pointer">
+                    <Link to="/profile" className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
-                      Dashboard
+                      My Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -213,14 +213,14 @@ const Navbar = () => {
                       {user.user_metadata?.full_name || user.email?.split('@')[0]}
                     </span>
                   </div>
-                  <Link to="/dashboard" className="w-full">
+                  <Link to="/profile" className="w-full">
                     <Button 
                       variant="outline" 
                       size="sm" 
                       className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold"
                     >
                       <User className="h-4 w-4" />
-                      Dashboard
+                      My Profile
                     </Button>
                   </Link>
                   <Button 
