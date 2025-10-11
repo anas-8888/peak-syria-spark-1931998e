@@ -1,5 +1,6 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -8,24 +9,37 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, CreditCard, Lock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { PaymentSchema, type PaymentFormData } from "@/lib/validationSchemas";
+import { useToast } from "@/hooks/use-toast";
 
 const Payment = () => {
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
   const navigate = useNavigate();
-  const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
 
   const total = 2550000;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-    
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
+  } = useForm<PaymentFormData>({
+    resolver: zodResolver(PaymentSchema)
+  });
+
+  const onSubmit = async (data: PaymentFormData) => {
+    try {
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
       navigate("/order-tracking");
-    }, 2000);
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء معالجة الدفع",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -51,7 +65,7 @@ const Payment = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <Label htmlFor="cardNumber" className="flex items-center">
                 <CreditCard className="mr-2 h-4 w-4" />
@@ -61,10 +75,13 @@ const Payment = () => {
                 id="cardNumber"
                 type="text"
                 placeholder="1234 5678 9012 3456"
-                required
+                {...register("cardNumber")}
                 maxLength={19}
                 className="mt-1"
               />
+              {errors.cardNumber && (
+                <p className="text-sm text-destructive mt-1">{errors.cardNumber.message}</p>
+              )}
             </div>
 
             <div>
@@ -73,9 +90,12 @@ const Payment = () => {
                 id="cardName"
                 type="text"
                 placeholder="John Doe"
-                required
+                {...register("cardName")}
                 className="mt-1"
               />
+              {errors.cardName && (
+                <p className="text-sm text-destructive mt-1">{errors.cardName.message}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -85,10 +105,13 @@ const Payment = () => {
                   id="expiry"
                   type="text"
                   placeholder="MM/YY"
-                  required
+                  {...register("expiry")}
                   maxLength={5}
                   className="mt-1"
                 />
+                {errors.expiry && (
+                  <p className="text-sm text-destructive mt-1">{errors.expiry.message}</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="cvv">{t("payment.cvv")}</Label>
@@ -96,10 +119,13 @@ const Payment = () => {
                   id="cvv"
                   type="text"
                   placeholder="123"
-                  required
+                  {...register("cvv")}
                   maxLength={4}
                   className="mt-1"
                 />
+                {errors.cvv && (
+                  <p className="text-sm text-destructive mt-1">{errors.cvv.message}</p>
+                )}
               </div>
             </div>
 
@@ -108,9 +134,9 @@ const Payment = () => {
               variant="hero"
               size="lg"
               className="w-full"
-              disabled={isProcessing}
+              disabled={isSubmitting}
             >
-              {isProcessing ? t("payment.processing") : t("payment.pay")}
+              {isSubmitting ? t("payment.processing") : t("payment.pay")}
             </Button>
 
             <p className="text-xs text-center text-muted-foreground">

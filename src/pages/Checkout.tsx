@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -9,24 +11,44 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ArrowLeft, CreditCard, Banknote } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { CheckoutSchema, type CheckoutFormData } from "@/lib/validationSchemas";
+import { useToast } from "@/hooks/use-toast";
 
 const Checkout = () => {
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [paymentMethod, setPaymentMethod] = useState("cash");
 
   const subtotal = 2500000;
   const shipping = 50000;
   const total = subtotal + shipping;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (paymentMethod === "card") {
-      navigate("/payment");
-    } else {
-      // Cash on delivery - go directly to order confirmation
-      navigate("/order-tracking");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
+  } = useForm<CheckoutFormData>({
+    resolver: zodResolver(CheckoutSchema)
+  });
+
+  const onSubmit = async (data: CheckoutFormData) => {
+    try {
+      // Here we would call the secure order creation function
+      console.log("Order data:", data);
+      
+      if (paymentMethod === "card") {
+        navigate("/payment");
+      } else {
+        navigate("/order-tracking");
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء معالجة الطلب",
+        variant: "destructive"
+      });
     }
   };
 
@@ -42,7 +64,7 @@ const Checkout = () => {
 
         <h1 className="text-3xl md:text-4xl font-bold mb-8">{t("checkout.title")}</h1>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Checkout Form */}
             <div className="lg:col-span-2 space-y-6">
@@ -52,11 +74,28 @@ const Checkout = () => {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="email">{t("checkout.email")}</Label>
-                    <Input id="email" type="email" required className="mt-1" />
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      {...register("email")}
+                      className="mt-1" 
+                    />
+                    {errors.email && (
+                      <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="phone">{t("checkout.phone")}</Label>
-                    <Input id="phone" type="tel" required className="mt-1" />
+                    <Input 
+                      id="phone" 
+                      type="tel" 
+                      {...register("phone")}
+                      placeholder="+963xxxxxxxxx"
+                      className="mt-1" 
+                    />
+                    {errors.phone && (
+                      <p className="text-sm text-destructive mt-1">{errors.phone.message}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -67,16 +106,40 @@ const Checkout = () => {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="fullName">{t("checkout.fullName")}</Label>
-                    <Input id="fullName" type="text" required className="mt-1" />
+                    <Input 
+                      id="fullName" 
+                      type="text" 
+                      {...register("fullName")}
+                      className="mt-1" 
+                    />
+                    {errors.fullName && (
+                      <p className="text-sm text-destructive mt-1">{errors.fullName.message}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="address">{t("checkout.address")}</Label>
-                    <Input id="address" type="text" required className="mt-1" />
+                    <Input 
+                      id="address" 
+                      type="text" 
+                      {...register("address")}
+                      className="mt-1" 
+                    />
+                    {errors.address && (
+                      <p className="text-sm text-destructive mt-1">{errors.address.message}</p>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="city">{t("checkout.city")}</Label>
-                      <Input id="city" type="text" required className="mt-1" />
+                      <Input 
+                        id="city" 
+                        type="text" 
+                        {...register("city")}
+                        className="mt-1" 
+                      />
+                      {errors.city && (
+                        <p className="text-sm text-destructive mt-1">{errors.city.message}</p>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="postal">{t("checkout.postalCode")}</Label>
@@ -128,8 +191,14 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                <Button type="submit" variant="hero" size="lg" className="w-full">
-                  {t("checkout.placeOrder")}
+                <Button 
+                  type="submit" 
+                  variant="hero" 
+                  size="lg" 
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "جاري المعالجة..." : t("checkout.placeOrder")}
                 </Button>
               </div>
             </div>
