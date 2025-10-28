@@ -713,14 +713,13 @@ const Products = () => {
               <div className="grid gap-2">
                 <Label htmlFor="flag">Product Flag</Label>
                 <Select
-                  value={formData.flag}
+                  value={formData.flag || undefined}
                   onValueChange={(value) => setFormData({ ...formData, flag: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a flag" />
+                    <SelectValue placeholder="No flag" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
                     <SelectItem value="New Arrival">New Arrival</SelectItem>
                     <SelectItem value="Offer">Offer</SelectItem>
                     <SelectItem value="Best Seller">Best Seller</SelectItem>
@@ -1001,14 +1000,13 @@ const Products = () => {
               <div className="grid gap-2">
                 <Label htmlFor="edit-flag">Product Flag</Label>
                 <Select
-                  value={formData.flag}
+                  value={formData.flag || undefined}
                   onValueChange={(value) => setFormData({ ...formData, flag: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a flag" />
+                    <SelectValue placeholder="No flag" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
                     <SelectItem value="New Arrival">New Arrival</SelectItem>
                     <SelectItem value="Offer">Offer</SelectItem>
                     <SelectItem value="Best Seller">Best Seller</SelectItem>
