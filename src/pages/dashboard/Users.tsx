@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -53,6 +54,7 @@ interface Customer {
   totalSpent: number;
   role_id: string;
   role: { name: string };
+  avatar_url: string | null;
 }
 
 const Users = () => {
@@ -322,9 +324,9 @@ const Users = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="moderator">Moderator</SelectItem>
-                <SelectItem value="user">User</SelectItem>
+                {roles.map((r: any) => (
+                  <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -363,11 +365,15 @@ const Users = () => {
                   <TableRow key={customer.id} className="hover:bg-muted/50">
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
-                          <span className="font-semibold text-primary">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage
+                            src={customer.avatar_url || undefined}
+                            alt={`${customer.full_name || customer.email || "User"} avatar`}
+                          />
+                          <AvatarFallback>
                             {customer.full_name?.charAt(0) || customer.email?.charAt(0) || "?"}
-                          </span>
-                        </div>
+                          </AvatarFallback>
+                        </Avatar>
                         <div>
                           <p className="font-medium">{customer.full_name || "N/A"}</p>
                           <p className="text-sm text-muted-foreground">{customer.email || "N/A"}</p>
@@ -435,16 +441,27 @@ const Users = () => {
           <DialogHeader>
             <DialogTitle>User Details</DialogTitle>
           </DialogHeader>
-          {selectedCustomer && (
-            <div className="space-y-4 py-4">
-              <div>
-                <Label className="text-sm font-semibold">Full Name</Label>
-                <p className="mt-1">{selectedCustomer.full_name || "N/A"}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-semibold">Email</Label>
-                <p className="mt-1">{selectedCustomer.email || "N/A"}</p>
-              </div>
+            {selectedCustomer && (
+              <div className="space-y-4 py-4">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage
+                      src={selectedCustomer.avatar_url || undefined}
+                      alt={`${selectedCustomer.full_name || selectedCustomer.email || "User"} avatar`}
+                    />
+                    <AvatarFallback>
+                      {selectedCustomer.full_name?.charAt(0) || selectedCustomer.email?.charAt(0) || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold">{selectedCustomer.full_name || "N/A"}</p>
+                    <p className="text-sm text-muted-foreground">{selectedCustomer.email || "N/A"}</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold">Full Name</Label>
+                  <p className="mt-1">{selectedCustomer.full_name || "N/A"}</p>
+                </div>
               <div>
                 <Label className="text-sm font-semibold">Phone</Label>
                 <p className="mt-1">{selectedCustomer.phone || "N/A"}</p>

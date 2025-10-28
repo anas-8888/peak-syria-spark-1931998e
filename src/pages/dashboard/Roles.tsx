@@ -60,10 +60,14 @@ const Roles = () => {
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [newRoleName, setNewRoleName] = useState("");
+  const [renameValue, setRenameValue] = useState("");
+  const reservedRoleNames = ["super admin", "customer"];
 
   // Fetch all permissions
   const { data: allPermissions = [] } = useQuery({
@@ -127,6 +131,51 @@ const Roles = () => {
       );
 
       return rolesWithData as RoleWithPermissions[];
+    },
+  });
+
+  // Create role mutation
+  const createRoleMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const cleaned = name.trim();
+      if (!cleaned) throw new Error("Role name is required");
+      if (reservedRoleNames.includes(cleaned.toLowerCase())) {
+        throw new Error("This role name is reserved");
+      }
+      const { error } = await supabase.from("roles").insert({ name: cleaned });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["roles"] });
+      toast.success("Role created");
+      setIsAddDialogOpen(false);
+      setNewRoleName("");
+    },
+    onError: (error: any) => {
+      toast.error("Failed to create role", { description: error.message });
+    },
+  });
+
+  // Rename role mutation
+  const renameRoleMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const cleaned = name.trim();
+      if (!cleaned) throw new Error("Role name is required");
+      if (reservedRoleNames.includes(cleaned.toLowerCase())) {
+        throw new Error("This role name is reserved");
+      }
+      const { error } = await supabase.from("roles").update({ name: cleaned }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["roles"] });
+      toast.success("Role renamed");
+      setIsRenameDialogOpen(false);
+      setSelectedRole(null);
+      setRenameValue("");
+    },
+    onError: (error: any) => {
+      toast.error("Failed to rename role", { description: error.message });
     },
   });
 
@@ -208,6 +257,9 @@ const Roles = () => {
           <h1 className="text-3xl font-bold mb-2">Role Management</h1>
           <p className="text-muted-foreground">Manage roles and permissions</p>
         </div>
+        <Button onClick={() => setIsAddDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" /> Add Role
+        </Button>
       </div>
 
       {/* Stats */}
@@ -311,8 +363,21 @@ const Roles = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEditRole(role)}
+                          aria-label="Edit permissions"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Shield className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={reservedRoleNames.includes(role.name.toLowerCase())}
+                          onClick={() => {
+                            setSelectedRole({ id: role.id, name: role.name, created_at: '' });
+                            setRenameValue(role.name);
+                            setIsRenameDialogOpen(true);
+                          }}
+                        >
+                          Rename
                         </Button>
                       </div>
                     </TableCell>
@@ -378,8 +443,47 @@ const Roles = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-};
 
-export default Roles;
+      {/* Create Role Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Role</DialogTitle>
+            <DialogDescription>Create a new role</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="role-name">Role name</Label>
+              <Input id="role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} placeholder="e.g. manager" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => createRoleMutation.mutate(newRoleName)} disabled={createRoleMutation.isPending}>
+              {createRoleMutation.isPending ? "Creating..." : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rename Role Dialog */}
+      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rename Role</DialogTitle>
+            <DialogDescription>Change the role name</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="rename-role">New name</Label>
+              <Input id="rename-role" value={renameValue} onChange={(e) => setRenameValue(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRenameDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => selectedRole && renameRoleMutation.mutate({ id: selectedRole.id, name: renameValue })} disabled={renameRoleMutation.isPending || (selectedRole ? reservedRoleNames.includes(selectedRole.name.toLowerCase()) : false)}>
+              {renameRoleMutation.isPending ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
