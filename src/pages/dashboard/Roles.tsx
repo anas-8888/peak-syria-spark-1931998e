@@ -345,14 +345,14 @@ const Roles = () => {
                     <TableCell className="font-semibold">{role.userCount}</TableCell>
                     <TableCell>
                       <div className="flex gap-1 flex-wrap max-w-md">
-                        {role.permissions.slice(0, 3).map((perm) => (
+                        {(role.permissions ?? []).slice(0, 3).map((perm) => (
                           <Badge key={perm.id} variant="secondary" className="text-xs">
                             {perm.name}
                           </Badge>
                         ))}
-                        {role.permissions.length > 3 && (
+                        {((role.permissions?.length ?? 0) > 3) && (
                           <Badge variant="outline" className="text-xs">
-                            +{role.permissions.length - 3} more
+                            +{(role.permissions?.length ?? 0) - 3} more
                           </Badge>
                         )}
                       </div>
