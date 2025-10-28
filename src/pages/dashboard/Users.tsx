@@ -87,6 +87,7 @@ const Users = () => {
     full_name: "",
     phone: "",
     address: "",
+    role_id: "",
   });
 
   // Fetch users with order stats and roles
@@ -172,6 +173,7 @@ const Users = () => {
       full_name: "",
       phone: "",
       address: "",
+      role_id: "",
     });
     setSelectedCustomer(null);
   };
@@ -188,6 +190,7 @@ const Users = () => {
       full_name: customer.full_name || "",
       phone: customer.phone || "",
       address: customer.address || "",
+      role_id: customer.role_id || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -534,6 +537,24 @@ const Users = () => {
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 placeholder="Enter address"
               />
+            </div>
+            <div>
+              <Label htmlFor="edit-role">Role</Label>
+              <Select 
+                value={formData.role_id} 
+                onValueChange={(value) => setFormData({ ...formData, role_id: value })}
+              >
+                <SelectTrigger id="edit-role">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((r: any) => (
+                    <SelectItem key={r.id} value={r.id} className="capitalize">
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>

@@ -136,20 +136,42 @@ const Roles = () => {
 
   // Create role mutation
   const createRoleMutation = useMutation({
-    mutationFn: async (name: string) => {
-      const cleaned = name.trim();
+    mutationFn: async (data: { name: string; permissionIds: string[] }) => {
+      const cleaned = data.name.trim();
       if (!cleaned) throw new Error("Role name is required");
       if (reservedRoleNames.includes(cleaned.toLowerCase())) {
         throw new Error("This role name is reserved");
       }
-      const { error } = await supabase.from("roles").insert({ name: cleaned });
-      if (error) throw error;
+      
+      // Insert the role
+      const { data: newRole, error: roleError } = await supabase
+        .from("roles")
+        .insert({ name: cleaned })
+        .select()
+        .single();
+      
+      if (roleError) throw roleError;
+      
+      // Insert permissions if any selected
+      if (data.permissionIds.length > 0 && newRole) {
+        const { error: permError } = await supabase
+          .from("role_permissions")
+          .insert(
+            data.permissionIds.map((permId) => ({
+              role_id: newRole.id,
+              permission_id: permId,
+            }))
+          );
+        
+        if (permError) throw permError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles"] });
-      toast.success("Role created");
+      toast.success("Role created with permissions");
       setIsAddDialogOpen(false);
       setNewRoleName("");
+      setSelectedPermissions([]);
     },
     onError: (error: any) => {
       toast.error("Failed to create role", { description: error.message });
@@ -445,22 +467,65 @@ const Roles = () => {
       </Dialog>
 
       {/* Create Role Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-md">
+      <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+        setIsAddDialogOpen(open);
+        if (!open) {
+          setNewRoleName("");
+          setSelectedPermissions([]);
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Role</DialogTitle>
-            <DialogDescription>Create a new role</DialogDescription>
+            <DialogDescription>Create a new role and assign permissions</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
               <Label htmlFor="role-name">Role name</Label>
-              <Input id="role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} placeholder="e.g. manager" />
+              <Input 
+                id="role-name" 
+                value={newRoleName} 
+                onChange={(e) => setNewRoleName(e.target.value)} 
+                placeholder="e.g. manager" 
+              />
+            </div>
+            <div className="space-y-4">
+              <Label>Permissions</Label>
+              {Object.entries(permissionsByCategory).map(([category, permissions]) => (
+                <div key={category} className="space-y-3">
+                  <h3 className="font-semibold text-sm">{category}</h3>
+                  <div className="space-y-2 pl-4">
+                    {permissions.map((perm) => (
+                      <div key={perm.id} className="flex items-start gap-3">
+                        <Checkbox
+                          id={`add-${perm.id}`}
+                          checked={selectedPermissions.includes(perm.id)}
+                          onCheckedChange={() => togglePermission(perm.id)}
+                        />
+                        <div className="flex-1">
+                          <Label htmlFor={`add-${perm.id}`} className="cursor-pointer font-normal">
+                            {perm.name}
+                          </Label>
+                          {perm.description && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {perm.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-            <Button onClick={() => createRoleMutation.mutate(newRoleName)} disabled={createRoleMutation.isPending}>
-              {createRoleMutation.isPending ? "Creating..." : "Create"}
+            <Button 
+              onClick={() => createRoleMutation.mutate({ name: newRoleName, permissionIds: selectedPermissions })} 
+              disabled={createRoleMutation.isPending || !newRoleName.trim()}
+            >
+              {createRoleMutation.isPending ? "Creating..." : "Create Role"}
             </Button>
           </DialogFooter>
         </DialogContent>
