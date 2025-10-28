@@ -64,6 +64,7 @@ const DashboardSidebar = () => {
       <aside
         className={`
           ${collapsed ? "w-20" : "w-64"}
+          min-h-screen max-h-screen
           bg-card border-l border-border transition-all duration-300 flex flex-col
           lg:static lg:translate-x-0
           fixed inset-y-0 right-0 z-50
@@ -108,7 +109,8 @@ const DashboardSidebar = () => {
         </Button>
 
         {/* Menu Items */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
