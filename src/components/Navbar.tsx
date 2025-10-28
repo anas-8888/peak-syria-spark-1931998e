@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Menu, X, Search, LogOut, LogIn, User } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, LogOut, LogIn, User, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const [avatarUrl, setAvatarUrl] = useState("");
   const [fullName, setFullName] = useState("");
+  const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -30,15 +31,28 @@ const Navbar = () => {
 
   const loadProfile = async () => {
     try {
-      const { data } = await supabase
+      const { data: profileData } = await supabase
         .from("profiles")
-        .select("avatar_url, full_name")
+        .select("avatar_url, full_name, role_id")
         .eq("id", user?.id)
         .single();
 
-      if (data) {
-        setAvatarUrl(data.avatar_url || "");
-        setFullName(data.full_name || "");
+      if (profileData) {
+        setAvatarUrl(profileData.avatar_url || "");
+        setFullName(profileData.full_name || "");
+        
+        // Get role name
+        if (profileData.role_id) {
+          const { data: roleData } = await supabase
+            .from("roles")
+            .select("name")
+            .eq("id", profileData.role_id)
+            .single();
+          
+          if (roleData) {
+            setUserRole(roleData.name.toLowerCase());
+          }
+        }
       }
     } catch (error) {
       console.error("Error loading profile:", error);
@@ -91,6 +105,18 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-2 xl:gap-3">
+            {user && userRole && userRole !== "customer" && (
+              <Link to="/dashboard">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-10 w-10 rounded-full hover:bg-accent/50 transition-all duration-300 hover:scale-110"
+                  title="Dashboard"
+                >
+                  <LayoutDashboard className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
             <Button 
               variant="ghost" 
               size="icon" 
@@ -241,6 +267,18 @@ const Navbar = () => {
                       {fullName || user.email?.split('@')[0]}
                     </span>
                   </div>
+                  {userRole && userRole !== "customer" && (
+                    <Link to="/dashboard" className="w-full">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        Dashboard
+                      </Button>
+                    </Link>
+                  )}
                   <Link to="/profile" className="w-full">
                     <Button 
                       variant="outline" 
