@@ -1,3 +1,5 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   TrendingUp,
   Package,
@@ -24,90 +26,197 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const stats = [
-  {
-    title: "Total Revenue",
-    value: "450,000,000",
-    unit: "SYP",
-    change: "+12.5%",
-    trend: "up",
-    icon: DollarSign,
-  },
-  {
-    title: "New Orders",
-    value: "156",
-    change: "+8.2%",
-    trend: "up",
-    icon: ShoppingBag,
-  },
-  {
-    title: "Products",
-    value: "342",
-    change: "+2.4%",
-    trend: "up",
-    icon: Package,
-  },
-  {
-    title: "Growth Rate",
-    value: "15.8%",
-    change: "-2.1%",
-    trend: "down",
-    icon: TrendingUp,
-  },
-];
-
-const revenueData = [
-  { month: "Jan", revenue: 45000000, orders: 142 },
-  { month: "Feb", revenue: 52000000, orders: 168 },
-  { month: "Mar", revenue: 48000000, orders: 156 },
-  { month: "Apr", revenue: 61000000, orders: 189 },
-  { month: "May", revenue: 55000000, orders: 172 },
-  { month: "Jun", revenue: 70000000, orders: 215 },
-];
-
-const categoryData = [
-  { name: "Basketball Shoes", value: 45, color: "#EF4444" },
-  { name: "Running Shoes", value: 30, color: "#3B82F6" },
-  { name: "Apparel", value: 15, color: "#10B981" },
-  { name: "Accessories", value: 10, color: "#F59E0B" },
-];
-
-const recentOrders = [
-  {
-    id: "#12845",
-    customer: "Ahmad Mohammad",
-    product: "Peak Basketball Pro X",
-    amount: "2,500,000 SYP",
-    status: "Delivered",
-    statusColor: "bg-green-500",
-  },
-  {
-    id: "#12844",
-    customer: "Sara Ali",
-    product: "Peak Running Elite",
-    amount: "1,800,000 SYP",
-    status: "In Transit",
-    statusColor: "bg-blue-500",
-  },
-  {
-    id: "#12843",
-    customer: "Mahmoud Khaled",
-    product: "Peak Court Master",
-    amount: "2,200,000 SYP",
-    status: "Processing",
-    statusColor: "bg-yellow-500",
-  },
-  {
-    id: "#12842",
-    customer: "Layla Hassan",
-    product: "Peak Speed Runner",
-    amount: "1,900,000 SYP",
-    status: "Delivered",
-    statusColor: "bg-green-500",
-  },
-];
-
 const Overview = () => {
+  // Fetch all orders
+  const { data: orders = [] } = useQuery({
+    queryKey: ["dashboard-orders"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch products count
+  const { data: productsCount = 0 } = useQuery({
+    queryKey: ["dashboard-products-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("products")
+        .select("*", { count: "exact", head: true });
+      
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  // Fetch categories for pie chart
+  const { data: categories = [] } = useQuery({
+    queryKey: ["dashboard-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, name");
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch products with categories for distribution
+  const { data: products = [] } = useQuery({
+    queryKey: ["dashboard-products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, category");
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch recent orders with details
+  const { data: recentOrdersData = [] } = useQuery({
+    queryKey: ["dashboard-recent-orders"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select(`
+          id,
+          total_amount,
+          status,
+          created_at,
+          customer_name,
+          profiles:user_id (full_name)
+        `)
+        .order("created_at", { ascending: false })
+        .limit(4);
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Calculate statistics
+  const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0);
+  const totalOrders = orders.length;
+  
+  // Calculate this month's data
+  const now = new Date();
+  const thisMonthOrders = orders.filter(order => {
+    const orderDate = new Date(order.created_at);
+    return orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
+  });
+  const thisMonthRevenue = thisMonthOrders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0);
+  
+  // Calculate last month's data for comparison
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthOrders = orders.filter(order => {
+    const orderDate = new Date(order.created_at);
+    return orderDate.getMonth() === lastMonth.getMonth() && orderDate.getFullYear() === lastMonth.getFullYear();
+  });
+  const lastMonthRevenue = lastMonthOrders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0);
+  
+  // Calculate changes
+  const revenueChange = lastMonthRevenue > 0 
+    ? (((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(1)
+    : "0";
+  const ordersChange = lastMonthOrders.length > 0
+    ? (((thisMonthOrders.length - lastMonthOrders.length) / lastMonthOrders.length) * 100).toFixed(1)
+    : "0";
+  const growthRate = revenueChange;
+
+  // Prepare monthly data for charts (last 6 months)
+  const monthlyData = [];
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthOrders = orders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      return orderDate.getMonth() === date.getMonth() && orderDate.getFullYear() === date.getFullYear();
+    });
+    const monthRevenue = monthOrders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0);
+    
+    monthlyData.push({
+      month: date.toLocaleDateString('en-US', { month: 'short' }),
+      revenue: monthRevenue,
+      orders: monthOrders.length,
+    });
+  }
+
+  // Prepare category distribution data
+  const categoryColors = ["#EF4444", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"];
+  const categoryDistribution = categories.map((cat, index) => {
+    const catProducts = products.filter(p => p.category === cat.name);
+    const percentage = products.length > 0 ? ((catProducts.length / products.length) * 100).toFixed(1) : 0;
+    return {
+      name: cat.name,
+      value: parseFloat(percentage as string),
+      color: categoryColors[index % categoryColors.length],
+    };
+  }).filter(cat => cat.value > 0);
+
+  // Prepare stats
+  const stats = [
+    {
+      title: "Total Revenue",
+      value: `$${totalRevenue.toFixed(2)}`,
+      unit: "",
+      change: `${Number(revenueChange) >= 0 ? '+' : ''}${revenueChange}%`,
+      trend: Number(revenueChange) >= 0 ? "up" : "down",
+      icon: DollarSign,
+    },
+    {
+      title: "New Orders",
+      value: totalOrders.toString(),
+      change: `${Number(ordersChange) >= 0 ? '+' : ''}${ordersChange}%`,
+      trend: Number(ordersChange) >= 0 ? "up" : "down",
+      icon: ShoppingBag,
+    },
+    {
+      title: "Products",
+      value: productsCount.toString(),
+      change: "+0%",
+      trend: "up",
+      icon: Package,
+    },
+    {
+      title: "Growth Rate",
+      value: `${growthRate}%`,
+      change: `${Number(revenueChange) >= 0 ? '+' : ''}${revenueChange}%`,
+      trend: Number(growthRate) >= 0 ? "up" : "down",
+      icon: TrendingUp,
+    },
+  ];
+
+  // Status color mapping
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'delivered':
+        return 'bg-green-500';
+      case 'processing':
+        return 'bg-yellow-500';
+      case 'pending':
+        return 'bg-blue-500';
+      case 'cancelled':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  const recentOrders = recentOrdersData.map((order: any) => ({
+    id: `#${order.id.slice(0, 8)}`,
+    customer: order.customer_name || order.profiles?.full_name || 'Unknown',
+    product: '-',
+    amount: `$${Number(order.total_amount || 0).toFixed(2)}`,
+    status: order.status || 'pending',
+    statusColor: getStatusColor(order.status),
+  }));
   return (
     <div className="p-4 md:p-8 space-y-6 md:space-y-8">
       {/* Header */}
@@ -174,18 +283,20 @@ const Overview = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={revenueData}>
+              <LineChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value: number) => `$${value.toFixed(2)}`}
+                />
                 <Legend />
                 <Line
                   type="monotone"
                   dataKey="revenue"
                   stroke="#EF4444"
                   strokeWidth={2}
-                  name="Revenue (SYP)"
+                  name="Revenue ($)"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -199,7 +310,7 @@ const Overview = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={revenueData}>
+              <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
@@ -217,28 +328,34 @@ const Overview = () => {
         {/* Category Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base md:text-xl">Sales by Category</CardTitle>
+            <CardTitle className="text-base md:text-xl">Products by Category</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {categoryDistribution.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={categoryDistribution}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {categoryDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                No category data available
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -249,7 +366,7 @@ const Overview = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {revenueData.slice(-4).map((data, index) => (
+              {monthlyData.slice(-4).map((data, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
@@ -260,7 +377,7 @@ const Overview = () => {
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-primary text-sm md:text-base">
-                      {(data.revenue / 1000000).toFixed(1)}M SYP
+                      ${data.revenue.toFixed(2)}
                     </p>
                   </div>
                 </div>
