@@ -1,17 +1,122 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, ShoppingCart, Heart, Share2, ArrowLeft } from "lucide-react";
-import productShoes1 from "@/assets/product-shoes-1.jpg";
+import { Badge } from "@/components/ui/badge";
+import { Minus, Plus, ShoppingCart, Heart, Share2, ArrowLeft, Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+type ProductImage = {
+  id: string;
+  image_url: string;
+  is_primary: boolean;
+  display_order: number;
+};
+
+type Product = {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  price: number;
+  stock_quantity: number;
+  is_active: boolean;
+  colors?: { color: string; image_id: string }[];
+  offer_price?: number | null;
+  rating?: number;
+  sizes?: string[];
+  sku?: string;
+  features?: string[];
+  flag?: string | null;
+};
 
 const ProductDetail = () => {
   const { id } = useParams();
   const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState("42");
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedImageUrl, setSelectedImageUrl] = useState("");
 
-  const sizes = ["38", "39", "40", "41", "42", "43", "44", "45"];
+  // Fetch product details
+  const { data: product, isLoading } = useQuery({
+    queryKey: ["product", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      
+      return {
+        ...data,
+        colors: (data.colors as any) as { color: string; image_id: string }[] | undefined,
+      } as Product;
+    },
+    enabled: !!id,
+  });
+
+  // Fetch product images
+  const { data: images = [] } = useQuery({
+    queryKey: ["product-images", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_images")
+        .select("*")
+        .eq("product_id", id)
+        .order("display_order", { ascending: true });
+
+      if (error) throw error;
+      return data as ProductImage[];
+    },
+    enabled: !!id,
+  });
+
+  // Set initial selected image
+  useEffect(() => {
+    if (images.length > 0) {
+      const primaryImage = images.find(img => img.is_primary);
+      setSelectedImageUrl(primaryImage?.image_url || images[0].image_url);
+    }
+  }, [images]);
+
+  // Set initial selected size
+  useEffect(() => {
+    if (product?.sizes && product.sizes.length > 0 && !selectedSize) {
+      setSelectedSize(product.sizes[0]);
+    }
+  }, [product?.sizes, selectedSize]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">Loading...</div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">Product not found</div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  const displayPrice = product.offer_price || product.price;
+  const hasDiscount = !!product.offer_price;
 
   return (
     <div className="min-h-screen bg-background">
@@ -27,54 +132,124 @@ const ProductDetail = () => {
           {/* Product Images */}
           <div className="space-y-4">
             <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-              <img src={productShoes1} alt="Product" className="w-full h-full object-cover" />
+              <img 
+                src={selectedImageUrl || images[0]?.image_url || "/placeholder.svg"} 
+                alt={product.name} 
+                className="w-full h-full object-cover" 
+              />
             </div>
-            <div className="grid grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="aspect-square bg-muted rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all">
-                  <img src={productShoes1} alt={`Thumbnail ${i}`} className="w-full h-full object-cover" />
-                </div>
-              ))}
-            </div>
+            {images.length > 1 && (
+              <div className="grid grid-cols-4 gap-4">
+                {images.map((image) => (
+                  <div 
+                    key={image.id} 
+                    className={`aspect-square bg-muted rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all ${
+                      selectedImageUrl === image.image_url ? 'ring-2 ring-primary' : ''
+                    }`}
+                    onClick={() => setSelectedImageUrl(image.image_url)}
+                  >
+                    <img src={image.image_url} alt="Thumbnail" className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
           <div className="space-y-4 sm:space-y-6">
             <div>
-              <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase mb-3 sm:mb-4">
-                New Arrival
-              </div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Peak Basketball Pro X</h1>
-              <p className="text-muted-foreground text-sm sm:text-base">SKU: PEAK-BBX-001</p>
+              {product.flag && (
+                <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase mb-3 sm:mb-4">
+                  {product.flag}
+                </div>
+              )}
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">{product.name}</h1>
+              {product.sku && (
+                <p className="text-muted-foreground text-sm sm:text-base">SKU: {product.sku}</p>
+              )}
+              {product.rating !== undefined && product.rating > 0 && (
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 ${
+                          i < Math.floor(product.rating!)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-muted-foreground"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm text-muted-foreground">({product.rating}/5)</span>
+                </div>
+              )}
             </div>
 
-            <div className="text-2xl sm:text-3xl font-bold text-primary">$45</div>
+            <div className="flex items-center gap-3">
+              <div className="text-2xl sm:text-3xl font-bold text-primary">
+                ${displayPrice.toFixed(2)}
+              </div>
+              {hasDiscount && (
+                <div className="text-lg sm:text-xl line-through text-muted-foreground">
+                  ${product.price.toFixed(2)}
+                </div>
+              )}
+            </div>
 
-            <p className="text-muted-foreground leading-relaxed">
-              Experience peak performance with our flagship basketball shoe. Featuring advanced cushioning technology,
-              superior grip, and premium materials designed for professional athletes. The Pro X delivers unmatched
-              court feel and explosive power for your game.
-            </p>
+            {product.description && (
+              <p className="text-muted-foreground leading-relaxed">
+                {product.description}
+              </p>
+            )}
 
             {/* Size Selection */}
-            <div>
-              <label className="block text-sm font-semibold mb-3">Select Size (EU)</label>
-              <div className="grid grid-cols-4 gap-2">
-                {sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`py-2 px-3 rounded-md border-2 transition-all text-sm sm:text-base ${
-                      selectedSize === size
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border hover:border-primary"
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
+            {product.sizes && product.sizes.length > 0 && (
+              <div>
+                <label className="block text-sm font-semibold mb-3">Select Size (EU)</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`py-2 px-3 rounded-md border-2 transition-all text-sm sm:text-base ${
+                        selectedSize === size
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border hover:border-primary"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Color Selection */}
+            {product.colors && product.colors.length > 0 && (
+              <div>
+                <label className="block text-sm font-semibold mb-3">Select Color</label>
+                <div className="flex gap-2">
+                  {product.colors.map((colorObj, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setSelectedColor(colorObj.color);
+                        const colorImage = images.find(img => img.id === colorObj.image_id);
+                        if (colorImage) setSelectedImageUrl(colorImage.image_url);
+                      }}
+                      className={`px-4 py-2 rounded-md border-2 transition-all text-sm ${
+                        selectedColor === colorObj.color
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border hover:border-primary"
+                      }`}
+                    >
+                      {colorObj.color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Quantity */}
             <div>
@@ -94,17 +269,27 @@ const ProductDetail = () => {
                   size="icon"
                   onClick={() => setQuantity(quantity + 1)}
                   className="h-8 w-8 sm:h-10 sm:w-10"
+                  disabled={quantity >= product.stock_quantity}
                 >
                   <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
+                <span className="text-sm text-muted-foreground">
+                  {product.stock_quantity} available
+                </span>
               </div>
             </div>
 
             {/* Actions */}
             <div className="space-y-3 sm:space-y-4">
-              <Button variant="hero" size="lg" className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold">
+              <Button 
+                variant="hero" 
+                size="lg" 
+                className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold"
+                onClick={() => toast.success("Added to cart!")}
+                disabled={product.stock_quantity === 0}
+              >
                 <ShoppingCart className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                Add to Cart
+                {product.stock_quantity > 0 ? "Add to Cart" : "Out of Stock"}
               </Button>
               <div className="flex gap-2 sm:gap-3">
                 <Button variant="outline" size="lg" className="flex-1 h-10 sm:h-12 text-sm sm:text-base">
@@ -119,24 +304,16 @@ const ProductDetail = () => {
             </div>
 
             {/* Features */}
-            <div className="border-t pt-4 sm:pt-6 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
-                <span className="text-sm sm:text-base">Premium cushioning technology</span>
+            {product.features && product.features.length > 0 && (
+              <div className="border-t pt-4 sm:pt-6 space-y-3">
+                {product.features.map((feature, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
+                    <span className="text-sm sm:text-base">{feature}</span>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
-                <span className="text-sm sm:text-base">Advanced grip pattern</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
-                <span className="text-sm sm:text-base">Breathable mesh upper</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
-                <span className="text-sm sm:text-base">Reinforced ankle support</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

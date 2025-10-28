@@ -267,37 +267,58 @@ export type Database = {
       products: {
         Row: {
           category: string
+          colors: Json | null
           created_at: string | null
           description: string | null
+          features: string[] | null
+          flag: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
           name: string
+          offer_price: number | null
           price: number
+          rating: number | null
+          sizes: string[] | null
+          sku: string | null
           stock_quantity: number | null
           updated_at: string | null
         }
         Insert: {
           category: string
+          colors?: Json | null
           created_at?: string | null
           description?: string | null
+          features?: string[] | null
+          flag?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           name: string
+          offer_price?: number | null
           price: number
+          rating?: number | null
+          sizes?: string[] | null
+          sku?: string | null
           stock_quantity?: number | null
           updated_at?: string | null
         }
         Update: {
           category?: string
+          colors?: Json | null
           created_at?: string | null
           description?: string | null
+          features?: string[] | null
+          flag?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           name?: string
+          offer_price?: number | null
           price?: number
+          rating?: number | null
+          sizes?: string[] | null
+          sku?: string | null
           stock_quantity?: number | null
           updated_at?: string | null
         }

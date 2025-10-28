@@ -54,6 +54,13 @@ type Product = {
   stock_quantity: number;
   image_url: string | null;
   is_active: boolean;
+  colors?: { color: string; image_id: string }[];
+  offer_price?: number | null;
+  rating?: number;
+  sizes?: string[];
+  sku?: string;
+  features?: string[];
+  flag?: string | null;
 };
 
 type ProductImage = {
@@ -90,7 +97,17 @@ const Products = () => {
     price: "",
     stock_quantity: "",
     image_url: "",
+    offer_price: "",
+    rating: "0",
+    sizes: [] as string[],
+    features: [] as string[],
+    flag: "",
+    colors: [] as { color: string; image_id: string }[],
   });
+  
+  const [newSize, setNewSize] = useState("");
+  const [newFeature, setNewFeature] = useState("");
+  const [newColor, setNewColor] = useState({ color: "", image_id: "" });
 
   const queryClient = useQueryClient();
 
@@ -133,6 +150,7 @@ const Products = () => {
         return {
           ...product,
           image_url: primaryImage?.image_url || product.image_url,
+          colors: (product.colors as any) as { color: string; image_id: string }[] | undefined,
         };
       });
 
@@ -151,6 +169,12 @@ const Products = () => {
         stock_quantity: parseInt(newProduct.stock_quantity),
         image_url: newProduct.image_url || null,
         is_active: true,
+        offer_price: newProduct.offer_price ? parseFloat(newProduct.offer_price) : null,
+        rating: parseFloat(newProduct.rating),
+        sizes: newProduct.sizes,
+        features: newProduct.features,
+        flag: newProduct.flag || null,
+        colors: newProduct.colors,
       }).select().single();
 
       if (error) throw error;
@@ -162,7 +186,10 @@ const Products = () => {
         description: "You can now add images to this product",
       });
       // Switch to the product for editing with images
-      setSelectedProduct(newProduct as Product);
+      setSelectedProduct({
+        ...newProduct,
+        colors: (newProduct.colors as any) as { color: string; image_id: string }[] | undefined,
+      } as Product);
       setIsAddDialogOpen(false);
       setIsEditDialogOpen(true);
       resetForm();
@@ -192,6 +219,12 @@ const Products = () => {
           price: parseFloat(updates.price),
           stock_quantity: parseInt(updates.stock_quantity),
           image_url: updates.image_url || null,
+          offer_price: updates.offer_price ? parseFloat(updates.offer_price) : null,
+          rating: parseFloat(updates.rating),
+          sizes: updates.sizes,
+          features: updates.features,
+          flag: updates.flag || null,
+          colors: updates.colors,
         })
         .eq("id", id);
 
@@ -276,9 +309,18 @@ const Products = () => {
       price: "",
       stock_quantity: "",
       image_url: "",
+      offer_price: "",
+      rating: "0",
+      sizes: [],
+      features: [],
+      flag: "",
+      colors: [],
     });
     setSelectedCategoryIds([]);
     setActiveTab("details");
+    setNewSize("");
+    setNewFeature("");
+    setNewColor({ color: "", image_id: "" });
   };
 
   const handleAddProduct = async () => {
@@ -297,6 +339,12 @@ const Products = () => {
           price: parseFloat(formData.price),
           stock_quantity: parseInt(formData.stock_quantity),
           image_url: formData.image_url || null,
+          offer_price: formData.offer_price ? parseFloat(formData.offer_price) : null,
+          rating: parseFloat(formData.rating),
+          sizes: formData.sizes,
+          features: formData.features,
+          flag: formData.flag || null,
+          colors: formData.colors,
         })
         .select()
         .single();
@@ -304,7 +352,10 @@ const Products = () => {
       if (error) throw error;
 
       // Set the selected product and switch to images tab
-      setSelectedProduct(data);
+      setSelectedProduct({
+        ...data,
+        colors: (data.colors as any) as { color: string; image_id: string }[] | undefined,
+      } as Product);
       setActiveTab("images");
       queryClient.invalidateQueries({ queryKey: ["products"] });
       toast.success("Product added! Now add images.");
@@ -335,6 +386,12 @@ const Products = () => {
       price: product.price.toString(),
       stock_quantity: product.stock_quantity.toString(),
       image_url: product.image_url || "",
+      offer_price: product.offer_price?.toString() || "",
+      rating: product.rating?.toString() || "0",
+      sizes: product.sizes || [],
+      features: product.features || [],
+      flag: product.flag || "",
+      colors: product.colors || [],
     });
     setIsEditDialogOpen(true);
   };
@@ -628,6 +685,160 @@ const Products = () => {
                   placeholder=""
                 />
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="offer_price">Offer Price (USD)</Label>
+                <Input
+                  id="offer_price"
+                  type="number"
+                  step="0.01"
+                  value={formData.offer_price}
+                  onChange={(e) => setFormData({ ...formData, offer_price: e.target.value })}
+                  placeholder="Leave empty if no offer"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="rating">Rating (0-5)</Label>
+                <Input
+                  id="rating"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="5"
+                  value={formData.rating}
+                  onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="flag">Product Flag</Label>
+                <Select
+                  value={formData.flag}
+                  onValueChange={(value) => setFormData({ ...formData, flag: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a flag" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="New Arrival">New Arrival</SelectItem>
+                    <SelectItem value="Offer">Offer</SelectItem>
+                    <SelectItem value="Best Seller">Best Seller</SelectItem>
+                    <SelectItem value="Limited Edition">Limited Edition</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Sizes Management */}
+            <div className="grid gap-2">
+              <Label>Available Sizes (EU)</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newSize}
+                  onChange={(e) => setNewSize(e.target.value)}
+                  placeholder="e.g., 42"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newSize.trim()) {
+                      e.preventDefault();
+                      setFormData({
+                        ...formData,
+                        sizes: [...formData.sizes, newSize.trim()],
+                      });
+                      setNewSize("");
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  onClick={() => {
+                    if (newSize.trim()) {
+                      setFormData({
+                        ...formData,
+                        sizes: [...formData.sizes, newSize.trim()],
+                      });
+                      setNewSize("");
+                    }
+                  }}
+                >
+                  Add Size
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.sizes.map((size, index) => (
+                  <Badge key={index} variant="secondary" className="gap-1">
+                    {size}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          sizes: formData.sizes.filter((_, i) => i !== index),
+                        });
+                      }}
+                      className="ml-1 hover:text-destructive"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Features Management */}
+            <div className="grid gap-2">
+              <Label>Product Features</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newFeature}
+                  onChange={(e) => setNewFeature(e.target.value)}
+                  placeholder="e.g., Premium cushioning technology"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newFeature.trim()) {
+                      e.preventDefault();
+                      setFormData({
+                        ...formData,
+                        features: [...formData.features, newFeature.trim()],
+                      });
+                      setNewFeature("");
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  onClick={() => {
+                    if (newFeature.trim()) {
+                      setFormData({
+                        ...formData,
+                        features: [...formData.features, newFeature.trim()],
+                      });
+                      setNewFeature("");
+                    }
+                  }}
+                >
+                  Add Feature
+                </Button>
+              </div>
+              <div className="flex flex-col gap-2 mt-2">
+                {formData.features.map((feature, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
+                    <span className="flex-1">{feature}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          features: formData.features.filter((_, i) => i !== index),
+                        });
+                      }}
+                      className="text-destructive hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </TabsContent>
 
@@ -753,6 +964,169 @@ const Products = () => {
                   placeholder=""
                 />
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-offer_price">Offer Price (USD)</Label>
+                <Input
+                  id="edit-offer_price"
+                  type="number"
+                  step="0.01"
+                  value={formData.offer_price}
+                  onChange={(e) => setFormData({ ...formData, offer_price: e.target.value })}
+                  placeholder="Leave empty if no offer"
+                />
+              </div>
+            </div>
+
+            {/* Display SKU */}
+            {selectedProduct?.sku && (
+              <div className="grid gap-2">
+                <Label>SKU (Auto-generated)</Label>
+                <Input value={selectedProduct.sku} disabled className="bg-muted" />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-rating">Rating (0-5)</Label>
+                <Input
+                  id="edit-rating"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="5"
+                  value={formData.rating}
+                  onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-flag">Product Flag</Label>
+                <Select
+                  value={formData.flag}
+                  onValueChange={(value) => setFormData({ ...formData, flag: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a flag" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="New Arrival">New Arrival</SelectItem>
+                    <SelectItem value="Offer">Offer</SelectItem>
+                    <SelectItem value="Best Seller">Best Seller</SelectItem>
+                    <SelectItem value="Limited Edition">Limited Edition</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Sizes Management */}
+            <div className="grid gap-2">
+              <Label>Available Sizes (EU)</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newSize}
+                  onChange={(e) => setNewSize(e.target.value)}
+                  placeholder="e.g., 42"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newSize.trim()) {
+                      e.preventDefault();
+                      setFormData({
+                        ...formData,
+                        sizes: [...formData.sizes, newSize.trim()],
+                      });
+                      setNewSize("");
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  onClick={() => {
+                    if (newSize.trim()) {
+                      setFormData({
+                        ...formData,
+                        sizes: [...formData.sizes, newSize.trim()],
+                      });
+                      setNewSize("");
+                    }
+                  }}
+                >
+                  Add Size
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.sizes.map((size, index) => (
+                  <Badge key={index} variant="secondary" className="gap-1">
+                    {size}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          sizes: formData.sizes.filter((_, i) => i !== index),
+                        });
+                      }}
+                      className="ml-1 hover:text-destructive"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Features Management */}
+            <div className="grid gap-2">
+              <Label>Product Features</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newFeature}
+                  onChange={(e) => setNewFeature(e.target.value)}
+                  placeholder="e.g., Premium cushioning technology"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newFeature.trim()) {
+                      e.preventDefault();
+                      setFormData({
+                        ...formData,
+                        features: [...formData.features, newFeature.trim()],
+                      });
+                      setNewFeature("");
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  onClick={() => {
+                    if (newFeature.trim()) {
+                      setFormData({
+                        ...formData,
+                        features: [...formData.features, newFeature.trim()],
+                      });
+                      setNewFeature("");
+                    }
+                  }}
+                >
+                  Add Feature
+                </Button>
+              </div>
+              <div className="flex flex-col gap-2 mt-2">
+                {formData.features.map((feature, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
+                    <span className="flex-1">{feature}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          features: formData.features.filter((_, i) => i !== index),
+                        });
+                      }}
+                      className="text-destructive hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </TabsContent>
 
@@ -837,28 +1211,84 @@ const Products = () => {
                   <p className="text-sm">{selectedProduct.description || "No description"}</p>
                 </div>
 
+                {selectedProduct.sku && (
+                  <div>
+                    <Label className="text-muted-foreground">SKU</Label>
+                    <p className="font-mono text-sm">{selectedProduct.sku}</p>
+                  </div>
+                )}
+
+                {selectedProduct.flag && (
+                  <div>
+                    <Label className="text-muted-foreground">Flag</Label>
+                    <Badge variant="secondary">{selectedProduct.flag}</Badge>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground">Category</Label>
                     <p className="font-medium">{selectedProduct.category}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Price</Label>
-                    <p className="text-lg font-bold">${selectedProduct.price.toFixed(2)}</p>
+                    <Label className="text-muted-foreground">Rating</Label>
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium">{selectedProduct.rating || 0}/5</span>
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
+                    <Label className="text-muted-foreground">Price</Label>
+                    <div className="flex items-center gap-2">
+                      {selectedProduct.offer_price ? (
+                        <>
+                          <p className="text-lg font-bold text-primary">${selectedProduct.offer_price.toFixed(2)}</p>
+                          <p className="text-sm line-through text-muted-foreground">${selectedProduct.price.toFixed(2)}</p>
+                        </>
+                      ) : (
+                        <p className="text-lg font-bold">${selectedProduct.price.toFixed(2)}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
                     <Label className="text-muted-foreground">Stock</Label>
                     <p className="font-medium">{selectedProduct.stock_quantity} units</p>
                   </div>
+                </div>
+
+                {selectedProduct.sizes && selectedProduct.sizes.length > 0 && (
                   <div>
-                    <Label className="text-muted-foreground">Status</Label>
-                    <Badge variant={getStockStatus(selectedProduct.stock_quantity).variant}>
-                      {getStockStatus(selectedProduct.stock_quantity).label}
-                    </Badge>
+                    <Label className="text-muted-foreground">Available Sizes</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedProduct.sizes.map((size, idx) => (
+                        <Badge key={idx} variant="outline">{size}</Badge>
+                      ))}
+                    </div>
                   </div>
+                )}
+
+                {selectedProduct.features && selectedProduct.features.length > 0 && (
+                  <div>
+                    <Label className="text-muted-foreground">Features</Label>
+                    <div className="flex flex-col gap-2 mt-2">
+                      {selectedProduct.features.map((feature, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-sm">
+                          <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <Label className="text-muted-foreground">Status</Label>
+                  <Badge variant={getStockStatus(selectedProduct.stock_quantity).variant}>
+                    {getStockStatus(selectedProduct.stock_quantity).label}
+                  </Badge>
                 </div>
               </div>
             </div>
