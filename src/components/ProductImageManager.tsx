@@ -56,12 +56,18 @@ export const ProductImageManager = ({ productId }: ProductImageManagerProps) => 
         data: { publicUrl },
       } = supabase.storage.from("product-images").getPublicUrl(fileName);
 
+      // Check current image count from database
+      const { count } = await supabase
+        .from("product_images")
+        .select("*", { count: "exact", head: true })
+        .eq("product_id", productId);
+
       // Save to database
       const { error: dbError } = await supabase.from("product_images").insert({
         product_id: productId,
         image_url: publicUrl,
-        is_primary: images.length === 0, // First image is primary by default
-        display_order: images.length,
+        is_primary: (count || 0) === 0, // First image is primary by default
+        display_order: count || 0,
       });
 
       if (dbError) throw dbError;

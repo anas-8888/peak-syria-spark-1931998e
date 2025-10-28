@@ -80,6 +80,7 @@ const Products = () => {
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState("details");
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
@@ -277,14 +278,41 @@ const Products = () => {
       image_url: "",
     });
     setSelectedCategoryIds([]);
+    setActiveTab("details");
   };
 
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     if (!formData.name || !formData.category || !formData.price || !formData.stock_quantity) {
       toast.error("Please fill in all required fields");
       return;
     }
-    addProductMutation.mutate(formData);
+    
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .insert({
+          name: formData.name,
+          description: formData.description || null,
+          category: formData.category,
+          price: parseFloat(formData.price),
+          stock_quantity: parseInt(formData.stock_quantity),
+          image_url: formData.image_url || null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Set the selected product and switch to images tab
+      setSelectedProduct(data);
+      setActiveTab("images");
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Product added! Now add images.");
+    } catch (error: any) {
+      toast.error("Failed to add product", {
+        description: error.message,
+      });
+    }
   };
 
   const handleEditProduct = () => {
@@ -513,12 +541,18 @@ const Products = () => {
       </Card>
 
       {/* Add Product Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+      <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+        setIsAddDialogOpen(open);
+        if (!open) {
+          resetForm();
+          setSelectedProduct(null);
+        }
+      }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Product</DialogTitle>
           </DialogHeader>
-          <Tabs defaultValue="details" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="details">Product Details</TabsTrigger>
               <TabsTrigger value="images" disabled={!selectedProduct}>
@@ -610,9 +644,13 @@ const Products = () => {
 
           <TabsContent value="images">
             <div className="py-4">
-              <p className="text-sm text-muted-foreground mb-4">
-                Save the product first before adding images
-              </p>
+              {selectedProduct ? (
+                <ProductImageManager productId={selectedProduct.id} />
+              ) : (
+                <p className="text-sm text-muted-foreground mb-4">
+                  Save the product first before adding images
+                </p>
+              )}
             </div>
           </TabsContent>
           </Tabs>
@@ -623,16 +661,25 @@ const Products = () => {
               onClick={() => {
                 setIsAddDialogOpen(false);
                 resetForm();
+                setSelectedProduct(null);
               }}
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleAddProduct}
-              disabled={addProductMutation.isPending}
-            >
-              {addProductMutation.isPending ? "Adding..." : "Add Product & Continue to Images"}
-            </Button>
+            {activeTab === "details" ? (
+              <Button onClick={handleAddProduct}>
+                Add Product & Continue to Images
+              </Button>
+            ) : (
+              <Button onClick={() => {
+                setIsAddDialogOpen(false);
+                resetForm();
+                setSelectedProduct(null);
+                toast.success("Product created successfully!");
+              }}>
+                Done
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

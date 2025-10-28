@@ -47,6 +47,7 @@ export type Database = {
           description: string | null
           display_order: number | null
           id: string
+          image_url: string | null
           is_active: boolean | null
           name: string
           parent_id: string | null
@@ -57,6 +58,7 @@ export type Database = {
           description?: string | null
           display_order?: number | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           name: string
           parent_id?: string | null
@@ -67,6 +69,7 @@ export type Database = {
           description?: string | null
           display_order?: number | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           name?: string
           parent_id?: string | null

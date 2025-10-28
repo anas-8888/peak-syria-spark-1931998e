@@ -49,6 +49,7 @@ const AdminLogin = () => {
         description: "Redirecting to dashboard...",
         duration: 2000,
       });
+      // Don't set loading to false, let useEffect handle redirect
     }
   };
 

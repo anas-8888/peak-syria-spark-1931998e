@@ -49,6 +49,7 @@ interface Category {
   name: string;
   description: string | null;
   parent_id: string | null;
+  image_url: string | null;
   display_order: number;
   is_active: boolean;
 }
@@ -70,6 +71,7 @@ const Categories = () => {
     name: "",
     description: "",
     parent_id: "",
+    image_url: "",
     display_order: 0,
     is_active: true,
   });
@@ -121,6 +123,7 @@ const Categories = () => {
         name: data.name,
         description: data.description || null,
         parent_id: data.parent_id || null,
+        image_url: data.image_url || null,
         display_order: data.display_order,
         is_active: data.is_active,
       }]);
@@ -146,6 +149,7 @@ const Categories = () => {
           name: data.name,
           description: data.description || null,
           parent_id: data.parent_id || null,
+          image_url: data.image_url || null,
           display_order: data.display_order,
           is_active: data.is_active,
         })
@@ -199,6 +203,7 @@ const Categories = () => {
       name: "",
       description: "",
       parent_id: "",
+      image_url: "",
       display_order: 0,
       is_active: true,
     });
@@ -211,6 +216,7 @@ const Categories = () => {
       name: category.name,
       description: category.description || "",
       parent_id: category.parent_id || "",
+      image_url: category.image_url || "",
       display_order: category.display_order,
       is_active: category.is_active,
     });
@@ -501,6 +507,18 @@ const Categories = () => {
                     setFormData({ ...formData, description: e.target.value })
                   }
                   rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="image_url">Image URL</Label>
+                <Input
+                  id="image_url"
+                  value={formData.image_url}
+                  onChange={(e) =>
+                    setFormData({ ...formData, image_url: e.target.value })
+                  }
+                  placeholder="https://example.com/category-image.jpg"
                 />
               </div>
 
