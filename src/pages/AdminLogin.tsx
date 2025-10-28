@@ -123,17 +123,6 @@ const AdminLogin = () => {
               </Button>
             </form>
 
-            {/* Info */}
-            <div className="mt-6 p-4 bg-primary/10 rounded-lg">
-              <p className="text-xs text-center text-muted-foreground">
-                <span className="font-semibold text-primary">Default Admin:</span>
-                <br />
-                Email: admin@peaksyria.com
-                <br />
-                Password: Admin123456
-              </p>
-            </div>
-
             {/* Back Link */}
             <p className="mt-6 text-center text-sm text-muted-foreground">
               <Link to="/" className="text-primary hover:underline font-semibold">
