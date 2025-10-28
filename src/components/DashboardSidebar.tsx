@@ -98,20 +98,6 @@ const DashboardSidebar = () => {
           )}
         </div>
 
-        {/* Desktop Toggle Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="hidden lg:block absolute -left-3 top-24 bg-card border border-border rounded-full shadow-md hover:bg-accent z-10"
-          onClick={() => setCollapsed(!collapsed)}
-        >
-          {collapsed ? (
-            <ChevronLeft className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
-        </Button>
-
         {/* Menu Items */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
 
