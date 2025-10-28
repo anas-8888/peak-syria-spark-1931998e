@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, Edit, Trash2, Eye, X } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Eye, X, Star, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,8 +60,10 @@ const Products = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -194,6 +196,41 @@ const Products = () => {
     },
   });
 
+  // Bulk delete mutation
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("products").delete().in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success(`${selectedProducts.length} products deleted successfully`);
+      setSelectedProducts([]);
+    },
+    onError: (error) => {
+      toast.error("Failed to delete products", {
+        description: error.message,
+      });
+    },
+  });
+
+  // Fetch images for preview
+  const { data: previewImages = [] } = useQuery({
+    queryKey: ["product-images", selectedProduct?.id],
+    queryFn: async () => {
+      if (!selectedProduct?.id) return [];
+      const { data, error } = await supabase
+        .from("product_images")
+        .select("*")
+        .eq("product_id", selectedProduct.id)
+        .order("display_order", { ascending: true });
+
+      if (error) throw error;
+      return data as ProductImage[];
+    },
+    enabled: !!selectedProduct?.id && isPreviewDialogOpen,
+  });
+
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -247,6 +284,30 @@ const Products = () => {
     return { label: "In Stock", variant: "default" as const };
   };
 
+  const toggleSelectAll = () => {
+    if (selectedProducts.length === filteredProducts.length) {
+      setSelectedProducts([]);
+    } else {
+      setSelectedProducts(filteredProducts.map(p => p.id));
+    }
+  };
+
+  const toggleSelectProduct = (id: string) => {
+    setSelectedProducts(prev => 
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedProducts.length === 0) return;
+    bulkDeleteMutation.mutate(selectedProducts);
+  };
+
+  const openPreviewDialog = (product: Product) => {
+    setSelectedProduct(product);
+    setIsPreviewDialogOpen(true);
+  };
+
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
@@ -257,10 +318,22 @@ const Products = () => {
             View and manage all products in the store
           </p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add New Product
-        </Button>
+        <div className="flex gap-2">
+          {selectedProducts.length > 0 && (
+            <Button 
+              variant="destructive" 
+              onClick={handleBulkDelete}
+              disabled={bulkDeleteMutation.isPending}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete {selectedProducts.length} Selected
+            </Button>
+          )}
+          <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add New Product
+          </Button>
+        </div>
       </div>
 
       {/* Search & Filters */}
@@ -298,6 +371,14 @@ const Products = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <input
+                      type="checkbox"
+                      checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
+                      onChange={toggleSelectAll}
+                      className="cursor-pointer"
+                    />
+                  </TableHead>
                   <TableHead>Product</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Price</TableHead>
@@ -312,19 +393,28 @@ const Products = () => {
                   return (
                     <TableRow key={product.id} className="hover:bg-muted/50">
                       <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={selectedProducts.includes(product.id)}
+                          onChange={() => toggleSelectProduct(product.id)}
+                          className="cursor-pointer"
+                        />
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-3">
                           {product.image_url ? (
                             <img
                               src={product.image_url}
                               alt={product.name}
-                              className="h-12 w-12 rounded-lg object-cover"
+                              className="h-12 w-12 rounded-lg object-cover cursor-pointer"
+                              onClick={() => openPreviewDialog(product)}
                             />
                           ) : (
                             <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
                               <span className="text-xs text-muted-foreground">No image</span>
                             </div>
                           )}
-                          <span className="font-medium">{product.name}</span>
+                          <span className="font-medium cursor-pointer hover:text-primary" onClick={() => openPreviewDialog(product)}>{product.name}</span>
                         </div>
                       </TableCell>
                       <TableCell>{product.category}</TableCell>
@@ -351,6 +441,14 @@ const Products = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openPreviewDialog(product)}
+                            title="Preview"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -602,6 +700,97 @@ const Products = () => {
               disabled={updateProductMutation.isPending}
             >
               {updateProductMutation.isPending ? "Updating..." : "Update Product"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Product Dialog */}
+      <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Product Preview</DialogTitle>
+          </DialogHeader>
+          {selectedProduct && (
+            <div className="space-y-6">
+              {/* Image Gallery */}
+              <div className="space-y-4">
+                <h3 className="font-semibold">Product Images</h3>
+                {previewImages.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {previewImages.map((image) => (
+                      <div key={image.id} className="relative group">
+                        <img
+                          src={image.image_url}
+                          alt="Product"
+                          className={`w-full aspect-square object-cover rounded-lg ${
+                            image.is_primary ? "ring-2 ring-primary" : ""
+                          }`}
+                        />
+                        {image.is_primary && (
+                          <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                            <Star className="h-3 w-3 fill-current" />
+                            Primary
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                    <ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No images available</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Product Details */}
+              <div className="space-y-4 border-t pt-4">
+                <div>
+                  <Label className="text-muted-foreground">Name</Label>
+                  <p className="text-lg font-semibold">{selectedProduct.name}</p>
+                </div>
+                
+                <div>
+                  <Label className="text-muted-foreground">Description</Label>
+                  <p className="text-sm">{selectedProduct.description || "No description"}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Category</Label>
+                    <p className="font-medium">{selectedProduct.category}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Price</Label>
+                    <p className="text-lg font-bold">${selectedProduct.price.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Stock</Label>
+                    <p className="font-medium">{selectedProduct.stock_quantity} units</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Status</Label>
+                    <Badge variant={getStockStatus(selectedProduct.stock_quantity).variant}>
+                      {getStockStatus(selectedProduct.stock_quantity).label}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>
+              Close
+            </Button>
+            <Button onClick={() => {
+              setIsPreviewDialogOpen(false);
+              if (selectedProduct) openEditDialog(selectedProduct);
+            }}>
+              Edit Product
             </Button>
           </DialogFooter>
         </DialogContent>
