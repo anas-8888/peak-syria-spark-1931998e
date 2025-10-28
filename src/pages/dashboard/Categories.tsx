@@ -434,6 +434,7 @@ const Categories = () => {
                       className="cursor-pointer"
                     />
                   </TableHead>
+                  <TableHead className="w-20">Image</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Parent Category</TableHead>
@@ -453,6 +454,19 @@ const Categories = () => {
                         onChange={() => toggleSelectCategory(category.id)}
                         className="cursor-pointer"
                       />
+                    </TableCell>
+                    <TableCell>
+                      {category.image_url ? (
+                        <img 
+                          src={category.image_url} 
+                          alt={category.name}
+                          className="w-12 h-12 object-cover rounded-md"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center">
+                          <span className="text-xs text-muted-foreground">No image</span>
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       <span 
@@ -530,7 +544,7 @@ const Categories = () => {
           }
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>
