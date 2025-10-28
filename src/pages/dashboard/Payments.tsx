@@ -2,6 +2,7 @@ import { DollarSign, CreditCard, Banknote, TrendingUp, Download } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -10,56 +11,80 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
-const transactions = [
-  {
-    id: "TXN-12845",
-    order: "#12845",
-    customer: "Ahmad Mohammad",
-    amount: "4,500,000 SYP",
-    method: "Credit Card",
-    status: "Completed",
-    date: "2025/01/15",
-  },
-  {
-    id: "TXN-12844",
-    order: "#12844",
-    customer: "Sara Ali",
-    amount: "3,600,000 SYP",
-    method: "Cash on Delivery",
-    status: "Pending",
-    date: "2025/01/14",
-  },
-  {
-    id: "TXN-12843",
-    order: "#12843",
-    customer: "Mahmoud Khaled",
-    amount: "2,200,000 SYP",
-    method: "Credit Card",
-    status: "Completed",
-    date: "2025/01/14",
-  },
-  {
-    id: "TXN-12842",
-    order: "#12842",
-    customer: "Layla Hassan",
-    amount: "6,800,000 SYP",
-    method: "Bank Transfer",
-    status: "Completed",
-    date: "2025/01/13",
-  },
-  {
-    id: "TXN-12841",
-    order: "#12841",
-    customer: "Omar Yousef",
-    amount: "3,200,000 SYP",
-    method: "Credit Card",
-    status: "Failed",
-    date: "2025/01/12",
-  },
-];
+type Payment = {
+  id: string;
+  order_id: string;
+  customer_name: string;
+  amount: number;
+  payment_method: string;
+  status: string;
+  created_at: string;
+};
 
 const Payments = () => {
+  // Fetch all payments
+  const { data: paymentsData, isLoading } = useQuery({
+    queryKey: ["payments"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data as Payment[];
+    },
+  });
+
+  const payments = paymentsData || [];
+
+  // Calculate statistics
+  const totalRevenue = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const completedPayments = payments.filter(p => p.status === 'completed');
+  const pendingPayments = payments.filter(p => p.status === 'pending');
+  
+  // Calculate revenue growth (comparing last month vs previous month)
+  const now = new Date();
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+  const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+  const prevMonthEnd = new Date(now.getFullYear(), now.getMonth() - 1, 0);
+
+  const lastMonthRevenue = payments
+    .filter(p => {
+      const date = new Date(p.created_at);
+      return date >= lastMonthStart && date <= lastMonthEnd;
+    })
+    .reduce((sum, p) => sum + Number(p.amount), 0);
+
+  const prevMonthRevenue = payments
+    .filter(p => {
+      const date = new Date(p.created_at);
+      return date >= prevMonthStart && date <= prevMonthEnd;
+    })
+    .reduce((sum, p) => sum + Number(p.amount), 0);
+
+  const revenueGrowth = prevMonthRevenue > 0
+    ? ((lastMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100
+    : 0;
+
+  // Calculate payment method breakdown
+  const paymentMethodStats = payments.reduce((acc, payment) => {
+    const method = payment.payment_method;
+    if (!acc[method]) {
+      acc[method] = { total: 0, count: 0 };
+    }
+    acc[method].total += Number(payment.amount);
+    acc[method].count += 1;
+    return acc;
+  }, {} as Record<string, { total: number; count: number }>);
+
+  const totalPayments = payments.length;
+
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
@@ -84,7 +109,11 @@ const Payments = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Revenue</p>
-                <p className="text-2xl font-bold">450M SYP</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-24" />
+                ) : (
+                  <p className="text-2xl font-bold">${totalRevenue.toLocaleString()}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -97,7 +126,13 @@ const Payments = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Revenue Growth</p>
-                <p className="text-2xl font-bold">+15.8%</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-24" />
+                ) : (
+                  <p className="text-2xl font-bold">
+                    {revenueGrowth >= 0 ? '+' : ''}{revenueGrowth.toFixed(1)}%
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -110,7 +145,11 @@ const Payments = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Successful Transactions</p>
-                <p className="text-2xl font-bold">148</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-24" />
+                ) : (
+                  <p className="text-2xl font-bold">{completedPayments.length}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -123,7 +162,11 @@ const Payments = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Pending Transactions</p>
-                <p className="text-2xl font-bold">8</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-24" />
+                ) : (
+                  <p className="text-2xl font-bold">{pendingPayments.length}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -132,33 +175,35 @@ const Payments = () => {
 
       {/* Payment Methods */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Credit Card</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold mb-2">285M SYP</p>
-            <p className="text-sm text-muted-foreground">63% of total transactions</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Cash on Delivery</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold mb-2">125M SYP</p>
-            <p className="text-sm text-muted-foreground">28% of total transactions</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Bank Transfer</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold mb-2">40M SYP</p>
-            <p className="text-sm text-muted-foreground">9% of total transactions</p>
-          </CardContent>
-        </Card>
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-10 w-24 mb-2" />
+                <Skeleton className="h-4 w-40" />
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          Object.entries(paymentMethodStats).map(([method, stats]) => (
+            <Card key={method}>
+              <CardHeader>
+                <CardTitle className="text-lg">{method}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold mb-2">${stats.total.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">
+                  {totalPayments > 0 
+                    ? Math.round((stats.count / totalPayments) * 100) 
+                    : 0}% of total transactions
+                </p>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Transactions Table */}
@@ -180,29 +225,55 @@ const Payments = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions.map((transaction) => (
-                <TableRow key={transaction.id} className="hover:bg-muted/50">
-                  <TableCell className="font-mono font-semibold">{transaction.id}</TableCell>
-                  <TableCell className="font-mono">{transaction.order}</TableCell>
-                  <TableCell>{transaction.customer}</TableCell>
-                  <TableCell className="font-semibold">{transaction.amount}</TableCell>
-                  <TableCell>{transaction.method}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        transaction.status === "Completed"
-                          ? "default"
-                          : transaction.status === "Pending"
-                          ? "secondary"
-                          : "destructive"
-                      }
-                    >
-                      {transaction.status}
-                    </Badge>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  </TableRow>
+                ))
+              ) : payments.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No payments found
                   </TableCell>
-                  <TableCell>{transaction.date}</TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                payments.map((payment) => (
+                  <TableRow key={payment.id} className="hover:bg-muted/50">
+                    <TableCell className="font-mono font-semibold">
+                      TXN-{payment.id.slice(0, 8)}
+                    </TableCell>
+                    <TableCell className="font-mono">
+                      #{payment.order_id.slice(0, 8)}
+                    </TableCell>
+                    <TableCell>{payment.customer_name}</TableCell>
+                    <TableCell className="font-semibold">
+                      ${Number(payment.amount).toLocaleString()}
+                    </TableCell>
+                    <TableCell>{payment.payment_method}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          payment.status === "completed"
+                            ? "default"
+                            : payment.status === "pending"
+                            ? "secondary"
+                            : "destructive"
+                        }
+                      >
+                        {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{format(new Date(payment.created_at), "yyyy/MM/dd")}</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
