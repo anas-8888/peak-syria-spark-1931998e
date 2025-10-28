@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, Edit, Trash2, Eye, X, Star, Image as ImageIcon } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Eye, Star, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +32,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProductImageManager } from "@/components/ProductImageManager";
@@ -56,6 +64,14 @@ type ProductImage = {
   display_order: number;
 };
 
+type Category = {
+  id: string;
+  name: string;
+  description: string | null;
+  parent_id: string | null;
+  is_active: boolean;
+};
+
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -64,6 +80,8 @@ const Products = () => {
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -74,6 +92,20 @@ const Products = () => {
   });
 
   const queryClient = useQueryClient();
+
+  // Fetch categories
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data as Category[];
+    },
+  });
 
   // Fetch products with their primary images
   const { data: products = [], isLoading } = useQuery({
@@ -244,6 +276,7 @@ const Products = () => {
       stock_quantity: "",
       image_url: "",
     });
+    setSelectedCategoryIds([]);
   };
 
   const handleAddProduct = () => {
@@ -300,7 +333,12 @@ const Products = () => {
 
   const handleBulkDelete = () => {
     if (selectedProducts.length === 0) return;
+    setBulkDeleteDialogOpen(true);
+  };
+
+  const confirmBulkDelete = () => {
     bulkDeleteMutation.mutate(selectedProducts);
+    setBulkDeleteDialogOpen(false);
   };
 
   const openPreviewDialog = (product: Product) => {
@@ -513,14 +551,23 @@ const Products = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="category">Category *</Label>
-                <Input
-                  id="category"
+                <Select
                   value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, category: value })
                   }
-                  placeholder="e.g., Basketball Shoes"
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="price">Price (USD) *</Label>
@@ -530,7 +577,7 @@ const Products = () => {
                   step="0.01"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="0.00"
+                  placeholder=""
                 />
               </div>
             </div>
@@ -544,7 +591,7 @@ const Products = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, stock_quantity: e.target.value })
                   }
-                  placeholder="0"
+                  placeholder=""
                 />
               </div>
               <div className="grid gap-2">
@@ -555,7 +602,7 @@ const Products = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, image_url: e.target.value })
                   }
-                  placeholder="https://example.com/image.jpg"
+                  placeholder=""
                 />
               </div>
             </div>
@@ -627,14 +674,23 @@ const Products = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-category">Category *</Label>
-                <Input
-                  id="edit-category"
+                <Select
                   value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, category: value })
                   }
-                  placeholder="e.g., Basketball Shoes"
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-price">Price (USD) *</Label>
@@ -644,7 +700,7 @@ const Products = () => {
                   step="0.01"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="0.00"
+                  placeholder=""
                 />
               </div>
             </div>
@@ -658,7 +714,7 @@ const Products = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, stock_quantity: e.target.value })
                   }
-                  placeholder="0"
+                  placeholder=""
                 />
               </div>
               <div className="grid gap-2">
@@ -669,7 +725,7 @@ const Products = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, image_url: e.target.value })
                   }
-                  placeholder="https://example.com/image.jpg"
+                  placeholder=""
                 />
               </div>
             </div>
@@ -820,6 +876,31 @@ const Products = () => {
               className="bg-destructive hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedProducts.length} products?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete {selectedProducts.length} 
+              {selectedProducts.length === 1 ? " product" : " products"} from the database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmBulkDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

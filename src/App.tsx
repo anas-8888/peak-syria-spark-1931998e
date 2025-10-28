@@ -34,6 +34,7 @@ import Inventory from "./pages/dashboard/Inventory";
 import Shipping from "./pages/dashboard/Shipping";
 import Marketing from "./pages/dashboard/Marketing";
 import DashboardSettings from "./pages/dashboard/Settings";
+import Categories from "./pages/dashboard/Categories";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />}>
                   <Route index element={<Overview />} />
                   <Route path="products" element={<Products />} />
+                  <Route path="categories" element={<Categories />} />
                   <Route path="orders" element={<Orders />} />
                   <Route path="payments" element={<Payments />} />
                   <Route path="customers" element={<Customers />} />

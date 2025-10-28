@@ -17,6 +17,7 @@ import {
   Megaphone,
   Menu,
   X,
+  FolderTree,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import peakLogo from "@/assets/peak-logo.png";
@@ -24,6 +25,7 @@ import peakLogo from "@/assets/peak-logo.png";
 const menuItems = [
   { title: "Overview", path: "/dashboard", icon: LayoutDashboard, end: true },
   { title: "Products", path: "/dashboard/products", icon: Package, end: false },
+  { title: "Categories", path: "/dashboard/categories", icon: FolderTree, end: false },
   { title: "Orders", path: "/dashboard/orders", icon: ShoppingBag, end: false },
   { title: "Payments", path: "/dashboard/payments", icon: CreditCard, end: false },
   { title: "Customers", path: "/dashboard/customers", icon: Users, end: false },
