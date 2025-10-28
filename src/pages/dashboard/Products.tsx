@@ -542,7 +542,14 @@ const Products = () => {
                       </TableCell>
                       <TableCell>{product.category}</TableCell>
                       <TableCell className="font-semibold">
-                        ${product.price.toFixed(2)}
+                        {product.offer_price ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-primary">${product.offer_price.toFixed(2)}</span>
+                            <span className="text-sm line-through text-muted-foreground">${product.price.toFixed(2)}</span>
+                          </div>
+                        ) : (
+                          <span>${product.price.toFixed(2)}</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <span

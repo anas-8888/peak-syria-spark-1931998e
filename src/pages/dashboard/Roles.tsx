@@ -67,7 +67,16 @@ const Roles = () => {
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [newRoleName, setNewRoleName] = useState("");
   const [renameValue, setRenameValue] = useState("");
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const reservedRoleNames = ["super admin", "customer"];
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
+    );
+  };
 
   // Fetch all permissions
   const { data: allPermissions = [] } = useQuery({
@@ -91,8 +100,7 @@ const Roles = () => {
       // Get all roles
       const { data: allRoles, error: rolesError } = await supabase
         .from("roles")
-        .select("*")
-        .order("name");
+        .select("*");
 
       if (rolesError) throw rolesError;
 
@@ -130,7 +138,20 @@ const Roles = () => {
         })
       );
 
-      return rolesWithData as RoleWithPermissions[];
+      // Sort roles: super admin first, customer second, then the rest
+      const sortedRoles = rolesWithData.sort((a, b) => {
+        const aLower = a.name.toLowerCase();
+        const bLower = b.name.toLowerCase();
+        
+        if (aLower === 'super admin') return -1;
+        if (bLower === 'super admin') return 1;
+        if (aLower === 'customer') return -1;
+        if (bLower === 'customer') return 1;
+        
+        return a.name.localeCompare(b.name);
+      });
+
+      return sortedRoles as RoleWithPermissions[];
     },
   });
 
@@ -358,27 +379,7 @@ const Roles = () => {
         </Card>
       </div>
 
-      {/* Permissions Box */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Permissions ({allPermissions.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {Object.entries(permissionsByCategory).map(([category, permissions]) => (
-              <div key={category} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <span className="font-medium capitalize">{category}</span>
-                <Badge variant="secondary">{permissions.length} permissions</Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Roles Table */}
-      <div className="grid grid-cols-1 gap-6">
-      </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Roles ({roles.length})</CardTitle>
@@ -471,6 +472,40 @@ const Roles = () => {
               </TableBody>
             </Table>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Permissions Box */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Permissions ({allPermissions.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {Object.entries(permissionsByCategory).map(([category, permissions]) => (
+              <div key={category} className="border rounded-lg overflow-hidden">
+                <div 
+                  className="flex items-center justify-between p-3 bg-muted/50 cursor-pointer hover:bg-muted transition-colors"
+                  onClick={() => toggleCategory(category)}
+                >
+                  <span className="font-medium capitalize">{category}</span>
+                  <Badge variant="secondary">{permissions.length} permissions</Badge>
+                </div>
+                {expandedCategories.includes(category) && (
+                  <div className="p-3 space-y-2 border-t">
+                    {permissions.map((perm) => (
+                      <div key={perm.id} className="flex flex-col gap-1">
+                        <span className="text-sm font-medium">{perm.name}</span>
+                        {perm.description && (
+                          <span className="text-xs text-muted-foreground">{perm.description}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
