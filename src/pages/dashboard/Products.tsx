@@ -108,7 +108,7 @@ const Products = () => {
   // Add product mutation
   const addProductMutation = useMutation({
     mutationFn: async (newProduct: typeof formData) => {
-      const { error } = await supabase.from("products").insert({
+      const { data, error } = await supabase.from("products").insert({
         name: newProduct.name,
         description: newProduct.description || null,
         category: newProduct.category,
@@ -116,14 +116,20 @@ const Products = () => {
         stock_quantity: parseInt(newProduct.stock_quantity),
         image_url: newProduct.image_url || null,
         is_active: true,
-      });
+      }).select().single();
 
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (newProduct) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast.success("Product added successfully");
+      toast.success("Product added successfully", {
+        description: "You can now add images to this product",
+      });
+      // Switch to the product for editing with images
+      setSelectedProduct(newProduct as Product);
       setIsAddDialogOpen(false);
+      setIsEditDialogOpen(true);
       resetForm();
     },
     onError: (error) => {
@@ -480,7 +486,7 @@ const Products = () => {
               onClick={handleAddProduct}
               disabled={addProductMutation.isPending}
             >
-              {addProductMutation.isPending ? "Adding..." : "Add Product"}
+              {addProductMutation.isPending ? "Adding..." : "Add Product & Continue to Images"}
             </Button>
           </DialogFooter>
         </DialogContent>
