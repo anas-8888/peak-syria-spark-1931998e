@@ -12,75 +12,84 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { format } from "date-fns";
 
-const orders = [
-  {
-    id: "#12845",
-    customer: "Ahmad Mohammad",
-    email: "ahmed@example.com",
-    products: 3,
-    total: "4,500,000 SYP",
-    status: "Delivered",
-    statusColor: "default",
-    date: "2025/01/15",
-  },
-  {
-    id: "#12844",
-    customer: "Sara Ali",
-    email: "sara@example.com",
-    products: 2,
-    total: "3,600,000 SYP",
-    status: "In Transit",
-    statusColor: "secondary",
-    date: "2025/01/14",
-  },
-  {
-    id: "#12843",
-    customer: "Mahmoud Khaled",
-    email: "mahmoud@example.com",
-    products: 1,
-    total: "2,200,000 SYP",
-    status: "Processing",
-    statusColor: "secondary",
-    date: "2025/01/14",
-  },
-  {
-    id: "#12842",
-    customer: "Layla Hassan",
-    email: "layla@example.com",
-    products: 4,
-    total: "6,800,000 SYP",
-    status: "Delivered",
-    statusColor: "default",
-    date: "2025/01/13",
-  },
-  {
-    id: "#12841",
-    customer: "Omar Yousef",
-    email: "omar@example.com",
-    products: 2,
-    total: "3,200,000 SYP",
-    status: "Cancelled",
-    statusColor: "destructive",
-    date: "2025/01/12",
-  },
-];
+type OrderWithItems = {
+  id: string;
+  customer_name: string;
+  customer_email: string;
+  total_amount: number;
+  status: string;
+  created_at: string;
+  itemCount: number;
+};
 
 const statusIcons = {
-  Delivered: CheckCircle,
-  "In Transit": Truck,
-  Processing: Package,
-  Cancelled: XCircle,
+  delivered: CheckCircle,
+  shipped: Truck,
+  pending: Package,
+  cancelled: XCircle,
+};
+
+const statusVariants = {
+  delivered: "default",
+  shipped: "secondary",
+  pending: "secondary",
+  cancelled: "destructive",
+};
+
+const statusLabels = {
+  delivered: "Delivered",
+  shipped: "In Transit",
+  pending: "Processing",
+  cancelled: "Cancelled",
 };
 
 const Orders = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
+  const { data: ordersData, isLoading } = useQuery({
+    queryKey: ["orders"],
+    queryFn: async () => {
+      const { data: orders, error } = await supabase
+        .from("orders")
+        .select(`
+          id,
+          customer_name,
+          customer_email,
+          total_amount,
+          status,
+          created_at,
+          order_items (
+            id
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      return orders.map((order) => ({
+        ...order,
+        itemCount: order.order_items?.length || 0,
+      })) as OrderWithItems[];
+    },
+  });
+
+  const orders = ordersData || [];
+
   const filteredOrders = orders.filter(
     (order) =>
       order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.toLowerCase().includes(searchTerm.toLowerCase())
+      order.customer_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalOrders = orders.length;
+  const inTransitOrders = orders.filter((o) => o.status === "shipped").length;
+  const completedOrders = orders.filter((o) => o.status === "delivered").length;
+  const cancelledOrders = orders.filter((o) => o.status === "cancelled").length;
 
   return (
     <div className="p-8 space-y-6">
@@ -100,7 +109,9 @@ const Orders = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Orders</p>
-                <p className="text-2xl font-bold">156</p>
+                <p className="text-2xl font-bold">
+                  {isLoading ? <Skeleton className="h-8 w-16" /> : totalOrders}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -113,7 +124,9 @@ const Orders = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">In Transit</p>
-                <p className="text-2xl font-bold">28</p>
+                <p className="text-2xl font-bold">
+                  {isLoading ? <Skeleton className="h-8 w-16" /> : inTransitOrders}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -126,7 +139,9 @@ const Orders = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold">118</p>
+                <p className="text-2xl font-bold">
+                  {isLoading ? <Skeleton className="h-8 w-16" /> : completedOrders}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -139,7 +154,9 @@ const Orders = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Cancelled</p>
-                <p className="text-2xl font-bold">10</p>
+                <p className="text-2xl font-bold">
+                  {isLoading ? <Skeleton className="h-8 w-16" /> : cancelledOrders}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -180,34 +197,58 @@ const Orders = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOrders.map((order) => {
-                const StatusIcon = statusIcons[order.status as keyof typeof statusIcons];
-                return (
-                  <TableRow key={order.id} className="hover:bg-muted/50">
-                    <TableCell className="font-mono font-semibold">{order.id}</TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{order.customer}</p>
-                        <p className="text-sm text-muted-foreground">{order.email}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{order.products} items</TableCell>
-                    <TableCell className="font-semibold">{order.total}</TableCell>
-                    <TableCell>
-                      <Badge variant={order.statusColor as any} className="gap-2">
-                        <StatusIcon className="h-3 w-3" />
-                        {order.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{order.date}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                   </TableRow>
-                );
-              })}
+                ))
+              ) : filteredOrders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No orders found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredOrders.map((order) => {
+                  const StatusIcon = statusIcons[order.status as keyof typeof statusIcons];
+                  return (
+                    <TableRow key={order.id} className="hover:bg-muted/50">
+                      <TableCell className="font-mono font-semibold">
+                        #{order.id.slice(0, 8)}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{order.customer_name}</p>
+                          <p className="text-sm text-muted-foreground">{order.customer_email}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>{order.itemCount} items</TableCell>
+                      <TableCell className="font-semibold">
+                        ${order.total_amount.toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={statusVariants[order.status as keyof typeof statusVariants] as any} className="gap-2">
+                          <StatusIcon className="h-3 w-3" />
+                          {statusLabels[order.status as keyof typeof statusLabels]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{format(new Date(order.created_at), "yyyy/MM/dd")}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="icon">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </CardContent>
