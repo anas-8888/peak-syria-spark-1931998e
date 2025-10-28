@@ -75,6 +75,8 @@ const Categories = () => {
     display_order: 0,
     is_active: true,
   });
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // Fetch categories
   const { data: allCategories = [], isLoading } = useQuery({
@@ -119,11 +121,31 @@ const Categories = () => {
   // Add mutation
   const addMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      let finalImageUrl = data.image_url;
+
+      // Upload image if provided
+      if (uploadedImage) {
+        const fileExt = uploadedImage.name.split('.').pop();
+        const fileName = `categories/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, uploadedImage);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(fileName);
+
+        finalImageUrl = publicUrl;
+      }
+
       const { error } = await supabase.from("categories").insert([{
         name: data.name,
         description: data.description || null,
         parent_id: data.parent_id || null,
-        image_url: data.image_url || null,
+        image_url: finalImageUrl || null,
         display_order: data.display_order,
         is_active: data.is_active,
       }]);
@@ -143,13 +165,33 @@ const Categories = () => {
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: async (data: typeof formData & { id: string }) => {
+      let finalImageUrl = data.image_url;
+
+      // Upload new image if provided
+      if (uploadedImage) {
+        const fileExt = uploadedImage.name.split('.').pop();
+        const fileName = `categories/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, uploadedImage);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(fileName);
+
+        finalImageUrl = publicUrl;
+      }
+
       const { error } = await supabase
         .from("categories")
         .update({
           name: data.name,
           description: data.description || null,
           parent_id: data.parent_id || null,
-          image_url: data.image_url || null,
+          image_url: finalImageUrl || null,
           display_order: data.display_order,
           is_active: data.is_active,
         })
@@ -208,6 +250,8 @@ const Categories = () => {
       is_active: true,
     });
     setSelectedCategory(null);
+    setUploadedImage(null);
+    setImagePreview(null);
   };
 
   const handleEdit = (category: Category) => {
@@ -220,6 +264,8 @@ const Categories = () => {
       display_order: category.display_order,
       is_active: category.is_active,
     });
+    setUploadedImage(null);
+    setImagePreview(category.image_url || null);
     setIsEditDialogOpen(true);
   };
 
@@ -263,6 +309,18 @@ const Categories = () => {
   const openPreviewDialog = (category: Category) => {
     setSelectedCategory(category);
     setIsPreviewDialogOpen(true);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -511,15 +569,23 @@ const Categories = () => {
               </div>
 
               <div>
-                <Label htmlFor="image_url">Image URL</Label>
+                <Label htmlFor="category-image">Category Image</Label>
                 <Input
-                  id="image_url"
-                  value={formData.image_url}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image_url: e.target.value })
-                  }
-                  placeholder="https://example.com/category-image.jpg"
+                  id="category-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="cursor-pointer"
                 />
+                {imagePreview && (
+                  <div className="mt-2">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="w-32 h-32 object-cover rounded-md border"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>

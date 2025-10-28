@@ -628,17 +628,6 @@ const Products = () => {
                   placeholder=""
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="image">Image URL</Label>
-                <Input
-                  id="image"
-                  value={formData.image_url}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image_url: e.target.value })
-                  }
-                  placeholder=""
-                />
-              </div>
             </div>
           </TabsContent>
 
@@ -760,17 +749,6 @@ const Products = () => {
                   value={formData.stock_quantity}
                   onChange={(e) =>
                     setFormData({ ...formData, stock_quantity: e.target.value })
-                  }
-                  placeholder=""
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-image">Image URL</Label>
-                <Input
-                  id="edit-image"
-                  value={formData.image_url}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image_url: e.target.value })
                   }
                   placeholder=""
                 />
