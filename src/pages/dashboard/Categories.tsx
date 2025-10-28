@@ -350,16 +350,16 @@ const Categories = () => {
               <div>
                 <Label htmlFor="parent">Parent Category</Label>
                 <Select
-                  value={formData.parent_id}
+                  value={formData.parent_id || "none"}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, parent_id: value })
+                    setFormData({ ...formData, parent_id: value === "none" ? "" : value })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="None (Root Category)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None (Root Category)</SelectItem>
+                    <SelectItem value="none">None (Root Category)</SelectItem>
                     {getAvailableParents().map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         {getCategoryHierarchy(cat.id)}
