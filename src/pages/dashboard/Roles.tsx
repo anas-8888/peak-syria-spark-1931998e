@@ -63,7 +63,7 @@ const Roles = () => {
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
+  const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [newRoleName, setNewRoleName] = useState("");
   const [renameValue, setRenameValue] = useState("");
@@ -201,6 +201,23 @@ const Roles = () => {
     },
   });
 
+  // Delete role mutation
+  const deleteRoleMutation = useMutation({
+    mutationFn: async (roleId: string) => {
+      const { error } = await supabase.from("roles").delete().eq("id", roleId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["roles"] });
+      toast.success("Role deleted successfully");
+      setDeleteDialogOpen(false);
+      setRoleToDelete(null);
+    },
+    onError: (error: any) => {
+      toast.error("Failed to delete role", { description: error.message });
+    },
+  });
+
   // Update role permissions mutation
   const updatePermissionsMutation = useMutation({
     mutationFn: async (data: { roleId: string; permissionIds: string[] }) => {
@@ -260,6 +277,20 @@ const Roles = () => {
         ? prev.filter((id) => id !== permissionId)
         : [...prev, permissionId]
     );
+  };
+
+  const toggleCategoryPermissions = (category: string) => {
+    const categoryPerms = permissionsByCategory[category] || [];
+    const categoryPermIds = categoryPerms.map((p) => p.id);
+    const allSelected = categoryPermIds.every((id) => selectedPermissions.includes(id));
+    
+    if (allSelected) {
+      // Unselect all in category
+      setSelectedPermissions((prev) => prev.filter((id) => !categoryPermIds.includes(id)));
+    } else {
+      // Select all in category
+      setSelectedPermissions((prev) => [...new Set([...prev, ...categoryPermIds])]);
+    }
   };
 
   // Group permissions by category
@@ -327,7 +358,27 @@ const Roles = () => {
         </Card>
       </div>
 
+      {/* Permissions Box */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Permissions ({allPermissions.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {Object.entries(permissionsByCategory).map(([category, permissions]) => (
+              <div key={category} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <span className="font-medium capitalize">{category}</span>
+                <Badge variant="secondary">{permissions.length} permissions</Badge>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Roles Table */}
+      <div className="grid grid-cols-1 gap-6">
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Roles ({roles.length})</CardTitle>
@@ -401,6 +452,18 @@ const Roles = () => {
                         >
                           Rename
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled={reservedRoleNames.includes(role.name.toLowerCase())}
+                          onClick={() => {
+                            setRoleToDelete({ id: role.id, name: role.name, created_at: '' });
+                            setDeleteDialogOpen(true);
+                          }}
+                          aria-label="Delete role"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -421,10 +484,23 @@ const Roles = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
-            {Object.entries(permissionsByCategory).map(([category, permissions]) => (
-              <div key={category} className="space-y-3">
-                <h3 className="font-semibold text-sm">{category}</h3>
-                <div className="space-y-2 pl-4">
+            {Object.entries(permissionsByCategory).map(([category, permissions]) => {
+              const categoryPermIds = permissions.map((p) => p.id);
+              const allCategorySelected = categoryPermIds.every((id) => selectedPermissions.includes(id));
+              
+              return (
+                <div key={category} className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id={`category-${category}`}
+                      checked={allCategorySelected}
+                      onCheckedChange={() => toggleCategoryPermissions(category)}
+                    />
+                    <Label htmlFor={`category-${category}`} className="font-semibold text-sm cursor-pointer capitalize">
+                      {category}
+                    </Label>
+                  </div>
+                  <div className="space-y-2 pl-4">
                   {permissions.map((perm) => (
                     <div key={perm.id} className="flex items-start gap-3">
                       <Checkbox
@@ -446,7 +522,8 @@ const Roles = () => {
                   ))}
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
           <DialogFooter>
             <Button
@@ -491,10 +568,23 @@ const Roles = () => {
             </div>
             <div className="space-y-4">
               <Label>Permissions</Label>
-              {Object.entries(permissionsByCategory).map(([category, permissions]) => (
-                <div key={category} className="space-y-3">
-                  <h3 className="font-semibold text-sm">{category}</h3>
-                  <div className="space-y-2 pl-4">
+              {Object.entries(permissionsByCategory).map(([category, permissions]) => {
+                const categoryPermIds = permissions.map((p) => p.id);
+                const allCategorySelected = categoryPermIds.every((id) => selectedPermissions.includes(id));
+                
+                return (
+                  <div key={category} className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id={`add-category-${category}`}
+                        checked={allCategorySelected}
+                        onCheckedChange={() => toggleCategoryPermissions(category)}
+                      />
+                      <Label htmlFor={`add-category-${category}`} className="font-semibold text-sm cursor-pointer capitalize">
+                        {category}
+                      </Label>
+                    </div>
+                    <div className="space-y-2 pl-4">
                     {permissions.map((perm) => (
                       <div key={perm.id} className="flex items-start gap-3">
                         <Checkbox
@@ -516,7 +606,8 @@ const Roles = () => {
                     ))}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           <DialogFooter>
@@ -552,6 +643,28 @@ const Roles = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Role Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Role</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the role "{roleToDelete?.name}"? This action cannot be undone.
+              Users with this role will need to be reassigned.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => roleToDelete && deleteRoleMutation.mutate(roleToDelete.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteRoleMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

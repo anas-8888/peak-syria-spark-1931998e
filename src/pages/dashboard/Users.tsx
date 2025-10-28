@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Eye, Mail, Phone, UserPlus, TrendingUp, Users as UsersIcon, UserCheck, Pencil, Trash2 } from "lucide-react";
+import { Search, Eye, Mail, Phone, UserPlus, TrendingUp, Users as UsersIcon, UserCheck, Pencil, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,12 +81,20 @@ const Users = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
     full_name: "",
     phone: "",
     address: "",
+    role_id: "",
+  });
+
+  const [newUserData, setNewUserData] = useState({
+    email: "",
+    password: "",
+    full_name: "",
     role_id: "",
   });
 
@@ -178,6 +186,11 @@ const Users = () => {
     setSelectedCustomer(null);
   };
 
+  const resetNewUserForm = () => {
+    setNewUserData({ email: "", password: "", full_name: "", role_id: "" });
+    setIsAddUserDialogOpen(false);
+  };
+
   const handleViewCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
     setIsViewDialogOpen(true);
@@ -216,6 +229,40 @@ const Users = () => {
     });
   };
 
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: async (data: typeof newUserData) => {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.full_name,
+          },
+        },
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("Failed to create user");
+
+      // Update the profile with role_id
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ role_id: data.role_id })
+        .eq("id", authData.user.id);
+
+      if (profileError) throw profileError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("User created successfully");
+      resetNewUserForm();
+    },
+    onError: (error: any) => {
+      toast.error("Failed to create user", { description: error.message });
+    },
+  });
+
   const filteredCustomers = customers.filter((customer) => {
     const matchesSearch =
       customer.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -250,6 +297,9 @@ const Users = () => {
           <h1 className="text-3xl font-bold mb-2">User Management</h1>
           <p className="text-muted-foreground">View and manage all users</p>
         </div>
+        <Button onClick={() => setIsAddUserDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" /> Add User
+        </Button>
       </div>
 
       {/* Stats */}
@@ -595,6 +645,81 @@ const Users = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Add User Dialog */}
+      <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>Create a new user account with a specific role</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="new-email">Email</Label>
+              <Input
+                id="new-email"
+                type="email"
+                value={newUserData.email}
+                onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
+                placeholder="user@example.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-password">Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newUserData.password}
+                onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
+                placeholder="••••••••"
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-full-name">Full Name</Label>
+              <Input
+                id="new-full-name"
+                value={newUserData.full_name}
+                onChange={(e) => setNewUserData({ ...newUserData, full_name: e.target.value })}
+                placeholder="John Doe"
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-role">Role</Label>
+              <Select
+                value={newUserData.role_id}
+                onValueChange={(value) => setNewUserData({ ...newUserData, role_id: value })}
+              >
+                <SelectTrigger id="new-role">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((role: any) => (
+                    <SelectItem key={role.id} value={role.id} className="capitalize">
+                      {role.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={resetNewUserForm}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => createUserMutation.mutate(newUserData)}
+              disabled={
+                createUserMutation.isPending ||
+                !newUserData.email ||
+                !newUserData.password ||
+                !newUserData.role_id
+              }
+            >
+              {createUserMutation.isPending ? "Creating..." : "Create User"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
