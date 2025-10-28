@@ -22,12 +22,7 @@ export const useAdminCheck = () => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
+      const { data, error } = await supabase.rpc("is_admin", { _user_id: user.id });
 
       if (error) throw error;
 
