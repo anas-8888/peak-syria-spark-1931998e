@@ -51,13 +51,28 @@ interface Customer {
   created_at: string;
   totalOrders: number;
   totalSpent: number;
-  roles?: { role: string }[];
+  role_id: string;
+  role: { name: string };
 }
 
 const Users = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+
+  // Fetch all roles for the filter
+  const { data: roles = [] } = useQuery({
+    queryKey: ["roles"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("roles")
+        .select("*")
+        .order("name");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -76,25 +91,23 @@ const Users = () => {
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      // First get all profiles
+      // Get profiles with role information
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("*")
+        .select(`
+          *,
+          role:roles(name)
+        `)
         .order("created_at", { ascending: false });
 
       if (profilesError) throw profilesError;
 
-      // Then get order stats and roles for each user
+      // Get order stats for each user
       const customersWithStats = await Promise.all(
         (profiles || []).map(async (profile) => {
           const { data: orders } = await supabase
             .from("orders")
             .select("total_amount")
-            .eq("user_id", profile.id);
-
-          const { data: roles } = await supabase
-            .from("user_roles")
-            .select("role")
             .eq("user_id", profile.id);
 
           const totalOrders = orders?.length || 0;
@@ -104,7 +117,6 @@ const Users = () => {
             ...profile,
             totalOrders,
             totalSpent,
-            roles: roles || [],
           };
         })
       );
@@ -206,7 +218,7 @@ const Users = () => {
     
     const matchesRole =
       roleFilter === "all" ||
-      customer.roles?.some((r) => r.role === roleFilter);
+      customer.role_id === roleFilter;
 
     return matchesSearch && matchesRole;
   });
@@ -375,17 +387,9 @@ const Users = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1 flex-wrap">
-                        {customer.roles && customer.roles.length > 0 ? (
-                          customer.roles.map((r, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
-                              {r.role}
-                            </Badge>
-                          ))
-                        ) : (
-                          <span className="text-muted-foreground text-sm">No role</span>
-                        )}
-                      </div>
+                      <Badge variant="secondary" className="text-xs capitalize">
+                        {customer.role?.name || 'N/A'}
+                      </Badge>
                     </TableCell>
                     <TableCell className="font-semibold">{customer.totalOrders}</TableCell>
                     <TableCell className="font-semibold">

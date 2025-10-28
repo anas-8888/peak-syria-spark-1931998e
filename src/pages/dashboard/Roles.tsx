@@ -43,8 +43,15 @@ interface Permission {
   category: string;
 }
 
+interface Role {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
 interface RoleWithPermissions {
-  role: string;
+  id: string;
+  name: string;
   permissions: Permission[];
   userCount: number;
 }
@@ -53,7 +60,7 @@ const Roles = () => {
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
@@ -77,18 +84,17 @@ const Roles = () => {
   const { data: roles = [], isLoading } = useQuery({
     queryKey: ["roles"],
     queryFn: async () => {
-      // Get all unique roles
-      const { data: userRoles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("role");
+      // Get all roles
+      const { data: allRoles, error: rolesError } = await supabase
+        .from("roles")
+        .select("*")
+        .order("name");
 
       if (rolesError) throw rolesError;
 
-      const uniqueRoles = Array.from(new Set(userRoles?.map((r) => r.role) || []));
-
       // Get permissions and user count for each role
       const rolesWithData = await Promise.all(
-        uniqueRoles.map(async (role) => {
+        (allRoles || []).map(async (role) => {
           // Get permissions for this role
           const { data: rolePerms } = await supabase
             .from("role_permissions")
@@ -101,20 +107,21 @@ const Roles = () => {
                 category
               )
             `)
-            .eq("role", role);
+            .eq("role_id", role.id);
 
           // Get user count for this role
-          const { data: users } = await supabase
-            .from("user_roles")
-            .select("user_id", { count: "exact", head: true })
-            .eq("role", role);
+          const { count } = await supabase
+            .from("profiles")
+            .select("*", { count: "exact", head: true })
+            .eq("role_id", role.id);
 
           const permissions = rolePerms?.map((rp: any) => rp.permissions).filter(Boolean) || [];
 
           return {
-            role,
+            id: role.id,
+            name: role.name,
             permissions,
-            userCount: users || 0,
+            userCount: count || 0,
           };
         })
       );
@@ -125,12 +132,12 @@ const Roles = () => {
 
   // Update role permissions mutation
   const updatePermissionsMutation = useMutation({
-    mutationFn: async (data: { role: string; permissionIds: string[] }) => {
+    mutationFn: async (data: { roleId: string; permissionIds: string[] }) => {
       // Delete existing permissions for this role
       const { error: deleteError } = await supabase
         .from("role_permissions")
         .delete()
-        .eq("role", data.role as any);
+        .eq("role_id", data.roleId);
 
       if (deleteError) throw deleteError;
 
@@ -140,7 +147,7 @@ const Roles = () => {
           .from("role_permissions")
           .insert(
             data.permissionIds.map((permId) => ({
-              role: data.role as any,
+              role_id: data.roleId,
               permission_id: permId,
             }))
           );
@@ -163,7 +170,7 @@ const Roles = () => {
   });
 
   const handleEditRole = (role: RoleWithPermissions) => {
-    setSelectedRole(role.role);
+    setSelectedRole({ id: role.id, name: role.name, created_at: '' });
     setSelectedPermissions(role.permissions.map((p) => p.id));
     setIsEditDialogOpen(true);
   };
@@ -171,7 +178,7 @@ const Roles = () => {
   const handleUpdatePermissions = () => {
     if (!selectedRole) return;
     updatePermissionsMutation.mutate({
-      role: selectedRole,
+      roleId: selectedRole.id,
       permissionIds: selectedPermissions,
     });
   };
@@ -272,14 +279,14 @@ const Roles = () => {
               </TableHeader>
               <TableBody>
                 {roles.map((role) => (
-                  <TableRow key={role.role} className="hover:bg-muted/50">
+                  <TableRow key={role.id} className="hover:bg-muted/50">
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
                           <Shield className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <p className="font-medium capitalize">{role.role}</p>
+                          <p className="font-medium capitalize">{role.name}</p>
                         </div>
                       </div>
                     </TableCell>
@@ -323,7 +330,7 @@ const Roles = () => {
           <DialogHeader>
             <DialogTitle>Edit Role Permissions</DialogTitle>
             <DialogDescription>
-              Select permissions for the <span className="font-semibold capitalize">{selectedRole}</span> role
+              Select permissions for the <span className="font-semibold capitalize">{selectedRole?.name}</span> role
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
