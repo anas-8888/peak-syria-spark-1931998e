@@ -487,3 +487,8 @@ const Roles = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
+
+export default Roles;
