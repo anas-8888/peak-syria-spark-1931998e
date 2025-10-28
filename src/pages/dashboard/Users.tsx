@@ -1,12 +1,19 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Eye, Mail, Phone, UserPlus, TrendingUp, Users, UserCheck, Pencil, Trash2 } from "lucide-react";
+import { Search, Eye, Mail, Phone, UserPlus, TrendingUp, Users as UsersIcon, UserCheck, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -44,11 +51,13 @@ interface Customer {
   created_at: string;
   totalOrders: number;
   totalSpent: number;
+  roles?: { role: string }[];
 }
 
-const Customers = () => {
+const Users = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -63,9 +72,9 @@ const Customers = () => {
     address: "",
   });
 
-  // Fetch customers with order stats
+  // Fetch users with order stats and roles
   const { data: customers = [], isLoading } = useQuery({
-    queryKey: ["customers"],
+    queryKey: ["users"],
     queryFn: async () => {
       // First get all profiles
       const { data: profiles, error: profilesError } = await supabase
@@ -75,12 +84,17 @@ const Customers = () => {
 
       if (profilesError) throw profilesError;
 
-      // Then get order stats for each customer
+      // Then get order stats and roles for each user
       const customersWithStats = await Promise.all(
         (profiles || []).map(async (profile) => {
           const { data: orders } = await supabase
             .from("orders")
             .select("total_amount")
+            .eq("user_id", profile.id);
+
+          const { data: roles } = await supabase
+            .from("user_roles")
+            .select("role")
             .eq("user_id", profile.id);
 
           const totalOrders = orders?.length || 0;
@@ -90,6 +104,7 @@ const Customers = () => {
             ...profile,
             totalOrders,
             totalSpent,
+            roles: roles || [],
           };
         })
       );
@@ -108,8 +123,8 @@ const Customers = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["customers"] });
-      toast.success("Customer updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("User updated successfully");
       setIsEditDialogOpen(false);
       resetForm();
     },
@@ -127,8 +142,8 @@ const Customers = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["customers"] });
-      toast.success("Customer deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("User deleted successfully");
     },
     onError: (error: any) => {
       toast.error("Failed to delete customer", {
@@ -184,11 +199,17 @@ const Customers = () => {
     });
   };
 
-  const filteredCustomers = customers.filter(
-    (customer) =>
+  const filteredCustomers = customers.filter((customer) => {
+    const matchesSearch =
       customer.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      customer.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRole =
+      roleFilter === "all" ||
+      customer.roles?.some((r) => r.role === roleFilter);
+
+    return matchesSearch && matchesRole;
+  });
 
   // Calculate stats
   const totalCustomers = customers.length;
@@ -209,8 +230,8 @@ const Customers = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Customer Management</h1>
-          <p className="text-muted-foreground">View and manage all customers</p>
+          <h1 className="text-3xl font-bold mb-2">User Management</h1>
+          <p className="text-muted-foreground">View and manage all users</p>
         </div>
       </div>
 
@@ -220,7 +241,7 @@ const Customers = () => {
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Users className="h-6 w-6 text-primary" />
+                <UsersIcon className="h-6 w-6 text-primary" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Customers</p>
@@ -270,41 +291,55 @@ const Customers = () => {
         </Card>
       </div>
 
-      {/* Search */}
+      {/* Search and Filter */}
       <Card>
         <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="moderator">Moderator</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Customers Table */}
+      {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Customers ({filteredCustomers.length})</CardTitle>
+          <CardTitle>Users ({filteredCustomers.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
-              Loading customers...
+              Loading users...
             </div>
           ) : filteredCustomers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No customers found
+              No users found
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Customer</TableHead>
+                  <TableHead>User</TableHead>
                   <TableHead>Contact</TableHead>
+                  <TableHead>Role</TableHead>
                   <TableHead>Orders</TableHead>
                   <TableHead>Total Spent</TableHead>
                   <TableHead>Join Date</TableHead>
@@ -337,6 +372,19 @@ const Customers = () => {
                           <Phone className="h-3 w-3 text-muted-foreground" />
                           <span className="text-muted-foreground">{customer.phone || "N/A"}</span>
                         </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 flex-wrap">
+                        {customer.roles && customer.roles.length > 0 ? (
+                          customer.roles.map((r, idx) => (
+                            <Badge key={idx} variant="secondary" className="text-xs">
+                              {r.role}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-muted-foreground text-sm">No role</span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="font-semibold">{customer.totalOrders}</TableCell>
@@ -377,11 +425,11 @@ const Customers = () => {
         </CardContent>
       </Card>
 
-      {/* View Customer Dialog */}
+      {/* View User Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Customer Details</DialogTitle>
+            <DialogTitle>User Details</DialogTitle>
           </DialogHeader>
           {selectedCustomer && (
             <div className="space-y-4 py-4">
@@ -421,12 +469,12 @@ const Customers = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Customer Dialog */}
+      {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Customer</DialogTitle>
-            <DialogDescription>Update customer information</DialogDescription>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>Update user information</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
@@ -478,7 +526,7 @@ const Customers = () => {
               Cancel
             </Button>
             <Button onClick={handleUpdateCustomer} disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? "Updating..." : "Update Customer"}
+              {updateMutation.isPending ? "Updating..." : "Update User"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -490,7 +538,7 @@ const Customers = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete this customer
+              This action cannot be undone. This will permanently delete this user
               and all associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -509,4 +557,4 @@ const Customers = () => {
   );
 };
 
-export default Customers;
+export default Users;

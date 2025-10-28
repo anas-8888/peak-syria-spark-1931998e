@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   FolderTree,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import peakLogo from "@/assets/peak-logo.png";
@@ -28,7 +29,8 @@ const menuItems = [
   { title: "Categories", path: "/dashboard/categories", icon: FolderTree, end: false },
   { title: "Orders", path: "/dashboard/orders", icon: ShoppingBag, end: false },
   { title: "Payments", path: "/dashboard/payments", icon: CreditCard, end: false },
-  { title: "Customers", path: "/dashboard/customers", icon: Users, end: false },
+  { title: "Users", path: "/dashboard/users", icon: Users, end: false },
+  { title: "Roles", path: "/dashboard/roles", icon: Shield, end: false },
   { title: "Analytics", path: "/dashboard/analytics", icon: BarChart3, end: false },
   { title: "Reviews", path: "/dashboard/reviews", icon: Star, end: false },
   { title: "Discounts", path: "/dashboard/discounts", icon: Tag, end: false },

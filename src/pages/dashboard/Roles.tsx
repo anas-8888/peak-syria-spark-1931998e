@@ -1,0 +1,378 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Shield, Pencil, Trash2, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+
+interface Permission {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+}
+
+interface RoleWithPermissions {
+  role: string;
+  permissions: Permission[];
+  userCount: number;
+}
+
+const Roles = () => {
+  const queryClient = useQueryClient();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+
+  // Fetch all permissions
+  const { data: allPermissions = [] } = useQuery({
+    queryKey: ["permissions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("permissions")
+        .select("*")
+        .order("category", { ascending: true })
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+      return data as Permission[];
+    },
+  });
+
+  // Fetch roles with permissions
+  const { data: roles = [], isLoading } = useQuery({
+    queryKey: ["roles"],
+    queryFn: async () => {
+      // Get all unique roles
+      const { data: userRoles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("role");
+
+      if (rolesError) throw rolesError;
+
+      const uniqueRoles = Array.from(new Set(userRoles?.map((r) => r.role) || []));
+
+      // Get permissions and user count for each role
+      const rolesWithData = await Promise.all(
+        uniqueRoles.map(async (role) => {
+          // Get permissions for this role
+          const { data: rolePerms } = await supabase
+            .from("role_permissions")
+            .select(`
+              permission_id,
+              permissions (
+                id,
+                name,
+                description,
+                category
+              )
+            `)
+            .eq("role", role);
+
+          // Get user count for this role
+          const { data: users } = await supabase
+            .from("user_roles")
+            .select("user_id", { count: "exact", head: true })
+            .eq("role", role);
+
+          const permissions = rolePerms?.map((rp: any) => rp.permissions).filter(Boolean) || [];
+
+          return {
+            role,
+            permissions,
+            userCount: users || 0,
+          };
+        })
+      );
+
+      return rolesWithData as RoleWithPermissions[];
+    },
+  });
+
+  // Update role permissions mutation
+  const updatePermissionsMutation = useMutation({
+    mutationFn: async (data: { role: string; permissionIds: string[] }) => {
+      // Delete existing permissions for this role
+      const { error: deleteError } = await supabase
+        .from("role_permissions")
+        .delete()
+        .eq("role", data.role as any);
+
+      if (deleteError) throw deleteError;
+
+      // Insert new permissions
+      if (data.permissionIds.length > 0) {
+        const { error: insertError } = await supabase
+          .from("role_permissions")
+          .insert(
+            data.permissionIds.map((permId) => ({
+              role: data.role as any,
+              permission_id: permId,
+            }))
+          );
+
+        if (insertError) throw insertError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["roles"] });
+      toast.success("Role permissions updated successfully");
+      setIsEditDialogOpen(false);
+      setSelectedRole(null);
+      setSelectedPermissions([]);
+    },
+    onError: (error: any) => {
+      toast.error("Failed to update role permissions", {
+        description: error.message,
+      });
+    },
+  });
+
+  const handleEditRole = (role: RoleWithPermissions) => {
+    setSelectedRole(role.role);
+    setSelectedPermissions(role.permissions.map((p) => p.id));
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdatePermissions = () => {
+    if (!selectedRole) return;
+    updatePermissionsMutation.mutate({
+      role: selectedRole,
+      permissionIds: selectedPermissions,
+    });
+  };
+
+  const togglePermission = (permissionId: string) => {
+    setSelectedPermissions((prev) =>
+      prev.includes(permissionId)
+        ? prev.filter((id) => id !== permissionId)
+        : [...prev, permissionId]
+    );
+  };
+
+  // Group permissions by category
+  const permissionsByCategory = allPermissions.reduce((acc, perm) => {
+    if (!acc[perm.category]) {
+      acc[perm.category] = [];
+    }
+    acc[perm.category].push(perm);
+    return acc;
+  }, {} as Record<string, Permission[]>);
+
+  return (
+    <div className="p-8 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Role Management</h1>
+          <p className="text-muted-foreground">Manage roles and permissions</p>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                <Shield className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Roles</p>
+                <p className="text-2xl font-bold">{roles.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                <Shield className="h-6 w-6 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Permissions</p>
+                <p className="text-2xl font-bold">{allPermissions.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 bg-green-500/10 rounded-lg flex items-center justify-center">
+                <Shield className="h-6 w-6 text-green-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Permission Categories</p>
+                <p className="text-2xl font-bold">{Object.keys(permissionsByCategory).length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Roles Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Roles ({roles.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Loading roles...
+            </div>
+          ) : roles.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No roles found
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Users</TableHead>
+                  <TableHead>Permissions</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {roles.map((role) => (
+                  <TableRow key={role.role} className="hover:bg-muted/50">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
+                          <Shield className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium capitalize">{role.role}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-semibold">{role.userCount}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 flex-wrap max-w-md">
+                        {role.permissions.slice(0, 3).map((perm) => (
+                          <Badge key={perm.id} variant="secondary" className="text-xs">
+                            {perm.name}
+                          </Badge>
+                        ))}
+                        {role.permissions.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{role.permissions.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditRole(role)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Edit Role Permissions Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Role Permissions</DialogTitle>
+            <DialogDescription>
+              Select permissions for the <span className="font-semibold capitalize">{selectedRole}</span> role
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {Object.entries(permissionsByCategory).map(([category, permissions]) => (
+              <div key={category} className="space-y-3">
+                <h3 className="font-semibold text-sm">{category}</h3>
+                <div className="space-y-2 pl-4">
+                  {permissions.map((perm) => (
+                    <div key={perm.id} className="flex items-start gap-3">
+                      <Checkbox
+                        id={perm.id}
+                        checked={selectedPermissions.includes(perm.id)}
+                        onCheckedChange={() => togglePermission(perm.id)}
+                      />
+                      <div className="flex-1">
+                        <Label htmlFor={perm.id} className="cursor-pointer font-normal">
+                          {perm.name}
+                        </Label>
+                        {perm.description && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {perm.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditDialogOpen(false);
+                setSelectedRole(null);
+                setSelectedPermissions([]);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleUpdatePermissions} disabled={updatePermissionsMutation.isPending}>
+              {updatePermissionsMutation.isPending ? "Updating..." : "Update Permissions"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Roles;
