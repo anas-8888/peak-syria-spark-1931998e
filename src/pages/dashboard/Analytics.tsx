@@ -2,6 +2,7 @@ import { TrendingUp, DollarSign, ShoppingBag, Users, Download } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   BarChart,
   Bar,
@@ -17,31 +18,143 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 
-const salesData = [
-  { month: "Jan", revenue: 45000000, orders: 142 },
-  { month: "Feb", revenue: 52000000, orders: 168 },
-  { month: "Mar", revenue: 48000000, orders: 156 },
-  { month: "Apr", revenue: 61000000, orders: 189 },
-  { month: "May", revenue: 55000000, orders: 172 },
-  { month: "Jun", revenue: 70000000, orders: 215 },
-];
-
-const productData = [
-  { name: "Basketball Shoes", value: 45, color: "#EF4444" },
-  { name: "Running Shoes", value: 30, color: "#3B82F6" },
-  { name: "Apparel", value: 15, color: "#10B981" },
-  { name: "Accessories", value: 10, color: "#F59E0B" },
-];
-
-const topProducts = [
-  { name: "Peak Basketball Pro X", sales: 342, revenue: "85,500,000 SYP" },
-  { name: "Peak Running Elite", sales: 298, revenue: "53,640,000 SYP" },
-  { name: "Peak Court Master", sales: 256, revenue: "56,320,000 SYP" },
-  { name: "Peak Speed Runner", sales: 189, revenue: "35,910,000 SYP" },
-];
+const CHART_COLORS = ["#EF4444", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"];
 
 const Analytics = () => {
+  // Fetch all orders with items
+  const { data: ordersData, isLoading: ordersLoading } = useQuery({
+    queryKey: ["analytics-orders"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select(`
+          id,
+          total_amount,
+          status,
+          created_at,
+          order_items (
+            quantity,
+            price,
+            product_id,
+            products (
+              name,
+              category
+            )
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch customer count
+  const { data: customersData, isLoading: customersLoading } = useQuery({
+    queryKey: ["analytics-customers"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true });
+
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  // Fetch categories for sales distribution
+  const { data: categoriesData } = useQuery({
+    queryKey: ["analytics-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("name");
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isLoading = ordersLoading || customersLoading;
+
+  // Calculate metrics
+  const totalRevenue = ordersData?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
+  const totalOrders = ordersData?.length || 0;
+  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+  // Calculate previous period for growth comparison
+  const sixMonthsAgo = subMonths(new Date(), 6);
+  const recentOrders = ordersData?.filter(o => new Date(o.created_at) >= sixMonthsAgo) || [];
+  const oldOrders = ordersData?.filter(o => new Date(o.created_at) < sixMonthsAgo) || [];
+  
+  const recentRevenue = recentOrders.reduce((sum, order) => sum + Number(order.total_amount), 0);
+  const oldRevenue = oldOrders.reduce((sum, order) => sum + Number(order.total_amount), 0);
+  const revenueGrowth = oldRevenue > 0 ? ((recentRevenue - oldRevenue) / oldRevenue) * 100 : 0;
+  const ordersGrowth = oldOrders.length > 0 ? ((recentOrders.length - oldOrders.length) / oldOrders.length) * 100 : 0;
+
+  // Monthly sales data for the last 6 months
+  const monthlyData = Array.from({ length: 6 }, (_, i) => {
+    const date = subMonths(new Date(), 5 - i);
+    const monthStart = startOfMonth(date);
+    const monthEnd = endOfMonth(date);
+    
+    const monthOrders = ordersData?.filter(order => {
+      const orderDate = new Date(order.created_at);
+      return orderDate >= monthStart && orderDate <= monthEnd;
+    }) || [];
+
+    const revenue = monthOrders.reduce((sum, order) => sum + Number(order.total_amount), 0);
+
+    return {
+      month: format(date, "MMM"),
+      revenue: revenue,
+      orders: monthOrders.length,
+    };
+  });
+
+  // Sales by category
+  const categorySales = categoriesData?.map(cat => {
+    const categoryOrders = ordersData?.flatMap(order => 
+      order.order_items?.filter(item => item.products?.category === cat.name) || []
+    ) || [];
+    
+    const totalSales = categoryOrders.reduce((sum, item) => 
+      sum + (Number(item.price) * item.quantity), 0
+    );
+
+    return { name: cat.name, value: totalSales };
+  }).filter(c => c.value > 0) || [];
+
+  const totalCategorySales = categorySales.reduce((sum, c) => sum + c.value, 0);
+  const categoryPercentages = categorySales.map((cat, index) => ({
+    name: cat.name,
+    value: totalCategorySales > 0 ? Math.round((cat.value / totalCategorySales) * 100) : 0,
+    color: CHART_COLORS[index % CHART_COLORS.length],
+  }));
+
+  // Top selling products
+  const productSalesMap = new Map<string, { name: string; sales: number; revenue: number }>();
+  
+  ordersData?.forEach(order => {
+    order.order_items?.forEach(item => {
+      const productName = item.products?.name || "Unknown";
+      const existing = productSalesMap.get(productName) || { name: productName, sales: 0, revenue: 0 };
+      productSalesMap.set(productName, {
+        name: productName,
+        sales: existing.sales + item.quantity,
+        revenue: existing.revenue + (Number(item.price) * item.quantity),
+      });
+    });
+  });
+
+  const topProducts = Array.from(productSalesMap.values())
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 4);
+
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
@@ -66,8 +179,16 @@ const Analytics = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Revenue (6M)</p>
-                <p className="text-2xl font-bold">331M SYP</p>
-                <Badge variant="default" className="mt-1">+15.8%</Badge>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-24" />
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold">${(recentRevenue).toLocaleString()}</p>
+                    <Badge variant="default" className="mt-1">
+                      {revenueGrowth >= 0 ? '+' : ''}{revenueGrowth.toFixed(1)}%
+                    </Badge>
+                  </>
+                )}
               </div>
             </div>
           </CardContent>
@@ -80,8 +201,16 @@ const Analytics = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Orders</p>
-                <p className="text-2xl font-bold">1,042</p>
-                <Badge variant="secondary" className="mt-1">+8.2%</Badge>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-24" />
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold">{totalOrders.toLocaleString()}</p>
+                    <Badge variant="secondary" className="mt-1">
+                      {ordersGrowth >= 0 ? '+' : ''}{ordersGrowth.toFixed(1)}%
+                    </Badge>
+                  </>
+                )}
               </div>
             </div>
           </CardContent>
@@ -94,8 +223,14 @@ const Analytics = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Customers</p>
-                <p className="text-2xl font-bold">1,248</p>
-                <Badge variant="secondary" className="mt-1">+12.4%</Badge>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-24" />
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold">{customersData?.toLocaleString()}</p>
+                    <Badge variant="secondary" className="mt-1">+12.4%</Badge>
+                  </>
+                )}
               </div>
             </div>
           </CardContent>
@@ -108,8 +243,14 @@ const Analytics = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Avg. Order Value</p>
-                <p className="text-2xl font-bold">317K SYP</p>
-                <Badge variant="secondary" className="mt-1">+3.2%</Badge>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-24" />
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold">${avgOrderValue.toFixed(0)}</p>
+                    <Badge variant="secondary" className="mt-1">+3.2%</Badge>
+                  </>
+                )}
               </div>
             </div>
           </CardContent>
@@ -124,22 +265,26 @@ const Analytics = () => {
             <CardTitle>Revenue Trend (6 Months)</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={salesData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#EF4444"
-                  strokeWidth={2}
-                  name="Revenue (SYP)"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {isLoading ? (
+              <Skeleton className="h-[300px] w-full" />
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value: number) => `$${value.toLocaleString()}`} />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#EF4444"
+                    strokeWidth={2}
+                    name="Revenue ($)"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -149,16 +294,20 @@ const Analytics = () => {
             <CardTitle>Orders Trend (6 Months)</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={salesData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="orders" fill="#3B82F6" name="Orders" />
-              </BarChart>
-            </ResponsiveContainer>
+            {isLoading ? (
+              <Skeleton className="h-[300px] w-full" />
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="orders" fill="#3B82F6" name="Orders" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -171,25 +320,33 @@ const Analytics = () => {
             <CardTitle>Sales by Category</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={productData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}%`}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {productData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {isLoading ? (
+              <Skeleton className="h-[300px] w-full" />
+            ) : categoryPercentages.length === 0 ? (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                No category data available
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={categoryPercentages}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}%`}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {categoryPercentages.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -200,23 +357,33 @@ const Analytics = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {topProducts.map((product, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
-                      <span className="font-bold text-primary">#{index + 1}</span>
-                    </div>
-                    <div>
-                      <p className="font-medium">{product.name}</p>
-                      <p className="text-sm text-muted-foreground">{product.sales} units sold</p>
-                    </div>
-                  </div>
-                  <p className="font-semibold text-primary">{product.revenue}</p>
+              {isLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))
+              ) : topProducts.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  No product sales data available
                 </div>
-              ))}
+              ) : (
+                topProducts.map((product, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
+                        <span className="font-bold text-primary">#{index + 1}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">{product.name}</p>
+                        <p className="text-sm text-muted-foreground">{product.sales} units sold</p>
+                      </div>
+                    </div>
+                    <p className="font-semibold text-primary">${product.revenue.toLocaleString()}</p>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
