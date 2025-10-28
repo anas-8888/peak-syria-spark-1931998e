@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Eye, Mail, Phone, UserPlus, TrendingUp, Users as UsersIcon, UserCheck, Pencil, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,6 +60,7 @@ interface Customer {
 
 const Users = () => {
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
@@ -208,7 +210,19 @@ const Users = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = (id: string, customer: Customer) => {
+    // Prevent deleting yourself
+    if (currentUser && id === currentUser.id) {
+      toast.error("Cannot delete your own account");
+      return;
+    }
+    
+    // Prevent deleting super admin
+    if (customer.role?.name?.toLowerCase() === 'super admin') {
+      toast.error("Cannot delete super admin accounts");
+      return;
+    }
+    
     setCustomerToDelete(id);
     setDeleteDialogOpen(true);
   };
@@ -474,7 +488,18 @@ const Users = () => {
                         <Button 
                           variant="ghost" 
                           size="icon"
-                          onClick={() => handleDeleteClick(customer.id)}
+                          disabled={
+                            (currentUser && customer.id === currentUser.id) ||
+                            customer.role?.name?.toLowerCase() === 'super admin'
+                          }
+                          onClick={() => handleDeleteClick(customer.id, customer)}
+                          title={
+                            currentUser && customer.id === currentUser.id
+                              ? "Cannot delete your own account"
+                              : customer.role?.name?.toLowerCase() === 'super admin'
+                              ? "Cannot delete super admin accounts"
+                              : "Delete user"
+                          }
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
