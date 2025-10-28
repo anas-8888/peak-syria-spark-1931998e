@@ -12,6 +12,9 @@ export const useAdminCheck = () => {
   }, [user]);
 
   const checkAdminStatus = async () => {
+    // Ensure loading is true every time we (re)check to avoid race conditions
+    setLoading(true);
+
     if (!user) {
       setIsAdmin(false);
       setLoading(false);
