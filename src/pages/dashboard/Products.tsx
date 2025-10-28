@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Plus, Edit, Trash2, Eye, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ProductImageManager } from "@/components/ProductImageManager";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Product = {
   id: string;
@@ -44,6 +46,14 @@ type Product = {
   stock_quantity: number;
   image_url: string | null;
   is_active: boolean;
+};
+
+type ProductImage = {
+  id: string;
+  product_id: string;
+  image_url: string;
+  is_primary: boolean;
+  display_order: number;
 };
 
 const Products = () => {
@@ -63,17 +73,35 @@ const Products = () => {
 
   const queryClient = useQueryClient();
 
-  // Fetch products
+  // Fetch products with their primary images
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: productsData, error: productsError } = await supabase
         .from("products")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      return data as Product[];
+      if (productsError) throw productsError;
+
+      // Fetch primary images for all products
+      const { data: imagesData } = await supabase
+        .from("product_images")
+        .select("product_id, image_url")
+        .eq("is_primary", true);
+
+      // Map primary images to products
+      const productsWithImages = productsData.map((product) => {
+        const primaryImage = imagesData?.find(
+          (img) => img.product_id === product.id
+        );
+        return {
+          ...product,
+          image_url: primaryImage?.image_url || product.image_url,
+        };
+      });
+
+      return productsWithImages as Product[];
     },
   });
 
@@ -344,11 +372,19 @@ const Products = () => {
 
       {/* Add Product Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Product</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <Tabs defaultValue="details" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="details">Product Details</TabsTrigger>
+              <TabsTrigger value="images" disabled={!selectedProduct}>
+                Images
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="details" className="space-y-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Product Name *</Label>
               <Input
@@ -419,7 +455,17 @@ const Products = () => {
                 />
               </div>
             </div>
-          </div>
+          </TabsContent>
+
+          <TabsContent value="images">
+            <div className="py-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                Save the product first before adding images
+              </p>
+            </div>
+          </TabsContent>
+          </Tabs>
+
           <DialogFooter>
             <Button
               variant="outline"
@@ -442,11 +488,17 @@ const Products = () => {
 
       {/* Edit Product Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <Tabs defaultValue="details" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="details">Product Details</TabsTrigger>
+              <TabsTrigger value="images">Images</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="details" className="space-y-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="edit-name">Product Name *</Label>
               <Input
@@ -517,7 +569,17 @@ const Products = () => {
                 />
               </div>
             </div>
-          </div>
+          </TabsContent>
+
+          <TabsContent value="images">
+            <div className="py-4">
+              {selectedProduct && (
+                <ProductImageManager productId={selectedProduct.id} />
+              )}
+            </div>
+          </TabsContent>
+          </Tabs>
+
           <DialogFooter>
             <Button
               variant="outline"
