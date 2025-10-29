@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, SlidersHorizontal } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
@@ -192,8 +193,10 @@ const ProductFilters = ({ filters, onFilterChange, categories, sizes, minPrice, 
   return (
     <>
       {/* Desktop Filters */}
-      <div className="hidden lg:block bg-card p-6 rounded-lg shadow-sm sticky top-24">
-        <FilterContent />
+      <div className="hidden lg:block bg-card p-6 rounded-lg shadow-sm sticky top-24 max-h-[calc(100vh-7rem)]">
+        <ScrollArea className="h-full pr-4">
+          <FilterContent />
+        </ScrollArea>
       </div>
 
       {/* Mobile Filters */}
