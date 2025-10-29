@@ -85,6 +85,243 @@ export type Database = {
           },
         ]
       }
+      discount_categories: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          discount_id: string
+          id: string
+          is_excluded: boolean | null
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          discount_id: string
+          id?: string
+          is_excluded?: boolean | null
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          discount_id?: string
+          id?: string
+          is_excluded?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_categories_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "discounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discount_products: {
+        Row: {
+          created_at: string | null
+          discount_id: string
+          id: string
+          is_excluded: boolean | null
+          product_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          discount_id: string
+          id?: string
+          is_excluded?: boolean | null
+          product_id: string
+        }
+        Update: {
+          created_at?: string | null
+          discount_id?: string
+          id?: string
+          is_excluded?: boolean | null
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_products_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "discounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discount_usages: {
+        Row: {
+          created_at: string | null
+          discount_amount: number
+          discount_id: string
+          id: string
+          ip_address: string | null
+          order_id: string | null
+          order_subtotal: number
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          discount_amount: number
+          discount_id: string
+          id?: string
+          ip_address?: string | null
+          order_id?: string | null
+          order_subtotal: number
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          discount_amount?: number
+          discount_id?: string
+          id?: string
+          ip_address?: string | null
+          order_id?: string | null
+          order_subtotal?: number
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_usages_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "discounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_usages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discounts: {
+        Row: {
+          channels: Database["public"]["Enums"]["discount_channel"][] | null
+          code: string | null
+          created_at: string | null
+          created_by: string | null
+          customer_segments: string[] | null
+          days_of_week: number[] | null
+          end_date: string | null
+          first_order_only: boolean | null
+          global_usage_limit: number | null
+          happy_hours_end: string | null
+          happy_hours_start: string | null
+          id: string
+          internal_notes: string | null
+          is_automatic: boolean | null
+          is_stackable: boolean | null
+          logged_in_only: boolean | null
+          marketing_label: string | null
+          min_cart_subtotal: number | null
+          min_quantity: number | null
+          name: string
+          per_customer_limit: number | null
+          per_order_max_discount: number | null
+          scope: Database["public"]["Enums"]["discount_scope"]
+          stack_with_shipping: boolean | null
+          start_date: string
+          status: Database["public"]["Enums"]["discount_status"]
+          tiered_config: Json | null
+          total_revenue: number | null
+          total_uses: number | null
+          type: Database["public"]["Enums"]["discount_type"]
+          updated_at: string | null
+          value: number
+          value_type: string | null
+        }
+        Insert: {
+          channels?: Database["public"]["Enums"]["discount_channel"][] | null
+          code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_segments?: string[] | null
+          days_of_week?: number[] | null
+          end_date?: string | null
+          first_order_only?: boolean | null
+          global_usage_limit?: number | null
+          happy_hours_end?: string | null
+          happy_hours_start?: string | null
+          id?: string
+          internal_notes?: string | null
+          is_automatic?: boolean | null
+          is_stackable?: boolean | null
+          logged_in_only?: boolean | null
+          marketing_label?: string | null
+          min_cart_subtotal?: number | null
+          min_quantity?: number | null
+          name: string
+          per_customer_limit?: number | null
+          per_order_max_discount?: number | null
+          scope?: Database["public"]["Enums"]["discount_scope"]
+          stack_with_shipping?: boolean | null
+          start_date: string
+          status?: Database["public"]["Enums"]["discount_status"]
+          tiered_config?: Json | null
+          total_revenue?: number | null
+          total_uses?: number | null
+          type: Database["public"]["Enums"]["discount_type"]
+          updated_at?: string | null
+          value: number
+          value_type?: string | null
+        }
+        Update: {
+          channels?: Database["public"]["Enums"]["discount_channel"][] | null
+          code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_segments?: string[] | null
+          days_of_week?: number[] | null
+          end_date?: string | null
+          first_order_only?: boolean | null
+          global_usage_limit?: number | null
+          happy_hours_end?: string | null
+          happy_hours_start?: string | null
+          id?: string
+          internal_notes?: string | null
+          is_automatic?: boolean | null
+          is_stackable?: boolean | null
+          logged_in_only?: boolean | null
+          marketing_label?: string | null
+          min_cart_subtotal?: number | null
+          min_quantity?: number | null
+          name?: string
+          per_customer_limit?: number | null
+          per_order_max_discount?: number | null
+          scope?: Database["public"]["Enums"]["discount_scope"]
+          stack_with_shipping?: boolean | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["discount_status"]
+          tiered_config?: Json | null
+          total_revenue?: number | null
+          total_uses?: number | null
+          type?: Database["public"]["Enums"]["discount_type"]
+          updated_at?: string | null
+          value?: number
+          value_type?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string | null
@@ -493,9 +730,51 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      record_discount_usage: {
+        Args: {
+          p_discount_amount: number
+          p_discount_id: string
+          p_ip_address?: string
+          p_order_id: string
+          p_order_subtotal: number
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      validate_discount_code: {
+        Args: {
+          p_cart_items: Json
+          p_cart_subtotal: number
+          p_code: string
+          p_user_id: string
+        }
+        Returns: {
+          discount_amount: number
+          discount_id: string
+          is_valid: boolean
+          message: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      discount_channel: "web" | "app" | "pos" | "marketplace"
+      discount_scope: "store_wide" | "categories" | "products" | "tags"
+      discount_status:
+        | "active"
+        | "scheduled"
+        | "expired"
+        | "paused"
+        | "archived"
+      discount_type:
+        | "percentage"
+        | "fixed_amount"
+        | "bogo"
+        | "tiered"
+        | "bundle"
+        | "volume"
+        | "free_shipping"
+        | "clearance"
+        | "flash"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -622,6 +901,21 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      discount_channel: ["web", "app", "pos", "marketplace"],
+      discount_scope: ["store_wide", "categories", "products", "tags"],
+      discount_status: ["active", "scheduled", "expired", "paused", "archived"],
+      discount_type: [
+        "percentage",
+        "fixed_amount",
+        "bogo",
+        "tiered",
+        "bundle",
+        "volume",
+        "free_shipping",
+        "clearance",
+        "flash",
+      ],
+    },
   },
 } as const
