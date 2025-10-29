@@ -102,6 +102,24 @@ const Products = () => {
     }
   });
 
+  // Fetch product flags from hero_slides
+  const {
+    data: productFlags = []
+  } = useQuery({
+    queryKey: ["product-flags"],
+    queryFn: async () => {
+      const {
+        data,
+        error
+      } = await supabase.from("hero_slides").select("flag_name").eq("is_active", true);
+      if (error) throw error;
+      
+      // Get unique flag names
+      const uniqueFlags = [...new Set(data.map(item => item.flag_name))];
+      return uniqueFlags;
+    }
+  });
+
   // Fetch products with their primary images
   const {
     data: products = [],
@@ -659,11 +677,12 @@ const Products = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="No flag" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="New Arrival">New Arrival</SelectItem>
-                    <SelectItem value="Offer">Offer</SelectItem>
-                    <SelectItem value="Best Seller">Best Seller</SelectItem>
-                    <SelectItem value="Limited Edition">Limited Edition</SelectItem>
+                  <SelectContent className="bg-background z-50">
+                    {productFlags.map((flag) => (
+                      <SelectItem key={flag} value={flag}>
+                        {flag}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
