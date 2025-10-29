@@ -39,6 +39,22 @@ const Navbar = () => {
     },
   });
 
+  // Fetch categories that should show in navbar
+  const { data: navbarCategories = [] } = useQuery({
+    queryKey: ["navbar-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, name")
+        .eq("is_active", true)
+        .eq("show_in_navbar", true)
+        .order("display_order");
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   useEffect(() => {
     if (user) {
       loadProfile();
@@ -76,16 +92,12 @@ const Navbar = () => {
     name: flag.flag_name,
     path: flag.button_url
   })),
+  // Add category navigation items
+  ...navbarCategories.map(category => ({
+    name: category.name,
+    path: `/products?category=${encodeURIComponent(category.name.toLowerCase())}`
+  })),
   {
-    name: "Basketball",
-    path: "/products?category=basketball"
-  }, {
-    name: "Running",
-    path: "/products?category=running"
-  }, {
-    name: "Casual",
-    path: "/products?category=apparel"
-  }, {
     name: "About",
     path: "/about"
   }];

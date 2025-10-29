@@ -52,6 +52,7 @@ interface Category {
   image_url: string | null;
   display_order: number;
   is_active: boolean;
+  show_in_navbar: boolean;
 }
 
 const Categories = () => {
@@ -74,6 +75,7 @@ const Categories = () => {
     image_url: "",
     display_order: 0,
     is_active: true,
+    show_in_navbar: false,
   });
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -148,6 +150,7 @@ const Categories = () => {
         image_url: finalImageUrl || null,
         display_order: data.display_order,
         is_active: data.is_active,
+        show_in_navbar: data.show_in_navbar,
       }]);
       if (error) throw error;
     },
@@ -194,6 +197,7 @@ const Categories = () => {
           image_url: finalImageUrl || null,
           display_order: data.display_order,
           is_active: data.is_active,
+          show_in_navbar: data.show_in_navbar,
         })
         .eq("id", data.id);
       if (error) throw error;
@@ -248,6 +252,7 @@ const Categories = () => {
       image_url: "",
       display_order: 0,
       is_active: true,
+      show_in_navbar: false,
     });
     setSelectedCategory(null);
     setUploadedImage(null);
@@ -263,6 +268,7 @@ const Categories = () => {
       image_url: category.image_url || "",
       display_order: category.display_order,
       is_active: category.is_active,
+      show_in_navbar: category.show_in_navbar,
     });
     setUploadedImage(null);
     setImagePreview(category.image_url || null);
@@ -441,6 +447,7 @@ const Categories = () => {
                   <TableHead>Children</TableHead>
                   <TableHead>Order</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Navbar</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -498,6 +505,25 @@ const Categories = () => {
                       <Badge variant={category.is_active ? "default" : "secondary"}>
                         {category.is_active ? "Active" : "Inactive"}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={category.show_in_navbar}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            const { error } = await supabase
+                              .from("categories")
+                              .update({ show_in_navbar: checked })
+                              .eq("id", category.id);
+                            
+                            if (error) throw error;
+                            queryClient.invalidateQueries({ queryKey: ["categories"] });
+                            toast.success(`Category ${checked ? "added to" : "removed from"} navbar`);
+                          } catch (error: any) {
+                            toast.error("Failed to update navbar setting: " + error.message);
+                          }
+                        }}
+                      />
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -648,6 +674,17 @@ const Categories = () => {
                   }
                 />
                 <Label htmlFor="active">Active</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="show-navbar"
+                  checked={formData.show_in_navbar}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, show_in_navbar: checked })
+                  }
+                />
+                <Label htmlFor="show-navbar">Show in Navbar</Label>
               </div>
             </div>
 
