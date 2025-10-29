@@ -1033,12 +1033,15 @@ const Marketing = () => {
               <Label htmlFor="campaign-type">Type *</Label>
               <Select
                 value={campaignForm.type}
-                onValueChange={(value: Campaign['type']) => setCampaignForm({ ...campaignForm, type: value })}
+                onValueChange={(value: Campaign['type']) => {
+                  // Reset template_id when type changes
+                  setCampaignForm({ ...campaignForm, type: value, template_id: "" });
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   <SelectItem value="email">Email</SelectItem>
                   <SelectItem value="sms">SMS</SelectItem>
                   <SelectItem value="push">Push Notification</SelectItem>
@@ -1054,9 +1057,11 @@ const Marketing = () => {
                 onValueChange={(value) => setCampaignForm({ ...campaignForm, template_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose a template" />
+                  <SelectValue placeholder="Choose a template">
+                    {campaignForm.template_id && templates.find(t => t.id === campaignForm.template_id)?.name}
+                  </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   {templates
                     .filter(t => t.type === campaignForm.type)
                     .map((template) => (
@@ -1082,7 +1087,7 @@ const Marketing = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="All customers" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   <SelectItem value="all">All Customers</SelectItem>
                   {segments.map((segment) => (
                     <SelectItem key={segment.id} value={segment.id}>
@@ -1143,7 +1148,7 @@ const Marketing = () => {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   <SelectItem value="email">Email</SelectItem>
                   <SelectItem value="sms">SMS</SelectItem>
                   <SelectItem value="push">Push Notification</SelectItem>
@@ -1291,7 +1296,7 @@ const Marketing = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="Select region" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background z-50">
                       <SelectItem value="all">All Regions</SelectItem>
                       {regions.map((region: any) => (
                         <SelectItem key={region.id} value={region.name}>
