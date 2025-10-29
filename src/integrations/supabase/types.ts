@@ -138,6 +138,36 @@ export type Database = {
           },
         ]
       }
+      colors: {
+        Row: {
+          created_at: string
+          display_order: number | null
+          hex_code: string
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number | null
+          hex_code: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number | null
+          hex_code?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_segments: {
         Row: {
           created_at: string
@@ -744,6 +774,42 @@ export type Database = {
           },
           {
             foreignKeyName: "product_categories_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_colors: {
+        Row: {
+          color_id: string
+          created_at: string | null
+          id: string
+          product_id: string
+        }
+        Insert: {
+          color_id: string
+          created_at?: string | null
+          id?: string
+          product_id: string
+        }
+        Update: {
+          color_id?: string
+          created_at?: string | null
+          id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_colors_color_id_fkey"
+            columns: ["color_id"]
+            isOneToOne: false
+            referencedRelation: "colors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_colors_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"

@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProductImageManager } from "@/components/ProductImageManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ColorSelector } from "@/components/ColorSelector";
 type Product = {
   id: string;
   name: string;
@@ -79,6 +80,7 @@ const Products = () => {
       image_id: string;
     }[]
   });
+  const [selectedColorIds, setSelectedColorIds] = useState<string[]>([]);
   const [newSize, setNewSize] = useState("");
   const [newFeature, setNewFeature] = useState("");
   const [newColor, setNewColor] = useState({
@@ -178,6 +180,19 @@ const Products = () => {
         colors: newProduct.colors
       }).select().single();
       if (error) throw error;
+
+      // Add color associations
+      if (selectedColorIds.length > 0) {
+        const colorInserts = selectedColorIds.map(colorId => ({
+          product_id: data.id,
+          color_id: colorId
+        }));
+        const { error: colorError } = await supabase
+          .from("product_colors")
+          .insert(colorInserts);
+        if (colorError) throw colorError;
+      }
+
       return data;
     },
     onSuccess: newProduct => {
@@ -232,6 +247,26 @@ const Products = () => {
         colors: updates.colors
       }).eq("id", id);
       if (error) throw error;
+
+      // Update color associations
+      // First, delete existing associations
+      const { error: deleteError } = await supabase
+        .from("product_colors")
+        .delete()
+        .eq("product_id", id);
+      if (deleteError) throw deleteError;
+
+      // Then add new ones
+      if (selectedColorIds.length > 0) {
+        const colorInserts = selectedColorIds.map(colorId => ({
+          product_id: id,
+          color_id: colorId
+        }));
+        const { error: colorError } = await supabase
+          .from("product_colors")
+          .insert(colorInserts);
+        if (colorError) throw colorError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -328,6 +363,7 @@ const Products = () => {
       colors: []
     });
     setSelectedCategoryIds([]);
+    setSelectedColorIds([]);
     setActiveTab("details");
     setNewSize("");
     setNewFeature("");
@@ -390,7 +426,7 @@ const Products = () => {
       updates: formData
     });
   };
-  const openEditDialog = (product: Product) => {
+  const openEditDialog = async (product: Product) => {
     setSelectedProduct(product);
     setFormData({
       name: product.name,
@@ -406,6 +442,14 @@ const Products = () => {
       flag: product.flag || "",
       colors: product.colors || []
     });
+
+    // Load existing color associations
+    const { data: productColors } = await supabase
+      .from("product_colors")
+      .select("color_id")
+      .eq("product_id", product.id);
+    
+    setSelectedColorIds(productColors?.map(pc => pc.color_id) || []);
     setIsEditDialogOpen(true);
   };
   const getStockStatus = (stock: number) => {
@@ -729,6 +773,15 @@ const Products = () => {
               </div>
             </div>
 
+            {/* Color Selection */}
+            <div className="grid gap-2">
+              <Label>Product Colors</Label>
+              <ColorSelector 
+                selectedColorIds={selectedColorIds}
+                onSelectionChange={setSelectedColorIds}
+              />
+            </div>
+
             {/* Features Management */}
             <div className="grid gap-2">
               <Label>Product Features</Label>
@@ -947,6 +1000,15 @@ const Products = () => {
               </div>
             </div>
 
+            {/* Color Selection */}
+            <div className="grid gap-2">
+              <Label>Product Colors</Label>
+              <ColorSelector 
+                selectedColorIds={selectedColorIds}
+                onSelectionChange={setSelectedColorIds}
+              />
+            </div>
+
             {/* Features Management */}
             <div className="grid gap-2">
               <Label>Product Features</Label>
@@ -1162,6 +1224,15 @@ const Products = () => {
                     </button>
                   </Badge>)}
               </div>
+            </div>
+
+            {/* Color Selection */}
+            <div className="grid gap-2">
+              <Label>Product Colors</Label>
+              <ColorSelector 
+                selectedColorIds={selectedColorIds}
+                onSelectionChange={setSelectedColorIds}
+              />
             </div>
 
             {/* Features Management */}

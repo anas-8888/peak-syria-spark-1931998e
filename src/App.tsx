@@ -39,6 +39,7 @@ import Marketing from "./pages/dashboard/Marketing";
 import DashboardSettings from "./pages/dashboard/Settings";
 import Categories from "./pages/dashboard/Categories";
 import Regions from "./pages/dashboard/Regions";
+import Colors from "./pages/dashboard/Colors";
 
 const queryClient = new QueryClient();
 
@@ -71,10 +72,11 @@ function App() {
                   {/* Dashboard Routes */}
                   <Route path="/dashboard" element={<Dashboard />}>
                     <Route index element={<Overview />} />
-                    <Route path="hero-slides" element={<HeroSlides />} />
-                    <Route path="products" element={<Products />} />
-                    <Route path="categories" element={<Categories />} />
-                    <Route path="regions" element={<Regions />} />
+                  <Route path="hero-slides" element={<HeroSlides />} />
+                  <Route path="products" element={<Products />} />
+                  <Route path="categories" element={<Categories />} />
+                  <Route path="colors" element={<Colors />} />
+                  <Route path="regions" element={<Regions />} />
                     <Route path="orders" element={<Orders />} />
                     <Route path="payments" element={<Payments />} />
                     <Route path="users" element={<Users />} />
