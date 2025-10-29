@@ -92,7 +92,13 @@ const Marketing = () => {
   const [segmentForm, setSegmentForm] = useState({
     name: "",
     description: "",
-    criteria: "{}"
+    minPurchaseAmount: "",
+    maxPurchaseAmount: "",
+    minOrders: "",
+    maxOrders: "",
+    location: "",
+    lastPurchaseDays: "",
+    customerStatus: ""
   });
 
   const queryClient = useQueryClient();
@@ -270,13 +276,23 @@ const Marketing = () => {
   // Save Segment
   const saveSegmentMutation = useMutation({
     mutationFn: async (data: typeof segmentForm & { id?: string }) => {
+      // Build criteria object from form fields
+      const criteria: any = {};
+      if (data.minPurchaseAmount) criteria.minPurchaseAmount = parseFloat(data.minPurchaseAmount);
+      if (data.maxPurchaseAmount) criteria.maxPurchaseAmount = parseFloat(data.maxPurchaseAmount);
+      if (data.minOrders) criteria.minOrders = parseInt(data.minOrders);
+      if (data.maxOrders) criteria.maxOrders = parseInt(data.maxOrders);
+      if (data.location) criteria.location = data.location;
+      if (data.lastPurchaseDays) criteria.lastPurchaseDays = parseInt(data.lastPurchaseDays);
+      if (data.customerStatus) criteria.customerStatus = data.customerStatus;
+
       if (data.id) {
         const { error } = await supabase
           .from("customer_segments")
           .update({
             name: data.name,
             description: data.description || null,
-            criteria: JSON.parse(data.criteria),
+            criteria: criteria,
           })
           .eq("id", data.id);
         if (error) throw error;
@@ -286,7 +302,7 @@ const Marketing = () => {
           .insert({
             name: data.name,
             description: data.description || null,
-            criteria: JSON.parse(data.criteria),
+            criteria: criteria,
           });
         if (error) throw error;
       }
@@ -366,7 +382,13 @@ const Marketing = () => {
     setSegmentForm({
       name: "",
       description: "",
-      criteria: "{}"
+      minPurchaseAmount: "",
+      maxPurchaseAmount: "",
+      minOrders: "",
+      maxOrders: "",
+      location: "",
+      lastPurchaseDays: "",
+      customerStatus: ""
     });
     setEditingSegment(null);
   };
@@ -398,10 +420,17 @@ const Marketing = () => {
 
   const openEditSegment = (segment: Segment) => {
     setEditingSegment(segment);
+    const criteria = segment.criteria || {};
     setSegmentForm({
       name: segment.name,
       description: segment.description || "",
-      criteria: JSON.stringify(segment.criteria, null, 2)
+      minPurchaseAmount: criteria.minPurchaseAmount?.toString() || "",
+      maxPurchaseAmount: criteria.maxPurchaseAmount?.toString() || "",
+      minOrders: criteria.minOrders?.toString() || "",
+      maxOrders: criteria.maxOrders?.toString() || "",
+      location: criteria.location || "",
+      lastPurchaseDays: criteria.lastPurchaseDays?.toString() || "",
+      customerStatus: criteria.customerStatus || ""
     });
     setIsSegmentDialogOpen(true);
   };
@@ -1057,7 +1086,7 @@ const Marketing = () => {
 
       {/* Segment Dialog */}
       <Dialog open={isSegmentDialogOpen} onOpenChange={setIsSegmentDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingSegment ? "Edit Segment" : "Create Segment"}</DialogTitle>
           </DialogHeader>
@@ -1083,18 +1112,103 @@ const Marketing = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="segment-criteria">Criteria (JSON)</Label>
-              <Textarea
-                id="segment-criteria"
-                value={segmentForm.criteria}
-                onChange={(e) => setSegmentForm({ ...segmentForm, criteria: e.target.value })}
-                placeholder='{"min_orders": 5, "min_spent": 1000}'
-                rows={4}
-                className="font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                Define segment criteria in JSON format
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium mb-4">Segmentation Criteria</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="min-purchase">Minimum Purchase Amount ($)</Label>
+                  <Input
+                    id="min-purchase"
+                    type="number"
+                    value={segmentForm.minPurchaseAmount}
+                    onChange={(e) => setSegmentForm({ ...segmentForm, minPurchaseAmount: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="max-purchase">Maximum Purchase Amount ($)</Label>
+                  <Input
+                    id="max-purchase"
+                    type="number"
+                    value={segmentForm.maxPurchaseAmount}
+                    onChange={(e) => setSegmentForm({ ...segmentForm, maxPurchaseAmount: e.target.value })}
+                    placeholder="No limit"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="min-orders">Minimum Number of Orders</Label>
+                  <Input
+                    id="min-orders"
+                    type="number"
+                    value={segmentForm.minOrders}
+                    onChange={(e) => setSegmentForm({ ...segmentForm, minOrders: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="max-orders">Maximum Number of Orders</Label>
+                  <Input
+                    id="max-orders"
+                    type="number"
+                    value={segmentForm.maxOrders}
+                    onChange={(e) => setSegmentForm({ ...segmentForm, maxOrders: e.target.value })}
+                    placeholder="No limit"
+                    min="0"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="location">Location/Country</Label>
+                  <Input
+                    id="location"
+                    value={segmentForm.location}
+                    onChange={(e) => setSegmentForm({ ...segmentForm, location: e.target.value })}
+                    placeholder="e.g., Syria, USA"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="last-purchase">Last Purchase Within (Days)</Label>
+                  <Input
+                    id="last-purchase"
+                    type="number"
+                    value={segmentForm.lastPurchaseDays}
+                    onChange={(e) => setSegmentForm({ ...segmentForm, lastPurchaseDays: e.target.value })}
+                    placeholder="e.g., 30"
+                    min="0"
+                  />
+                </div>
+
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="customer-status">Customer Status</Label>
+                  <Select
+                    value={segmentForm.customerStatus}
+                    onValueChange={(value) => setSegmentForm({ ...segmentForm, customerStatus: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="new">New Customer</SelectItem>
+                      <SelectItem value="vip">VIP</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground mt-4">
+                Fill in the criteria fields to define your customer segment. All fields are optional - only filled fields will be used for segmentation.
               </p>
             </div>
           </div>
