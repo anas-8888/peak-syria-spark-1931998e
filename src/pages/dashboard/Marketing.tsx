@@ -514,46 +514,113 @@ const Marketing = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Recent Campaigns</CardTitle>
+              <CardTitle>
+                {activeTab === "overview" && "Recent Campaigns"}
+                {activeTab === "templates" && "Recent Templates"}
+                {activeTab === "segments" && "Recent Segments"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              {campaigns.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No campaigns yet. Create your first campaign to get started!</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Campaign</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Sent</TableHead>
-                      <TableHead>Opens</TableHead>
-                      <TableHead>Clicks</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {campaigns.slice(0, 5).map((campaign) => {
-                      const campaignAnalytics = analytics.find(a => a.campaign_id === campaign.id);
-                      return (
-                        <TableRow key={campaign.id}>
-                          <TableCell className="font-medium">{campaign.name}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {getCampaignIcon(campaign.type)}
-                              <span className="capitalize">{campaign.type}</span>
+              {activeTab === "overview" && (
+                campaigns.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No campaigns yet. Create your first campaign to get started!</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Campaign</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Sent</TableHead>
+                        <TableHead>Opens</TableHead>
+                        <TableHead>Clicks</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {campaigns.slice(0, 5).map((campaign) => {
+                        const campaignAnalytics = analytics.find(a => a.campaign_id === campaign.id);
+                        return (
+                          <TableRow key={campaign.id}>
+                            <TableCell className="font-medium">{campaign.name}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {getCampaignIcon(campaign.type)}
+                                <span className="capitalize">{campaign.type}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>{getStatusBadge(campaign.status)}</TableCell>
+                            <TableCell>{campaignAnalytics?.sent_count || 0}</TableCell>
+                            <TableCell>{campaignAnalytics?.opened_count || 0}</TableCell>
+                            <TableCell>{campaignAnalytics?.clicked_count || 0}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )
+              )}
+
+              {activeTab === "templates" && (
+                templates.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No templates yet. Create your first template to get started!</p>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {templates.slice(0, 6).map((template) => (
+                      <Card key={template.id}>
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <CardTitle className="text-lg">{template.name}</CardTitle>
+                              <Badge variant="outline" className="mt-2">
+                                <FileText className="h-3 w-3 mr-1" />
+                                {template.type}
+                              </Badge>
                             </div>
-                          </TableCell>
-                          <TableCell>{getStatusBadge(campaign.status)}</TableCell>
-                          <TableCell>{campaignAnalytics?.sent_count || 0}</TableCell>
-                          <TableCell>{campaignAnalytics?.opened_count || 0}</TableCell>
-                          <TableCell>{campaignAnalytics?.clicked_count || 0}</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          {template.subject && (
+                            <p className="text-sm font-medium mb-2">Subject: {template.subject}</p>
+                          )}
+                          <p className="text-sm text-muted-foreground line-clamp-3">{template.content}</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )
+              )}
+
+              {activeTab === "segments" && (
+                segments.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No segments yet. Create your first segment to get started!</p>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {segments.slice(0, 6).map((segment) => (
+                      <Card key={segment.id}>
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-1">
+                              <CardTitle className="text-lg">{segment.name}</CardTitle>
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <Users className="h-4 w-4" />
+                                <span>{segment.customer_count} customers</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground">{segment.description || "No description"}</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )
               )}
             </CardContent>
           </Card>
