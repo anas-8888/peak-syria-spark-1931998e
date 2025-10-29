@@ -266,7 +266,7 @@ const HeroSlides = () => {
                   id="button-url"
                   value={slideForm.button_url}
                   onChange={(e) => setSlideForm({ ...slideForm, button_url: e.target.value })}
-                  placeholder="/products?category=..."
+                  placeholder="/offers"
                 />
               </div>
 
