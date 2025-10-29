@@ -97,8 +97,7 @@ const Marketing = () => {
     minOrders: "",
     maxOrders: "",
     location: "",
-    lastPurchaseDays: "",
-    customerStatus: ""
+    lastPurchaseDays: ""
   });
 
   const queryClient = useQueryClient();
@@ -284,7 +283,6 @@ const Marketing = () => {
       if (data.maxOrders) criteria.maxOrders = parseInt(data.maxOrders);
       if (data.location) criteria.location = data.location;
       if (data.lastPurchaseDays) criteria.lastPurchaseDays = parseInt(data.lastPurchaseDays);
-      if (data.customerStatus) criteria.customerStatus = data.customerStatus;
 
       if (data.id) {
         const { error } = await supabase
@@ -387,8 +385,7 @@ const Marketing = () => {
       minOrders: "",
       maxOrders: "",
       location: "",
-      lastPurchaseDays: "",
-      customerStatus: ""
+      lastPurchaseDays: ""
     });
     setEditingSegment(null);
   };
@@ -429,8 +426,7 @@ const Marketing = () => {
       minOrders: criteria.minOrders?.toString() || "",
       maxOrders: criteria.maxOrders?.toString() || "",
       location: criteria.location || "",
-      lastPurchaseDays: criteria.lastPurchaseDays?.toString() || "",
-      customerStatus: criteria.customerStatus || ""
+      lastPurchaseDays: criteria.lastPurchaseDays?.toString() || ""
     });
     setIsSegmentDialogOpen(true);
   };
@@ -1186,24 +1182,6 @@ const Marketing = () => {
                     placeholder="e.g., 30"
                     min="0"
                   />
-                </div>
-
-                <div className="space-y-2 col-span-2">
-                  <Label htmlFor="customer-status">Customer Status</Label>
-                  <Select
-                    value={segmentForm.customerStatus}
-                    onValueChange={(value) => setSegmentForm({ ...segmentForm, customerStatus: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="new">New Customer</SelectItem>
-                      <SelectItem value="vip">VIP</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
 
