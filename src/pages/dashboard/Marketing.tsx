@@ -814,11 +814,7 @@ const Marketing = () => {
 
         {/* Segments Tab */}
         <TabsContent value="segments" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-2xl font-bold">Customer Segments</h2>
-              <p className="text-muted-foreground">Organize your audience into targeted groups</p>
-            </div>
+          <div className="flex justify-end items-center">
             <Button onClick={() => {
               resetSegmentForm();
               setIsSegmentDialogOpen(true);
