@@ -66,40 +66,65 @@ serve(async (req) => {
       }
     }
 
-    // Rate limiting check
+    // Authentication required for AI chat access
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
-    if (supabaseUrl && supabaseKey) {
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      const authHeader = req.headers.get('Authorization');
-      let userId = null;
-      
-      if (authHeader) {
-        const token = authHeader.replace('Bearer ', '');
-        const { data: { user } } = await supabase.auth.getUser(token);
-        userId = user?.id;
-      }
-      
-      const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown';
-      
-      // Check rate limit
-      const { data: canProceed } = await supabase.rpc('check_ai_chat_rate_limit', {
-        p_user_id: userId,
-        p_ip_address: ipAddress,
-        p_max_requests: 20,
-        p_window_minutes: 60
-      });
-      
-      if (!canProceed) {
+    if (!supabaseUrl || !supabaseKey) {
+      return new Response(
+        JSON.stringify({ error: "Service configuration error" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const authHeader = req.headers.get('Authorization');
+    let userId = null;
+    
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !user) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+          JSON.stringify({ error: "Authentication required for AI chat access" }),
           {
-            status: 429,
+            status: 401,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           }
         );
       }
+      userId = user.id;
+    } else {
+      return new Response(
+        JSON.stringify({ error: "Authentication required for AI chat access" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+    
+    const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown';
+    
+    // Enhanced rate limiting: 20 requests per hour for authenticated users
+    const { data: canProceed } = await supabase.rpc('check_ai_chat_rate_limit', {
+      p_user_id: userId,
+      p_ip_address: ipAddress,
+      p_max_requests: 20,
+      p_window_minutes: 60
+    });
+    
+    if (!canProceed) {
+      return new Response(
+        JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+        {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     

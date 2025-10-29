@@ -36,7 +36,7 @@ const Checkout = () => {
   const onSubmit = async (data: CheckoutFormData) => {
     try {
       // Here we would call the secure order creation function
-      console.log("Order data:", data);
+      // Removed console.log to prevent PII exposure in browser dev tools
       
       if (paymentMethod === "card") {
         navigate("/payment");
