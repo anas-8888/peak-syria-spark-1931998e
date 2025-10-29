@@ -122,6 +122,24 @@ const ProductsEnhanced = () => {
     },
   });
 
+  // Fetch colors from database that are actually used in products
+  const { data: availableColors = [] } = useQuery({
+    queryKey: ["colors-used-in-products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("colors")
+        .select("name, hex_code")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data.map(c => ({
+        name: c.name,
+        value: c.name.toLowerCase(),
+        hex: c.hex_code
+      }));
+    },
+  });
+
   // Get unique sizes from all products
   const availableSizes = [...new Set(allProducts.flatMap(p => p.sizes || []))].sort();
 
@@ -215,6 +233,7 @@ const ProductsEnhanced = () => {
                 filters={filters} 
                 onFilterChange={setFilters} 
                 categories={categories}
+                colors={availableColors}
                 sizes={availableSizes}
                 minPrice={minPrice}
                 maxPrice={maxPrice}

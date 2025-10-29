@@ -18,20 +18,13 @@ interface ProductFiltersProps {
   filters: FilterOptions;
   onFilterChange: (filters: FilterOptions) => void;
   categories: string[];
+  colors: Array<{ name: string; value: string; hex: string }>;
   sizes: string[];
   minPrice: number;
   maxPrice: number;
 }
 
-const availableColors = [
-  { name: "Black", value: "black", hex: "#000000" },
-  { name: "White", value: "white", hex: "#FFFFFF" },
-  { name: "Red", value: "red", hex: "#E31E24" },
-  { name: "Gray", value: "gray", hex: "#808080" },
-  { name: "Blue", value: "blue", hex: "#0066CC" },
-];
-
-const ProductFilters = ({ filters, onFilterChange, categories, sizes, minPrice, maxPrice }: ProductFiltersProps) => {
+const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, minPrice, maxPrice }: ProductFiltersProps) => {
   const [localFilters, setLocalFilters] = useState(filters);
   const [tempPriceRange, setTempPriceRange] = useState<[number, number]>(filters.priceRange);
 
@@ -127,21 +120,25 @@ const ProductFilters = ({ filters, onFilterChange, categories, sizes, minPrice, 
       {/* Colors */}
       <div className="space-y-3">
         <h3 className="font-bold text-lg">Colors</h3>
-        <div className="flex flex-wrap gap-2">
-          {availableColors.map((color) => (
-            <button
-              key={color.value}
-              onClick={() => handleColorToggle(color.value)}
-              className={`w-8 h-8 rounded-full border-2 transition-all ${
-                localFilters.colors.includes(color.value)
-                  ? "border-primary scale-110 ring-2 ring-primary ring-offset-2"
-                  : "border-border hover:scale-105"
-              }`}
-              style={{ backgroundColor: color.hex }}
-              title={color.name}
-            />
-          ))}
-        </div>
+        {colors.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {colors.map((color) => (
+              <button
+                key={color.value}
+                onClick={() => handleColorToggle(color.value)}
+                className={`w-8 h-8 rounded-full border-2 transition-all ${
+                  localFilters.colors.includes(color.value)
+                    ? "border-primary scale-110 ring-2 ring-primary ring-offset-2"
+                    : "border-border hover:scale-105"
+                }`}
+                style={{ backgroundColor: color.hex }}
+                title={color.name}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">No colors available</p>
+        )}
       </div>
 
       {/* Sizes */}
