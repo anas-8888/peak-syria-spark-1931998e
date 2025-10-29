@@ -246,7 +246,7 @@ const ProductsEnhanced = () => {
                       className="animate-fade-in"
                     >
                       <ProductCardEnhanced 
-                        id={parseInt(product.id)}
+                        id={product.id}
                         name={product.name}
                         price={product.price}
                         image={product.image}

@@ -7,7 +7,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ProductCardEnhancedProps {
-  id: number;
+  id: string;
   name: string;
   price: number;
   image: string;

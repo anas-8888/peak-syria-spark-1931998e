@@ -148,7 +148,7 @@ const FlagProducts = () => {
               {products.map((product) => (
                 <ProductCardEnhanced
                   key={product.id}
-                  id={parseInt(product.id)}
+                  id={product.id}
                   name={product.name}
                   price={product.offer_price || product.price}
                   image={product.image_url || ''}

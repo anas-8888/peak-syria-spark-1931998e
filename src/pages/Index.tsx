@@ -38,7 +38,7 @@ const Index = () => {
       const productsWithImages = productsData.map((product) => {
         const primaryImage = imagesData?.find((img) => img.product_id === product.id);
         return {
-          id: parseInt(product.id),
+          id: product.id,
           name: product.name,
           price: product.offer_price || product.price,
           image: primaryImage?.image_url || product.image_url || '',
