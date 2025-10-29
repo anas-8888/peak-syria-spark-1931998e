@@ -75,8 +75,7 @@ const Marketing = () => {
   const [campaignForm, setCampaignForm] = useState({
     name: "",
     type: "email" as Campaign['type'],
-    subject: "",
-    content: "",
+    template_id: "",
     target_segment: "",
     scheduled_date: ""
   });
@@ -168,14 +167,20 @@ const Marketing = () => {
   // Create/Update Campaign
   const saveCampaignMutation = useMutation({
     mutationFn: async (data: typeof campaignForm & { id?: string }) => {
+      // Get template details
+      const template = templates.find(t => t.id === data.template_id);
+      if (!template) {
+        throw new Error("Please select a template");
+      }
+
       if (data.id) {
         const { error } = await supabase
           .from("marketing_campaigns")
           .update({
             name: data.name,
             type: data.type,
-            subject: data.subject || null,
-            content: data.content,
+            subject: template.subject || null,
+            content: template.content,
             target_segment: data.target_segment || null,
             scheduled_date: data.scheduled_date || null,
           })
@@ -187,8 +192,8 @@ const Marketing = () => {
           .insert({
             name: data.name,
             type: data.type,
-            subject: data.subject || null,
-            content: data.content,
+            subject: template.subject || null,
+            content: template.content,
             target_segment: data.target_segment || null,
             scheduled_date: data.scheduled_date || null,
             status: 'draft'
@@ -202,8 +207,8 @@ const Marketing = () => {
       setIsCampaignDialogOpen(false);
       resetCampaignForm();
     },
-    onError: () => {
-      toast.error("Failed to save campaign");
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to save campaign");
     },
   });
 
@@ -369,8 +374,7 @@ const Marketing = () => {
     setCampaignForm({
       name: "",
       type: "email",
-      subject: "",
-      content: "",
+      template_id: "",
       target_segment: "",
       scheduled_date: ""
     });
@@ -407,8 +411,7 @@ const Marketing = () => {
     setCampaignForm({
       name: campaign.name,
       type: campaign.type,
-      subject: campaign.subject || "",
-      content: campaign.content,
+      template_id: "",
       target_segment: campaign.target_segment || "",
       scheduled_date: campaign.scheduled_date || ""
     });
@@ -942,27 +945,30 @@ const Marketing = () => {
               </Select>
             </div>
 
-            {(campaignForm.type === 'email' || campaignForm.type === 'push') && (
-              <div className="space-y-2">
-                <Label htmlFor="campaign-subject">Subject</Label>
-                <Input
-                  id="campaign-subject"
-                  value={campaignForm.subject}
-                  onChange={(e) => setCampaignForm({ ...campaignForm, subject: e.target.value })}
-                  placeholder="Don't miss our summer sale!"
-                />
-              </div>
-            )}
-
             <div className="space-y-2">
-              <Label htmlFor="campaign-content">Content *</Label>
-              <Textarea
-                id="campaign-content"
-                value={campaignForm.content}
-                onChange={(e) => setCampaignForm({ ...campaignForm, content: e.target.value })}
-                placeholder="Campaign message content..."
-                rows={6}
-              />
+              <Label htmlFor="campaign-template">Select Template *</Label>
+              <Select
+                value={campaignForm.template_id}
+                onValueChange={(value) => setCampaignForm({ ...campaignForm, template_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates
+                    .filter(t => t.type === campaignForm.type)
+                    .map((template) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              {templates.filter(t => t.type === campaignForm.type).length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No {campaignForm.type} templates available. Create one first.
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -1001,7 +1007,7 @@ const Marketing = () => {
             </Button>
             <Button
               onClick={() => saveCampaignMutation.mutate(editingCampaign ? { ...campaignForm, id: editingCampaign.id } : campaignForm)}
-              disabled={!campaignForm.name || !campaignForm.content}
+              disabled={!campaignForm.name || !campaignForm.template_id}
             >
               {editingCampaign ? "Update" : "Create"} Campaign
             </Button>
