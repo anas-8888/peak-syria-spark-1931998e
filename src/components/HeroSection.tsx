@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import heroImage1 from "@/assets/hero-athlete-1.jpg";
-import heroImage2 from "@/assets/hero-athlete-2.jpg";
 
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -32,34 +30,20 @@ const HeroSection = () => {
     },
   });
 
-  // Fallback slides with existing images
-  const fallbackSlides = [
-    {
-      flag_name: "New Arrival",
-      image_url: heroImage1,
-      title: "Unleash Your Peak Performance",
-      subtitle: "Premium Basketball Collection 2025",
-      button_text: "Shop Basketball",
-      button_url: "/products?category=basketball",
-    },
-    {
-      flag_name: "Offer",
-      image_url: heroImage2,
-      title: "Run Beyond Limits",
-      subtitle: "Revolutionary Running Shoes",
-      button_text: "Explore Collection",
-      button_url: "/products?category=running",
-    },
-  ];
+  const slides = dbSlides || [];
 
-  const slides = dbSlides && dbSlides.length > 0 ? dbSlides : fallbackSlides;
+  // If no slides, don't render anything
+  if (isLoading || slides.length === 0) {
+    return null;
+  }
 
   useEffect(() => {
+    if (slides.length === 0) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
