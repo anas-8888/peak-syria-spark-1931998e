@@ -519,9 +519,9 @@ const Products = () => {
                       <TableCell>{product.category}</TableCell>
                       <TableCell className="font-semibold">
                         {product.offer_price ? <div className="flex items-center gap-2">
-                            <span className="text-primary">${product.offer_price.toFixed(2)}</span>
-                            <span className="text-sm line-through text-muted-foreground">${product.price.toFixed(2)}</span>
-                          </div> : <span>${product.price.toFixed(2)}</span>}
+                            <span className="text-primary">${product.offer_price?.toFixed(2) || '0.00'}</span>
+                            <span className="text-sm line-through text-muted-foreground">${product.price?.toFixed(2) || '0.00'}</span>
+                          </div> : <span>${product.price?.toFixed(2) || '0.00'}</span>}
                       </TableCell>
                       <TableCell>
                         <span className={`font-medium ${product.stock_quantity === 0 ? "text-destructive" : product.stock_quantity < 10 ? "text-yellow-600" : "text-green-600"}`}>
@@ -1265,9 +1265,9 @@ const Products = () => {
                     <Label className="text-muted-foreground">Price</Label>
                     <div className="flex items-center gap-2">
                       {selectedProduct.offer_price ? <>
-                          <p className="text-lg font-bold text-primary">${selectedProduct.offer_price.toFixed(2)}</p>
-                          <p className="text-sm line-through text-muted-foreground">${selectedProduct.price.toFixed(2)}</p>
-                        </> : <p className="text-lg font-bold">${selectedProduct.price.toFixed(2)}</p>}
+                          <p className="text-lg font-bold text-primary">${selectedProduct.offer_price?.toFixed(2) || '0.00'}</p>
+                          <p className="text-sm line-through text-muted-foreground">${selectedProduct.price?.toFixed(2) || '0.00'}</p>
+                        </> : <p className="text-lg font-bold">${selectedProduct.price?.toFixed(2) || '0.00'}</p>}
                     </div>
                   </div>
                   <div>
