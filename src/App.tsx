@@ -31,7 +31,6 @@ import Roles from "./pages/dashboard/Roles";
 import Analytics from "./pages/dashboard/Analytics";
 import Reviews from "./pages/dashboard/Reviews";
 import Discounts from "./pages/dashboard/Discounts";
-import Inventory from "./pages/dashboard/Inventory";
 import Shipping from "./pages/dashboard/Shipping";
 import Marketing from "./pages/dashboard/Marketing";
 import DashboardSettings from "./pages/dashboard/Settings";
@@ -75,7 +74,6 @@ function App() {
                   <Route path="analytics" element={<Analytics />} />
                   <Route path="reviews" element={<Reviews />} />
                   <Route path="discounts" element={<Discounts />} />
-                  <Route path="inventory" element={<Inventory />} />
                   <Route path="shipping" element={<Shipping />} />
                   <Route path="marketing" element={<Marketing />} />
                   <Route path="settings" element={<DashboardSettings />} />
