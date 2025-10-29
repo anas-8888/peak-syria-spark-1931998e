@@ -625,9 +625,6 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
           {discountType === "bundle" && (
             <div className="space-y-3 border rounded-lg p-4 bg-muted/20">
               <Label className="text-base">Bundle Products</Label>
-              <p className="text-xs text-muted-foreground">
-                حذاء + جوارب + منتج تنظيف = 90,000 ل.س بدلًا من 110,000 ل.س
-              </p>
               <div className="relative mb-2">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
