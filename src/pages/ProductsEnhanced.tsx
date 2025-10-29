@@ -122,21 +122,36 @@ const ProductsEnhanced = () => {
     },
   });
 
-  // Fetch colors from database that are actually used in products
+  // Fetch colors that are actually used in products
   const { data: availableColors = [] } = useQuery({
     queryKey: ["colors-used-in-products"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("colors")
-        .select("name, hex_code")
-        .eq("is_active", true)
-        .order("name");
-      if (error) throw error;
-      return data.map(c => ({
-        name: c.name,
-        value: c.name.toLowerCase(),
-        hex: c.hex_code
-      }));
+      // Get colors that are linked to products
+      const { data: productColors, error: pcError } = await supabase
+        .from("product_colors")
+        .select(`
+          colors:color_id (
+            name,
+            hex_code
+          )
+        `);
+      
+      if (pcError) throw pcError;
+      
+      // Extract unique colors
+      const uniqueColors = new Map();
+      productColors?.forEach((pc) => {
+        const color = (pc.colors as any);
+        if (color?.name && color?.hex_code) {
+          uniqueColors.set(color.name, {
+            name: color.name,
+            value: color.name.toLowerCase(),
+            hex: color.hex_code
+          });
+        }
+      });
+      
+      return Array.from(uniqueColors.values()).sort((a, b) => a.name.localeCompare(b.name));
     },
   });
 
