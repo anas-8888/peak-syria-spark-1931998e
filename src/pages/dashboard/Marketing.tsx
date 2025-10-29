@@ -758,55 +758,58 @@ const Marketing = () => {
             </Button>
           </div>
 
-          {templates.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No templates yet</h3>
-                <p className="text-muted-foreground">Save time by creating reusable message templates</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {templates.map((template) => (
-                <Card key={template.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg">{template.name}</CardTitle>
-                        <Badge variant="outline" className="mt-2">
-                          <FileText className="h-3 w-3 mr-1" />
-                          {template.type}
-                        </Badge>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEditTemplate(template)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeletingTemplateId(template.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {template.subject && (
-                      <p className="text-sm font-medium mb-2">Subject: {template.subject}</p>
-                    )}
-                    <p className="text-sm text-muted-foreground line-clamp-3">{template.content}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Templates</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {templates.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No templates yet. Create your first template to get started!</p>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {templates.slice(0, 6).map((template) => (
+                    <Card key={template.id}>
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="text-lg">{template.name}</CardTitle>
+                            <Badge variant="outline" className="mt-2">
+                              <FileText className="h-3 w-3 mr-1" />
+                              {template.type}
+                            </Badge>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditTemplate(template)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeletingTemplateId(template.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {template.subject && (
+                          <p className="text-sm font-medium mb-2">Subject: {template.subject}</p>
+                        )}
+                        <p className="text-sm text-muted-foreground line-clamp-3">{template.content}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Segments Tab */}
@@ -825,52 +828,55 @@ const Marketing = () => {
             </Button>
           </div>
 
-          {segments.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No segments yet</h3>
-                <p className="text-muted-foreground">Target specific customer groups with segmentation</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {segments.map((segment) => (
-                <Card key={segment.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg">{segment.name}</CardTitle>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Users className="h-4 w-4" />
-                          <span>{segment.customer_count} customers</span>
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Segments</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {segments.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No segments yet. Create your first segment to get started!</p>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {segments.slice(0, 6).map((segment) => (
+                    <Card key={segment.id}>
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            <CardTitle className="text-lg">{segment.name}</CardTitle>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Users className="h-4 w-4" />
+                              <span>{segment.customer_count} customers</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditSegment(segment)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeletingSegmentId(segment.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEditSegment(segment)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeletingSegmentId(segment.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">{segment.description || "No description"}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">{segment.description || "No description"}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
