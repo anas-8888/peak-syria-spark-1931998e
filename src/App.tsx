@@ -7,8 +7,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
 import ProductsEnhanced from "./pages/ProductsEnhanced";
+import FlagProducts from "./pages/FlagProducts";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
@@ -43,53 +45,56 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <LanguageProvider>
-            <CurrencyProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/products" element={<ProductsEnhanced />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/payment" element={<Payment />} />
-                <Route path="/order-tracking" element={<OrderTracking />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/admin-login" element={<AdminLogin />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                {/* Dashboard Routes */}
-                <Route path="/dashboard" element={<Dashboard />}>
-                  <Route index element={<Overview />} />
-                  <Route path="hero-slides" element={<HeroSlides />} />
-                  <Route path="products" element={<Products />} />
-                  <Route path="categories" element={<Categories />} />
-                  <Route path="regions" element={<Regions />} />
-                  <Route path="orders" element={<Orders />} />
-                  <Route path="payments" element={<Payments />} />
-                  <Route path="users" element={<Users />} />
-                  <Route path="roles" element={<Roles />} />
-                  <Route path="analytics" element={<Analytics />} />
-                  <Route path="reviews" element={<Reviews />} />
-                  <Route path="discounts" element={<Discounts />} />
-                  <Route path="shipping" element={<Shipping />} />
-                  <Route path="marketing" element={<Marketing />} />
-                  <Route path="settings" element={<DashboardSettings />} />
-                </Route>
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-                </Routes>
-              </TooltipProvider>
-            </CurrencyProvider>
-          </LanguageProvider>
-        </AuthProvider>
-      </BrowserRouter>
+      <HelmetProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <LanguageProvider>
+              <CurrencyProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/products" element={<ProductsEnhanced />} />
+                  <Route path="/flag-products" element={<FlagProducts />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/payment" element={<Payment />} />
+                  <Route path="/order-tracking" element={<OrderTracking />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/admin-login" element={<AdminLogin />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  {/* Dashboard Routes */}
+                  <Route path="/dashboard" element={<Dashboard />}>
+                    <Route index element={<Overview />} />
+                    <Route path="hero-slides" element={<HeroSlides />} />
+                    <Route path="products" element={<Products />} />
+                    <Route path="categories" element={<Categories />} />
+                    <Route path="regions" element={<Regions />} />
+                    <Route path="orders" element={<Orders />} />
+                    <Route path="payments" element={<Payments />} />
+                    <Route path="users" element={<Users />} />
+                    <Route path="roles" element={<Roles />} />
+                    <Route path="analytics" element={<Analytics />} />
+                    <Route path="reviews" element={<Reviews />} />
+                    <Route path="discounts" element={<Discounts />} />
+                    <Route path="shipping" element={<Shipping />} />
+                    <Route path="marketing" element={<Marketing />} />
+                    <Route path="settings" element={<DashboardSettings />} />
+                  </Route>
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </TooltipProvider>
+              </CurrencyProvider>
+            </LanguageProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </HelmetProvider>
     </QueryClientProvider>
   );
 }

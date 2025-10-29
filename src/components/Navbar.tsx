@@ -31,7 +31,11 @@ const Navbar = () => {
         .order("display_order");
 
       if (error) throw error;
-      return data || [];
+      // Transform button_url to use /flag-products route with query param
+      return (data || []).map(flag => ({
+        ...flag,
+        button_url: `/flag-products?flag=${encodeURIComponent(flag.flag_name)}`
+      }));
     },
   });
 

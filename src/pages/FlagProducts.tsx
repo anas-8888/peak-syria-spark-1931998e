@@ -1,0 +1,171 @@
+import { useState, useEffect } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import ProductCardEnhanced from "@/components/ProductCardEnhanced";
+import { Loader2 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
+
+type Product = {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  price: number;
+  offer_price?: number | null;
+  stock_quantity: number;
+  image_url: string | null;
+  is_active: boolean;
+  rating?: number;
+  sizes?: string[];
+  flag?: string | null;
+};
+
+const FlagProducts = () => {
+  const [searchParams] = useSearchParams();
+  const flagFromUrl = searchParams.get("flag") || "";
+  
+  // Fetch hero slide info for this flag
+  const { data: heroSlide } = useQuery({
+    queryKey: ["hero-slide", flagFromUrl],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("hero_slides")
+        .select("*")
+        .eq("flag_name", flagFromUrl)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!flagFromUrl,
+  });
+
+  // Fetch products with this flag
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: ["flag-products", flagFromUrl],
+    queryFn: async () => {
+      const { data: productsData, error: productsError } = await supabase
+        .from("products")
+        .select("*")
+        .eq("flag", flagFromUrl)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (productsError) throw productsError;
+
+      // Fetch primary images
+      const { data: imagesData } = await supabase
+        .from("product_images")
+        .select("product_id, image_url")
+        .eq("is_primary", true);
+
+      // Map images to products
+      const productsWithImages = productsData.map((product) => {
+        const primaryImage = imagesData?.find((img) => img.product_id === product.id);
+        return {
+          ...product,
+          image_url: primaryImage?.image_url || product.image_url,
+        };
+      });
+
+      return productsWithImages as Product[];
+    },
+    enabled: !!flagFromUrl,
+  });
+
+  const pageTitle = flagFromUrl || "Products";
+  const pageDescription = heroSlide?.subtitle || `Browse our ${flagFromUrl} collection`;
+
+  return (
+    <>
+      <Helmet>
+        <title>{pageTitle} | PEAK Syria</title>
+        <meta name="description" content={pageDescription} />
+        <meta name="keywords" content={`${flagFromUrl}, sports shoes, athletic footwear, PEAK Syria`} />
+      </Helmet>
+
+      <div className="min-h-screen flex flex-col bg-background">
+        <Navbar />
+
+        {/* Hero Section */}
+        {heroSlide && (
+          <section 
+            className="relative h-[300px] md:h-[400px] bg-cover bg-center"
+            style={{
+              backgroundImage: heroSlide.image_url ? `url(${heroSlide.image_url})` : 'none',
+              backgroundColor: heroSlide.image_url ? 'transparent' : 'hsl(var(--secondary))'
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30" />
+            <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
+              <div className="max-w-2xl space-y-4">
+                <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-4 py-2 text-primary text-sm font-semibold">
+                  <span className="text-xs">✨</span>
+                  {flagFromUrl}
+                </div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
+                  {heroSlide.title}
+                </h1>
+                <p className="text-lg md:text-xl text-white/90">
+                  {heroSlide.subtitle}
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Products Section */}
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">
+              {flagFromUrl} Collection
+            </h2>
+            <p className="text-muted-foreground">
+              {products.length} {products.length === 1 ? 'product' : 'products'} found
+            </p>
+          </div>
+
+          {isLoading ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                <span className="text-2xl">📦</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No products found</h3>
+              <p className="text-muted-foreground">
+                Check back soon for {flagFromUrl} products!
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.map((product) => (
+                <ProductCardEnhanced
+                  key={product.id}
+                  id={parseInt(product.id)}
+                  name={product.name}
+                  price={product.offer_price || product.price}
+                  image={product.image_url || ''}
+                  category={product.category}
+                  isNew={product.flag === 'New Arrival'}
+                  sizes={product.sizes}
+                  rating={product.rating}
+                />
+              ))}
+            </div>
+          )}
+        </main>
+
+        <Footer />
+      </div>
+    </>
+  );
+};
+
+export default FlagProducts;
