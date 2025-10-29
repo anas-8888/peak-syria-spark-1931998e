@@ -518,16 +518,6 @@ const Marketing = () => {
               {campaigns.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <p>No campaigns yet. Create your first campaign to get started!</p>
-                  <Button
-                    className="mt-4"
-                    onClick={() => {
-                      resetCampaignForm();
-                      setIsCampaignDialogOpen(true);
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Campaign
-                  </Button>
                 </div>
               ) : (
                 <Table>
@@ -704,14 +694,7 @@ const Marketing = () => {
               <CardContent className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No templates yet</h3>
-                <p className="text-muted-foreground mb-4">Save time by creating reusable message templates</p>
-                <Button onClick={() => {
-                  resetTemplateForm();
-                  setIsTemplateDialogOpen(true);
-                }}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Template
-                </Button>
+                <p className="text-muted-foreground">Save time by creating reusable message templates</p>
               </CardContent>
             </Card>
           ) : (
@@ -778,14 +761,7 @@ const Marketing = () => {
               <CardContent className="text-center py-12">
                 <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No segments yet</h3>
-                <p className="text-muted-foreground mb-4">Target specific customer groups with segmentation</p>
-                <Button onClick={() => {
-                  resetSegmentForm();
-                  setIsSegmentDialogOpen(true);
-                }}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Segment
-                </Button>
+                <p className="text-muted-foreground">Target specific customer groups with segmentation</p>
               </CardContent>
             </Card>
           ) : (
