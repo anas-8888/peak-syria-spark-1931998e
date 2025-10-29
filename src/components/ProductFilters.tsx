@@ -127,12 +127,12 @@ const ProductFilters = ({ filters, onFilterChange, categories, sizes, minPrice, 
       {/* Colors */}
       <div className="space-y-3">
         <h3 className="font-bold text-lg">Colors</h3>
-        <div className="grid grid-cols-5 gap-2">
+        <div className="flex flex-wrap gap-2">
           {availableColors.map((color) => (
             <button
               key={color.value}
               onClick={() => handleColorToggle(color.value)}
-              className={`w-10 h-10 rounded-full border-2 transition-all ${
+              className={`w-8 h-8 rounded-full border-2 transition-all ${
                 localFilters.colors.includes(color.value)
                   ? "border-primary scale-110 ring-2 ring-primary ring-offset-2"
                   : "border-border hover:scale-105"
