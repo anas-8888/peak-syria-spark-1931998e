@@ -285,6 +285,28 @@ const HeroSlides = () => {
                 <p className="text-xs text-muted-foreground mb-2">
                   Recommended size: 1920x1080px (16:9 aspect ratio) for best results
                 </p>
+                
+                {/* Show current image if exists */}
+                {slideForm.image_url && !imageFile && (
+                  <div className="mb-3 relative inline-block">
+                    <img 
+                      src={slideForm.image_url} 
+                      alt="Current slide" 
+                      className="w-full max-w-md h-40 object-cover rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={() => setSlideForm({ ...slideForm, image_url: "" })}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Remove Image
+                    </Button>
+                  </div>
+                )}
+                
                 <div className="mt-2">
                   <Input
                     id="image"
@@ -295,10 +317,10 @@ const HeroSlides = () => {
                       if (file) setImageFile(file);
                     }}
                   />
-                  {(slideForm.image_url || imageFile) && (
+                  {imageFile && (
                     <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                       <ImageIcon className="h-4 w-4" />
-                      {imageFile ? imageFile.name : "Current image uploaded"}
+                      {imageFile.name}
                     </div>
                   )}
                 </div>
