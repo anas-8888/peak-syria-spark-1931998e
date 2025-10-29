@@ -186,7 +186,16 @@ const ProductDetail = () => {
                     className={`aspect-square bg-muted rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all ${
                       selectedImageUrl === image.image_url ? 'ring-2 ring-primary' : ''
                     }`}
-                    onClick={() => setSelectedImageUrl(image.image_url)}
+                    onClick={() => {
+                      setSelectedImageUrl(image.image_url);
+                      // Find and set the color associated with this image
+                      const colorForImage = Object.entries(colorImageMap).find(
+                        ([_, imageUrl]) => imageUrl === image.image_url
+                      );
+                      if (colorForImage) {
+                        setSelectedColor(colorForImage[0]);
+                      }
+                    }}
                   >
                     <img src={image.image_url} alt="Thumbnail" className="w-full h-full object-cover" />
                   </div>
