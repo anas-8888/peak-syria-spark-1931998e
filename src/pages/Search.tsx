@@ -208,7 +208,7 @@ const Search = () => {
       <Navbar />
 
       {/* Search Section */}
-      <section className="relative bg-gradient-to-br from-secondary via-secondary to-secondary/80 py-12 sm:py-16 text-secondary-foreground overflow-hidden">
+      <section className="relative z-20 bg-gradient-to-br from-secondary via-secondary to-secondary/80 py-12 sm:py-16 text-secondary-foreground overflow-visible">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(227,30,36,0.3),transparent_50%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(227,30,36,0.2),transparent_50%)]" />
