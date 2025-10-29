@@ -13,13 +13,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -28,8 +21,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Image as ImageIcon } from "lucide-react";
+import { Plus, Edit, Trash2, Image as ImageIcon, Upload } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+
+// Import hero images
+import heroNewArrival from "@/assets/hero-new-arrival.jpg";
+import heroOffer from "@/assets/hero-offer.jpg";
+import heroBestSeller from "@/assets/hero-best-seller.jpg";
+import heroLimitedEdition from "@/assets/hero-limited-edition.jpg";
 
 type HeroSlide = {
   id: string;
@@ -54,6 +53,7 @@ const HeroSlides = () => {
   const [editingSlide, setEditingSlide] = useState<HeroSlide | null>(null);
   const [deletingSlideId, setDeletingSlideId] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploadingAssets, setUploadingAssets] = useState(false);
 
   const [slideForm, setSlideForm] = useState({
     flag_name: "",
@@ -82,6 +82,62 @@ const HeroSlides = () => {
       return data as HeroSlide[];
     },
   });
+
+  // Upload asset images to storage
+  const uploadAssetImages = async () => {
+    setUploadingAssets(true);
+    
+    const imageMap: Record<string, string> = {
+      "New Arrival": heroNewArrival,
+      "Offer": heroOffer,
+      "Best Seller": heroBestSeller,
+      "Limited Edition": heroLimitedEdition,
+    };
+
+    try {
+      for (const slide of slides) {
+        const localImage = imageMap[slide.flag_name];
+        if (!localImage || slide.image_url) continue; // Skip if already has image
+
+        // Fetch the local image
+        const response = await fetch(localImage);
+        const blob = await response.blob();
+        
+        // Upload to Supabase storage
+        const fileName = `${slide.flag_name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.jpg`;
+        const filePath = `hero-slides/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("product-images")
+          .upload(filePath, blob, {
+            contentType: "image/jpeg",
+            upsert: true,
+          });
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from("product-images")
+          .getPublicUrl(filePath);
+
+        // Update slide with image URL
+        const { error: updateError } = await supabase
+          .from("hero_slides")
+          .update({ image_url: publicUrl })
+          .eq("id", slide.id);
+
+        if (updateError) throw updateError;
+      }
+
+      toast.success("All hero images uploaded successfully!");
+      queryClient.invalidateQueries({ queryKey: ["hero-slides"] });
+    } catch (error: any) {
+      toast.error(`Failed to upload images: ${error.message}`);
+    } finally {
+      setUploadingAssets(false);
+    }
+  };
 
   // Upload image mutation
   const uploadImageMutation = useMutation({
@@ -206,181 +262,191 @@ const HeroSlides = () => {
             Manage hero section slides with product flags
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) resetForm();
-        }}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Slide
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingSlide ? "Edit Slide" : "Create New Slide"}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="flag-name">Flag Name *</Label>
-                <Input
-                  id="flag-name"
-                  value={slideForm.flag_name}
-                  onChange={(e) => setSlideForm({ ...slideForm, flag_name: e.target.value })}
-                  placeholder="e.g. New Arrival, Offer, Best Seller"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Common examples: New Arrival, Offer, Best Seller, Limited Edition
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="title">Title *</Label>
-                <Input
-                  id="title"
-                  value={slideForm.title}
-                  onChange={(e) => setSlideForm({ ...slideForm, title: e.target.value })}
-                  placeholder="Enter slide title"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="subtitle">Subtitle *</Label>
-                <Input
-                  id="subtitle"
-                  value={slideForm.subtitle}
-                  onChange={(e) => setSlideForm({ ...slideForm, subtitle: e.target.value })}
-                  placeholder="Enter slide subtitle"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="button-text">Button Text *</Label>
-                <Input
-                  id="button-text"
-                  value={slideForm.button_text}
-                  onChange={(e) => setSlideForm({ ...slideForm, button_text: e.target.value })}
-                  placeholder="Enter button text"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="button-url">Button URL *</Label>
-                <Input
-                  id="button-url"
-                  value={slideForm.button_url}
-                  onChange={(e) => setSlideForm({ ...slideForm, button_url: e.target.value })}
-                  placeholder="/offers"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="display-order">Display Order *</Label>
-                <Input
-                  id="display-order"
-                  type="number"
-                  value={slideForm.display_order}
-                  onChange={(e) => setSlideForm({ ...slideForm, display_order: parseInt(e.target.value) })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="image">Slide Image *</Label>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Recommended size: 1920x1080px (16:9 aspect ratio) for best results
-                </p>
-                
-                {/* Show current image if exists */}
-                {slideForm.image_url && !imageFile && (
-                  <div className="mb-3 relative inline-block">
-                    <img 
-                      src={slideForm.image_url} 
-                      alt="Current slide" 
-                      className="w-full max-w-md h-40 object-cover rounded-lg border"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      className="absolute top-2 right-2"
-                      onClick={() => setSlideForm({ ...slideForm, image_url: "" })}
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Remove Image
-                    </Button>
-                  </div>
-                )}
-                
-                <div className="mt-2">
-                  <Input
-                    id="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) setImageFile(file);
-                    }}
-                  />
-                  {imageFile && (
-                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                      <ImageIcon className="h-4 w-4" />
-                      {imageFile.name}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="is-active">Active</Label>
-                <Switch
-                  id="is-active"
-                  checked={slideForm.is_active}
-                  onCheckedChange={(checked) => setSlideForm({ ...slideForm, is_active: checked })}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          <Button
+            onClick={uploadAssetImages}
+            disabled={uploadingAssets}
+            variant="outline"
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            {uploadingAssets ? "Uploading..." : "Upload Asset Images"}
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) resetForm();
+          }}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Slide
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingSlide ? "Edit Slide" : "Create New Slide"}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="show-in-navbar">Show in Navbar</Label>
+                  <Label htmlFor="flag-name">Flag Name *</Label>
+                  <Input
+                    id="flag-name"
+                    value={slideForm.flag_name}
+                    onChange={(e) => setSlideForm({ ...slideForm, flag_name: e.target.value })}
+                    placeholder="e.g. New Arrival, Offer, Best Seller"
+                  />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Display this flag as a navigation link
+                    Common examples: New Arrival, Offer, Best Seller, Limited Edition
                   </p>
                 </div>
-                <Switch
-                  id="show-in-navbar"
-                  checked={slideForm.show_in_navbar}
-                  onCheckedChange={(checked) => setSlideForm({ ...slideForm, show_in_navbar: checked })}
-                />
-              </div>
 
-              <div className="flex justify-end gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsDialogOpen(false);
-                    resetForm();
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => saveSlide.mutate(slideForm)}
-                  disabled={
-                    !slideForm.flag_name ||
-                    !slideForm.title ||
-                    !slideForm.subtitle ||
-                    !slideForm.button_text ||
-                    !slideForm.button_url ||
-                    (!editingSlide && !slideForm.image_url && !imageFile) ||
-                    saveSlide.isPending
-                  }
-                >
-                  {saveSlide.isPending ? "Saving..." : editingSlide ? "Update" : "Create"}
-                </Button>
+                <div>
+                  <Label htmlFor="title">Title *</Label>
+                  <Input
+                    id="title"
+                    value={slideForm.title}
+                    onChange={(e) => setSlideForm({ ...slideForm, title: e.target.value })}
+                    placeholder="Enter slide title"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="subtitle">Subtitle *</Label>
+                  <Input
+                    id="subtitle"
+                    value={slideForm.subtitle}
+                    onChange={(e) => setSlideForm({ ...slideForm, subtitle: e.target.value })}
+                    placeholder="Enter slide subtitle"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="button-text">Button Text *</Label>
+                  <Input
+                    id="button-text"
+                    value={slideForm.button_text}
+                    onChange={(e) => setSlideForm({ ...slideForm, button_text: e.target.value })}
+                    placeholder="Enter button text"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="button-url">Button URL *</Label>
+                  <Input
+                    id="button-url"
+                    value={slideForm.button_url}
+                    onChange={(e) => setSlideForm({ ...slideForm, button_url: e.target.value })}
+                    placeholder="/offers"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="display-order">Display Order *</Label>
+                  <Input
+                    id="display-order"
+                    type="number"
+                    value={slideForm.display_order}
+                    onChange={(e) => setSlideForm({ ...slideForm, display_order: parseInt(e.target.value) })}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="image">Slide Image *</Label>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Recommended size: 1920x1080px (16:9 aspect ratio) for best results
+                  </p>
+                  
+                  {/* Show current image if exists */}
+                  {slideForm.image_url && !imageFile && (
+                    <div className="mb-3 relative inline-block">
+                      <img 
+                        src={slideForm.image_url} 
+                        alt="Current slide" 
+                        className="w-full max-w-md h-40 object-cover rounded-lg border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => setSlideForm({ ...slideForm, image_url: "" })}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Remove Image
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <div className="mt-2">
+                    <Input
+                      id="image"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) setImageFile(file);
+                      }}
+                    />
+                    {imageFile && (
+                      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                        <ImageIcon className="h-4 w-4" />
+                        {imageFile.name}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="is-active">Active</Label>
+                  <Switch
+                    id="is-active"
+                    checked={slideForm.is_active}
+                    onCheckedChange={(checked) => setSlideForm({ ...slideForm, is_active: checked })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="show-in-navbar">Show in Navbar</Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Display this flag as a navigation link
+                    </p>
+                  </div>
+                  <Switch
+                    id="show-in-navbar"
+                    checked={slideForm.show_in_navbar}
+                    onCheckedChange={(checked) => setSlideForm({ ...slideForm, show_in_navbar: checked })}
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsDialogOpen(false);
+                      resetForm();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => saveSlide.mutate(slideForm)}
+                    disabled={
+                      !slideForm.flag_name ||
+                      !slideForm.title ||
+                      !slideForm.subtitle ||
+                      !slideForm.button_text ||
+                      !slideForm.button_url ||
+                      (!editingSlide && !slideForm.image_url && !imageFile) ||
+                      saveSlide.isPending
+                    }
+                  >
+                    {saveSlide.isPending ? "Saving..." : editingSlide ? "Update" : "Create"}
+                  </Button>
+                </div>
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
@@ -408,12 +474,16 @@ const HeroSlides = () => {
                 {slides.map((slide) => (
                   <TableRow key={slide.id}>
                     <TableCell>
-                      {slide.image_url && (
+                      {slide.image_url ? (
                         <img 
                           src={slide.image_url} 
                           alt={slide.title}
                           className="w-20 h-12 object-cover rounded"
                         />
+                      ) : (
+                        <div className="w-20 h-12 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
+                          No image
+                        </div>
                       )}
                     </TableCell>
                     <TableCell>{slide.display_order}</TableCell>
