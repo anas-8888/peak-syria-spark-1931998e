@@ -41,6 +41,56 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_analytics: {
+        Row: {
+          bounce_count: number | null
+          campaign_id: string
+          clicked_count: number | null
+          converted_count: number | null
+          delivered_count: number | null
+          id: string
+          opened_count: number | null
+          revenue_generated: number | null
+          sent_count: number | null
+          unsubscribe_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          bounce_count?: number | null
+          campaign_id: string
+          clicked_count?: number | null
+          converted_count?: number | null
+          delivered_count?: number | null
+          id?: string
+          opened_count?: number | null
+          revenue_generated?: number | null
+          sent_count?: number | null
+          unsubscribe_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bounce_count?: number | null
+          campaign_id?: string
+          clicked_count?: number | null
+          converted_count?: number | null
+          delivered_count?: number | null
+          id?: string
+          opened_count?: number | null
+          revenue_generated?: number | null
+          sent_count?: number | null
+          unsubscribe_count?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_analytics_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string | null
@@ -84,6 +134,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      customer_segments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          criteria: Json
+          customer_count: number | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          customer_count?: number | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          customer_count?: number | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       discount_categories: {
         Row: {
@@ -331,6 +414,93 @@ export type Database = {
           updated_at?: string | null
           value?: number
           value_type?: string | null
+        }
+        Relationships: []
+      }
+      marketing_campaigns: {
+        Row: {
+          completed_at: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          scheduled_date: string | null
+          started_at: string | null
+          status: string
+          subject: string | null
+          target_audience_size: number | null
+          target_segment: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          scheduled_date?: string | null
+          started_at?: string | null
+          status?: string
+          subject?: string | null
+          target_audience_size?: number | null
+          target_segment?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          scheduled_date?: string | null
+          started_at?: string | null
+          status?: string
+          subject?: string | null
+          target_audience_size?: number | null
+          target_segment?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketing_templates: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          preview_text: string | null
+          subject: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          preview_text?: string | null
+          subject?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          preview_text?: string | null
+          subject?: string | null
+          type?: string
+          updated_at?: string
         }
         Relationships: []
       }
