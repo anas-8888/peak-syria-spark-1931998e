@@ -886,6 +886,7 @@ export type Database = {
           sizes: string[] | null
           sku: string | null
           stock_quantity: number | null
+          target_gender: string | null
           updated_at: string | null
         }
         Insert: {
@@ -905,6 +906,7 @@ export type Database = {
           sizes?: string[] | null
           sku?: string | null
           stock_quantity?: number | null
+          target_gender?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -924,6 +926,7 @@ export type Database = {
           sizes?: string[] | null
           sku?: string | null
           stock_quantity?: number | null
+          target_gender?: string | null
           updated_at?: string | null
         }
         Relationships: []

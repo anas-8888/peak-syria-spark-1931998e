@@ -21,6 +21,7 @@ interface ProductCardEnhancedProps {
   rating?: number;
   colorImages?: Record<string, string>;
   viewMode?: "grid" | "list";
+  targetGender?: string;
 }
 
 const ProductCardEnhanced = ({
@@ -35,6 +36,7 @@ const ProductCardEnhanced = ({
   rating = 4.5,
   colorImages,
   viewMode = "grid",
+  targetGender,
 }: ProductCardEnhancedProps) => {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState(colors[0]);
@@ -192,6 +194,11 @@ const ProductCardEnhanced = ({
             {isNew && (
               <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold uppercase shadow-lg animate-scale-in">
                 {t("product.new")}
+              </div>
+            )}
+            {targetGender && targetGender !== 'both' && (
+              <div className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold uppercase shadow-lg">
+                {targetGender === 'men' ? "MEN" : "WOMEN"}
               </div>
             )}
           </div>

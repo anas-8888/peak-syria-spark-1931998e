@@ -31,6 +31,7 @@ type Product = {
   sku?: string;
   features?: string[];
   flag?: string | null;
+  target_gender?: string;
 };
 
 const ProductDetail = () => {
@@ -229,6 +230,13 @@ const ProductDetail = () => {
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">{product.name}</h1>
               {product.sku && (
                 <p className="text-muted-foreground text-sm sm:text-base">SKU: {product.sku}</p>
+              )}
+              {product.target_gender && product.target_gender !== 'both' && (
+                <div className="inline-block">
+                  <Badge variant="outline" className="text-xs sm:text-sm">
+                    {product.target_gender === 'men' ? "Men's" : "Women's"}
+                  </Badge>
+                </div>
               )}
               {product.rating !== undefined && product.rating > 0 && (
                 <div className="flex items-center gap-2 mt-2">

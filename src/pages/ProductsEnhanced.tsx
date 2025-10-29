@@ -25,6 +25,7 @@ interface Product {
   sizes: string[];
   rating: number;
   colorImages?: Record<string, string>;
+  target_gender?: string;
 }
 
 const ProductsEnhanced = () => {
@@ -101,6 +102,7 @@ const ProductsEnhanced = () => {
           sizes: product.sizes || [],
           rating: product.rating || 0,
           colorImages: Object.keys(colorImages).length > 0 ? colorImages : undefined,
+          target_gender: product.target_gender,
         };
       });
 
@@ -329,6 +331,7 @@ const ProductsEnhanced = () => {
                         rating={product.rating}
                         colorImages={product.colorImages}
                         viewMode={viewMode}
+                        targetGender={product.target_gender}
                       />
                     </div>
                   ))}

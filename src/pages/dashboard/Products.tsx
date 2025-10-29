@@ -76,6 +76,7 @@ const Products = () => {
     sizes: [] as string[],
     features: [] as string[],
     flag: "",
+    target_gender: "both",
     colors: [] as {
       color: string;
       image_id: string;
@@ -178,6 +179,7 @@ const Products = () => {
         sizes: newProduct.sizes,
         features: newProduct.features,
         flag: newProduct.flag || null,
+        target_gender: newProduct.target_gender,
         colors: newProduct.colors
       }).select().single();
       if (error) throw error;
@@ -246,6 +248,7 @@ const Products = () => {
         sizes: updates.sizes,
         features: updates.features,
         flag: updates.flag || null,
+        target_gender: updates.target_gender,
         colors: updates.colors
       }).eq("id", id);
       if (error) throw error;
@@ -383,6 +386,7 @@ const Products = () => {
       sizes: [],
       features: [],
       flag: "",
+      target_gender: "both",
       colors: []
     });
     setSelectedCategoryIds([]);
@@ -467,6 +471,7 @@ const Products = () => {
         sizes: product.sizes || [],
         features: product.features || [],
         flag: product.flag || "",
+        target_gender: (product as any).target_gender || "both",
         colors: product.colors || []
       });
 
@@ -544,6 +549,7 @@ const Products = () => {
       sizes: product.sizes || [],
       features: product.features || [],
       flag: product.flag || "",
+      target_gender: (product as any).target_gender || "both",
       colors: product.colors || []
     });
     setIsCopyDialogOpen(true);
@@ -783,6 +789,23 @@ const Products = () => {
               </div>
             </div>
 
+            <div className="grid gap-2">
+              <Label htmlFor="target_gender">Target Gender</Label>
+              <Select value={formData.target_gender} onValueChange={value => setFormData({
+                ...formData,
+                target_gender: value
+              })}>
+                <SelectTrigger id="target_gender">
+                  <SelectValue placeholder="Select target gender" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="men">Men</SelectItem>
+                  <SelectItem value="women">Women</SelectItem>
+                  <SelectItem value="both">Both / Unisex</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Sizes Management */}
             <div className="grid gap-2">
               <Label>Available Sizes (EU)</Label>
@@ -1007,6 +1030,23 @@ const Products = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="copy-target_gender">Target Gender</Label>
+              <Select value={formData.target_gender} onValueChange={value => setFormData({
+                ...formData,
+                target_gender: value
+              })}>
+                <SelectTrigger id="copy-target_gender">
+                  <SelectValue placeholder="Select target gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="men">Men</SelectItem>
+                  <SelectItem value="women">Women</SelectItem>
+                  <SelectItem value="both">Both / Unisex</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Sizes Management */}
@@ -1239,6 +1279,23 @@ const Products = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="edit-target_gender">Target Gender</Label>
+              <Select value={formData.target_gender} onValueChange={value => setFormData({
+                ...formData,
+                target_gender: value
+              })}>
+                <SelectTrigger id="edit-target_gender">
+                  <SelectValue placeholder="Select target gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="men">Men</SelectItem>
+                  <SelectItem value="women">Women</SelectItem>
+                  <SelectItem value="both">Both / Unisex</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Sizes Management */}
