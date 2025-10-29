@@ -23,6 +23,7 @@ type Campaign = {
   status: 'draft' | 'scheduled' | 'active' | 'paused' | 'completed' | 'cancelled';
   subject: string | null;
   content: string;
+  template_id: string | null;
   target_segment: string | null;
   target_audience_size: number;
   scheduled_date: string | null;
@@ -180,6 +181,7 @@ const Marketing = () => {
           .update({
             name: data.name,
             type: data.type,
+            template_id: data.template_id,
             subject: template.subject || null,
             content: template.content,
             target_segment: data.target_segment || null,
@@ -193,6 +195,7 @@ const Marketing = () => {
           .insert({
             name: data.name,
             type: data.type,
+            template_id: data.template_id,
             subject: template.subject || null,
             content: template.content,
             target_segment: data.target_segment || null,
@@ -412,9 +415,9 @@ const Marketing = () => {
     setCampaignForm({
       name: campaign.name,
       type: campaign.type,
-      template_id: "",
+      template_id: campaign.template_id || "",
       target_segment: campaign.target_segment || "",
-      scheduled_date: campaign.scheduled_date || ""
+      scheduled_date: campaign.scheduled_date ? campaign.scheduled_date.slice(0, 16) : ""
     });
     setIsCampaignDialogOpen(true);
   };

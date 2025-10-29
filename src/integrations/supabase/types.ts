@@ -431,6 +431,7 @@ export type Database = {
           subject: string | null
           target_audience_size: number | null
           target_segment: string | null
+          template_id: string | null
           type: string
           updated_at: string
         }
@@ -447,6 +448,7 @@ export type Database = {
           subject?: string | null
           target_audience_size?: number | null
           target_segment?: string | null
+          template_id?: string | null
           type: string
           updated_at?: string
         }
@@ -463,10 +465,19 @@ export type Database = {
           subject?: string | null
           target_audience_size?: number | null
           target_segment?: string | null
+          template_id?: string | null
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "marketing_campaigns_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       marketing_templates: {
         Row: {
