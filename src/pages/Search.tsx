@@ -245,10 +245,10 @@ const Search = () => {
 
             {/* Suggestions Dropdown */}
             {showSuggestions && (suggestions.length > 0 || recentSearches.length > 0) && (
-              <div className="absolute top-full mt-2 w-full bg-background border-2 border-border rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+              <div className="absolute top-full mt-2 w-full bg-background border-2 border-border rounded-2xl shadow-2xl overflow-hidden z-[100] animate-fade-in">
                 {/* Recent Searches */}
                 {!searchQuery && recentSearches.length > 0 && (
-                  <div className="p-2 border-b">
+                  <div className="p-2 border-b bg-background">
                     <p className="text-xs text-muted-foreground px-3 py-2 font-semibold">Recent Searches</p>
                     {recentSearches.map((search, index) => (
                       <button
@@ -278,7 +278,7 @@ const Search = () => {
 
                 {/* Suggestions */}
                 {suggestions.length > 0 && (
-                  <div className="p-2">
+                  <div className="p-2 bg-background">
                     <p className="text-xs text-muted-foreground px-3 py-2 font-semibold">Suggestions</p>
                     {suggestions.map((suggestion, index) => (
                       <button
