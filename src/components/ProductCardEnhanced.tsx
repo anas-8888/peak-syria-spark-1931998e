@@ -153,8 +153,10 @@ const ProductCardEnhanced = ({
 
           <div className="flex items-center justify-between pt-2 border-t">
             <span className="text-xl font-bold text-primary">{formatPrice(price)}</span>
-            <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10">
-              View Details
+            <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10" asChild>
+              <Link to={`/product/${id}`}>
+                View Details
+              </Link>
             </Button>
           </div>
         </div>
