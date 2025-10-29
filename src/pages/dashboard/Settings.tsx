@@ -5,8 +5,119 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 const Settings = () => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  
+  // Account Information State
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  
+  // Security State
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Load user profile
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('full_name, email, phone')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setFullName(data.full_name || "");
+          setEmail(data.email || user.email || "");
+          setPhone(data.phone || "");
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+        toast.error("Failed to load profile");
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: fullName,
+          phone: phone,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast.success("Password updated successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      console.error("Error updating password:", error);
+      toast.error("Failed to update password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loadingProfile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
@@ -32,7 +143,12 @@ const Settings = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" placeholder="Enter your full name" defaultValue="System Admin" />
+              <Input 
+                id="name" 
+                placeholder="Enter your full name" 
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -40,16 +156,23 @@ const Settings = () => {
                 id="email"
                 type="email"
                 placeholder="admin@example.com"
-                defaultValue="admin@peaksyria.com"
+                value={email}
+                disabled
+                className="opacity-60"
               />
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="phone">Phone Number</Label>
-            <Input id="phone" placeholder="+963 123 456 789" defaultValue="+963 123 456 789" />
+            <Input 
+              id="phone" 
+              placeholder="+963 123 456 789" 
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
           </div>
-          <Button className="gap-2">
-            <Save className="h-4 w-4" />
+          <Button className="gap-2" onClick={handleSaveProfile} disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Save Changes
           </Button>
         </CardContent>
@@ -71,20 +194,38 @@ const Settings = () => {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="current">Current Password</Label>
-            <Input id="current" type="password" placeholder="••••••••" />
+            <Input 
+              id="current" 
+              type="password" 
+              placeholder="••••••••" 
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+            />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="new">New Password</Label>
-              <Input id="new" type="password" placeholder="••••••••" />
+              <Input 
+                id="new" 
+                type="password" 
+                placeholder="••••••••" 
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm">Confirm Password</Label>
-              <Input id="confirm" type="password" placeholder="••••••••" />
+              <Input 
+                id="confirm" 
+                type="password" 
+                placeholder="••••••••" 
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
             </div>
           </div>
-          <Button variant="destructive" className="gap-2">
-            <Shield className="h-4 w-4" />
+          <Button variant="destructive" className="gap-2" onClick={handleUpdatePassword} disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
             Update Password
           </Button>
         </CardContent>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -19,9 +19,13 @@ import {
   X,
   FolderTree,
   Shield,
+  ExternalLink,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import peakLogo from "@/assets/peak-logo.png";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const menuItems = [
   { title: "Overview", path: "/dashboard", icon: LayoutDashboard, end: true },
@@ -43,6 +47,18 @@ const menuItems = [
 const DashboardSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("Logged out successfully");
+      navigate("/");
+    } catch (error) {
+      toast.error("Failed to logout");
+    }
+  };
 
   return (
     <>
@@ -98,8 +114,22 @@ const DashboardSidebar = () => {
           )}
         </div>
 
+        {/* Browse Website Link */}
+        <div className="p-4 pb-2">
+          <NavLink
+            to="/"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          >
+            <ExternalLink className="h-5 w-5 flex-shrink-0" />
+            {!collapsed && (
+              <span className="font-medium whitespace-nowrap">Browse Website</span>
+            )}
+          </NavLink>
+        </div>
+
         {/* Menu Items */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+        <nav className="flex-1 p-4 pt-0 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
 
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -127,14 +157,24 @@ const DashboardSidebar = () => {
         </nav>
 
         {/* Footer */}
-        {!collapsed && (
-          <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border space-y-3">
+          {/* Logout Button */}
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className={`w-full gap-3 ${collapsed ? 'px-0 justify-center' : 'justify-start'}`}
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            {!collapsed && <span className="font-medium">Log Out</span>}
+          </Button>
+
+          {!collapsed && (
             <div className="bg-primary/10 rounded-lg p-3 text-center">
               <p className="text-sm font-semibold text-primary mb-1">Admin Panel</p>
               <p className="text-xs text-muted-foreground">PEAK Syria</p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </aside>
     </>
   );
