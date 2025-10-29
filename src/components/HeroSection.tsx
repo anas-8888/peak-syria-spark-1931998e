@@ -48,7 +48,7 @@ const HeroSection = () => {
     },
   ];
 
-  const slides = dbSlides && dbSlides.length > 0 ? dbSlides : fallbackSlides;
+  const slides = dbSlides && dbSlides.length > 0 ? dbSlides : [];
 
   useEffect(() => {
     const timer = setInterval(() => {

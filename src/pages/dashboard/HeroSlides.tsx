@@ -21,14 +21,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Image as ImageIcon, Upload } from "lucide-react";
+import { Plus, Edit, Trash2, Image as ImageIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-
-// Import hero images
-import heroNewArrival from "@/assets/hero-new-arrival.jpg";
-import heroOffer from "@/assets/hero-offer.jpg";
-import heroBestSeller from "@/assets/hero-best-seller.jpg";
-import heroLimitedEdition from "@/assets/hero-limited-edition.jpg";
 
 type HeroSlide = {
   id: string;
@@ -53,7 +47,6 @@ const HeroSlides = () => {
   const [editingSlide, setEditingSlide] = useState<HeroSlide | null>(null);
   const [deletingSlideId, setDeletingSlideId] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [uploadingAssets, setUploadingAssets] = useState(false);
 
   const [slideForm, setSlideForm] = useState({
     flag_name: "",
@@ -82,62 +75,6 @@ const HeroSlides = () => {
       return data as HeroSlide[];
     },
   });
-
-  // Upload asset images to storage
-  const uploadAssetImages = async () => {
-    setUploadingAssets(true);
-    
-    const imageMap: Record<string, string> = {
-      "New Arrival": heroNewArrival,
-      "Offer": heroOffer,
-      "Best Seller": heroBestSeller,
-      "Limited Edition": heroLimitedEdition,
-    };
-
-    try {
-      for (const slide of slides) {
-        const localImage = imageMap[slide.flag_name];
-        if (!localImage || slide.image_url) continue; // Skip if already has image
-
-        // Fetch the local image
-        const response = await fetch(localImage);
-        const blob = await response.blob();
-        
-        // Upload to Supabase storage
-        const fileName = `${slide.flag_name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.jpg`;
-        const filePath = `hero-slides/${fileName}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from("product-images")
-          .upload(filePath, blob, {
-            contentType: "image/jpeg",
-            upsert: true,
-          });
-
-        if (uploadError) throw uploadError;
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from("product-images")
-          .getPublicUrl(filePath);
-
-        // Update slide with image URL
-        const { error: updateError } = await supabase
-          .from("hero_slides")
-          .update({ image_url: publicUrl })
-          .eq("id", slide.id);
-
-        if (updateError) throw updateError;
-      }
-
-      toast.success("All hero images uploaded successfully!");
-      queryClient.invalidateQueries({ queryKey: ["hero-slides"] });
-    } catch (error: any) {
-      toast.error(`Failed to upload images: ${error.message}`);
-    } finally {
-      setUploadingAssets(false);
-    }
-  };
 
   // Upload image mutation
   const uploadImageMutation = useMutation({
@@ -262,25 +199,16 @@ const HeroSlides = () => {
             Manage hero section slides with product flags
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={uploadAssetImages}
-            disabled={uploadingAssets}
-            variant="outline"
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            {uploadingAssets ? "Uploading..." : "Upload Asset Images"}
-          </Button>
-          <Dialog open={isDialogOpen} onOpenChange={(open) => {
-            setIsDialogOpen(open);
-            if (!open) resetForm();
-          }}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Slide
-              </Button>
-            </DialogTrigger>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) resetForm();
+        }}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Slide
+            </Button>
+          </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingSlide ? "Edit Slide" : "Create New Slide"}</DialogTitle>
@@ -446,7 +374,6 @@ const HeroSlides = () => {
               </div>
             </DialogContent>
           </Dialog>
-        </div>
       </div>
 
       <Card>
