@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import peakLogo from "@/assets/peak-logo.png";
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -17,6 +18,23 @@ const Navbar = () => {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [fullName, setFullName] = useState("");
   const [userRole, setUserRole] = useState("");
+
+  // Fetch hero slides that should show in navbar
+  const { data: navbarFlags = [] } = useQuery({
+    queryKey: ["navbar-flags"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("hero_slides")
+        .select("flag_name, button_url")
+        .eq("is_active", true)
+        .eq("show_in_navbar", true)
+        .order("display_order");
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   useEffect(() => {
     if (user) {
       loadProfile();
@@ -48,7 +66,13 @@ const Navbar = () => {
   const navLinks = [{
     name: "All Products",
     path: "/products"
-  }, {
+  },
+  // Add flag navigation items from hero slides
+  ...navbarFlags.map(flag => ({
+    name: flag.flag_name,
+    path: flag.button_url
+  })),
+  {
     name: "Basketball",
     path: "/products?category=basketball"
   }, {

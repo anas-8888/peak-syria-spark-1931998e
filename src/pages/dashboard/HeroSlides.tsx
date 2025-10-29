@@ -43,6 +43,7 @@ type HeroSlide = {
   image_height: number;
   display_order: number;
   is_active: boolean;
+  show_in_navbar: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -65,6 +66,7 @@ const HeroSlides = () => {
     image_height: 1080,
     display_order: 0,
     is_active: true,
+    show_in_navbar: false,
   });
 
   // Fetch hero slides
@@ -171,6 +173,7 @@ const HeroSlides = () => {
       image_height: 1080,
       display_order: 0,
       is_active: true,
+      show_in_navbar: false,
     });
     setEditingSlide(null);
     setImageFile(null);
@@ -189,6 +192,7 @@ const HeroSlides = () => {
       image_height: slide.image_height,
       display_order: slide.display_order,
       is_active: slide.is_active,
+      show_in_navbar: slide.show_in_navbar,
     });
     setIsDialogOpen(true);
   };
@@ -335,6 +339,20 @@ const HeroSlides = () => {
                 />
               </div>
 
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="show-in-navbar">Show in Navbar</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Display this flag as a navigation link
+                  </p>
+                </div>
+                <Switch
+                  id="show-in-navbar"
+                  checked={slideForm.show_in_navbar}
+                  onCheckedChange={(checked) => setSlideForm({ ...slideForm, show_in_navbar: checked })}
+                />
+              </div>
+
               <div className="flex justify-end gap-2 pt-4">
                 <Button
                   variant="outline"
@@ -353,7 +371,7 @@ const HeroSlides = () => {
                     !slideForm.subtitle ||
                     !slideForm.button_text ||
                     !slideForm.button_url ||
-                    (!slideForm.image_url && !imageFile) ||
+                    (!editingSlide && !slideForm.image_url && !imageFile) ||
                     saveSlide.isPending
                   }
                 >
@@ -382,6 +400,7 @@ const HeroSlides = () => {
                   <TableHead>Title</TableHead>
                   <TableHead>Button Text</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>In Navbar</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -410,6 +429,13 @@ const HeroSlides = () => {
                         slide.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
                       }`}>
                         {slide.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                        slide.show_in_navbar ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
+                      }`}>
+                        {slide.show_in_navbar ? "Yes" : "No"}
                       </span>
                     </TableCell>
                     <TableCell>

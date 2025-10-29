@@ -429,6 +429,7 @@ export type Database = {
           image_url: string
           image_width: number
           is_active: boolean
+          show_in_navbar: boolean
           subtitle: string
           title: string
           updated_at: string
@@ -444,6 +445,7 @@ export type Database = {
           image_url: string
           image_width?: number
           is_active?: boolean
+          show_in_navbar?: boolean
           subtitle: string
           title: string
           updated_at?: string
@@ -459,6 +461,7 @@ export type Database = {
           image_url?: string
           image_width?: number
           is_active?: boolean
+          show_in_navbar?: boolean
           subtitle?: string
           title?: string
           updated_at?: string
