@@ -495,6 +495,7 @@ const Products = () => {
                   </TableHead>
                   <TableHead>Product</TableHead>
                   <TableHead>Category</TableHead>
+                  <TableHead>Flag</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Stock</TableHead>
                   <TableHead>Status</TableHead>
@@ -517,6 +518,15 @@ const Products = () => {
                         </div>
                       </TableCell>
                       <TableCell>{product.category}</TableCell>
+                      <TableCell>
+                        {product.flag ? (
+                          <Badge variant="secondary" className="text-xs">
+                            {product.flag}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </TableCell>
                       <TableCell className="font-semibold">
                         {product.offer_price ? <div className="flex items-center gap-2">
                             <span className="text-primary">${product.offer_price?.toFixed(2) || '0.00'}</span>
