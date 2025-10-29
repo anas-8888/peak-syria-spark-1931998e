@@ -24,7 +24,10 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const discountSchema = z.object({
   code: z.string().optional(),
@@ -34,7 +37,6 @@ const discountSchema = z.object({
   type: z.enum(["percentage", "fixed_amount", "bogo", "tiered", "bundle", "volume", "free_shipping", "clearance", "flash"]),
   value: z.number().min(0, "Value must be positive"),
   scope: z.enum(["store_wide", "categories", "products", "tags"]),
-  channels: z.array(z.enum(["web", "app", "pos", "marketplace"])).min(1),
   min_cart_subtotal: z.number().min(0).default(0),
   min_quantity: z.number().min(0).default(0),
   first_order_only: z.boolean().default(false),
@@ -48,18 +50,49 @@ const discountSchema = z.object({
   end_date: z.date().optional(),
   is_automatic: z.boolean().default(false),
   status: z.enum(["active", "scheduled", "expired", "paused", "archived"]).default("scheduled"),
+  selected_categories: z.array(z.string()).optional(),
+  selected_products: z.array(z.string()).optional(),
 });
 
 export type DiscountFormData = z.infer<typeof discountSchema>;
 
 interface DiscountFormProps {
   initialData?: Partial<DiscountFormData>;
-  onSubmit: (data: DiscountFormData) => void;
+  onSubmit: (data: DiscountFormData & { selected_categories?: string[], selected_products?: string[] }) => void;
   isLoading?: boolean;
 }
 
 export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormProps) {
-  const [selectedChannels, setSelectedChannels] = useState<string[]>(initialData?.channels || ["web"]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialData?.selected_categories || []);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>(initialData?.selected_products || []);
+
+  // Fetch categories
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch products
+  const { data: products = [] } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, category")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
   
   const form = useForm<DiscountFormData>({
     resolver: zodResolver(discountSchema),
@@ -71,7 +104,6 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
       type: initialData?.type || "percentage",
       value: initialData?.value || 0,
       scope: initialData?.scope || "store_wide",
-      channels: initialData?.channels || ["web"],
       min_cart_subtotal: initialData?.min_cart_subtotal || 0,
       min_quantity: initialData?.min_quantity || 0,
       first_order_only: initialData?.first_order_only || false,
@@ -86,17 +118,32 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
 
   const discountType = form.watch("type");
   const isAutomatic = form.watch("is_automatic");
+  const scope = form.watch("scope");
 
-  const handleChannelToggle = (channel: string) => {
-    const updated = selectedChannels.includes(channel)
-      ? selectedChannels.filter(c => c !== channel)
-      : [...selectedChannels, channel];
-    setSelectedChannels(updated);
-    form.setValue("channels", updated as any);
+  const handleCategoryToggle = (categoryId: string) => {
+    const updated = selectedCategories.includes(categoryId)
+      ? selectedCategories.filter(id => id !== categoryId)
+      : [...selectedCategories, categoryId];
+    setSelectedCategories(updated);
+  };
+
+  const handleProductToggle = (productId: string) => {
+    const updated = selectedProducts.includes(productId)
+      ? selectedProducts.filter(id => id !== productId)
+      : [...selectedProducts, productId];
+    setSelectedProducts(updated);
+  };
+
+  const handleFormSubmit = (data: DiscountFormData) => {
+    onSubmit({
+      ...data,
+      selected_categories: scope === "categories" ? selectedCategories : undefined,
+      selected_products: scope === "products" ? selectedProducts : undefined,
+    });
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
       <Tabs defaultValue="basics" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="basics">Basics</TabsTrigger>
@@ -207,21 +254,72 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Channels</Label>
-            <div className="flex gap-2 flex-wrap">
-              {["web", "app", "pos", "marketplace"].map((channel) => (
-                <Badge
-                  key={channel}
-                  variant={selectedChannels.includes(channel) ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => handleChannelToggle(channel)}
-                >
-                  {channel.toUpperCase()}
-                </Badge>
-              ))}
+          {/* Category Selection */}
+          {scope === "categories" && (
+            <div className="space-y-2">
+              <Label>Select Categories</Label>
+              <div className="border rounded-md p-4 max-h-64 overflow-y-auto space-y-2">
+                {categories.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No categories available</p>
+                ) : (
+                  categories.map((category: any) => (
+                    <div key={category.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`category-${category.id}`}
+                        checked={selectedCategories.includes(category.id)}
+                        onCheckedChange={() => handleCategoryToggle(category.id)}
+                      />
+                      <Label
+                        htmlFor={`category-${category.id}`}
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        {category.name}
+                      </Label>
+                    </div>
+                  ))
+                )}
+              </div>
+              {selectedCategories.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {selectedCategories.length} {selectedCategories.length === 1 ? "category" : "categories"} selected
+                </p>
+              )}
             </div>
-          </div>
+          )}
+
+          {/* Product Selection */}
+          {scope === "products" && (
+            <div className="space-y-2">
+              <Label>Select Products</Label>
+              <div className="border rounded-md p-4 max-h-64 overflow-y-auto space-y-2">
+                {products.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No products available</p>
+                ) : (
+                  products.map((product: any) => (
+                    <div key={product.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`product-${product.id}`}
+                        checked={selectedProducts.includes(product.id)}
+                        onCheckedChange={() => handleProductToggle(product.id)}
+                      />
+                      <Label
+                        htmlFor={`product-${product.id}`}
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        {product.name}
+                        <span className="text-muted-foreground ml-2">({product.category})</span>
+                      </Label>
+                    </div>
+                  ))
+                )}
+              </div>
+              {selectedProducts.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {selectedProducts.length} {selectedProducts.length === 1 ? "product" : "products"} selected
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="flex items-center space-x-2">
             <Switch

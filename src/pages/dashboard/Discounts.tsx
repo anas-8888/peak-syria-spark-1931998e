@@ -59,6 +59,8 @@ const Discounts = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);
+  const [editingCategories, setEditingCategories] = useState<string[]>([]);
+  const [editingProducts, setEditingProducts] = useState<string[]>([]);
   const queryClient = useQueryClient();
   const { formatPrice } = useCurrency();
 
@@ -78,7 +80,7 @@ const Discounts = () => {
 
   // Create discount mutation
   const createMutation = useMutation({
-    mutationFn: async (data: DiscountFormData) => {
+    mutationFn: async (data: DiscountFormData & { selected_categories?: string[], selected_products?: string[] }) => {
       const { data: result, error } = await supabase
         .from("discounts")
         .insert({
@@ -89,7 +91,7 @@ const Discounts = () => {
           type: data.type,
           value: data.value,
           scope: data.scope,
-          channels: data.channels,
+          channels: ["web"],
           min_cart_subtotal: data.min_cart_subtotal,
           min_quantity: data.min_quantity,
           first_order_only: data.first_order_only,
@@ -108,6 +110,31 @@ const Discounts = () => {
         .single();
 
       if (error) throw error;
+
+      // Handle category associations
+      if (data.scope === "categories" && data.selected_categories && data.selected_categories.length > 0) {
+        const categoryInserts = data.selected_categories.map(categoryId => ({
+          discount_id: result.id,
+          category_id: categoryId,
+        }));
+        const { error: catError } = await supabase
+          .from("discount_categories")
+          .insert(categoryInserts);
+        if (catError) throw catError;
+      }
+
+      // Handle product associations
+      if (data.scope === "products" && data.selected_products && data.selected_products.length > 0) {
+        const productInserts = data.selected_products.map(productId => ({
+          discount_id: result.id,
+          product_id: productId,
+        }));
+        const { error: prodError } = await supabase
+          .from("discount_products")
+          .insert(productInserts);
+        if (prodError) throw prodError;
+      }
+
       return result;
     },
     onSuccess: () => {
@@ -122,7 +149,7 @@ const Discounts = () => {
 
   // Update discount mutation
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: DiscountFormData }) => {
+    mutationFn: async ({ id, data }: { id: string; data: DiscountFormData & { selected_categories?: string[], selected_products?: string[] } }) => {
       const { error } = await supabase
         .from("discounts")
         .update({
@@ -133,7 +160,7 @@ const Discounts = () => {
           type: data.type,
           value: data.value,
           scope: data.scope,
-          channels: data.channels,
+          channels: ["web"],
           min_cart_subtotal: data.min_cart_subtotal,
           min_quantity: data.min_quantity,
           first_order_only: data.first_order_only,
@@ -151,6 +178,34 @@ const Discounts = () => {
         .eq("id", id);
 
       if (error) throw error;
+
+      // Delete existing associations
+      await supabase.from("discount_categories").delete().eq("discount_id", id);
+      await supabase.from("discount_products").delete().eq("discount_id", id);
+
+      // Handle category associations
+      if (data.scope === "categories" && data.selected_categories && data.selected_categories.length > 0) {
+        const categoryInserts = data.selected_categories.map(categoryId => ({
+          discount_id: id,
+          category_id: categoryId,
+        }));
+        const { error: catError } = await supabase
+          .from("discount_categories")
+          .insert(categoryInserts);
+        if (catError) throw catError;
+      }
+
+      // Handle product associations
+      if (data.scope === "products" && data.selected_products && data.selected_products.length > 0) {
+        const productInserts = data.selected_products.map(productId => ({
+          discount_id: id,
+          product_id: productId,
+        }));
+        const { error: prodError } = await supabase
+          .from("discount_products")
+          .insert(productInserts);
+        if (prodError) throw prodError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["discounts"] });
@@ -220,13 +275,39 @@ const Discounts = () => {
     return { active, totalUses, totalRevenue, avgDiscount };
   }, [discounts]);
 
-  const handleCreateDiscount = (data: DiscountFormData) => {
+  const handleCreateDiscount = (data: DiscountFormData & { selected_categories?: string[], selected_products?: string[] }) => {
     createMutation.mutate(data);
   };
 
-  const handleUpdateDiscount = (data: DiscountFormData) => {
+  const handleUpdateDiscount = (data: DiscountFormData & { selected_categories?: string[], selected_products?: string[] }) => {
     if (editingDiscount) {
       updateMutation.mutate({ id: editingDiscount.id, data });
+    }
+  };
+
+  const handleEditDiscount = async (discount: Discount) => {
+    setEditingDiscount(discount);
+
+    // Load associated categories
+    if (discount.scope === "categories") {
+      const { data: categories } = await supabase
+        .from("discount_categories")
+        .select("category_id")
+        .eq("discount_id", discount.id);
+      setEditingCategories(categories?.map(c => c.category_id) || []);
+    } else {
+      setEditingCategories([]);
+    }
+
+    // Load associated products
+    if (discount.scope === "products") {
+      const { data: products } = await supabase
+        .from("discount_products")
+        .select("product_id")
+        .eq("discount_id", discount.id);
+      setEditingProducts(products?.map(p => p.product_id) || []);
+    } else {
+      setEditingProducts([]);
     }
   };
 
@@ -481,7 +562,7 @@ const Discounts = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => setEditingDiscount(discount)}
+                          onClick={() => handleEditDiscount(discount)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -536,12 +617,13 @@ const Discounts = () => {
                 type: editingDiscount.type as "percentage" | "fixed_amount" | "bogo" | "tiered" | "bundle" | "volume" | "free_shipping" | "clearance" | "flash",
                 value: editingDiscount.value,
                 scope: editingDiscount.scope as "store_wide" | "categories" | "products" | "tags",
-                channels: editingDiscount.channels as ("web" | "app" | "pos" | "marketplace")[],
                 min_cart_subtotal: editingDiscount.min_cart_subtotal,
                 is_automatic: editingDiscount.is_automatic,
                 start_date: new Date(editingDiscount.start_date),
                 end_date: editingDiscount.end_date ? new Date(editingDiscount.end_date) : undefined,
                 status: editingDiscount.status as "active" | "scheduled" | "expired" | "paused" | "archived",
+                selected_categories: editingCategories,
+                selected_products: editingProducts,
               }}
               onSubmit={handleUpdateDiscount}
               isLoading={updateMutation.isPending}
