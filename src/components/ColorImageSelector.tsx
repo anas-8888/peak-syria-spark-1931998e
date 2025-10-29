@@ -91,12 +91,19 @@ export const ColorImageSelector = ({
 
   return (
     <div className="space-y-4">
-      <Label>Product Colors & Images</Label>
+      <div className="flex items-center justify-between">
+        <Label>Product Colors & Images</Label>
+        {selectedMappings.length > 0 && (
+          <span className="text-xs text-muted-foreground">
+            {selectedMappings.length} color{selectedMappings.length !== 1 ? 's' : ''} selected
+          </span>
+        )}
+      </div>
       
       {/* Selected Colors */}
       <div className="space-y-3">
         {selectedMappings.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No colors selected</p>
+          <p className="text-sm text-muted-foreground">No colors selected. Add colors below.</p>
         ) : (
           selectedMappings.map((mapping) => {
             const color = colors.find(c => c.id === mapping.color_id);

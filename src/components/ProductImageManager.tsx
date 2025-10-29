@@ -63,17 +63,25 @@ export const ProductImageManager = ({
         data: { publicUrl },
       } = supabase.storage.from("product-images").getPublicUrl(fileName);
 
-      // Check current image count from database
+      // Check if any primary image exists for this product
+      const { data: existingPrimary } = await supabase
+        .from("product_images")
+        .select("id")
+        .eq("product_id", productId)
+        .eq("is_primary", true)
+        .single();
+
+      // Get current image count for display order
       const { count } = await supabase
         .from("product_images")
         .select("*", { count: "exact", head: true })
         .eq("product_id", productId);
 
-      // Save to database
+      // Save to database - set as primary if no primary exists
       const { error: dbError } = await supabase.from("product_images").insert({
         product_id: productId,
         image_url: publicUrl,
-        is_primary: (count || 0) === 0, // First image is primary by default
+        is_primary: !existingPrimary, // Set as primary if no primary exists
         display_order: count || 0,
       });
 
