@@ -216,6 +216,9 @@ export type Database = {
       }
       discounts: {
         Row: {
+          bogo_config: Json | null
+          bundle_price: number | null
+          bundle_products: Json | null
           channels: Database["public"]["Enums"]["discount_channel"][] | null
           code: string | null
           created_at: string | null
@@ -234,6 +237,7 @@ export type Database = {
           logged_in_only: boolean | null
           marketing_label: string | null
           min_cart_subtotal: number | null
+          min_purchase_amount: number | null
           min_quantity: number | null
           name: string
           per_customer_limit: number | null
@@ -251,6 +255,9 @@ export type Database = {
           value_type: string | null
         }
         Insert: {
+          bogo_config?: Json | null
+          bundle_price?: number | null
+          bundle_products?: Json | null
           channels?: Database["public"]["Enums"]["discount_channel"][] | null
           code?: string | null
           created_at?: string | null
@@ -269,6 +276,7 @@ export type Database = {
           logged_in_only?: boolean | null
           marketing_label?: string | null
           min_cart_subtotal?: number | null
+          min_purchase_amount?: number | null
           min_quantity?: number | null
           name: string
           per_customer_limit?: number | null
@@ -286,6 +294,9 @@ export type Database = {
           value_type?: string | null
         }
         Update: {
+          bogo_config?: Json | null
+          bundle_price?: number | null
+          bundle_products?: Json | null
           channels?: Database["public"]["Enums"]["discount_channel"][] | null
           code?: string | null
           created_at?: string | null
@@ -304,6 +315,7 @@ export type Database = {
           logged_in_only?: boolean | null
           marketing_label?: string | null
           min_cart_subtotal?: number | null
+          min_purchase_amount?: number | null
           min_quantity?: number | null
           name?: string
           per_customer_limit?: number | null
@@ -768,13 +780,13 @@ export type Database = {
       discount_type:
         | "percentage"
         | "fixed_amount"
-        | "bogo"
+        | "bogo_x_for_y"
         | "tiered"
         | "bundle"
         | "volume"
         | "free_shipping"
         | "clearance"
-        | "flash"
+        | "flash_sale"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -908,13 +920,13 @@ export const Constants = {
       discount_type: [
         "percentage",
         "fixed_amount",
-        "bogo",
+        "bogo_x_for_y",
         "tiered",
         "bundle",
         "volume",
         "free_shipping",
         "clearance",
-        "flash",
+        "flash_sale",
       ],
     },
   },

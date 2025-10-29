@@ -34,8 +34,11 @@ const discountSchema = z.object({
   name: z.string().min(1, "Name is required"),
   internal_notes: z.string().optional(),
   marketing_label: z.string().optional(),
-  type: z.enum(["percentage", "fixed_amount", "bogo", "tiered", "bundle", "volume", "free_shipping", "clearance", "flash"]),
-  value: z.number().min(0, "Value must be positive"),
+  type: z.enum(["percentage", "fixed_amount", "bogo_x_for_y", "tiered", "bundle", "volume", "free_shipping", "clearance", "flash_sale"]),
+  value: z.preprocess(
+    (val) => val === '' || val === null || val === undefined || Number.isNaN(val) ? 0 : Number(val),
+    z.number().min(0)
+  ),
   scope: z.enum(["store_wide", "categories", "products", "flags"]),
   min_cart_subtotal: z.number().min(0).default(0),
   min_quantity: z.number().min(0).default(0),
@@ -61,8 +64,19 @@ const discountSchema = z.object({
   status: z.enum(["active", "scheduled", "expired", "paused", "archived"]).default("scheduled"),
   selected_categories: z.array(z.string()).optional(),
   selected_products: z.array(z.string()).optional(),
+  selectedFlag: z.string().optional(),
+  // Type-specific fields
+  min_purchase_amount: z.number().optional(),
+  bogo_buy_qty: z.number().optional(),
+  bogo_get_qty: z.number().optional(),
+  bogo_get_price: z.number().optional(),
+  tiered_config: z.array(z.object({
+    min_amount: z.number(),
+    discount_percent: z.number()
+  })).optional(),
+  bundle_products: z.array(z.string()).optional(),
+  bundle_price: z.number().optional(),
 }).refine((data) => {
-  // If not automatic, code is required
   if (!data.is_automatic && (!data.code || data.code.trim() === "")) {
     return false;
   }
@@ -86,6 +100,8 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
   const [categorySearch, setCategorySearch] = useState("");
   const [productSearch, setProductSearch] = useState("");
   const [selectedFlag, setSelectedFlag] = useState<string>("");
+  const [tiers, setTiers] = useState<Array<{min_amount: number, discount_percent: number}>>([]);
+  const [bundleProducts, setBundleProducts] = useState<string[]>([]);
 
   // Fetch categories
   const { data: categories = [] } = useQuery({
@@ -160,6 +176,9 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
       ...data,
       selected_categories: scope === "categories" ? selectedCategories : undefined,
       selected_products: scope === "products" ? selectedProducts : undefined,
+      selectedFlag: scope === "flags" ? selectedFlag : undefined,
+      tiered_config: discountType === "tiered" ? tiers : undefined,
+      bundle_products: discountType === "bundle" ? bundleProducts : undefined,
     });
   };
 
@@ -241,29 +260,155 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
                 <SelectContent>
                   <SelectItem value="percentage">Percentage Off</SelectItem>
                   <SelectItem value="fixed_amount">Fixed Amount Off</SelectItem>
-                  <SelectItem value="bogo">BOGO / X-for-Y</SelectItem>
+                  <SelectItem value="bogo_x_for_y">BOGO / X-for-Y</SelectItem>
                   <SelectItem value="tiered">Tiered Discount</SelectItem>
                   <SelectItem value="bundle">Bundle Price</SelectItem>
                   <SelectItem value="volume">Volume Discount</SelectItem>
                   <SelectItem value="free_shipping">Free Shipping</SelectItem>
                   <SelectItem value="clearance">Clearance</SelectItem>
-                  <SelectItem value="flash">Flash Sale</SelectItem>
+                  <SelectItem value="flash_sale">Flash Sale</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="value">
-                {discountType === "percentage" ? "Percentage %" : "Amount $"}
-              </Label>
-              <Input
-                id="value"
-                type="number"
-                step="0.01"
-                {...form.register("value", { valueAsNumber: true })}
-                placeholder={discountType === "percentage" ? "20" : "10"}
-              />
-            </div>
+            {/* Dynamic value field based on discount type */}
+            {discountType === "percentage" && (
+              <div className="space-y-2">
+                <Label htmlFor="value">Percentage %</Label>
+                <Input
+                  id="value"
+                  type="number"
+                  step="0.01"
+                  {...form.register("value", { valueAsNumber: true })}
+                  placeholder="20"
+                />
+              </div>
+            )}
+            
+            {discountType === "fixed_amount" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="value">Discount Amount</Label>
+                  <Input
+                    id="value"
+                    type="number"
+                    step="0.01"
+                    {...form.register("value", { valueAsNumber: true })}
+                    placeholder="10000"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="min_purchase_amount">Minimum Purchase Amount</Label>
+                  <Input
+                    id="min_purchase_amount"
+                    type="number"
+                    step="0.01"
+                    {...form.register("min_purchase_amount", { valueAsNumber: true })}
+                    placeholder="50000"
+                  />
+                  <p className="text-xs text-muted-foreground">Customer must buy equal or above this amount</p>
+                </div>
+              </>
+            )}
+            
+            {discountType === "bogo_x_for_y" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="bogo_buy_qty">Buy Quantity</Label>
+                  <Input
+                    id="bogo_buy_qty"
+                    type="number"
+                    {...form.register("bogo_buy_qty", { valueAsNumber: true })}
+                    placeholder="1"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bogo_get_qty">Get Quantity</Label>
+                  <Input
+                    id="bogo_get_qty"
+                    type="number"
+                    {...form.register("bogo_get_qty", { valueAsNumber: true })}
+                    placeholder="1"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bogo_get_price">Price for 2nd Item</Label>
+                  <Input
+                    id="bogo_get_price"
+                    type="number"
+                    step="0.01"
+                    {...form.register("bogo_get_price", { valueAsNumber: true })}
+                    placeholder="5000"
+                  />
+                </div>
+              </>
+            )}
+            
+            {discountType === "volume" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="min_quantity">Minimum Quantity</Label>
+                  <Input
+                    id="min_quantity"
+                    type="number"
+                    {...form.register("min_quantity", { valueAsNumber: true })}
+                    placeholder="3"
+                  />
+                  <p className="text-xs text-muted-foreground">Number of units to buy</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="value">Discount %</Label>
+                  <Input
+                    id="value"
+                    type="number"
+                    step="0.01"
+                    {...form.register("value", { valueAsNumber: true })}
+                    placeholder="15"
+                  />
+                </div>
+              </>
+            )}
+            
+            {discountType === "bundle" && (
+              <div className="space-y-2">
+                <Label htmlFor="bundle_price">Bundle Price</Label>
+                <Input
+                  id="bundle_price"
+                  type="number"
+                  step="0.01"
+                  {...form.register("bundle_price", { valueAsNumber: true })}
+                  placeholder="90000"
+                />
+                <p className="text-xs text-muted-foreground">Fixed price for the bundle</p>
+              </div>
+            )}
+            
+            {(discountType === "clearance" || discountType === "flash_sale") && (
+              <div className="space-y-2">
+                <Label htmlFor="value">Discount %</Label>
+                <Input
+                  id="value"
+                  type="number"
+                  step="0.01"
+                  {...form.register("value", { valueAsNumber: true })}
+                  placeholder="30"
+                />
+              </div>
+            )}
+            
+            {discountType === "free_shipping" && (
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="min_cart_subtotal">Minimum Order Amount</Label>
+                <Input
+                  id="min_cart_subtotal"
+                  type="number"
+                  step="0.01"
+                  {...form.register("min_cart_subtotal", { valueAsNumber: true })}
+                  placeholder="75000"
+                />
+                <p className="text-xs text-muted-foreground">Free shipping for orders above this amount</p>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="scope">Applies To</Label>
@@ -393,6 +538,127 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
             </div>
           )}
 
+          {/* Tiered Discount Configuration */}
+          {discountType === "tiered" && (
+            <div className="space-y-3 border rounded-lg p-4 bg-muted/20">
+              <div className="flex items-center justify-between">
+                <Label className="text-base">Discount Tiers</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTiers([...tiers, { min_amount: 0, discount_percent: 0 }])}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Tier
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                عند الشراء بـ 100,000 ل.س → خصم 10%
+              </p>
+              {tiers.map((tier, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <Input
+                      type="number"
+                      placeholder="Min Amount (e.g., 100000)"
+                      value={tier.min_amount || ''}
+                      onChange={(e) => {
+                        const newTiers = [...tiers];
+                        newTiers[index].min_amount = Number(e.target.value);
+                        setTiers(newTiers);
+                      }}
+                    />
+                  </div>
+                  <span className="text-muted-foreground">→</span>
+                  <div className="flex-1">
+                    <Input
+                      type="number"
+                      placeholder="Discount % (e.g., 10)"
+                      value={tier.discount_percent || ''}
+                      onChange={(e) => {
+                        const newTiers = [...tiers];
+                        newTiers[index].discount_percent = Number(e.target.value);
+                        setTiers(newTiers);
+                      }}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setTiers(tiers.filter((_, i) => i !== index))}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              {tiers.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Click "Add Tier" to create discount tiers
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Bundle Product Selection */}
+          {discountType === "bundle" && (
+            <div className="space-y-3 border rounded-lg p-4 bg-muted/20">
+              <Label className="text-base">Bundle Products</Label>
+              <p className="text-xs text-muted-foreground">
+                حذاء + جوارب + منتج تنظيف = 90,000 ل.س بدلًا من 110,000 ل.س
+              </p>
+              <div className="relative mb-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search products for bundle..."
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="border rounded-md p-4 max-h-64 overflow-y-auto space-y-2">
+                {filteredProducts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No products found</p>
+                ) : (
+                  filteredProducts.map((product: any) => (
+                    <div key={product.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`bundle-${product.id}`}
+                        checked={bundleProducts.includes(product.id)}
+                        onCheckedChange={() => {
+                          const updated = bundleProducts.includes(product.id)
+                            ? bundleProducts.filter(id => id !== product.id)
+                            : [...bundleProducts, product.id];
+                          setBundleProducts(updated);
+                        }}
+                      />
+                      <Label
+                        htmlFor={`bundle-${product.id}`}
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        {product.name}
+                        <span className="text-muted-foreground ml-2">({product.category})</span>
+                      </Label>
+                    </div>
+                  ))
+                )}
+              </div>
+              {bundleProducts.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {bundleProducts.map(id => {
+                    const product = products.find((p: any) => p.id === id);
+                    return product ? (
+                      <Badge key={id} variant="secondary">
+                        {product.name}
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center space-x-2">
             <Switch
               id="is_automatic"
@@ -404,28 +670,35 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
         </TabsContent>
 
         <TabsContent value="rules" className="space-y-4 mt-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="min_cart_subtotal">Min. Cart Subtotal ($)</Label>
-              <Input
-                id="min_cart_subtotal"
-                type="number"
-                step="0.01"
-                {...form.register("min_cart_subtotal", { valueAsNumber: true })}
-                placeholder="0"
-              />
-            </div>
+          {/* Only show min cart/quantity for relevant discount types */}
+          {!["free_shipping", "tiered"].includes(discountType) && (
+            <div className="grid grid-cols-2 gap-4">
+              {!["bogo_x_for_y", "volume", "bundle"].includes(discountType) && (
+                <div className="space-y-2">
+                  <Label htmlFor="min_cart_subtotal">Min. Cart Subtotal ($)</Label>
+                  <Input
+                    id="min_cart_subtotal"
+                    type="number"
+                    step="0.01"
+                    {...form.register("min_cart_subtotal", { valueAsNumber: true })}
+                    placeholder="0"
+                  />
+                </div>
+              )}
 
-            <div className="space-y-2">
-              <Label htmlFor="min_quantity">Min. Quantity</Label>
-              <Input
-                id="min_quantity"
-                type="number"
-                {...form.register("min_quantity", { valueAsNumber: true })}
-                placeholder="0"
-              />
+              {!["volume", "bogo_x_for_y"].includes(discountType) && (
+                <div className="space-y-2">
+                  <Label htmlFor="min_quantity">Min. Quantity</Label>
+                  <Input
+                    id="min_quantity"
+                    type="number"
+                    {...form.register("min_quantity", { valueAsNumber: true })}
+                    placeholder="0"
+                  />
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
           <div className="space-y-3">
             <div className="flex items-center space-x-2">

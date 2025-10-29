@@ -99,6 +99,7 @@ const Discounts = () => {
           channels: ["web"],
           min_cart_subtotal: data.min_cart_subtotal,
           min_quantity: data.min_quantity,
+          min_purchase_amount: data.min_purchase_amount,
           first_order_only: data.first_order_only,
           logged_in_only: data.logged_in_only,
           global_usage_limit: data.global_usage_limit,
@@ -110,6 +111,14 @@ const Discounts = () => {
           end_date: data.end_date?.toISOString(),
           is_automatic: data.is_automatic,
           status: data.status,
+          tiered_config: data.tiered_config || [],
+          bogo_config: data.bogo_buy_qty && data.bogo_get_qty ? {
+            buy_quantity: data.bogo_buy_qty,
+            get_quantity: data.bogo_get_qty,
+            get_price: data.bogo_get_price || 0
+          } : null,
+          bundle_products: data.bundle_products || null,
+          bundle_price: data.bundle_price || null,
         } as any)
         .select()
         .single();
@@ -168,6 +177,7 @@ const Discounts = () => {
           channels: ["web"],
           min_cart_subtotal: data.min_cart_subtotal,
           min_quantity: data.min_quantity,
+          min_purchase_amount: data.min_purchase_amount,
           first_order_only: data.first_order_only,
           logged_in_only: data.logged_in_only,
           global_usage_limit: data.global_usage_limit,
@@ -179,6 +189,14 @@ const Discounts = () => {
           end_date: data.end_date?.toISOString(),
           is_automatic: data.is_automatic,
           status: data.status,
+          tiered_config: data.tiered_config || [],
+          bogo_config: data.bogo_buy_qty && data.bogo_get_qty ? {
+            buy_quantity: data.bogo_buy_qty,
+            get_quantity: data.bogo_get_qty,
+            get_price: data.bogo_get_price || 0
+          } : null,
+          bundle_products: data.bundle_products || null,
+          bundle_price: data.bundle_price || null,
         } as any)
         .eq("id", id);
 
@@ -330,6 +348,12 @@ const Discounts = () => {
     if (discount.type === "percentage") return `${discount.value}%`;
     if (discount.type === "fixed_amount") return formatPrice(discount.value);
     if (discount.type === "free_shipping") return "Free";
+    if (discount.type === "bogo_x_for_y") return "BOGO";
+    if (discount.type === "tiered") return "Tiered";
+    if (discount.type === "bundle") return formatPrice(discount.value || 0);
+    if (discount.type === "volume") return `${discount.value}%`;
+    if (discount.type === "clearance") return `${discount.value}%`;
+    if (discount.type === "flash_sale") return `${discount.value}%`;
     return "-";
   };
 
@@ -448,8 +472,13 @@ const Discounts = () => {
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="percentage">Percentage</SelectItem>
                 <SelectItem value="fixed_amount">Fixed Amount</SelectItem>
+                <SelectItem value="bogo_x_for_y">BOGO</SelectItem>
+                <SelectItem value="tiered">Tiered</SelectItem>
+                <SelectItem value="bundle">Bundle</SelectItem>
+                <SelectItem value="volume">Volume</SelectItem>
                 <SelectItem value="free_shipping">Free Shipping</SelectItem>
-                <SelectItem value="bogo">BOGO</SelectItem>
+                <SelectItem value="clearance">Clearance</SelectItem>
+                <SelectItem value="flash_sale">Flash Sale</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -626,7 +655,7 @@ const Discounts = () => {
               initialData={{
                 code: editingDiscount.code || undefined,
                 name: editingDiscount.name,
-                type: editingDiscount.type as "percentage" | "fixed_amount" | "bogo" | "tiered" | "bundle" | "volume" | "free_shipping" | "clearance" | "flash",
+                type: editingDiscount.type as "percentage" | "fixed_amount" | "bogo_x_for_y" | "tiered" | "bundle" | "volume" | "free_shipping" | "clearance" | "flash_sale",
                 value: editingDiscount.value,
                 scope: editingDiscount.scope as "store_wide" | "categories" | "products" | "flags",
                 min_cart_subtotal: editingDiscount.min_cart_subtotal,
