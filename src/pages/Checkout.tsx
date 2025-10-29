@@ -13,15 +13,24 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { CheckoutSchema, type CheckoutFormData } from "@/lib/validationSchemas";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import productShoes1 from "@/assets/product-shoes-1.jpg";
 
 const Checkout = () => {
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState("cash");
 
-  const subtotal = 2500000;
+  // Mock cart items - in production this would come from cart context/state
+  const cartItems = [
+    { id: "550e8400-e29b-41d4-a716-446655440000", name: "Peak Basketball Pro X", price: 2500000, quantity: 1, image: productShoes1, size: "42" },
+  ];
+
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = 50000;
   const total = subtotal + shipping;
 
@@ -35,9 +44,55 @@ const Checkout = () => {
 
   const onSubmit = async (data: CheckoutFormData) => {
     try {
-      // Here we would call the secure order creation function
-      // Removed console.log to prevent PII exposure in browser dev tools
-      
+      if (!user) {
+        toast({
+          title: "خطأ",
+          description: "يجب تسجيل الدخول لإتمام الطلب",
+          variant: "destructive"
+        });
+        navigate("/login");
+        return;
+      }
+
+      // Create order using secure RPC function
+      const { data: orderId, error: orderError } = await supabase.rpc('create_order_with_items', {
+        p_total_amount: total,
+        p_shipping_address: `${data.address}, ${data.city}`,
+        p_customer_name: data.fullName,
+        p_customer_phone: data.phone,
+        p_customer_email: data.email,
+        p_items: cartItems.map(item => ({
+          product_id: item.id,
+          quantity: item.quantity
+        }))
+      });
+
+      if (orderError) {
+        throw orderError;
+      }
+
+      // Create payment record if cash on delivery
+      if (paymentMethod === "cash") {
+        const { error: paymentError } = await supabase
+          .from('payments')
+          .insert({
+            order_id: orderId,
+            amount: total,
+            customer_name: data.fullName,
+            payment_method: 'cash_on_delivery',
+            status: 'pending'
+          });
+
+        if (paymentError) {
+          console.error("Payment record creation failed:", paymentError);
+        }
+      }
+
+      toast({
+        title: "نجح",
+        description: "تم إنشاء طلبك بنجاح",
+      });
+
       if (paymentMethod === "card") {
         navigate("/payment");
       } else {
@@ -46,7 +101,7 @@ const Checkout = () => {
     } catch (error) {
       toast({
         title: "خطأ",
-        description: "حدث خطأ أثناء معالجة الطلب",
+        description: error instanceof Error ? error.message : "حدث خطأ أثناء معالجة الطلب",
         variant: "destructive"
       });
     }
