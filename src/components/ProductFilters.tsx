@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -32,6 +32,12 @@ const availableColors = [
 
 const ProductFilters = ({ filters, onFilterChange, categories, sizes, minPrice, maxPrice }: ProductFiltersProps) => {
   const [localFilters, setLocalFilters] = useState(filters);
+  const [tempPriceRange, setTempPriceRange] = useState<[number, number]>(filters.priceRange);
+
+  // Update temp price range when filters change externally
+  useEffect(() => {
+    setTempPriceRange(filters.priceRange);
+  }, [filters.priceRange]);
 
   const handleCategoryToggle = (category: string) => {
     const newCategories = localFilters.categories.includes(category)
@@ -61,6 +67,10 @@ const ProductFilters = ({ filters, onFilterChange, categories, sizes, minPrice, 
   };
 
   const handlePriceChange = (value: number[]) => {
+    setTempPriceRange([value[0], value[1]] as [number, number]);
+  };
+
+  const handlePriceCommit = (value: number[]) => {
     const newFilters = { ...localFilters, priceRange: [value[0], value[1]] as [number, number] };
     setLocalFilters(newFilters);
     onFilterChange(newFilters);
@@ -74,6 +84,7 @@ const ProductFilters = ({ filters, onFilterChange, categories, sizes, minPrice, 
       priceRange: [minPrice, maxPrice],
     };
     setLocalFilters(resetFilters);
+    setTempPriceRange([minPrice, maxPrice]);
     onFilterChange(resetFilters);
   };
 
@@ -162,13 +173,14 @@ const ProductFilters = ({ filters, onFilterChange, categories, sizes, minPrice, 
             min={minPrice}
             max={maxPrice}
             step={1}
-            value={localFilters.priceRange}
+            value={tempPriceRange}
             onValueChange={handlePriceChange}
+            onValueCommit={handlePriceCommit}
             className="mb-4"
           />
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>${localFilters.priceRange[0].toFixed(2)}</span>
-            <span>${localFilters.priceRange[1].toFixed(2)}</span>
+            <span>${tempPriceRange[0].toFixed(2)}</span>
+            <span>${tempPriceRange[1].toFixed(2)}</span>
           </div>
         </div>
       </div>
