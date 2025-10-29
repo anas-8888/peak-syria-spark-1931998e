@@ -125,16 +125,6 @@ const ProductCardEnhanced = ({
               </div>
             )}
           </div>
-
-          {/* Favorite Icon (Always Visible) */}
-          {viewMode === "grid" && (
-            <button
-              onClick={() => setIsFavorite(!isFavorite)}
-              className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            >
-              <Heart className={`h-4 w-4 ${isFavorite ? "fill-primary text-primary" : ""}`} />
-            </button>
-          )}
         </div>
 
         {/* Product Info */}
