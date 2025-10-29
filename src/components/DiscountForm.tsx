@@ -41,9 +41,18 @@ const discountSchema = z.object({
   min_quantity: z.number().min(0).default(0),
   first_order_only: z.boolean().default(false),
   logged_in_only: z.boolean().default(false),
-  global_usage_limit: z.number().optional().nullable(),
-  per_customer_limit: z.number().optional().nullable(),
-  per_order_max_discount: z.number().optional().nullable(),
+  global_usage_limit: z.preprocess(
+    (val) => val === '' || val === null || val === undefined || Number.isNaN(val) ? undefined : Number(val),
+    z.number().int().positive().optional()
+  ),
+  per_customer_limit: z.preprocess(
+    (val) => val === '' || val === null || val === undefined || Number.isNaN(val) ? undefined : Number(val),
+    z.number().int().positive().optional()
+  ),
+  per_order_max_discount: z.preprocess(
+    (val) => val === '' || val === null || val === undefined || Number.isNaN(val) ? undefined : Number(val),
+    z.number().positive().optional()
+  ),
   is_stackable: z.boolean().default(false),
   stack_with_shipping: z.boolean().default(true),
   start_date: z.date(),
@@ -147,12 +156,6 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
   };
 
   const handleFormSubmit = (data: DiscountFormData) => {
-    console.log("Form Data:", data);
-    console.log("Scope:", scope);
-    console.log("Selected Categories:", selectedCategories);
-    console.log("Selected Products:", selectedProducts);
-    console.log("Selected Flag:", selectedFlag);
-    
     onSubmit({
       ...data,
       selected_categories: scope === "categories" ? selectedCategories : undefined,
@@ -595,20 +598,6 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
           {isLoading ? "Saving..." : initialData ? "Update Discount" : "Create Discount"}
         </Button>
       </div>
-      
-      {/* Show validation errors */}
-      {Object.keys(form.formState.errors).length > 0 && (
-        <div className="p-4 bg-destructive/10 border border-destructive rounded-md">
-          <p className="font-semibold text-destructive mb-2">Please fix the following errors:</p>
-          <ul className="list-disc list-inside space-y-1">
-            {Object.entries(form.formState.errors).map(([key, error]) => (
-              <li key={key} className="text-sm text-destructive">
-                {key}: {error?.message?.toString()}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </form>
   );
 }
