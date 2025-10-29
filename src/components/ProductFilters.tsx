@@ -93,7 +93,9 @@ const ProductFilters = ({ filters, onFilterChange, categories, sizes, minPrice, 
       {/* Clear Filters */}
       {(localFilters.categories.length > 0 ||
         localFilters.colors.length > 0 ||
-        localFilters.sizes.length > 0) && (
+        localFilters.sizes.length > 0 ||
+        tempPriceRange[0] !== minPrice ||
+        tempPriceRange[1] !== maxPrice) && (
         <Button variant="outline" onClick={clearAllFilters} className="w-full">
           <X className="mr-2 h-4 w-4" />
           Clear All Filters
