@@ -17,6 +17,7 @@ interface ProductCardEnhancedProps {
   sizes?: string[];
   rating?: number;
   colorImages?: Record<string, string>;
+  viewMode?: "grid" | "list";
 }
 
 const ProductCardEnhanced = ({
@@ -30,6 +31,7 @@ const ProductCardEnhanced = ({
   sizes = ["40", "41", "42", "43"],
   rating = 4.5,
   colorImages,
+  viewMode = "grid",
 }: ProductCardEnhancedProps) => {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState(colors[0]);
@@ -60,44 +62,50 @@ const ProductCardEnhanced = ({
 
   return (
     <>
-      <div className="group relative bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fade-in">
+      <div className={`group relative bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 animate-fade-in ${
+        viewMode === "list" ? "flex flex-row" : ""
+      }`}>
         {/* Product Image */}
-        <div className="relative aspect-square overflow-hidden bg-muted">
+        <div className={`relative overflow-hidden bg-muted ${
+          viewMode === "list" ? "w-48 h-48 flex-shrink-0" : "aspect-square"
+        }`}>
           <img
             src={currentImage}
             alt={name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
 
-          {/* Overlay on Hover */}
-          <div className="absolute inset-0 bg-gradient-to-t from-secondary/90 via-secondary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col items-center justify-end gap-3 pb-6">
-            <div className="flex gap-2">
+          {/* Overlay on Hover - Only in grid mode */}
+          {viewMode === "grid" && (
+            <div className="absolute inset-0 bg-gradient-to-t from-secondary/90 via-secondary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col items-center justify-end gap-3 pb-6">
+              <div className="flex gap-2">
+                <Button
+                  variant="outlineWhite"
+                  size="icon"
+                  onClick={() => setQuickViewOpen(true)}
+                  className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+                >
+                  <Eye className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant={isFavorite ? "hero" : "outlineWhite"}
+                  size="icon"
+                  onClick={() => setIsFavorite(!isFavorite)}
+                  className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75"
+                >
+                  <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
+                </Button>
+              </div>
               <Button
-                variant="outlineWhite"
-                size="icon"
-                onClick={() => setQuickViewOpen(true)}
-                className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+                variant="hero"
+                size="lg"
+                className="w-5/6 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-150"
               >
-                <Eye className="h-5 w-5" />
-              </Button>
-              <Button
-                variant={isFavorite ? "hero" : "outlineWhite"}
-                size="icon"
-                onClick={() => setIsFavorite(!isFavorite)}
-                className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75"
-              >
-                <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
+                <ShoppingCart className="mr-2 h-5 w-5" />
+                {t("product.addToCart")}
               </Button>
             </div>
-            <Button
-              variant="hero"
-              size="lg"
-              className="w-5/6 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-150"
-            >
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              {t("product.addToCart")}
-            </Button>
-          </div>
+          )}
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-2">
@@ -109,22 +117,28 @@ const ProductCardEnhanced = ({
           </div>
 
           {/* Favorite Icon (Always Visible) */}
-          <button
-            onClick={() => setIsFavorite(!isFavorite)}
-            className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          >
-            <Heart className={`h-4 w-4 ${isFavorite ? "fill-primary text-primary" : ""}`} />
-          </button>
+          {viewMode === "grid" && (
+            <button
+              onClick={() => setIsFavorite(!isFavorite)}
+              className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            >
+              <Heart className={`h-4 w-4 ${isFavorite ? "fill-primary text-primary" : ""}`} />
+            </button>
+          )}
         </div>
 
         {/* Product Info */}
-        <div className="p-4 space-y-3">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">{category}</p>
-          <Link to={`/product/${id}`}>
-            <h3 className="font-semibold text-card-foreground hover:text-primary transition-colors line-clamp-2 min-h-[3rem]">
-              {name}
-            </h3>
-          </Link>
+        <div className={`space-y-3 ${viewMode === "list" ? "flex-1 p-6 flex flex-col" : "p-4"}`}>
+          <div className={viewMode === "list" ? "flex-1" : ""}>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">{category}</p>
+            <Link to={`/product/${id}`}>
+              <h3 className={`font-semibold text-card-foreground hover:text-primary transition-colors line-clamp-2 ${
+                viewMode === "list" ? "text-lg mt-1" : "min-h-[3rem]"
+              }`}>
+                {name}
+              </h3>
+            </Link>
+          </div>
 
           {/* Colors */}
           <div className="flex gap-2">
@@ -158,13 +172,37 @@ const ProductCardEnhanced = ({
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-2 border-t">
-            <span className="text-xl font-bold text-primary">{formatPrice(price)}</span>
-            <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10" asChild>
-              <Link to={`/product/${id}`}>
-                View Details
-              </Link>
-            </Button>
+          <div className={`flex items-center ${viewMode === "list" ? "justify-between mt-auto pt-4 border-t" : "justify-between pt-2 border-t"}`}>
+            <span className={`font-bold text-primary ${viewMode === "list" ? "text-2xl" : "text-xl"}`}>{formatPrice(price)}</span>
+            {viewMode === "list" ? (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setQuickViewOpen(true)}
+                >
+                  <Eye className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant={isFavorite ? "hero" : "outline"}
+                  size="icon"
+                  onClick={() => setIsFavorite(!isFavorite)}
+                >
+                  <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
+                </Button>
+                <Button variant="hero" size="lg" asChild>
+                  <Link to={`/product/${id}`}>
+                    View Details
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10" asChild>
+                <Link to={`/product/${id}`}>
+                  View Details
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>

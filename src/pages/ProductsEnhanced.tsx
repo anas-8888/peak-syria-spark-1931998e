@@ -294,6 +294,7 @@ const ProductsEnhanced = () => {
                         sizes={product.sizes}
                         rating={product.rating}
                         colorImages={product.colorImages}
+                        viewMode={viewMode}
                       />
                     </div>
                   ))}
