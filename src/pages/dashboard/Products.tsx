@@ -429,33 +429,49 @@ const Products = () => {
     });
   };
   const openEditDialog = async (product: Product) => {
-    setSelectedProduct(product);
-    setFormData({
-      name: product.name,
-      description: product.description || "",
-      category: product.category,
-      price: product.price.toString(),
-      stock_quantity: product.stock_quantity.toString(),
-      image_url: product.image_url || "",
-      offer_price: product.offer_price?.toString() || "",
-      rating: product.rating?.toString() || "0",
-      sizes: product.sizes || [],
-      features: product.features || [],
-      flag: product.flag || "",
-      colors: product.colors || []
-    });
+    try {
+      // Reset to details tab first
+      setActiveTab("details");
+      
+      setSelectedProduct(product);
+      setFormData({
+        name: product.name,
+        description: product.description || "",
+        category: product.category,
+        price: product.price.toString(),
+        stock_quantity: product.stock_quantity.toString(),
+        image_url: product.image_url || "",
+        offer_price: product.offer_price?.toString() || "",
+        rating: product.rating?.toString() || "0",
+        sizes: product.sizes || [],
+        features: product.features || [],
+        flag: product.flag || "",
+        colors: product.colors || []
+      });
 
-    // Load existing color-image associations
-    const { data: productColors } = await supabase
-      .from("product_colors")
-      .select("color_id, image_id")
-      .eq("product_id", product.id);
-    
-    setColorImageMappings(productColors?.map(pc => ({
-      color_id: pc.color_id,
-      image_id: pc.image_id
-    })) || []);
-    setIsEditDialogOpen(true);
+      // Load existing color-image associations
+      const { data: productColors, error } = await supabase
+        .from("product_colors")
+        .select("color_id, image_id")
+        .eq("product_id", product.id);
+      
+      if (error) {
+        console.error("Error loading product colors:", error);
+        toast.error("Failed to load product colors");
+      }
+
+      console.log("Loaded product colors:", productColors);
+      
+      setColorImageMappings(productColors?.map(pc => ({
+        color_id: pc.color_id,
+        image_id: pc.image_id
+      })) || []);
+      
+      setIsEditDialogOpen(true);
+    } catch (error) {
+      console.error("Error opening edit dialog:", error);
+      toast.error("Failed to open product for editing");
+    }
   };
   const getStockStatus = (stock: number) => {
     if (stock === 0) return {
@@ -1087,12 +1103,19 @@ const Products = () => {
       </Dialog>
 
       {/* Edit Product Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+        setIsEditDialogOpen(open);
+        if (!open) {
+          resetForm();
+          setSelectedProduct(null);
+          setActiveTab("details");
+        }
+      }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
-          <Tabs defaultValue="details" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="details">Product Details</TabsTrigger>
               <TabsTrigger value="images">Images</TabsTrigger>
