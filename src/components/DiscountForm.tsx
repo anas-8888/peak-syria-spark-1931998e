@@ -576,9 +576,6 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
                   Add Tier
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                عند الشراء بـ 100,000 ل.س → خصم 10%
-              </p>
               {tiers.map((tier, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <div className="flex-1">
