@@ -16,6 +16,9 @@ interface FilterOptions {
 interface ProductFiltersProps {
   filters: FilterOptions;
   onFilterChange: (filters: FilterOptions) => void;
+  categories: string[];
+  sizes: string[];
+  minPrice: number;
   maxPrice: number;
 }
 
@@ -27,11 +30,7 @@ const availableColors = [
   { name: "Blue", value: "blue", hex: "#0066CC" },
 ];
 
-const availableSizes = ["38", "39", "40", "41", "42", "43", "44", "45"];
-
-const categories = ["Basketball", "Running", "Apparel", "Accessories"];
-
-const ProductFilters = ({ filters, onFilterChange, maxPrice }: ProductFiltersProps) => {
+const ProductFilters = ({ filters, onFilterChange, categories, sizes, minPrice, maxPrice }: ProductFiltersProps) => {
   const [localFilters, setLocalFilters] = useState(filters);
 
   const handleCategoryToggle = (category: string) => {
@@ -72,7 +71,7 @@ const ProductFilters = ({ filters, onFilterChange, maxPrice }: ProductFiltersPro
       categories: [],
       colors: [],
       sizes: [],
-      priceRange: [0, maxPrice],
+      priceRange: [minPrice, maxPrice],
     };
     setLocalFilters(resetFilters);
     onFilterChange(resetFilters);
@@ -93,18 +92,22 @@ const ProductFilters = ({ filters, onFilterChange, maxPrice }: ProductFiltersPro
       {/* Categories */}
       <div className="space-y-3">
         <h3 className="font-bold text-lg">Categories</h3>
-        {categories.map((category) => (
-          <div key={category} className="flex items-center space-x-2">
-            <Checkbox
-              id={`cat-${category}`}
-              checked={localFilters.categories.includes(category)}
-              onCheckedChange={() => handleCategoryToggle(category)}
-            />
-            <Label htmlFor={`cat-${category}`} className="cursor-pointer">
-              {category}
-            </Label>
-          </div>
-        ))}
+        {categories.length > 0 ? (
+          categories.map((category) => (
+            <div key={category} className="flex items-center space-x-2">
+              <Checkbox
+                id={`cat-${category}`}
+                checked={localFilters.categories.includes(category)}
+                onCheckedChange={() => handleCategoryToggle(category)}
+              />
+              <Label htmlFor={`cat-${category}`} className="cursor-pointer">
+                {category}
+              </Label>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">No categories available</p>
+        )}
       </div>
 
       {/* Colors */}
@@ -130,21 +133,25 @@ const ProductFilters = ({ filters, onFilterChange, maxPrice }: ProductFiltersPro
       {/* Sizes */}
       <div className="space-y-3">
         <h3 className="font-bold text-lg">Sizes (EU)</h3>
-        <div className="grid grid-cols-4 gap-2">
-          {availableSizes.map((size) => (
-            <button
-              key={size}
-              onClick={() => handleSizeToggle(size)}
-              className={`py-2 rounded-md border-2 transition-all ${
-                localFilters.sizes.includes(size)
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border hover:border-primary"
-              }`}
-            >
-              {size}
-            </button>
-          ))}
-        </div>
+        {sizes.length > 0 ? (
+          <div className="grid grid-cols-4 gap-2">
+            {sizes.map((size) => (
+              <button
+                key={size}
+                onClick={() => handleSizeToggle(size)}
+                className={`py-2 rounded-md border-2 transition-all ${
+                  localFilters.sizes.includes(size)
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border hover:border-primary"
+                }`}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">No sizes available</p>
+        )}
       </div>
 
       {/* Price Range */}
@@ -152,7 +159,7 @@ const ProductFilters = ({ filters, onFilterChange, maxPrice }: ProductFiltersPro
         <h3 className="font-bold text-lg">Price Range</h3>
         <div className="px-2">
           <Slider
-            min={0}
+            min={minPrice}
             max={maxPrice}
             step={100000}
             value={localFilters.priceRange}

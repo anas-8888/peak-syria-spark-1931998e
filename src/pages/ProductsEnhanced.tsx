@@ -76,6 +76,30 @@ const ProductsEnhanced = () => {
     },
   });
 
+  // Fetch categories from database
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("name")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data.map(c => c.name);
+    },
+  });
+
+  // Get unique sizes from all products
+  const availableSizes = [...new Set(allProducts.flatMap(p => p.sizes || []))].sort();
+
+  // Calculate price range from products
+  const prices = allProducts
+    .map(p => p.offer_price || p.price)
+    .filter(p => p > 0);
+  const minPrice = prices.length > 0 ? Math.floor(Math.min(...prices)) : 0;
+  const maxPrice = prices.length > 0 ? Math.ceil(Math.max(...prices)) : 1000;
+
   // Handle URL query parameters
   useEffect(() => {
     const category = searchParams.get('category');
@@ -87,7 +111,15 @@ const ProductsEnhanced = () => {
     }
   }, [searchParams]);
 
-  const maxPrice = allProducts.length > 0 ? Math.max(...allProducts.map((p) => p.price)) : 1000;
+  // Initialize price range filter when data loads
+  useEffect(() => {
+    if (allProducts.length > 0 && filters.priceRange[0] === 0 && filters.priceRange[1] === 1000) {
+      setFilters(prev => ({
+        ...prev,
+        priceRange: [minPrice, maxPrice]
+      }));
+    }
+  }, [allProducts, minPrice, maxPrice]);
 
   // Apply filters
   const filteredProducts = allProducts.filter((product) => {
@@ -141,7 +173,14 @@ const ProductsEnhanced = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
             {/* Sidebar Filters */}
             <div className="lg:col-span-1">
-              <ProductFilters filters={filters} onFilterChange={setFilters} maxPrice={maxPrice} />
+              <ProductFilters 
+                filters={filters} 
+                onFilterChange={setFilters} 
+                categories={categories}
+                sizes={availableSizes}
+                minPrice={minPrice}
+                maxPrice={maxPrice}
+              />
             </div>
 
             {/* Products Area */}
@@ -231,7 +270,7 @@ const ProductsEnhanced = () => {
                       categories: [],
                       colors: [],
                       sizes: [],
-                      priceRange: [0, maxPrice],
+                      priceRange: [minPrice, maxPrice],
                     })}
                     className="text-sm sm:text-base"
                   >
