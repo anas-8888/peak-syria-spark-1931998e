@@ -13,7 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Mail, MessageSquare, Bell, Share2, Edit, Trash2, Play, Pause, BarChart3, Users, Target, FileText, TrendingUp, MousePointerClick, DollarSign } from "lucide-react";
+import { Plus, Mail, MessageSquare, Bell, Share2, Edit, Trash2, Play, Pause, BarChart3, Users, Target, FileText, TrendingUp, MousePointerClick, DollarSign, Send } from "lucide-react";
+import CountdownTimer from "@/components/CountdownTimer";
 
 type Campaign = {
   id: string;
@@ -591,9 +592,11 @@ const Marketing = () => {
                         <TableHead>Campaign</TableHead>
                         <TableHead>Type</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Schedule / Timer</TableHead>
                         <TableHead>Sent</TableHead>
                         <TableHead>Opens</TableHead>
                         <TableHead>Clicks</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -609,9 +612,96 @@ const Marketing = () => {
                               </div>
                             </TableCell>
                             <TableCell>{getStatusBadge(campaign.status)}</TableCell>
+                            <TableCell>
+                              {campaign.scheduled_date && campaign.status === 'scheduled' ? (
+                                <CountdownTimer targetDate={campaign.scheduled_date} />
+                              ) : campaign.scheduled_date ? (
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(campaign.scheduled_date).toLocaleString()}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">Not scheduled</span>
+                              )}
+                            </TableCell>
                             <TableCell>{campaignAnalytics?.sent_count || 0}</TableCell>
                             <TableCell>{campaignAnalytics?.opened_count || 0}</TableCell>
                             <TableCell>{campaignAnalytics?.clicked_count || 0}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => openEditCampaign(campaign)}
+                                  title="Edit campaign"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                
+                                {campaign.status === 'draft' && (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => updateCampaignStatusMutation.mutate({ id: campaign.id, status: 'scheduled' })}
+                                      title="Schedule campaign"
+                                    >
+                                      <Pause className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => updateCampaignStatusMutation.mutate({ id: campaign.id, status: 'active' })}
+                                      title="Send now"
+                                    >
+                                      <Send className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
+                                
+                                {campaign.status === 'scheduled' && (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => updateCampaignStatusMutation.mutate({ id: campaign.id, status: 'active' })}
+                                      title="Send now"
+                                    >
+                                      <Send className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => updateCampaignStatusMutation.mutate({ id: campaign.id, status: 'paused' })}
+                                      title="Pause campaign"
+                                    >
+                                      <Pause className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
+                                
+                                {campaign.status === 'active' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => updateCampaignStatusMutation.mutate({ id: campaign.id, status: 'paused' })}
+                                    title="Pause campaign"
+                                  >
+                                    <Pause className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                
+                                {campaign.status === 'paused' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => updateCampaignStatusMutation.mutate({ id: campaign.id, status: 'active' })}
+                                    title="Resume campaign"
+                                  >
+                                    <Play className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
                           </TableRow>
                         );
                       })}
