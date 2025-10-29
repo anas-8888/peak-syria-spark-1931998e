@@ -122,27 +122,29 @@ const HeroSection = () => {
                <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 font-medium animate-fade-in" style={{ animationDelay: "200ms" }}>
                  {slide.subtitle}
                </p>
-               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
-                 <Link to={slide.button_url} className="w-full sm:w-auto">
-                   <Button 
-                     variant="hero" 
-                     size="lg" 
-                     className="group w-full sm:w-auto text-sm sm:text-base h-10 sm:h-12 px-6 sm:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                   >
-                     {slide.button_text}
-                     <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
-                   </Button>
-                 </Link>
-                 <Link to="/products" className="w-full sm:w-auto">
-                   <Button 
-                     variant="outlineWhite" 
-                     size="lg"
-                     className="w-full sm:w-auto text-sm sm:text-base h-10 sm:h-12 px-6 sm:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
-                   >
-                     View All
-                   </Button>
-                 </Link>
-               </div>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
+                  <Button 
+                    asChild
+                    variant="hero" 
+                    size="lg" 
+                    className="group w-full sm:w-auto text-sm sm:text-base h-10 sm:h-12 px-6 sm:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  >
+                    <Link to={slide.button_url}>
+                      {slide.button_text}
+                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </Button>
+                  <Button 
+                    asChild
+                    variant="outlineWhite" 
+                    size="lg"
+                    className="w-full sm:w-auto text-sm sm:text-base h-10 sm:h-12 px-6 sm:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                  >
+                    <Link to="/products">
+                      View All
+                    </Link>
+                  </Button>
+                </div>
              </div>
            </div>
         </div>
