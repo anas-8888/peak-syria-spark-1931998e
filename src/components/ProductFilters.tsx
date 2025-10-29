@@ -161,7 +161,7 @@ const ProductFilters = ({ filters, onFilterChange, categories, sizes, minPrice, 
           <Slider
             min={minPrice}
             max={maxPrice}
-            step={100000}
+            step={Math.max(1, Math.floor((maxPrice - minPrice) / 100))}
             value={localFilters.priceRange}
             onValueChange={handlePriceChange}
             className="mb-4"

@@ -55,9 +55,25 @@ const ProductsEnhanced = () => {
         .select("product_id, image_url")
         .eq("is_primary", true);
 
-      // Map images to products
+      // Fetch product colors
+      const { data: productColorsData } = await supabase
+        .from("product_colors")
+        .select(`
+          product_id,
+          colors:color_id (
+            name,
+            hex_code
+          )
+        `);
+
+      // Map images and colors to products
       const productsWithImages = productsData.map((product) => {
         const primaryImage = imagesData?.find((img) => img.product_id === product.id);
+        const productColors = productColorsData
+          ?.filter((pc) => pc.product_id === product.id)
+          .map((pc) => (pc.colors as any)?.name?.toLowerCase() || '')
+          .filter(Boolean);
+
         return {
           id: product.id,
           name: product.name,
@@ -66,7 +82,7 @@ const ProductsEnhanced = () => {
           image: primaryImage?.image_url || product.image_url || '',
           category: product.category,
           isNew: product.flag === 'New Arrival',
-          colors: [],
+          colors: productColors || [],
           sizes: product.sizes || [],
           rating: product.rating || 0,
         };
@@ -124,10 +140,16 @@ const ProductsEnhanced = () => {
   // Apply filters
   const filteredProducts = allProducts.filter((product) => {
     const categoryMatch = filters.categories.length === 0 || 
-      filters.categories.some(cat => product.category.toLowerCase().includes(cat.toLowerCase()));
-    const colorMatch = filters.colors.length === 0 || filters.colors.some((c) => product.colors.includes(c));
-    const sizeMatch = filters.sizes.length === 0 || filters.sizes.some((s) => product.sizes.includes(s));
-    const priceMatch = product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1];
+      filters.categories.some(cat => 
+        product.category.toLowerCase() === cat.toLowerCase() ||
+        product.category.toLowerCase().includes(cat.toLowerCase())
+      );
+    const colorMatch = filters.colors.length === 0 || 
+      filters.colors.some((c) => product.colors.includes(c.toLowerCase()));
+    const sizeMatch = filters.sizes.length === 0 || 
+      filters.sizes.some((s) => product.sizes.includes(s));
+    const actualPrice = product.offer_price || product.price;
+    const priceMatch = actualPrice >= filters.priceRange[0] && actualPrice <= filters.priceRange[1];
 
     return categoryMatch && colorMatch && sizeMatch && priceMatch;
   });
