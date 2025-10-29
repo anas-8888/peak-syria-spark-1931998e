@@ -211,7 +211,7 @@ const ProductCardEnhanced = ({
                 </div>
               </div>
               <Link to={`/product/${id}`}>
-                <Button variant="hero" size="lg" className="w-full">
+                <Button variant="hero" size="lg" className="w-full mt-6">
                   View Full Details
                 </Button>
               </Link>
