@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Menu, X, Search, LogOut, LogIn, User, LayoutDashboard, Heart } from "lucide-react";
+import { ShoppingCart, Menu, X, Search as SearchIcon, LogOut, LogIn, User, LayoutDashboard, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -128,8 +128,10 @@ const Navbar = () => {
                   <LayoutDashboard className="h-5 w-5" />
                 </Button>
               </Link>}
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-accent/50 transition-all duration-300 hover:scale-110">
-              <Search className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-accent/50 transition-all duration-300 hover:scale-110" asChild>
+              <Link to="/search">
+                <SearchIcon className="h-5 w-5" />
+              </Link>
             </Button>
             <Link to="/cart">
               <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full hover:bg-accent/50 transition-all duration-300 hover:scale-110">
@@ -210,8 +212,10 @@ const Navbar = () => {
                 {link.name}
               </Link>)}
             <div className="flex flex-col items-center justify-center gap-3 pt-4 border-t">
-              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full hover:bg-accent/50">
-                <Search className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full hover:bg-accent/50" asChild>
+                <Link to="/search">
+                  <SearchIcon className="h-5 w-5" />
+                </Link>
               </Button>
               <Link to="/cart">
                 <Button variant="ghost" size="icon" className="relative h-12 w-12 rounded-full hover:bg-accent/50">
