@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, Edit, Trash2, Eye, Star, Image as ImageIcon } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Eye, Star, Image as ImageIcon, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,6 +83,7 @@ const Products = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -431,6 +432,25 @@ const Products = () => {
     setIsPreviewDialogOpen(true);
   };
 
+  const openCopyDialog = (product: Product) => {
+    setSelectedProduct(null); // Don't set selected product for copy
+    setFormData({
+      name: `Copy of ${product.name}`,
+      description: product.description || "",
+      category: product.category,
+      price: product.price.toString(),
+      stock_quantity: product.stock_quantity.toString(),
+      image_url: product.image_url || "",
+      offer_price: product.offer_price?.toString() || "",
+      rating: product.rating?.toString() || "0",
+      sizes: product.sizes || [],
+      features: product.features || [],
+      flag: product.flag || "",
+      colors: product.colors || [],
+    });
+    setIsCopyDialogOpen(true);
+  };
+
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
@@ -583,13 +603,23 @@ const Products = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => openEditDialog(product)}
+                            title="Edit"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => openCopyDialog(product)}
+                            title="Copy Product"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setDeleteProductId(product.id)}
+                            title="Delete"
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -882,6 +912,292 @@ const Products = () => {
                 resetForm();
                 setSelectedProduct(null);
                 toast.success("Product created successfully!");
+              }}>
+                Done
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Copy Product Dialog */}
+      <Dialog open={isCopyDialogOpen} onOpenChange={(open) => {
+        setIsCopyDialogOpen(open);
+        if (!open) {
+          resetForm();
+          setSelectedProduct(null);
+        }
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Copy Product</DialogTitle>
+          </DialogHeader>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="details">Product Details</TabsTrigger>
+              <TabsTrigger value="images" disabled={!selectedProduct}>
+                Images
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="details" className="space-y-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="copy-name">Product Name *</Label>
+              <Input
+                id="copy-name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Enter product name"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="copy-description">Description</Label>
+              <Textarea
+                id="copy-description"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                placeholder="Enter product description"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="copy-category">Category *</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, category: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="copy-price">Price (USD) *</Label>
+                <Input
+                  id="copy-price"
+                  type="number"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder=""
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="copy-stock">Stock Quantity *</Label>
+                <Input
+                  id="copy-stock"
+                  type="number"
+                  value={formData.stock_quantity}
+                  onChange={(e) =>
+                    setFormData({ ...formData, stock_quantity: e.target.value })
+                  }
+                  placeholder=""
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="copy-offer-price">Offer Price (USD)</Label>
+                <Input
+                  id="copy-offer-price"
+                  type="number"
+                  step="0.01"
+                  value={formData.offer_price}
+                  onChange={(e) => setFormData({ ...formData, offer_price: e.target.value })}
+                  placeholder="Leave empty if no offer"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="copy-rating">Rating (0-5)</Label>
+                <Input
+                  id="copy-rating"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="5"
+                  value={formData.rating}
+                  onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="copy-flag">Product Flag</Label>
+                <Select
+                  value={formData.flag || undefined}
+                  onValueChange={(value) => setFormData({ ...formData, flag: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="No flag" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="New Arrival">New Arrival</SelectItem>
+                    <SelectItem value="Offer">Offer</SelectItem>
+                    <SelectItem value="Best Seller">Best Seller</SelectItem>
+                    <SelectItem value="Limited Edition">Limited Edition</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Sizes Management */}
+            <div className="grid gap-2">
+              <Label>Available Sizes (EU)</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newSize}
+                  onChange={(e) => setNewSize(e.target.value)}
+                  placeholder="e.g., 42"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newSize.trim()) {
+                      e.preventDefault();
+                      setFormData({
+                        ...formData,
+                        sizes: [...formData.sizes, newSize.trim()],
+                      });
+                      setNewSize("");
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  onClick={() => {
+                    if (newSize.trim()) {
+                      setFormData({
+                        ...formData,
+                        sizes: [...formData.sizes, newSize.trim()],
+                      });
+                      setNewSize("");
+                    }
+                  }}
+                >
+                  Add Size
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.sizes.map((size, index) => (
+                  <Badge key={index} variant="secondary" className="gap-1">
+                    {size}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          sizes: formData.sizes.filter((_, i) => i !== index),
+                        });
+                      }}
+                      className="ml-1 hover:text-destructive"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Features Management */}
+            <div className="grid gap-2">
+              <Label>Product Features</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newFeature}
+                  onChange={(e) => setNewFeature(e.target.value)}
+                  placeholder="e.g., Premium cushioning technology"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newFeature.trim()) {
+                      e.preventDefault();
+                      setFormData({
+                        ...formData,
+                        features: [...formData.features, newFeature.trim()],
+                      });
+                      setNewFeature("");
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  onClick={() => {
+                    if (newFeature.trim()) {
+                      setFormData({
+                        ...formData,
+                        features: [...formData.features, newFeature.trim()],
+                      });
+                      setNewFeature("");
+                    }
+                  }}
+                >
+                  Add Feature
+                </Button>
+              </div>
+              <div className="flex flex-col gap-2 mt-2">
+                {formData.features.map((feature, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
+                    <span className="flex-1">{feature}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          features: formData.features.filter((_, i) => i !== index),
+                        });
+                      }}
+                      className="text-destructive hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="images">
+            <div className="py-4">
+              {selectedProduct ? (
+                <ProductImageManager productId={selectedProduct.id} />
+              ) : (
+                <p className="text-sm text-muted-foreground mb-4">
+                  Save the product first before adding images
+                </p>
+              )}
+            </div>
+          </TabsContent>
+          </Tabs>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsCopyDialogOpen(false);
+                resetForm();
+                setSelectedProduct(null);
+              }}
+            >
+              Cancel
+            </Button>
+            {activeTab === "details" ? (
+              <Button onClick={handleAddProduct} disabled={addProductMutation.isPending}>
+                {addProductMutation.isPending ? "Copying..." : "Copy Product & Continue to Images"}
+              </Button>
+            ) : (
+              <Button onClick={() => {
+                setIsCopyDialogOpen(false);
+                resetForm();
+                setSelectedProduct(null);
+                toast.success("Product copied successfully!");
               }}>
                 Done
               </Button>
