@@ -43,6 +43,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import PercentageLoader from "@/components/PercentageLoader";
 
 interface Category {
   id: string;
@@ -356,6 +357,10 @@ const Categories = () => {
     return allCategories.filter((c) => !excludedIds.has(c.id));
   };
 
+  if (isLoading) {
+    return <PercentageLoader message="Loading categories..." />;
+  }
+
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
@@ -420,11 +425,7 @@ const Categories = () => {
           <CardTitle>Categories ({categories.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading categories...
-            </div>
-          ) : categories.length === 0 ? (
+          {categories.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No categories found
             </div>
