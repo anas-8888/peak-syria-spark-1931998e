@@ -24,6 +24,7 @@ interface Product {
   colors: string[];
   sizes: string[];
   rating: number;
+  colorImages?: Record<string, string>;
 }
 
 const ProductsEnhanced = () => {
@@ -49,17 +50,17 @@ const ProductsEnhanced = () => {
 
       if (productsError) throw productsError;
 
-      // Fetch primary images
-      const { data: imagesData } = await supabase
+      // Fetch ALL product images (not just primary)
+      const { data: allImagesData } = await supabase
         .from("product_images")
-        .select("product_id, image_url")
-        .eq("is_primary", true);
+        .select("id, product_id, image_url, is_primary");
 
-      // Fetch product colors
+      // Fetch product colors with images
       const { data: productColorsData } = await supabase
         .from("product_colors")
         .select(`
           product_id,
+          image_id,
           colors:color_id (
             name,
             hex_code
@@ -68,11 +69,25 @@ const ProductsEnhanced = () => {
 
       // Map images and colors to products
       const productsWithImages = productsData.map((product) => {
-        const primaryImage = imagesData?.find((img) => img.product_id === product.id);
-        const productColors = productColorsData
-          ?.filter((pc) => pc.product_id === product.id)
+        const primaryImage = allImagesData?.find((img) => img.product_id === product.id && img.is_primary);
+        const productColorsForItem = productColorsData?.filter((pc) => pc.product_id === product.id) || [];
+        
+        const productColors = productColorsForItem
           .map((pc) => (pc.colors as any)?.name?.toLowerCase() || '')
           .filter(Boolean);
+
+        // Create color to image mapping
+        const colorImages: Record<string, string> = {};
+        for (const pc of productColorsForItem) {
+          const colorName = (pc.colors as any)?.name?.toLowerCase();
+          if (colorName && pc.image_id) {
+            // Find the specific image by image_id
+            const colorImage = allImagesData?.find((img) => img.id === pc.image_id);
+            if (colorImage) {
+              colorImages[colorName] = colorImage.image_url;
+            }
+          }
+        }
 
         return {
           id: product.id,
@@ -85,6 +100,7 @@ const ProductsEnhanced = () => {
           colors: productColors || [],
           sizes: product.sizes || [],
           rating: product.rating || 0,
+          colorImages: Object.keys(colorImages).length > 0 ? colorImages : undefined,
         };
       });
 
@@ -277,6 +293,7 @@ const ProductsEnhanced = () => {
                         colors={product.colors}
                         sizes={product.sizes}
                         rating={product.rating}
+                        colorImages={product.colorImages}
                       />
                     </div>
                   ))}

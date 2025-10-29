@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShoppingCart, Eye, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -16,6 +16,7 @@ interface ProductCardEnhancedProps {
   colors?: string[];
   sizes?: string[];
   rating?: number;
+  colorImages?: Record<string, string>;
 }
 
 const ProductCardEnhanced = ({
@@ -28,12 +29,26 @@ const ProductCardEnhanced = ({
   colors = ["black", "white", "red"],
   sizes = ["40", "41", "42", "43"],
   rating = 4.5,
+  colorImages,
 }: ProductCardEnhancedProps) => {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState(colors[0]);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [currentImage, setCurrentImage] = useState(image);
   const { formatPrice } = useCurrency();
   const { t } = useLanguage();
+
+  // Update current image when image prop changes
+  useEffect(() => {
+    setCurrentImage(image);
+  }, [image]);
+
+  const handleColorChange = (color: string) => {
+    setSelectedColor(color);
+    if (colorImages && colorImages[color]) {
+      setCurrentImage(colorImages[color]);
+    }
+  };
 
   const colorMap: Record<string, string> = {
     black: "#000000",
@@ -49,7 +64,7 @@ const ProductCardEnhanced = ({
         {/* Product Image */}
         <div className="relative aspect-square overflow-hidden bg-muted">
           <img
-            src={image}
+            src={currentImage}
             alt={name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
@@ -116,7 +131,7 @@ const ProductCardEnhanced = ({
             {colors.map((color) => (
               <button
                 key={color}
-                onClick={() => setSelectedColor(color)}
+                onClick={() => handleColorChange(color)}
                 className={`w-6 h-6 rounded-full border-2 transition-all ${
                   selectedColor === color ? "border-primary scale-110 ring-2 ring-primary ring-offset-2" : "border-border"
                 }`}
@@ -153,7 +168,7 @@ const ProductCardEnhanced = ({
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-              <img src={image} alt={name} className="w-full h-full object-cover" />
+              <img src={currentImage} alt={name} className="w-full h-full object-cover" />
             </div>
             <div className="space-y-4">
               <div>
