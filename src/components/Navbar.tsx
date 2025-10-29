@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Menu, X, Search, LogOut, LogIn, User, LayoutDashboard } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, LogOut, LogIn, User, LayoutDashboard, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -171,6 +171,12 @@ const Navbar = () => {
                       My Profile
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/wishlist" className="cursor-pointer">
+                      <Heart className="mr-2 h-4 w-4" />
+                      My Wishlist
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer text-red-600 focus:text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />
@@ -237,6 +243,12 @@ const Navbar = () => {
                     <Button variant="outline" size="sm" className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold">
                       <User className="h-4 w-4" />
                       My Profile
+                    </Button>
+                  </Link>
+                  <Link to="/wishlist" className="w-full">
+                    <Button variant="outline" size="sm" className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold">
+                      <Heart className="h-4 w-4" />
+                      My Wishlist
                     </Button>
                   </Link>
                   <Button variant="outline" size="sm" onClick={() => signOut()} className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold text-red-600 hover:text-red-600">

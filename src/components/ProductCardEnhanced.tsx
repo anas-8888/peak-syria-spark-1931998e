@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { ShoppingCart, Eye, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface ProductCardEnhancedProps {
   id: string;
@@ -37,8 +40,11 @@ const ProductCardEnhanced = ({
   const [selectedColor, setSelectedColor] = useState(colors[0]);
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentImage, setCurrentImage] = useState(image);
+  const [isLoading, setIsLoading] = useState(false);
   const { formatPrice } = useCurrency();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Update current image when image prop changes
   useEffect(() => {
@@ -55,10 +61,73 @@ const ProductCardEnhanced = ({
     }
   }, [image, colorImages]);
 
+  // Check if product is in wishlist
+  useEffect(() => {
+    const checkWishlist = async () => {
+      if (!user) {
+        setIsFavorite(false);
+        return;
+      }
+
+      const { data } = await supabase
+        .from('wishlist')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('product_id', id)
+        .single();
+
+      setIsFavorite(!!data);
+    };
+
+    checkWishlist();
+  }, [user, id]);
+
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
     if (colorImages && colorImages[color]) {
       setCurrentImage(colorImages[color]);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!user) {
+      toast.error("Please log in to add items to your wishlist");
+      navigate('/login');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (isFavorite) {
+        // Remove from wishlist
+        const { error } = await supabase
+          .from('wishlist')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('product_id', id);
+
+        if (error) throw error;
+        setIsFavorite(false);
+        toast.success("Removed from wishlist");
+      } else {
+        // Add to wishlist
+        const { error } = await supabase
+          .from('wishlist')
+          .insert({
+            user_id: user.id,
+            product_id: id
+          });
+
+        if (error) throw error;
+        setIsFavorite(true);
+        toast.success("Added to wishlist");
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+      toast.error("Failed to update wishlist");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -100,7 +169,8 @@ const ProductCardEnhanced = ({
                 <Button
                   variant={isFavorite ? "hero" : "outlineWhite"}
                   size="icon"
-                  onClick={() => setIsFavorite(!isFavorite)}
+                  onClick={handleToggleFavorite}
+                  disabled={isLoading}
                   className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75"
                 >
                   <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
@@ -186,7 +256,8 @@ const ProductCardEnhanced = ({
                 <Button
                   variant={isFavorite ? "hero" : "outline"}
                   size="icon"
-                  onClick={() => setIsFavorite(!isFavorite)}
+                  onClick={handleToggleFavorite}
+                  disabled={isLoading}
                 >
                   <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
                 </Button>
