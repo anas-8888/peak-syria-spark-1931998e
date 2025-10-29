@@ -744,11 +744,7 @@ const Marketing = () => {
 
         {/* Templates Tab */}
         <TabsContent value="templates" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-2xl font-bold">Templates</h2>
-              <p className="text-muted-foreground">Create reusable campaign templates</p>
-            </div>
+          <div className="flex justify-end items-center">
             <Button onClick={() => {
               resetTemplateForm();
               setIsTemplateDialogOpen(true);
