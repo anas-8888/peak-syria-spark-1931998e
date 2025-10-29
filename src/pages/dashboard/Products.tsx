@@ -7,44 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProductImageManager } from "@/components/ProductImageManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 type Product = {
   id: string;
   name: string;
@@ -54,7 +25,10 @@ type Product = {
   stock_quantity: number;
   image_url: string | null;
   is_active: boolean;
-  colors?: { color: string; image_id: string }[];
+  colors?: {
+    color: string;
+    image_id: string;
+  }[];
   offer_price?: number | null;
   rating?: number;
   sizes?: string[];
@@ -62,7 +36,6 @@ type Product = {
   features?: string[];
   flag?: string | null;
 };
-
 type ProductImage = {
   id: string;
   product_id: string;
@@ -70,7 +43,6 @@ type ProductImage = {
   is_primary: boolean;
   display_order: number;
 };
-
 type Category = {
   id: string;
   name: string;
@@ -78,7 +50,6 @@ type Category = {
   parent_id: string | null;
   is_active: boolean;
 };
-
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -103,66 +74,77 @@ const Products = () => {
     sizes: [] as string[],
     features: [] as string[],
     flag: "",
-    colors: [] as { color: string; image_id: string }[],
+    colors: [] as {
+      color: string;
+      image_id: string;
+    }[]
   });
-  
   const [newSize, setNewSize] = useState("");
   const [newFeature, setNewFeature] = useState("");
-  const [newColor, setNewColor] = useState({ color: "", image_id: "" });
-
+  const [newColor, setNewColor] = useState({
+    color: "",
+    image_id: ""
+  });
   const queryClient = useQueryClient();
 
   // Fetch categories
-  const { data: categories = [] } = useQuery({
+  const {
+    data: categories = []
+  } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .eq("is_active", true)
-        .order("name");
+      const {
+        data,
+        error
+      } = await supabase.from("categories").select("*").eq("is_active", true).order("name");
       if (error) throw error;
       return data as Category[];
-    },
+    }
   });
 
   // Fetch products with their primary images
-  const { data: products = [], isLoading } = useQuery({
+  const {
+    data: products = [],
+    isLoading
+  } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
-      const { data: productsData, error: productsError } = await supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
-
+      const {
+        data: productsData,
+        error: productsError
+      } = await supabase.from("products").select("*").order("created_at", {
+        ascending: false
+      });
       if (productsError) throw productsError;
 
       // Fetch primary images for all products
-      const { data: imagesData } = await supabase
-        .from("product_images")
-        .select("product_id, image_url")
-        .eq("is_primary", true);
+      const {
+        data: imagesData
+      } = await supabase.from("product_images").select("product_id, image_url").eq("is_primary", true);
 
       // Map primary images to products
-      const productsWithImages = productsData.map((product) => {
-        const primaryImage = imagesData?.find(
-          (img) => img.product_id === product.id
-        );
+      const productsWithImages = productsData.map(product => {
+        const primaryImage = imagesData?.find(img => img.product_id === product.id);
         return {
           ...product,
           image_url: primaryImage?.image_url || product.image_url,
-          colors: (product.colors as any) as { color: string; image_id: string }[] | undefined,
+          colors: product.colors as any as {
+            color: string;
+            image_id: string;
+          }[] | undefined
         };
       });
-
       return productsWithImages as Product[];
-    },
+    }
   });
 
   // Add product mutation
   const addProductMutation = useMutation({
     mutationFn: async (newProduct: typeof formData) => {
-      const { data, error } = await supabase.from("products").insert({
+      const {
+        data,
+        error
+      } = await supabase.from("products").insert({
         name: newProduct.name,
         description: newProduct.description || null,
         category: newProduct.category,
@@ -175,133 +157,143 @@ const Products = () => {
         sizes: newProduct.sizes,
         features: newProduct.features,
         flag: newProduct.flag || null,
-        colors: newProduct.colors,
+        colors: newProduct.colors
       }).select().single();
-
       if (error) throw error;
       return data;
     },
-    onSuccess: (newProduct) => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+    onSuccess: newProduct => {
+      queryClient.invalidateQueries({
+        queryKey: ["products"]
+      });
       toast.success("Product added successfully", {
-        description: "You can now add images to this product",
+        description: "You can now add images to this product"
       });
       // Switch to the product for editing with images
       setSelectedProduct({
         ...newProduct,
-        colors: (newProduct.colors as any) as { color: string; image_id: string }[] | undefined,
+        colors: newProduct.colors as any as {
+          color: string;
+          image_id: string;
+        }[] | undefined
       } as Product);
       setIsAddDialogOpen(false);
       setIsEditDialogOpen(true);
       resetForm();
     },
-    onError: (error) => {
+    onError: error => {
       toast.error("Failed to add product", {
-        description: error.message,
+        description: error.message
       });
-    },
+    }
   });
 
   // Update product mutation
   const updateProductMutation = useMutation({
     mutationFn: async ({
       id,
-      updates,
+      updates
     }: {
       id: string;
       updates: typeof formData;
     }) => {
-      const { error } = await supabase
-        .from("products")
-        .update({
-          name: updates.name,
-          description: updates.description || null,
-          category: updates.category,
-          price: parseFloat(updates.price),
-          stock_quantity: parseInt(updates.stock_quantity),
-          image_url: updates.image_url || null,
-          offer_price: updates.offer_price ? parseFloat(updates.offer_price) : null,
-          rating: parseFloat(updates.rating),
-          sizes: updates.sizes,
-          features: updates.features,
-          flag: updates.flag || null,
-          colors: updates.colors,
-        })
-        .eq("id", id);
-
+      const {
+        error
+      } = await supabase.from("products").update({
+        name: updates.name,
+        description: updates.description || null,
+        category: updates.category,
+        price: parseFloat(updates.price),
+        stock_quantity: parseInt(updates.stock_quantity),
+        image_url: updates.image_url || null,
+        offer_price: updates.offer_price ? parseFloat(updates.offer_price) : null,
+        rating: parseFloat(updates.rating),
+        sizes: updates.sizes,
+        features: updates.features,
+        flag: updates.flag || null,
+        colors: updates.colors
+      }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({
+        queryKey: ["products"]
+      });
       toast.success("Product updated successfully");
       setIsEditDialogOpen(false);
       setSelectedProduct(null);
       resetForm();
     },
-    onError: (error) => {
+    onError: error => {
       toast.error("Failed to update product", {
-        description: error.message,
+        description: error.message
       });
-    },
+    }
   });
 
   // Delete product mutation
   const deleteProductMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("products").delete().eq("id", id);
+      const {
+        error
+      } = await supabase.from("products").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({
+        queryKey: ["products"]
+      });
       toast.success("Product deleted successfully");
       setDeleteProductId(null);
     },
-    onError: (error) => {
+    onError: error => {
       toast.error("Failed to delete product", {
-        description: error.message,
+        description: error.message
       });
-    },
+    }
   });
 
   // Bulk delete mutation
   const bulkDeleteMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      const { error } = await supabase.from("products").delete().in("id", ids);
+      const {
+        error
+      } = await supabase.from("products").delete().in("id", ids);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({
+        queryKey: ["products"]
+      });
       toast.success(`${selectedProducts.length} products deleted successfully`);
       setSelectedProducts([]);
     },
-    onError: (error) => {
+    onError: error => {
       toast.error("Failed to delete products", {
-        description: error.message,
+        description: error.message
       });
-    },
+    }
   });
 
   // Fetch images for preview
-  const { data: previewImages = [] } = useQuery({
+  const {
+    data: previewImages = []
+  } = useQuery({
     queryKey: ["product-images", selectedProduct?.id],
     queryFn: async () => {
       if (!selectedProduct?.id) return [];
-      const { data, error } = await supabase
-        .from("product_images")
-        .select("*")
-        .eq("product_id", selectedProduct.id)
-        .order("display_order", { ascending: true });
-
+      const {
+        data,
+        error
+      } = await supabase.from("product_images").select("*").eq("product_id", selectedProduct.id).order("display_order", {
+        ascending: true
+      });
       if (error) throw error;
       return data as ProductImage[];
     },
-    enabled: !!selectedProduct?.id && isPreviewDialogOpen,
+    enabled: !!selectedProduct?.id && isPreviewDialogOpen
   });
-
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
+  const filteredProducts = products.filter(product => product.name.toLowerCase().includes(searchTerm.toLowerCase()));
   const resetForm = () => {
     setFormData({
       name: "",
@@ -315,58 +307,61 @@ const Products = () => {
       sizes: [],
       features: [],
       flag: "",
-      colors: [],
+      colors: []
     });
     setSelectedCategoryIds([]);
     setActiveTab("details");
     setNewSize("");
     setNewFeature("");
-    setNewColor({ color: "", image_id: "" });
+    setNewColor({
+      color: "",
+      image_id: ""
+    });
   };
-
   const handleAddProduct = async () => {
     if (!formData.name || !formData.category || !formData.price || !formData.stock_quantity) {
       toast.error("Please fill in all required fields");
       return;
     }
-    
     try {
-      const { data, error } = await supabase
-        .from("products")
-        .insert({
-          name: formData.name,
-          description: formData.description || null,
-          category: formData.category,
-          price: parseFloat(formData.price),
-          stock_quantity: parseInt(formData.stock_quantity),
-          image_url: formData.image_url || null,
-          offer_price: formData.offer_price ? parseFloat(formData.offer_price) : null,
-          rating: parseFloat(formData.rating),
-          sizes: formData.sizes,
-          features: formData.features,
-          flag: formData.flag || null,
-          colors: formData.colors,
-        })
-        .select()
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from("products").insert({
+        name: formData.name,
+        description: formData.description || null,
+        category: formData.category,
+        price: parseFloat(formData.price),
+        stock_quantity: parseInt(formData.stock_quantity),
+        image_url: formData.image_url || null,
+        offer_price: formData.offer_price ? parseFloat(formData.offer_price) : null,
+        rating: parseFloat(formData.rating),
+        sizes: formData.sizes,
+        features: formData.features,
+        flag: formData.flag || null,
+        colors: formData.colors
+      }).select().single();
       if (error) throw error;
 
       // Set the selected product and switch to images tab
       setSelectedProduct({
         ...data,
-        colors: (data.colors as any) as { color: string; image_id: string }[] | undefined,
+        colors: data.colors as any as {
+          color: string;
+          image_id: string;
+        }[] | undefined
       } as Product);
       setActiveTab("images");
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({
+        queryKey: ["products"]
+      });
       toast.success("Product added! Now add images.");
     } catch (error: any) {
       toast.error("Failed to add product", {
-        description: error.message,
+        description: error.message
       });
     }
   };
-
   const handleEditProduct = () => {
     if (!selectedProduct || !formData.name || !formData.category || !formData.price || !formData.stock_quantity) {
       toast.error("Please fill in all required fields");
@@ -374,10 +369,9 @@ const Products = () => {
     }
     updateProductMutation.mutate({
       id: selectedProduct.id,
-      updates: formData,
+      updates: formData
     });
   };
-
   const openEditDialog = (product: Product) => {
     setSelectedProduct(product);
     setFormData({
@@ -392,17 +386,24 @@ const Products = () => {
       sizes: product.sizes || [],
       features: product.features || [],
       flag: product.flag || "",
-      colors: product.colors || [],
+      colors: product.colors || []
     });
     setIsEditDialogOpen(true);
   };
-
   const getStockStatus = (stock: number) => {
-    if (stock === 0) return { label: "Out of Stock", variant: "destructive" as const };
-    if (stock < 10) return { label: "Low Stock", variant: "secondary" as const };
-    return { label: "In Stock", variant: "default" as const };
+    if (stock === 0) return {
+      label: "Out of Stock",
+      variant: "destructive" as const
+    };
+    if (stock < 10) return {
+      label: "Low Stock",
+      variant: "secondary" as const
+    };
+    return {
+      label: "In Stock",
+      variant: "default" as const
+    };
   };
-
   const toggleSelectAll = () => {
     if (selectedProducts.length === filteredProducts.length) {
       setSelectedProducts([]);
@@ -410,28 +411,21 @@ const Products = () => {
       setSelectedProducts(filteredProducts.map(p => p.id));
     }
   };
-
   const toggleSelectProduct = (id: string) => {
-    setSelectedProducts(prev => 
-      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
-    );
+    setSelectedProducts(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);
   };
-
   const handleBulkDelete = () => {
     if (selectedProducts.length === 0) return;
     setBulkDeleteDialogOpen(true);
   };
-
   const confirmBulkDelete = () => {
     bulkDeleteMutation.mutate(selectedProducts);
     setBulkDeleteDialogOpen(false);
   };
-
   const openPreviewDialog = (product: Product) => {
     setSelectedProduct(product);
     setIsPreviewDialogOpen(true);
   };
-
   const openCopyDialog = (product: Product) => {
     setSelectedProduct(null); // Don't set selected product for copy
     setFormData({
@@ -446,13 +440,11 @@ const Products = () => {
       sizes: product.sizes || [],
       features: product.features || [],
       flag: product.flag || "",
-      colors: product.colors || [],
+      colors: product.colors || []
     });
     setIsCopyDialogOpen(true);
   };
-
-  return (
-    <div className="p-8 space-y-6">
+  return <div className="p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -462,16 +454,10 @@ const Products = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          {selectedProducts.length > 0 && (
-            <Button 
-              variant="destructive" 
-              onClick={handleBulkDelete}
-              disabled={bulkDeleteMutation.isPending}
-            >
+          {selectedProducts.length > 0 && <Button variant="destructive" onClick={handleBulkDelete} disabled={bulkDeleteMutation.isPending}>
               <Trash2 className="h-4 w-4 mr-2" />
               Delete {selectedProducts.length} Selected
-            </Button>
-          )}
+            </Button>}
           <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             Add New Product
@@ -485,12 +471,7 @@ const Products = () => {
           <div className="flex items-center gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search for a product..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+              <Input placeholder="Search for a product..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
           </div>
         </CardContent>
@@ -502,25 +483,15 @@ const Products = () => {
           <CardTitle>Products ({filteredProducts.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
+          {isLoading ? <div className="text-center py-8 text-muted-foreground">
               Loading products...
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            </div> : filteredProducts.length === 0 ? <div className="text-center py-8 text-muted-foreground">
               No products found
-            </div>
-          ) : (
-            <Table>
+            </div> : <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
-                    <input
-                      type="checkbox"
-                      checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
-                      onChange={toggleSelectAll}
-                      className="cursor-pointer"
-                    />
+                    <input type="checkbox" checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0} onChange={toggleSelectAll} className="cursor-pointer" />
                   </TableHead>
                   <TableHead>Product</TableHead>
                   <TableHead>Category</TableHead>
@@ -531,56 +502,29 @@ const Products = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.map((product) => {
-                  const stockStatus = getStockStatus(product.stock_quantity);
-                  return (
-                    <TableRow key={product.id} className="hover:bg-muted/50">
+                {filteredProducts.map(product => {
+              const stockStatus = getStockStatus(product.stock_quantity);
+              return <TableRow key={product.id} className="hover:bg-muted/50">
                       <TableCell>
-                        <input
-                          type="checkbox"
-                          checked={selectedProducts.includes(product.id)}
-                          onChange={() => toggleSelectProduct(product.id)}
-                          className="cursor-pointer"
-                        />
+                        <input type="checkbox" checked={selectedProducts.includes(product.id)} onChange={() => toggleSelectProduct(product.id)} className="cursor-pointer" />
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          {product.image_url ? (
-                            <img
-                              src={product.image_url}
-                              alt={product.name}
-                              className="h-12 w-12 rounded-lg object-cover cursor-pointer"
-                              onClick={() => openPreviewDialog(product)}
-                            />
-                          ) : (
-                            <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
+                          {product.image_url ? <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded-lg object-cover cursor-pointer" onClick={() => openPreviewDialog(product)} /> : <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
                               <span className="text-xs text-muted-foreground">No image</span>
-                            </div>
-                          )}
+                            </div>}
                           <span className="font-medium cursor-pointer hover:text-primary" onClick={() => openPreviewDialog(product)}>{product.name}</span>
                         </div>
                       </TableCell>
                       <TableCell>{product.category}</TableCell>
                       <TableCell className="font-semibold">
-                        {product.offer_price ? (
-                          <div className="flex items-center gap-2">
+                        {product.offer_price ? <div className="flex items-center gap-2">
                             <span className="text-primary">${product.offer_price.toFixed(2)}</span>
                             <span className="text-sm line-through text-muted-foreground">${product.price.toFixed(2)}</span>
-                          </div>
-                        ) : (
-                          <span>${product.price.toFixed(2)}</span>
-                        )}
+                          </div> : <span>${product.price.toFixed(2)}</span>}
                       </TableCell>
                       <TableCell>
-                        <span
-                          className={`font-medium ${
-                            product.stock_quantity === 0
-                              ? "text-destructive"
-                              : product.stock_quantity < 10
-                              ? "text-yellow-600"
-                              : "text-green-600"
-                          }`}
-                        >
+                        <span className={`font-medium ${product.stock_quantity === 0 ? "text-destructive" : product.stock_quantity < 10 ? "text-yellow-600" : "text-green-600"}`}>
                           {product.stock_quantity} units
                         </span>
                       </TableCell>
@@ -591,57 +535,35 @@ const Products = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openPreviewDialog(product)}
-                            title="Preview"
-                          >
+                          <Button variant="ghost" size="icon" onClick={() => openPreviewDialog(product)} title="Preview">
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEditDialog(product)}
-                            title="Edit"
-                          >
+                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(product)} title="Edit">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openCopyDialog(product)}
-                            title="Copy Product"
-                          >
+                          <Button variant="ghost" size="icon" onClick={() => openCopyDialog(product)} title="Copy Product">
                             <Copy className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteProductId(product.id)}
-                            title="Delete"
-                          >
+                          <Button variant="ghost" size="icon" onClick={() => setDeleteProductId(product.id)} title="Delete">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
                       </TableCell>
-                    </TableRow>
-                  );
-                })}
+                    </TableRow>;
+            })}
               </TableBody>
-            </Table>
-          )}
+            </Table>}
         </CardContent>
       </Card>
 
       {/* Add Product Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
-        setIsAddDialogOpen(open);
-        if (!open) {
-          resetForm();
-          setSelectedProduct(null);
-        }
-      }}>
+      <Dialog open={isAddDialogOpen} onOpenChange={open => {
+      setIsAddDialogOpen(open);
+      if (!open) {
+        resetForm();
+        setSelectedProduct(null);
+      }
+    }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Product</DialogTitle>
@@ -657,102 +579,73 @@ const Products = () => {
             <TabsContent value="details" className="space-y-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Product Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter product name"
-              />
+              <Input id="name" value={formData.name} onChange={e => setFormData({
+                ...formData,
+                name: e.target.value
+              })} placeholder="Enter product name" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Enter product description"
-                rows={3}
-              />
+              <Textarea id="description" value={formData.description} onChange={e => setFormData({
+                ...formData,
+                description: e.target.value
+              })} placeholder="Enter product description" rows={3} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="category">Category *</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, category: value })
-                  }
-                >
+                <Select value={formData.category} onValueChange={value => setFormData({
+                  ...formData,
+                  category: value
+                })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.name}>
+                    {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>
                         {cat.name}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="price">Price (USD) *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder=""
-                />
+                <Input id="price" type="number" step="0.01" value={formData.price} onChange={e => setFormData({
+                  ...formData,
+                  price: e.target.value
+                })} placeholder="" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="stock">Stock Quantity *</Label>
-                <Input
-                  id="stock"
-                  type="number"
-                  value={formData.stock_quantity}
-                  onChange={(e) =>
-                    setFormData({ ...formData, stock_quantity: e.target.value })
-                  }
-                  placeholder=""
-                />
+                <Input id="stock" type="number" value={formData.stock_quantity} onChange={e => setFormData({
+                  ...formData,
+                  stock_quantity: e.target.value
+                })} placeholder="" />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="offer_price">Offer Price (USD)</Label>
-                <Input
-                  id="offer_price"
-                  type="number"
-                  step="0.01"
-                  value={formData.offer_price}
-                  onChange={(e) => setFormData({ ...formData, offer_price: e.target.value })}
-                  placeholder="Leave empty if no offer"
-                />
+                <Input id="offer_price" type="number" step="0.01" value={formData.offer_price} onChange={e => setFormData({
+                  ...formData,
+                  offer_price: e.target.value
+                })} placeholder="Leave empty if no offer" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="rating">Rating (0-5)</Label>
-                <Input
-                  id="rating"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="5"
-                  value={formData.rating}
-                  onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                />
+                <Input id="rating" type="number" step="0.1" min="0" max="5" value={formData.rating} onChange={e => setFormData({
+                  ...formData,
+                  rating: e.target.value
+                })} />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="flag">Product Flag</Label>
-                <Select
-                  value={formData.flag || undefined}
-                  onValueChange={(value) => setFormData({ ...formData, flag: value })}
-                >
+                <Select value={formData.flag || undefined} onValueChange={value => setFormData({
+                  ...formData,
+                  flag: value
+                })}>
                   <SelectTrigger>
                     <SelectValue placeholder="No flag" />
                   </SelectTrigger>
@@ -770,54 +663,40 @@ const Products = () => {
             <div className="grid gap-2">
               <Label>Available Sizes (EU)</Label>
               <div className="flex gap-2">
-                <Input
-                  value={newSize}
-                  onChange={(e) => setNewSize(e.target.value)}
-                  placeholder="e.g., 42"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && newSize.trim()) {
-                      e.preventDefault();
-                      setFormData({
-                        ...formData,
-                        sizes: [...formData.sizes, newSize.trim()],
-                      });
-                      setNewSize("");
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  onClick={() => {
-                    if (newSize.trim()) {
-                      setFormData({
-                        ...formData,
-                        sizes: [...formData.sizes, newSize.trim()],
-                      });
-                      setNewSize("");
-                    }
-                  }}
-                >
+                <Input value={newSize} onChange={e => setNewSize(e.target.value)} placeholder="e.g., 42" onKeyDown={e => {
+                  if (e.key === 'Enter' && newSize.trim()) {
+                    e.preventDefault();
+                    setFormData({
+                      ...formData,
+                      sizes: [...formData.sizes, newSize.trim()]
+                    });
+                    setNewSize("");
+                  }
+                }} />
+                <Button type="button" onClick={() => {
+                  if (newSize.trim()) {
+                    setFormData({
+                      ...formData,
+                      sizes: [...formData.sizes, newSize.trim()]
+                    });
+                    setNewSize("");
+                  }
+                }}>
                   Add Size
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
-                {formData.sizes.map((size, index) => (
-                  <Badge key={index} variant="secondary" className="gap-1">
+                {formData.sizes.map((size, index) => <Badge key={index} variant="secondary" className="gap-1">
                     {size}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({
-                          ...formData,
-                          sizes: formData.sizes.filter((_, i) => i !== index),
-                        });
-                      }}
-                      className="ml-1 hover:text-destructive"
-                    >
+                    <button type="button" onClick={() => {
+                    setFormData({
+                      ...formData,
+                      sizes: formData.sizes.filter((_, i) => i !== index)
+                    });
+                  }} className="ml-1 hover:text-destructive">
                       ×
                     </button>
-                  </Badge>
-                ))}
+                  </Badge>)}
               </div>
             </div>
 
@@ -825,109 +704,84 @@ const Products = () => {
             <div className="grid gap-2">
               <Label>Product Features</Label>
               <div className="flex gap-2">
-                <Input
-                  value={newFeature}
-                  onChange={(e) => setNewFeature(e.target.value)}
-                  placeholder="e.g., Premium cushioning technology"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && newFeature.trim()) {
-                      e.preventDefault();
-                      setFormData({
-                        ...formData,
-                        features: [...formData.features, newFeature.trim()],
-                      });
-                      setNewFeature("");
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  onClick={() => {
-                    if (newFeature.trim()) {
-                      setFormData({
-                        ...formData,
-                        features: [...formData.features, newFeature.trim()],
-                      });
-                      setNewFeature("");
-                    }
-                  }}
-                >
+                <Input value={newFeature} onChange={e => setNewFeature(e.target.value)} placeholder="e.g., Premium cushioning technology" onKeyDown={e => {
+                  if (e.key === 'Enter' && newFeature.trim()) {
+                    e.preventDefault();
+                    setFormData({
+                      ...formData,
+                      features: [...formData.features, newFeature.trim()]
+                    });
+                    setNewFeature("");
+                  }
+                }} />
+                <Button type="button" onClick={() => {
+                  if (newFeature.trim()) {
+                    setFormData({
+                      ...formData,
+                      features: [...formData.features, newFeature.trim()]
+                    });
+                    setNewFeature("");
+                  }
+                }}>
                   Add Feature
                 </Button>
               </div>
               <div className="flex flex-col gap-2 mt-2">
-                {formData.features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm">
+                {formData.features.map((feature, index) => <div key={index} className="flex items-center gap-2 text-sm">
                     <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
                     <span className="flex-1">{feature}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({
-                          ...formData,
-                          features: formData.features.filter((_, i) => i !== index),
-                        });
-                      }}
-                      className="text-destructive hover:underline"
-                    >
+                    <button type="button" onClick={() => {
+                    setFormData({
+                      ...formData,
+                      features: formData.features.filter((_, i) => i !== index)
+                    });
+                  }} className="text-destructive hover:underline">
                       Remove
                     </button>
-                  </div>
-                ))}
+                  </div>)}
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="images">
             <div className="py-4">
-              {selectedProduct ? (
-                <ProductImageManager productId={selectedProduct.id} />
-              ) : (
-                <p className="text-sm text-muted-foreground mb-4">
+              {selectedProduct ? <ProductImageManager productId={selectedProduct.id} /> : <p className="text-sm text-muted-foreground mb-4">
                   Save the product first before adding images
-                </p>
-              )}
+                </p>}
             </div>
           </TabsContent>
           </Tabs>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsAddDialogOpen(false);
-                resetForm();
-                setSelectedProduct(null);
-              }}
-            >
+            <Button variant="outline" onClick={() => {
+            setIsAddDialogOpen(false);
+            resetForm();
+            setSelectedProduct(null);
+          }}>
               Cancel
             </Button>
-            {activeTab === "details" ? (
-              <Button onClick={handleAddProduct}>
+            {activeTab === "details" ? <Button onClick={handleAddProduct}>
                 Add Product & Continue to Images
-              </Button>
-            ) : (
-              <Button onClick={() => {
-                setIsAddDialogOpen(false);
-                resetForm();
-                setSelectedProduct(null);
-                toast.success("Product created successfully!");
-              }}>
+              </Button> : <Button onClick={() => {
+            setIsAddDialogOpen(false);
+            resetForm();
+            setSelectedProduct(null);
+            toast.success("Product created successfully!");
+          }}>
                 Done
-              </Button>
-            )}
+              </Button>}
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Copy Product Dialog */}
-      <Dialog open={isCopyDialogOpen} onOpenChange={(open) => {
-        setIsCopyDialogOpen(open);
-        if (!open) {
-          resetForm();
-          setSelectedProduct(null);
-        }
-      }}>
+      <Dialog open={isCopyDialogOpen} onOpenChange={open => {
+      setIsCopyDialogOpen(open);
+      if (!open) {
+        resetForm();
+        setSelectedProduct(null);
+      }
+    }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Copy Product</DialogTitle>
@@ -943,102 +797,73 @@ const Products = () => {
             <TabsContent value="details" className="space-y-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="copy-name">Product Name *</Label>
-              <Input
-                id="copy-name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter product name"
-              />
+              <Input id="copy-name" value={formData.name} onChange={e => setFormData({
+                ...formData,
+                name: e.target.value
+              })} placeholder="Enter product name" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="copy-description">Description</Label>
-              <Textarea
-                id="copy-description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Enter product description"
-                rows={3}
-              />
+              <Textarea id="copy-description" value={formData.description} onChange={e => setFormData({
+                ...formData,
+                description: e.target.value
+              })} placeholder="Enter product description" rows={3} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="copy-category">Category *</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, category: value })
-                  }
-                >
+                <Select value={formData.category} onValueChange={value => setFormData({
+                  ...formData,
+                  category: value
+                })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.name}>
+                    {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>
                         {cat.name}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="copy-price">Price (USD) *</Label>
-                <Input
-                  id="copy-price"
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder=""
-                />
+                <Input id="copy-price" type="number" step="0.01" value={formData.price} onChange={e => setFormData({
+                  ...formData,
+                  price: e.target.value
+                })} placeholder="" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="copy-stock">Stock Quantity *</Label>
-                <Input
-                  id="copy-stock"
-                  type="number"
-                  value={formData.stock_quantity}
-                  onChange={(e) =>
-                    setFormData({ ...formData, stock_quantity: e.target.value })
-                  }
-                  placeholder=""
-                />
+                <Input id="copy-stock" type="number" value={formData.stock_quantity} onChange={e => setFormData({
+                  ...formData,
+                  stock_quantity: e.target.value
+                })} placeholder="" />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="copy-offer-price">Offer Price (USD)</Label>
-                <Input
-                  id="copy-offer-price"
-                  type="number"
-                  step="0.01"
-                  value={formData.offer_price}
-                  onChange={(e) => setFormData({ ...formData, offer_price: e.target.value })}
-                  placeholder="Leave empty if no offer"
-                />
+                <Input id="copy-offer-price" type="number" step="0.01" value={formData.offer_price} onChange={e => setFormData({
+                  ...formData,
+                  offer_price: e.target.value
+                })} placeholder="Leave empty if no offer" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="copy-rating">Rating (0-5)</Label>
-                <Input
-                  id="copy-rating"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="5"
-                  value={formData.rating}
-                  onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                />
+                <Input id="copy-rating" type="number" step="0.1" min="0" max="5" value={formData.rating} onChange={e => setFormData({
+                  ...formData,
+                  rating: e.target.value
+                })} />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="copy-flag">Product Flag</Label>
-                <Select
-                  value={formData.flag || undefined}
-                  onValueChange={(value) => setFormData({ ...formData, flag: value })}
-                >
+                <Select value={formData.flag || undefined} onValueChange={value => setFormData({
+                  ...formData,
+                  flag: value
+                })}>
                   <SelectTrigger>
                     <SelectValue placeholder="No flag" />
                   </SelectTrigger>
@@ -1056,54 +881,40 @@ const Products = () => {
             <div className="grid gap-2">
               <Label>Available Sizes (EU)</Label>
               <div className="flex gap-2">
-                <Input
-                  value={newSize}
-                  onChange={(e) => setNewSize(e.target.value)}
-                  placeholder="e.g., 42"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && newSize.trim()) {
-                      e.preventDefault();
-                      setFormData({
-                        ...formData,
-                        sizes: [...formData.sizes, newSize.trim()],
-                      });
-                      setNewSize("");
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  onClick={() => {
-                    if (newSize.trim()) {
-                      setFormData({
-                        ...formData,
-                        sizes: [...formData.sizes, newSize.trim()],
-                      });
-                      setNewSize("");
-                    }
-                  }}
-                >
+                <Input value={newSize} onChange={e => setNewSize(e.target.value)} placeholder="e.g., 42" onKeyDown={e => {
+                  if (e.key === 'Enter' && newSize.trim()) {
+                    e.preventDefault();
+                    setFormData({
+                      ...formData,
+                      sizes: [...formData.sizes, newSize.trim()]
+                    });
+                    setNewSize("");
+                  }
+                }} />
+                <Button type="button" onClick={() => {
+                  if (newSize.trim()) {
+                    setFormData({
+                      ...formData,
+                      sizes: [...formData.sizes, newSize.trim()]
+                    });
+                    setNewSize("");
+                  }
+                }}>
                   Add Size
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
-                {formData.sizes.map((size, index) => (
-                  <Badge key={index} variant="secondary" className="gap-1">
+                {formData.sizes.map((size, index) => <Badge key={index} variant="secondary" className="gap-1">
                     {size}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({
-                          ...formData,
-                          sizes: formData.sizes.filter((_, i) => i !== index),
-                        });
-                      }}
-                      className="ml-1 hover:text-destructive"
-                    >
+                    <button type="button" onClick={() => {
+                    setFormData({
+                      ...formData,
+                      sizes: formData.sizes.filter((_, i) => i !== index)
+                    });
+                  }} className="ml-1 hover:text-destructive">
                       ×
                     </button>
-                  </Badge>
-                ))}
+                  </Badge>)}
               </div>
             </div>
 
@@ -1111,97 +922,72 @@ const Products = () => {
             <div className="grid gap-2">
               <Label>Product Features</Label>
               <div className="flex gap-2">
-                <Input
-                  value={newFeature}
-                  onChange={(e) => setNewFeature(e.target.value)}
-                  placeholder="e.g., Premium cushioning technology"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && newFeature.trim()) {
-                      e.preventDefault();
-                      setFormData({
-                        ...formData,
-                        features: [...formData.features, newFeature.trim()],
-                      });
-                      setNewFeature("");
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  onClick={() => {
-                    if (newFeature.trim()) {
-                      setFormData({
-                        ...formData,
-                        features: [...formData.features, newFeature.trim()],
-                      });
-                      setNewFeature("");
-                    }
-                  }}
-                >
+                <Input value={newFeature} onChange={e => setNewFeature(e.target.value)} placeholder="e.g., Premium cushioning technology" onKeyDown={e => {
+                  if (e.key === 'Enter' && newFeature.trim()) {
+                    e.preventDefault();
+                    setFormData({
+                      ...formData,
+                      features: [...formData.features, newFeature.trim()]
+                    });
+                    setNewFeature("");
+                  }
+                }} />
+                <Button type="button" onClick={() => {
+                  if (newFeature.trim()) {
+                    setFormData({
+                      ...formData,
+                      features: [...formData.features, newFeature.trim()]
+                    });
+                    setNewFeature("");
+                  }
+                }}>
                   Add Feature
                 </Button>
               </div>
               <div className="flex flex-col gap-2 mt-2">
-                {formData.features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm">
+                {formData.features.map((feature, index) => <div key={index} className="flex items-center gap-2 text-sm">
                     <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
                     <span className="flex-1">{feature}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({
-                          ...formData,
-                          features: formData.features.filter((_, i) => i !== index),
-                        });
-                      }}
-                      className="text-destructive hover:underline"
-                    >
+                    <button type="button" onClick={() => {
+                    setFormData({
+                      ...formData,
+                      features: formData.features.filter((_, i) => i !== index)
+                    });
+                  }} className="text-destructive hover:underline">
                       Remove
                     </button>
-                  </div>
-                ))}
+                  </div>)}
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="images">
             <div className="py-4">
-              {selectedProduct ? (
-                <ProductImageManager productId={selectedProduct.id} />
-              ) : (
-                <p className="text-sm text-muted-foreground mb-4">
+              {selectedProduct ? <ProductImageManager productId={selectedProduct.id} /> : <p className="text-sm text-muted-foreground mb-4">
                   Save the product first before adding images
-                </p>
-              )}
+                </p>}
             </div>
           </TabsContent>
           </Tabs>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsCopyDialogOpen(false);
-                resetForm();
-                setSelectedProduct(null);
-              }}
-            >
+            <Button variant="outline" onClick={() => {
+            setIsCopyDialogOpen(false);
+            resetForm();
+            setSelectedProduct(null);
+          }}>
               Cancel
             </Button>
-            {activeTab === "details" ? (
-              <Button onClick={handleAddProduct} disabled={addProductMutation.isPending}>
+            {activeTab === "details" ? <Button onClick={handleAddProduct} disabled={addProductMutation.isPending}>
                 {addProductMutation.isPending ? "Copying..." : "Copy Product & Continue to Images"}
-              </Button>
-            ) : (
-              <Button onClick={() => {
-                setIsCopyDialogOpen(false);
-                resetForm();
-                setSelectedProduct(null);
-                toast.success("Product copied successfully!");
-              }}>
+              </Button> : <Button onClick={() => {
+            setIsCopyDialogOpen(false);
+            resetForm();
+            setSelectedProduct(null);
+            toast.success("Product copied successfully!");
+          }}>
                 Done
-              </Button>
-            )}
+              </Button>}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1221,111 +1007,80 @@ const Products = () => {
             <TabsContent value="details" className="space-y-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="edit-name">Product Name *</Label>
-              <Input
-                id="edit-name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter product name"
-              />
+              <Input id="edit-name" value={formData.name} onChange={e => setFormData({
+                ...formData,
+                name: e.target.value
+              })} placeholder="Enter product name" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-description">Description</Label>
-              <Textarea
-                id="edit-description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Enter product description"
-                rows={3}
-              />
+              <Textarea id="edit-description" value={formData.description} onChange={e => setFormData({
+                ...formData,
+                description: e.target.value
+              })} placeholder="Enter product description" rows={3} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-category">Category *</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, category: value })
-                  }
-                >
+                <Select value={formData.category} onValueChange={value => setFormData({
+                  ...formData,
+                  category: value
+                })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.name}>
+                    {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>
                         {cat.name}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-price">Price (USD) *</Label>
-                <Input
-                  id="edit-price"
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder=""
-                />
+                <Input id="edit-price" type="number" step="0.01" value={formData.price} onChange={e => setFormData({
+                  ...formData,
+                  price: e.target.value
+                })} placeholder="" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-stock">Stock Quantity *</Label>
-                <Input
-                  id="edit-stock"
-                  type="number"
-                  value={formData.stock_quantity}
-                  onChange={(e) =>
-                    setFormData({ ...formData, stock_quantity: e.target.value })
-                  }
-                  placeholder=""
-                />
+                <Input id="edit-stock" type="number" value={formData.stock_quantity} onChange={e => setFormData({
+                  ...formData,
+                  stock_quantity: e.target.value
+                })} placeholder="" />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-offer_price">Offer Price (USD)</Label>
-                <Input
-                  id="edit-offer_price"
-                  type="number"
-                  step="0.01"
-                  value={formData.offer_price}
-                  onChange={(e) => setFormData({ ...formData, offer_price: e.target.value })}
-                  placeholder="Leave empty if no offer"
-                />
+                <Input id="edit-offer_price" type="number" step="0.01" value={formData.offer_price} onChange={e => setFormData({
+                  ...formData,
+                  offer_price: e.target.value
+                })} placeholder="Leave empty if no offer" />
               </div>
             </div>
 
             {/* Display SKU */}
-            {selectedProduct?.sku && (
-              <div className="grid gap-2">
+            {selectedProduct?.sku && <div className="grid gap-2">
                 <Label>SKU (Auto-generated)</Label>
                 <Input value={selectedProduct.sku} disabled className="bg-muted" />
-              </div>
-            )}
+              </div>}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-rating">Rating (0-5)</Label>
-                <Input
-                  id="edit-rating"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="5"
-                  value={formData.rating}
-                  onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                />
+                <Input id="edit-rating" type="number" step="0.1" min="0" max="5" value={formData.rating} onChange={e => setFormData({
+                  ...formData,
+                  rating: e.target.value
+                })} />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-flag">Product Flag</Label>
-                <Select
-                  value={formData.flag || undefined}
-                  onValueChange={(value) => setFormData({ ...formData, flag: value })}
-                >
+                <Select value={formData.flag || undefined} onValueChange={value => setFormData({
+                  ...formData,
+                  flag: value
+                })}>
                   <SelectTrigger>
                     <SelectValue placeholder="No flag" />
                   </SelectTrigger>
@@ -1343,54 +1098,40 @@ const Products = () => {
             <div className="grid gap-2">
               <Label>Available Sizes (EU)</Label>
               <div className="flex gap-2">
-                <Input
-                  value={newSize}
-                  onChange={(e) => setNewSize(e.target.value)}
-                  placeholder="e.g., 42"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && newSize.trim()) {
-                      e.preventDefault();
-                      setFormData({
-                        ...formData,
-                        sizes: [...formData.sizes, newSize.trim()],
-                      });
-                      setNewSize("");
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  onClick={() => {
-                    if (newSize.trim()) {
-                      setFormData({
-                        ...formData,
-                        sizes: [...formData.sizes, newSize.trim()],
-                      });
-                      setNewSize("");
-                    }
-                  }}
-                >
+                <Input value={newSize} onChange={e => setNewSize(e.target.value)} placeholder="e.g., 42" onKeyDown={e => {
+                  if (e.key === 'Enter' && newSize.trim()) {
+                    e.preventDefault();
+                    setFormData({
+                      ...formData,
+                      sizes: [...formData.sizes, newSize.trim()]
+                    });
+                    setNewSize("");
+                  }
+                }} />
+                <Button type="button" onClick={() => {
+                  if (newSize.trim()) {
+                    setFormData({
+                      ...formData,
+                      sizes: [...formData.sizes, newSize.trim()]
+                    });
+                    setNewSize("");
+                  }
+                }}>
                   Add Size
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
-                {formData.sizes.map((size, index) => (
-                  <Badge key={index} variant="secondary" className="gap-1">
+                {formData.sizes.map((size, index) => <Badge key={index} variant="secondary" className="gap-1">
                     {size}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({
-                          ...formData,
-                          sizes: formData.sizes.filter((_, i) => i !== index),
-                        });
-                      }}
-                      className="ml-1 hover:text-destructive"
-                    >
+                    <button type="button" onClick={() => {
+                    setFormData({
+                      ...formData,
+                      sizes: formData.sizes.filter((_, i) => i !== index)
+                    });
+                  }} className="ml-1 hover:text-destructive">
                       ×
                     </button>
-                  </Badge>
-                ))}
+                  </Badge>)}
               </div>
             </div>
 
@@ -1398,83 +1139,61 @@ const Products = () => {
             <div className="grid gap-2">
               <Label>Product Features</Label>
               <div className="flex gap-2">
-                <Input
-                  value={newFeature}
-                  onChange={(e) => setNewFeature(e.target.value)}
-                  placeholder="e.g., Premium cushioning technology"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && newFeature.trim()) {
-                      e.preventDefault();
-                      setFormData({
-                        ...formData,
-                        features: [...formData.features, newFeature.trim()],
-                      });
-                      setNewFeature("");
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  onClick={() => {
-                    if (newFeature.trim()) {
-                      setFormData({
-                        ...formData,
-                        features: [...formData.features, newFeature.trim()],
-                      });
-                      setNewFeature("");
-                    }
-                  }}
-                >
+                <Input value={newFeature} onChange={e => setNewFeature(e.target.value)} placeholder="e.g., Premium cushioning technology" onKeyDown={e => {
+                  if (e.key === 'Enter' && newFeature.trim()) {
+                    e.preventDefault();
+                    setFormData({
+                      ...formData,
+                      features: [...formData.features, newFeature.trim()]
+                    });
+                    setNewFeature("");
+                  }
+                }} />
+                <Button type="button" onClick={() => {
+                  if (newFeature.trim()) {
+                    setFormData({
+                      ...formData,
+                      features: [...formData.features, newFeature.trim()]
+                    });
+                    setNewFeature("");
+                  }
+                }}>
                   Add Feature
                 </Button>
               </div>
               <div className="flex flex-col gap-2 mt-2">
-                {formData.features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm">
+                {formData.features.map((feature, index) => <div key={index} className="flex items-center gap-2 text-sm">
                     <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
                     <span className="flex-1">{feature}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({
-                          ...formData,
-                          features: formData.features.filter((_, i) => i !== index),
-                        });
-                      }}
-                      className="text-destructive hover:underline"
-                    >
+                    <button type="button" onClick={() => {
+                    setFormData({
+                      ...formData,
+                      features: formData.features.filter((_, i) => i !== index)
+                    });
+                  }} className="text-destructive hover:underline">
                       Remove
                     </button>
-                  </div>
-                ))}
+                  </div>)}
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="images">
             <div className="py-4">
-              {selectedProduct && (
-                <ProductImageManager productId={selectedProduct.id} />
-              )}
+              {selectedProduct && <ProductImageManager productId={selectedProduct.id} />}
             </div>
           </TabsContent>
           </Tabs>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsEditDialogOpen(false);
-                setSelectedProduct(null);
-                resetForm();
-              }}
-            >
+            <Button variant="outline" onClick={() => {
+            setIsEditDialogOpen(false);
+            setSelectedProduct(null);
+            resetForm();
+          }}>
               Cancel
             </Button>
-            <Button
-              onClick={handleEditProduct}
-              disabled={updateProductMutation.isPending}
-            >
+            <Button onClick={handleEditProduct} disabled={updateProductMutation.isPending}>
               {updateProductMutation.isPending ? "Updating..." : "Update Product"}
             </Button>
           </DialogFooter>
@@ -1487,37 +1206,22 @@ const Products = () => {
           <DialogHeader>
             <DialogTitle>Product Preview</DialogTitle>
           </DialogHeader>
-          {selectedProduct && (
-            <div className="space-y-6">
+          {selectedProduct && <div className="space-y-6">
               {/* Image Gallery */}
               <div className="space-y-4">
                 <h3 className="font-semibold">Product Images</h3>
-                {previewImages.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {previewImages.map((image) => (
-                      <div key={image.id} className="relative group">
-                        <img
-                          src={image.image_url}
-                          alt="Product"
-                          className={`w-full aspect-square object-cover rounded-lg ${
-                            image.is_primary ? "ring-2 ring-primary" : ""
-                          }`}
-                        />
-                        {image.is_primary && (
-                          <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                {previewImages.length > 0 ? <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {previewImages.map(image => <div key={image.id} className="relative group">
+                        <img src={image.image_url} alt="Product" className={`w-full aspect-square object-cover rounded-lg ${image.is_primary ? "ring-2 ring-primary" : ""}`} />
+                        {image.is_primary && <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
                             <Star className="h-3 w-3 fill-current" />
                             Primary
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                          </div>}
+                      </div>)}
+                  </div> : <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
                     <ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
                     <p>No images available</p>
-                  </div>
-                )}
+                  </div>}
               </div>
 
               {/* Product Details */}
@@ -1532,19 +1236,15 @@ const Products = () => {
                   <p className="text-sm">{selectedProduct.description || "No description"}</p>
                 </div>
 
-                {selectedProduct.sku && (
-                  <div>
+                {selectedProduct.sku && <div>
                     <Label className="text-muted-foreground">SKU</Label>
                     <p className="font-mono text-sm">{selectedProduct.sku}</p>
-                  </div>
-                )}
+                  </div>}
 
-                {selectedProduct.flag && (
-                  <div>
+                {selectedProduct.flag && <div>
                     <Label className="text-muted-foreground">Flag</Label>
                     <Badge variant="secondary">{selectedProduct.flag}</Badge>
-                  </div>
-                )}
+                  </div>}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -1564,14 +1264,10 @@ const Products = () => {
                   <div>
                     <Label className="text-muted-foreground">Price</Label>
                     <div className="flex items-center gap-2">
-                      {selectedProduct.offer_price ? (
-                        <>
+                      {selectedProduct.offer_price ? <>
                           <p className="text-lg font-bold text-primary">${selectedProduct.offer_price.toFixed(2)}</p>
                           <p className="text-sm line-through text-muted-foreground">${selectedProduct.price.toFixed(2)}</p>
-                        </>
-                      ) : (
-                        <p className="text-lg font-bold">${selectedProduct.price.toFixed(2)}</p>
-                      )}
+                        </> : <p className="text-lg font-bold">${selectedProduct.price.toFixed(2)}</p>}
                     </div>
                   </div>
                   <div>
@@ -1580,74 +1276,59 @@ const Products = () => {
                   </div>
                 </div>
 
-                {selectedProduct.sizes && selectedProduct.sizes.length > 0 && (
-                  <div>
+                {selectedProduct.sizes && selectedProduct.sizes.length > 0 && <div>
                     <Label className="text-muted-foreground">Available Sizes</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {selectedProduct.sizes.map((size, idx) => (
-                        <Badge key={idx} variant="outline">{size}</Badge>
-                      ))}
+                      {selectedProduct.sizes.map((size, idx) => <Badge key={idx} variant="outline">{size}</Badge>)}
                     </div>
-                  </div>
-                )}
+                  </div>}
 
-                {selectedProduct.features && selectedProduct.features.length > 0 && (
-                  <div>
+                {selectedProduct.features && selectedProduct.features.length > 0 && <div>
                     <Label className="text-muted-foreground">Features</Label>
                     <div className="flex flex-col gap-2 mt-2">
-                      {selectedProduct.features.map((feature, idx) => (
-                        <div key={idx} className="flex items-center gap-2 text-sm">
+                      {selectedProduct.features.map((feature, idx) => <div key={idx} className="flex items-center gap-2 text-sm">
                           <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
                           <span>{feature}</span>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
-                  </div>
-                )}
+                  </div>}
 
-                {selectedProduct.colors && selectedProduct.colors.length > 0 && (
-                  <div>
+                {selectedProduct.colors && selectedProduct.colors.length > 0 && <div>
                     <Label className="text-muted-foreground">Available Colors</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {selectedProduct.colors.map((colorItem, idx) => (
-                        <div key={idx} className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-card">
-                          <div 
-                            className="w-6 h-6 rounded-full border-2 border-border" 
-                            style={{ backgroundColor: colorItem.color }}
-                            title={colorItem.color}
-                          />
+                      {selectedProduct.colors.map((colorItem, idx) => <div key={idx} className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-card">
+                          <div className="w-6 h-6 rounded-full border-2 border-border" style={{
+                    backgroundColor: colorItem.color
+                  }} title={colorItem.color} />
                           <span className="text-sm font-medium">{colorItem.color}</span>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground">Status</Label>
-                    <Badge variant={getStockStatus(selectedProduct.stock_quantity).variant}>
+                    <Badge variant={getStockStatus(selectedProduct.stock_quantity).variant} className="mx-[20px]">
                       {getStockStatus(selectedProduct.stock_quantity).label}
                     </Badge>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Active</Label>
-                    <Badge variant={selectedProduct.is_active ? "default" : "secondary"}>
+                    <Badge variant={selectedProduct.is_active ? "default" : "secondary"} className="mx-[20px]">
                       {selectedProduct.is_active ? "Active" : "Inactive"}
                     </Badge>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>
               Close
             </Button>
             <Button onClick={() => {
-              setIsPreviewDialogOpen(false);
-              if (selectedProduct) openEditDialog(selectedProduct);
-            }}>
+            setIsPreviewDialogOpen(false);
+            if (selectedProduct) openEditDialog(selectedProduct);
+          }}>
               Edit Product
             </Button>
           </DialogFooter>
@@ -1655,10 +1336,7 @@ const Products = () => {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={!!deleteProductId}
-        onOpenChange={() => setDeleteProductId(null)}
-      >
+      <AlertDialog open={!!deleteProductId} onOpenChange={() => setDeleteProductId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -1669,14 +1347,11 @@ const Products = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (deleteProductId) {
-                  deleteProductMutation.mutate(deleteProductId);
-                }
-              }}
-              className="bg-destructive hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={() => {
+            if (deleteProductId) {
+              deleteProductMutation.mutate(deleteProductId);
+            }
+          }} className="bg-destructive hover:bg-destructive/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -1684,10 +1359,7 @@ const Products = () => {
       </AlertDialog>
 
       {/* Bulk Delete Confirmation Dialog */}
-      <AlertDialog
-        open={bulkDeleteDialogOpen}
-        onOpenChange={setBulkDeleteDialogOpen}
-      >
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {selectedProducts.length} products?</AlertDialogTitle>
@@ -1698,17 +1370,12 @@ const Products = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmBulkDelete}
-              className="bg-destructive hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive hover:bg-destructive/90">
               Delete All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
+    </div>;
 };
-
 export default Products;
