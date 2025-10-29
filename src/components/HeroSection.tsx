@@ -32,11 +32,6 @@ const HeroSection = () => {
 
   const slides = dbSlides || [];
 
-  // If no slides, don't render anything
-  if (isLoading || slides.length === 0) {
-    return null;
-  }
-
   useEffect(() => {
     if (slides.length === 0) return;
     const timer = setInterval(() => {
@@ -44,6 +39,11 @@ const HeroSection = () => {
     }, 5000);
     return () => clearInterval(timer);
   }, [slides.length]);
+
+  // If no slides, don't render anything
+  if (isLoading || slides.length === 0) {
+    return null;
+  }
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
