@@ -2,31 +2,53 @@ import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import heroImage1 from "@/assets/hero-athlete-1.jpg";
 import heroImage2 from "@/assets/hero-athlete-2.jpg";
-
-const slides = [
-  {
-    image: heroImage1,
-    title: "Unleash Your Peak Performance",
-    subtitle: "Premium Basketball Collection 2025",
-    cta: "Shop Basketball",
-    link: "/products?category=basketball",
-  },
-  {
-    image: heroImage2,
-    title: "Run Beyond Limits",
-    subtitle: "Revolutionary Running Shoes",
-    cta: "Explore Collection",
-    link: "/products?category=running",
-  },
-];
 
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
+
+  // Fetch hero slides from database
+  const { data: dbSlides } = useQuery({
+    queryKey: ["hero-slides"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("hero_slides")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fallback slides with existing images
+  const fallbackSlides = [
+    {
+      flag_name: "New Arrival",
+      image_url: heroImage1,
+      title: "Unleash Your Peak Performance",
+      subtitle: "Premium Basketball Collection 2025",
+      button_text: "Shop Basketball",
+      button_url: "/products?category=basketball",
+    },
+    {
+      flag_name: "Offer",
+      image_url: heroImage2,
+      title: "Run Beyond Limits",
+      subtitle: "Revolutionary Running Shoes",
+      button_text: "Explore Collection",
+      button_url: "/products?category=running",
+    },
+  ];
+
+  const slides = dbSlides && dbSlides.length > 0 ? dbSlides : fallbackSlides;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -80,7 +102,7 @@ const HeroSection = () => {
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{ 
-              backgroundImage: `url(${slide.image})`,
+              backgroundImage: `url(${slide.image_url})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center center'
             }}
@@ -92,7 +114,7 @@ const HeroSection = () => {
              <div className="w-full max-w-3xl lg:max-w-4xl space-y-4 sm:space-y-5 md:space-y-6 lg:space-y-8">
                <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-4 py-2 text-primary text-sm font-semibold animate-slide-in-left">
                  <span className="text-xs sm:text-sm">✨</span>
-                 New Arrival
+                 {slide.flag_name}
                </div>
                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight animate-slide-up">
                  {slide.title}
@@ -101,13 +123,13 @@ const HeroSection = () => {
                  {slide.subtitle}
                </p>
                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
-                 <Link to={slide.link} className="w-full sm:w-auto">
+                 <Link to={slide.button_url} className="w-full sm:w-auto">
                    <Button 
                      variant="hero" 
                      size="lg" 
                      className="group w-full sm:w-auto text-sm sm:text-base h-10 sm:h-12 px-6 sm:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                    >
-                     {slide.cta}
+                     {slide.button_text}
                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                    </Button>
                  </Link>

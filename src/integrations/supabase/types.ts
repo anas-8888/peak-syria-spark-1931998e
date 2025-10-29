@@ -417,6 +417,54 @@ export type Database = {
         }
         Relationships: []
       }
+      hero_slides: {
+        Row: {
+          button_text: string
+          button_url: string
+          created_at: string
+          display_order: number
+          flag_name: string
+          id: string
+          image_height: number
+          image_url: string
+          image_width: number
+          is_active: boolean
+          subtitle: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          button_text: string
+          button_url: string
+          created_at?: string
+          display_order?: number
+          flag_name: string
+          id?: string
+          image_height?: number
+          image_url: string
+          image_width?: number
+          is_active?: boolean
+          subtitle: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          button_text?: string
+          button_url?: string
+          created_at?: string
+          display_order?: number
+          flag_name?: string
+          id?: string
+          image_height?: number
+          image_url?: string
+          image_width?: number
+          is_active?: boolean
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketing_campaigns: {
         Row: {
           completed_at: string | null
