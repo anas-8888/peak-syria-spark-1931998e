@@ -446,13 +446,15 @@ const Marketing = () => {
           <h1 className="text-3xl font-bold">Marketing & Campaigns</h1>
           <p className="text-muted-foreground">Manage your marketing campaigns and customer engagement</p>
         </div>
-        <Button onClick={() => {
-          resetCampaignForm();
-          setIsCampaignDialogOpen(true);
-        }}>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Campaign
-        </Button>
+        {activeTab === "overview" && (
+          <Button onClick={() => {
+            resetCampaignForm();
+            setIsCampaignDialogOpen(true);
+          }}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Campaign
+          </Button>
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
