@@ -399,7 +399,7 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
                   placeholder="90000"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Total price: {calculateBundleTotalPrice(products, bundleProducts).toLocaleString()} ل.س (Max allowed)
+                  Total price: ${calculateBundleTotalPrice(products, bundleProducts).toLocaleString()} (Max allowed)
                 </p>
               </div>
             )}
@@ -654,7 +654,7 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
                         htmlFor={`bundle-${product.id}`}
                         className="text-sm font-normal cursor-pointer"
                       >
-                        {product.name} - {Number(product.price || 0).toLocaleString()} ل.س
+                        {product.name} - ${Number(product.price || 0).toLocaleString()}
                         <span className="text-muted-foreground ml-2">({product.category})</span>
                       </Label>
                     </div>
@@ -674,7 +674,7 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
                     })}
                   </div>
                   <div className="p-2 bg-muted rounded text-sm font-semibold">
-                    Total Price: {calculateBundleTotalPrice(products, bundleProducts).toLocaleString()} ل.س
+                    Total Price: ${calculateBundleTotalPrice(products, bundleProducts).toLocaleString()}
                   </div>
                 </div>
               )}
