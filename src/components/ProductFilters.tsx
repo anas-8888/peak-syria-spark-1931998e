@@ -161,14 +161,14 @@ const ProductFilters = ({ filters, onFilterChange, categories, sizes, minPrice, 
           <Slider
             min={minPrice}
             max={maxPrice}
-            step={Math.max(1, Math.floor((maxPrice - minPrice) / 100))}
+            step={1}
             value={localFilters.priceRange}
             onValueChange={handlePriceChange}
             className="mb-4"
           />
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{localFilters.priceRange[0].toLocaleString()} SYP</span>
-            <span>{localFilters.priceRange[1].toLocaleString()} SYP</span>
+            <span>${localFilters.priceRange[0].toFixed(2)}</span>
+            <span>${localFilters.priceRange[1].toFixed(2)}</span>
           </div>
         </div>
       </div>
