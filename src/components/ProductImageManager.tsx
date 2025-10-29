@@ -166,19 +166,36 @@ export const ProductImageManager = ({ productId }: ProductImageManagerProps) => 
       const swapImage = images.find((img) => img.display_order === swapIndex);
       if (!swapImage) return;
 
-      // Swap display orders
-      await supabase
+      // Use a temporary value to avoid conflicts during swap
+      const tempOrder = -1;
+      
+      // Step 1: Set current image to temp
+      const { error: error1 } = await supabase
         .from("product_images")
-        .update({ display_order: swapIndex })
+        .update({ display_order: tempOrder })
         .eq("id", currentImage.id);
+      
+      if (error1) throw error1;
 
-      await supabase
+      // Step 2: Move swap image to current's position
+      const { error: error2 } = await supabase
         .from("product_images")
         .update({ display_order: currentIndex })
         .eq("id", swapImage.id);
+      
+      if (error2) throw error2;
+
+      // Step 3: Move current image to swap's position
+      const { error: error3 } = await supabase
+        .from("product_images")
+        .update({ display_order: swapIndex })
+        .eq("id", currentImage.id);
+      
+      if (error3) throw error3;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product-images", productId] });
+      toast.success("Image order updated");
     },
     onError: (error) => {
       toast.error("Failed to reorder images", {
@@ -193,19 +210,18 @@ export const ProductImageManager = ({ productId }: ProductImageManagerProps) => 
 
     setUploading(true);
     try {
-      const uploadPromises = Array.from(files).map(async (file) => {
+      // Upload sequentially to ensure correct primary image assignment
+      for (const file of Array.from(files)) {
         if (!file.type.startsWith("image/")) {
           toast.error(`${file.name} is not an image file`);
-          return;
+          continue;
         }
         if (file.size > 5 * 1024 * 1024) {
           toast.error(`${file.name} is larger than 5MB`);
-          return;
+          continue;
         }
-        return uploadImageMutation.mutateAsync(file);
-      });
-
-      await Promise.all(uploadPromises);
+        await uploadImageMutation.mutateAsync(file);
+      }
     } finally {
       setUploading(false);
       e.target.value = "";
