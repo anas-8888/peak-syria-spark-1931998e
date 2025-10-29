@@ -29,18 +29,18 @@ import { toast } from "sonner";
 
 const menuItems = [
   { title: "Overview", path: "/dashboard", icon: LayoutDashboard, end: true },
-  { title: "Products", path: "/dashboard/products", icon: Package, end: false },
+  { title: "Analytics", path: "/dashboard/analytics", icon: BarChart3, end: false },
   { title: "Categories", path: "/dashboard/categories", icon: FolderTree, end: false },
+  { title: "Products", path: "/dashboard/products", icon: Package, end: false },
   { title: "Orders", path: "/dashboard/orders", icon: ShoppingBag, end: false },
   { title: "Payments", path: "/dashboard/payments", icon: CreditCard, end: false },
-  { title: "Users", path: "/dashboard/users", icon: Users, end: false },
-  { title: "Roles", path: "/dashboard/roles", icon: Shield, end: false },
-  { title: "Analytics", path: "/dashboard/analytics", icon: BarChart3, end: false },
   { title: "Reviews", path: "/dashboard/reviews", icon: Star, end: false },
   { title: "Discounts", path: "/dashboard/discounts", icon: Tag, end: false },
   { title: "Inventory", path: "/dashboard/inventory", icon: Warehouse, end: false },
   { title: "Shipping", path: "/dashboard/shipping", icon: Truck, end: false },
   { title: "Marketing", path: "/dashboard/marketing", icon: Megaphone, end: false },
+  { title: "Roles", path: "/dashboard/roles", icon: Shield, end: false },
+  { title: "Users", path: "/dashboard/users", icon: Users, end: false },
   { title: "Settings", path: "/dashboard/settings", icon: Settings, end: false },
 ];
 
