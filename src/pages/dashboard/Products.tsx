@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProductImageManager } from "@/components/ProductImageManager";
@@ -330,6 +331,26 @@ const Products = () => {
     }
   });
 
+  // Toggle product active status mutation
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      const { error } = await supabase
+        .from("products")
+        .update({ is_active: isActive })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Product status updated");
+    },
+    onError: (error) => {
+      toast.error("Failed to update product status", {
+        description: error.message,
+      });
+    },
+  });
+
   // Fetch images for preview
   const {
     data: previewImages = []
@@ -628,6 +649,15 @@ const Products = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 border-r pr-2">
+                            <Switch
+                              checked={product.is_active}
+                              onCheckedChange={(checked) => {
+                                toggleActiveMutation.mutate({ id: product.id, isActive: checked });
+                              }}
+                              title={product.is_active ? "Deactivate" : "Activate"}
+                            />
+                          </div>
                           <Button variant="ghost" size="icon" onClick={() => openPreviewDialog(product)} title="Preview">
                             <Eye className="h-4 w-4" />
                           </Button>
