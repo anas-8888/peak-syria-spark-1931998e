@@ -109,25 +109,58 @@ export const ColorImageSelector = ({
             const color = colors.find(c => c.id === mapping.color_id);
             if (!color) return null;
 
+            const assignedImage = mapping.image_id 
+              ? productImages.find(img => img.id === mapping.image_id)
+              : null;
+
             return (
               <div 
                 key={mapping.color_id} 
-                className="flex items-center gap-3 p-3 border rounded-lg bg-card"
+                className="flex items-center gap-3 p-4 border rounded-lg bg-card hover:bg-accent/5 transition-colors"
               >
                 {/* Color Swatch */}
-                <div
-                  className="w-10 h-10 rounded border-2 border-border flex-shrink-0"
-                  style={{ backgroundColor: color.hex_code }}
-                  title={color.name}
-                />
+                <div className="flex flex-col items-center gap-1.5">
+                  <div
+                    className="w-12 h-12 rounded-lg border-2 border-border flex-shrink-0 shadow-sm"
+                    style={{ backgroundColor: color.hex_code }}
+                    title={color.name}
+                  />
+                  <span className="font-medium text-xs text-center">{color.name}</span>
+                </div>
                 
-                {/* Color Name */}
-                <div className="flex-shrink-0 w-24">
-                  <span className="font-medium text-sm">{color.name}</span>
+                {/* Arrow */}
+                <div className="text-muted-foreground flex-shrink-0">
+                  →
+                </div>
+
+                {/* Assigned Image Preview */}
+                <div className="flex-1">
+                  {assignedImage ? (
+                    <div className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg">
+                      <img 
+                        src={assignedImage.image_url} 
+                        alt="Assigned" 
+                        className="w-16 h-16 object-cover rounded border-2 border-primary"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Assigned Image</p>
+                        <p className="text-xs text-muted-foreground">
+                          {assignedImage.is_primary ? "Primary Image" : "Secondary Image"}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3 p-2 bg-muted/30 rounded-lg border-2 border-dashed">
+                      <div className="w-16 h-16 rounded bg-muted flex items-center justify-center">
+                        <span className="text-xs text-muted-foreground">No image</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">No image assigned</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Image Selector */}
-                <div className="flex-1">
+                <div className="w-48 flex-shrink-0">
                   {productId && productImages.length > 0 ? (
                     <Select
                       value={mapping.image_id || "none"}
@@ -136,7 +169,7 @@ export const ColorImageSelector = ({
                       }
                     >
                       <SelectTrigger className="h-9">
-                        <SelectValue placeholder="Select image" />
+                        <SelectValue placeholder="Change image" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">No image</SelectItem>
@@ -148,15 +181,15 @@ export const ColorImageSelector = ({
                                 alt="Product" 
                                 className="w-8 h-8 object-cover rounded"
                               />
-                              <span>{img.is_primary ? "Primary Image" : "Image"}</span>
+                              <span>{img.is_primary ? "Primary" : "Image"}</span>
                             </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   ) : (
-                    <span className="text-sm text-muted-foreground">
-                      {productId ? "No images uploaded yet" : "Save product first to assign images"}
+                    <span className="text-xs text-muted-foreground">
+                      {productId ? "Upload images first" : "Save product first"}
                     </span>
                   )}
                 </div>
@@ -168,6 +201,7 @@ export const ColorImageSelector = ({
                   size="icon"
                   onClick={() => removeColorMapping(mapping.color_id)}
                   className="flex-shrink-0"
+                  title="Remove color"
                 >
                   <X className="h-4 w-4" />
                 </Button>
