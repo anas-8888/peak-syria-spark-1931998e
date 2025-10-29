@@ -43,7 +43,17 @@ const ProductCardEnhanced = ({
   // Update current image when image prop changes
   useEffect(() => {
     setCurrentImage(image);
-  }, [image]);
+    
+    // Find and set the color that matches the primary image
+    if (colorImages) {
+      const matchingColor = Object.entries(colorImages).find(
+        ([_, imageUrl]) => imageUrl === image
+      );
+      if (matchingColor) {
+        setSelectedColor(matchingColor[0]);
+      }
+    }
+  }, [image, colorImages]);
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
