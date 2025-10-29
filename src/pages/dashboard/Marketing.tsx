@@ -455,6 +455,24 @@ const Marketing = () => {
             Create Campaign
           </Button>
         )}
+        {activeTab === "templates" && (
+          <Button onClick={() => {
+            resetTemplateForm();
+            setIsTemplateDialogOpen(true);
+          }}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Template
+          </Button>
+        )}
+        {activeTab === "segments" && (
+          <Button onClick={() => {
+            resetSegmentForm();
+            setIsSegmentDialogOpen(true);
+          }}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Segment
+          </Button>
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -744,16 +762,6 @@ const Marketing = () => {
 
         {/* Templates Tab */}
         <TabsContent value="templates" className="space-y-4">
-          <div className="flex justify-end items-center">
-            <Button onClick={() => {
-              resetTemplateForm();
-              setIsTemplateDialogOpen(true);
-            }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Template
-            </Button>
-          </div>
-
           <Card>
             <CardHeader>
               <CardTitle>Recent Templates</CardTitle>
@@ -810,16 +818,6 @@ const Marketing = () => {
 
         {/* Segments Tab */}
         <TabsContent value="segments" className="space-y-4">
-          <div className="flex justify-end items-center">
-            <Button onClick={() => {
-              resetSegmentForm();
-              setIsSegmentDialogOpen(true);
-            }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Segment
-            </Button>
-          </div>
-
           <Card>
             <CardHeader>
               <CardTitle>Recent Segments</CardTitle>
