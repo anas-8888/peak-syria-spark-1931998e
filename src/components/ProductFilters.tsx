@@ -193,8 +193,8 @@ const ProductFilters = ({ filters, onFilterChange, categories, sizes, minPrice, 
   return (
     <>
       {/* Desktop Filters */}
-      <div className="hidden lg:block bg-card p-6 rounded-lg shadow-sm sticky top-24 max-h-[calc(100vh-7rem)]">
-        <ScrollArea className="h-full pr-4">
+      <div className="hidden lg:block bg-card rounded-lg shadow-sm sticky top-24">
+        <ScrollArea className="h-[calc(100vh-8rem)] p-6">
           <FilterContent />
         </ScrollArea>
       </div>
