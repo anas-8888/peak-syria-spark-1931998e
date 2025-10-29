@@ -1289,11 +1289,37 @@ const Products = () => {
                   </div>
                 )}
 
-                <div>
-                  <Label className="text-muted-foreground">Status</Label>
-                  <Badge variant={getStockStatus(selectedProduct.stock_quantity).variant}>
-                    {getStockStatus(selectedProduct.stock_quantity).label}
-                  </Badge>
+                {selectedProduct.colors && selectedProduct.colors.length > 0 && (
+                  <div>
+                    <Label className="text-muted-foreground">Available Colors</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedProduct.colors.map((colorItem, idx) => (
+                        <div key={idx} className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-card">
+                          <div 
+                            className="w-6 h-6 rounded-full border-2 border-border" 
+                            style={{ backgroundColor: colorItem.color }}
+                            title={colorItem.color}
+                          />
+                          <span className="text-sm font-medium">{colorItem.color}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Status</Label>
+                    <Badge variant={getStockStatus(selectedProduct.stock_quantity).variant}>
+                      {getStockStatus(selectedProduct.stock_quantity).label}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Active</Label>
+                    <Badge variant={selectedProduct.is_active ? "default" : "secondary"}>
+                      {selectedProduct.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             </div>
