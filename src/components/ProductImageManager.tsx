@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ColorImageSelector } from "@/components/ColorImageSelector";
 
 type ProductImage = {
   id: string;
@@ -16,9 +17,15 @@ type ProductImage = {
 
 type ProductImageManagerProps = {
   productId: string;
+  colorImageMappings: { color_id: string; image_id: string | null }[];
+  onColorImageMappingsChange: (mappings: { color_id: string; image_id: string | null }[]) => void;
 };
 
-export const ProductImageManager = ({ productId }: ProductImageManagerProps) => {
+export const ProductImageManager = ({ 
+  productId, 
+  colorImageMappings, 
+  onColorImageMappingsChange 
+}: ProductImageManagerProps) => {
   const [uploading, setUploading] = useState(false);
   const queryClient = useQueryClient();
 
@@ -238,7 +245,18 @@ export const ProductImageManager = ({ productId }: ProductImageManagerProps) => 
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Color Image Assignments */}
+      <div className="pb-6 border-b">
+        <ColorImageSelector 
+          productId={productId}
+          selectedMappings={colorImageMappings}
+          onMappingChange={onColorImageMappingsChange}
+        />
+      </div>
+
+      {/* Product Images Management */}
+      <div className="space-y-4">
       {/* Upload Button */}
       <div className="flex items-center justify-between">
         <div>
@@ -378,6 +396,7 @@ export const ProductImageManager = ({ productId }: ProductImageManagerProps) => 
           <Upload className="h-3 w-3" />
           <strong>Upload:</strong> Max 5MB per image, multiple images supported
         </p>
+      </div>
       </div>
     </div>
   );

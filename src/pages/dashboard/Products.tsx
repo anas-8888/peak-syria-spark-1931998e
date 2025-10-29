@@ -778,15 +778,6 @@ const Products = () => {
               </div>
             </div>
 
-            {/* Color Selection */}
-            <div className="grid gap-2">
-              <ColorImageSelector 
-                productId={selectedProduct?.id || null}
-                selectedMappings={colorImageMappings}
-                onMappingChange={setColorImageMappings}
-              />
-            </div>
-
             {/* Features Management */}
             <div className="grid gap-2">
               <Label>Product Features</Label>
@@ -832,9 +823,17 @@ const Products = () => {
 
           <TabsContent value="images">
             <div className="py-4">
-              {selectedProduct ? <ProductImageManager productId={selectedProduct.id} /> : <p className="text-sm text-muted-foreground mb-4">
+              {selectedProduct ? (
+                <ProductImageManager 
+                  productId={selectedProduct.id}
+                  colorImageMappings={colorImageMappings}
+                  onColorImageMappingsChange={setColorImageMappings}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground mb-4">
                   Save the product first before adding images
-                </p>}
+                </p>
+              )}
             </div>
           </TabsContent>
           </Tabs>
@@ -1005,15 +1004,6 @@ const Products = () => {
               </div>
             </div>
 
-            {/* Color Selection */}
-            <div className="grid gap-2">
-              <ColorImageSelector 
-                productId={selectedProduct?.id || null}
-                selectedMappings={colorImageMappings}
-                onMappingChange={setColorImageMappings}
-              />
-            </div>
-
             {/* Features Management */}
             <div className="grid gap-2">
               <Label>Product Features</Label>
@@ -1059,9 +1049,17 @@ const Products = () => {
 
           <TabsContent value="images">
             <div className="py-4">
-              {selectedProduct ? <ProductImageManager productId={selectedProduct.id} /> : <p className="text-sm text-muted-foreground mb-4">
+              {selectedProduct ? (
+                <ProductImageManager 
+                  productId={selectedProduct.id}
+                  colorImageMappings={colorImageMappings}
+                  onColorImageMappingsChange={setColorImageMappings}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground mb-4">
                   Save the product first before adding images
-                </p>}
+                </p>
+              )}
             </div>
           </TabsContent>
           </Tabs>
@@ -1231,15 +1229,6 @@ const Products = () => {
               </div>
             </div>
 
-            {/* Color Selection */}
-            <div className="grid gap-2">
-              <ColorImageSelector 
-                productId={selectedProduct?.id || null}
-                selectedMappings={colorImageMappings}
-                onMappingChange={setColorImageMappings}
-              />
-            </div>
-
             {/* Features Management */}
             <div className="grid gap-2">
               <Label>Product Features</Label>
@@ -1285,7 +1274,13 @@ const Products = () => {
 
           <TabsContent value="images">
             <div className="py-4">
-              {selectedProduct && <ProductImageManager productId={selectedProduct.id} />}
+              {selectedProduct && (
+                <ProductImageManager 
+                  productId={selectedProduct.id}
+                  colorImageMappings={colorImageMappings}
+                  onColorImageMappingsChange={setColorImageMappings}
+                />
+              )}
             </div>
           </TabsContent>
           </Tabs>
