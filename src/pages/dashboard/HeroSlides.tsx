@@ -354,6 +354,7 @@ const HeroSlides = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Image</TableHead>
                   <TableHead>Order</TableHead>
                   <TableHead>Flag</TableHead>
                   <TableHead>Title</TableHead>
@@ -365,6 +366,15 @@ const HeroSlides = () => {
               <TableBody>
                 {slides.map((slide) => (
                   <TableRow key={slide.id}>
+                    <TableCell>
+                      {slide.image_url && (
+                        <img 
+                          src={slide.image_url} 
+                          alt={slide.title}
+                          className="w-20 h-12 object-cover rounded"
+                        />
+                      )}
+                    </TableCell>
                     <TableCell>{slide.display_order}</TableCell>
                     <TableCell>
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
