@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Plus, Edit, Trash2, Tag, TrendingUp, Percent, Users, Copy, Pause, Play, Archive, Download, Filter } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Tag, TrendingUp, Percent, Users, Copy, Pause, Play, Archive, Download, Filter, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +41,9 @@ interface Discount {
   scope: string;
   channels: string[];
   min_cart_subtotal: number;
+  first_order_only: boolean;
+  logged_in_only: boolean;
+  is_stackable: boolean;
   global_usage_limit: number | null;
   per_customer_limit: number | null;
   start_date: string;
@@ -50,6 +53,7 @@ interface Discount {
   total_uses: number;
   total_revenue: number;
   marketing_label: string | null;
+  internal_notes: string | null;
   created_at: string;
 }
 
@@ -59,6 +63,7 @@ const Discounts = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);
+  const [previewDiscount, setPreviewDiscount] = useState<Discount | null>(null);
   const [editingCategories, setEditingCategories] = useState<string[]>([]);
   const [editingProducts, setEditingProducts] = useState<string[]>([]);
   const queryClient = useQueryClient();
@@ -105,7 +110,7 @@ const Discounts = () => {
           end_date: data.end_date?.toISOString(),
           is_automatic: data.is_automatic,
           status: data.status,
-        })
+        } as any)
         .select()
         .single();
 
@@ -174,7 +179,7 @@ const Discounts = () => {
           end_date: data.end_date?.toISOString(),
           is_automatic: data.is_automatic,
           status: data.status,
-        })
+        } as any)
         .eq("id", id);
 
       if (error) throw error;
@@ -538,6 +543,13 @@ const Discounts = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setPreviewDiscount(discount)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                         {discount.status === "active" ? (
                           <Button
                             variant="ghost"
@@ -616,7 +628,7 @@ const Discounts = () => {
                 name: editingDiscount.name,
                 type: editingDiscount.type as "percentage" | "fixed_amount" | "bogo" | "tiered" | "bundle" | "volume" | "free_shipping" | "clearance" | "flash",
                 value: editingDiscount.value,
-                scope: editingDiscount.scope as "store_wide" | "categories" | "products" | "tags",
+                scope: editingDiscount.scope as "store_wide" | "categories" | "products" | "flags",
                 min_cart_subtotal: editingDiscount.min_cart_subtotal,
                 is_automatic: editingDiscount.is_automatic,
                 start_date: new Date(editingDiscount.start_date),
@@ -628,6 +640,139 @@ const Discounts = () => {
               onSubmit={handleUpdateDiscount}
               isLoading={updateMutation.isPending}
             />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Dialog */}
+      <Dialog open={!!previewDiscount} onOpenChange={() => setPreviewDiscount(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Discount Details</DialogTitle>
+          </DialogHeader>
+          {previewDiscount && (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    {previewDiscount.is_automatic ? (
+                      <Badge variant="secondary">AUTOMATIC</Badge>
+                    ) : (
+                      <Badge variant="outline" className="font-mono">{previewDiscount.code}</Badge>
+                    )}
+                    <Badge variant={getStatusBadge(previewDiscount.status)}>
+                      {previewDiscount.status}
+                    </Badge>
+                  </div>
+                  <h3 className="text-2xl font-bold">{previewDiscount.name}</h3>
+                  {previewDiscount.marketing_label && (
+                    <p className="text-muted-foreground mt-1">{previewDiscount.marketing_label}</p>
+                  )}
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-primary">
+                    {getDiscountValue(previewDiscount)}
+                  </p>
+                  <p className="text-sm text-muted-foreground capitalize">
+                    {previewDiscount.type.replace("_", " ")}
+                  </p>
+                </div>
+              </div>
+
+              {/* Basic Info */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Scope</p>
+                  <p className="font-medium capitalize">{previewDiscount.scope.replace("_", " ")}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Application</p>
+                  <p className="font-medium">{previewDiscount.is_automatic ? "Automatic" : "Coupon Code"}</p>
+                </div>
+              </div>
+
+              {/* Usage Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="pt-4">
+                    <p className="text-sm text-muted-foreground">Total Uses</p>
+                    <p className="text-2xl font-bold">
+                      {previewDiscount.total_uses}
+                      {previewDiscount.global_usage_limit && ` / ${previewDiscount.global_usage_limit}`}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4">
+                    <p className="text-sm text-muted-foreground">Revenue Impact</p>
+                    <p className="text-2xl font-bold">{formatPrice(previewDiscount.total_revenue)}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4">
+                    <p className="text-sm text-muted-foreground">Per Customer</p>
+                    <p className="text-2xl font-bold">
+                      {previewDiscount.per_customer_limit || "Unlimited"}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Rules */}
+              <div>
+                <h4 className="font-semibold mb-3">Eligibility Rules</h4>
+                <div className="space-y-2">
+                  {previewDiscount.min_cart_subtotal > 0 && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Badge variant="outline">Min. Cart</Badge>
+                      <span>{formatPrice(previewDiscount.min_cart_subtotal)}</span>
+                    </div>
+                  )}
+                  {previewDiscount.first_order_only && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Badge variant="outline">First Order Only</Badge>
+                    </div>
+                  )}
+                  {previewDiscount.logged_in_only && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Badge variant="outline">Logged-in Users Only</Badge>
+                    </div>
+                  )}
+                  {previewDiscount.is_stackable && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Badge variant="outline">Stackable</Badge>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Schedule */}
+              <div>
+                <h4 className="font-semibold mb-3">Schedule</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Start Date</p>
+                    <p className="font-medium">{format(new Date(previewDiscount.start_date), "PPP")}</p>
+                  </div>
+                  {previewDiscount.end_date && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">End Date</p>
+                      <p className="font-medium">{format(new Date(previewDiscount.end_date), "PPP")}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {previewDiscount.internal_notes && (
+                <div>
+                  <h4 className="font-semibold mb-2">Internal Notes</h4>
+                  <p className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                    {previewDiscount.internal_notes}
+                  </p>
+                </div>
+              )}
+            </div>
           )}
         </DialogContent>
       </Dialog>

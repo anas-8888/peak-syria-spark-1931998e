@@ -758,7 +758,7 @@ export type Database = {
     }
     Enums: {
       discount_channel: "web" | "app" | "pos" | "marketplace"
-      discount_scope: "store_wide" | "categories" | "products" | "tags"
+      discount_scope: "store_wide" | "categories" | "products" | "flags"
       discount_status:
         | "active"
         | "scheduled"
@@ -903,7 +903,7 @@ export const Constants = {
   public: {
     Enums: {
       discount_channel: ["web", "app", "pos", "marketplace"],
-      discount_scope: ["store_wide", "categories", "products", "tags"],
+      discount_scope: ["store_wide", "categories", "products", "flags"],
       discount_status: ["active", "scheduled", "expired", "paused", "archived"],
       discount_type: [
         "percentage",

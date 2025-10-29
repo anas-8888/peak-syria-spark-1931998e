@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Plus, X } from "lucide-react";
+import { CalendarIcon, Plus, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,7 +36,7 @@ const discountSchema = z.object({
   marketing_label: z.string().optional(),
   type: z.enum(["percentage", "fixed_amount", "bogo", "tiered", "bundle", "volume", "free_shipping", "clearance", "flash"]),
   value: z.number().min(0, "Value must be positive"),
-  scope: z.enum(["store_wide", "categories", "products", "tags"]),
+  scope: z.enum(["store_wide", "categories", "products", "flags"]),
   min_cart_subtotal: z.number().min(0).default(0),
   min_quantity: z.number().min(0).default(0),
   first_order_only: z.boolean().default(false),
@@ -65,6 +65,9 @@ interface DiscountFormProps {
 export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormProps) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialData?.selected_categories || []);
   const [selectedProducts, setSelectedProducts] = useState<string[]>(initialData?.selected_products || []);
+  const [categorySearch, setCategorySearch] = useState("");
+  const [productSearch, setProductSearch] = useState("");
+  const [selectedFlag, setSelectedFlag] = useState<string>("");
 
   // Fetch categories
   const { data: categories = [] } = useQuery({
@@ -141,6 +144,15 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
       selected_products: scope === "products" ? selectedProducts : undefined,
     });
   };
+
+  // Filter categories and products by search
+  const filteredCategories = categories.filter((cat: any) =>
+    cat.name.toLowerCase().includes(categorySearch.toLowerCase())
+  );
+
+  const filteredProducts = products.filter((prod: any) =>
+    prod.name.toLowerCase().includes(productSearch.toLowerCase())
+  );
 
   return (
     <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
@@ -248,7 +260,7 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
                   <SelectItem value="store_wide">Entire Store</SelectItem>
                   <SelectItem value="categories">Specific Categories</SelectItem>
                   <SelectItem value="products">Specific Products</SelectItem>
-                  <SelectItem value="tags">Product Tags</SelectItem>
+                  <SelectItem value="flags">Product Flag</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -258,11 +270,20 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
           {scope === "categories" && (
             <div className="space-y-2">
               <Label>Select Categories</Label>
+              <div className="relative mb-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search categories..."
+                  value={categorySearch}
+                  onChange={(e) => setCategorySearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
               <div className="border rounded-md p-4 max-h-64 overflow-y-auto space-y-2">
-                {categories.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No categories available</p>
+                {filteredCategories.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No categories found</p>
                 ) : (
-                  categories.map((category: any) => (
+                  filteredCategories.map((category: any) => (
                     <div key={category.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={`category-${category.id}`}
@@ -291,11 +312,20 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
           {scope === "products" && (
             <div className="space-y-2">
               <Label>Select Products</Label>
+              <div className="relative mb-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search products..."
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
               <div className="border rounded-md p-4 max-h-64 overflow-y-auto space-y-2">
-                {products.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No products available</p>
+                {filteredProducts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No products found</p>
                 ) : (
-                  products.map((product: any) => (
+                  filteredProducts.map((product: any) => (
                     <div key={product.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={`product-${product.id}`}
@@ -318,6 +348,30 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
                   {selectedProducts.length} {selectedProducts.length === 1 ? "product" : "products"} selected
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Flag Selection */}
+          {scope === "flags" && (
+            <div className="space-y-2">
+              <Label>Select Product Flag</Label>
+              <Select
+                value={selectedFlag}
+                onValueChange={(value) => setSelectedFlag(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a flag" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="New Arrival">New Arrival</SelectItem>
+                  <SelectItem value="Offer">Offer</SelectItem>
+                  <SelectItem value="Best Seller">Best Seller</SelectItem>
+                  <SelectItem value="Limited Edition">Limited Edition</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                This discount will apply to all products with the selected flag
+              </p>
             </div>
           )}
 
