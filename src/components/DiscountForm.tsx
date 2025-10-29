@@ -43,7 +43,6 @@ const discountSchema = z.object({
   min_cart_subtotal: z.number().min(0).default(0),
   min_quantity: z.number().min(0).default(0),
   first_order_only: z.boolean().default(false),
-  logged_in_only: z.boolean().default(false),
   global_usage_limit: z.preprocess(
     (val) => val === '' || val === null || val === undefined || Number.isNaN(val) ? undefined : Number(val),
     z.number().int().positive().optional()
@@ -58,7 +57,7 @@ const discountSchema = z.object({
   ),
   is_stackable: z.boolean().default(false),
   stack_with_shipping: z.boolean().default(true),
-  start_date: z.date(),
+  start_date: z.date().optional(),
   end_date: z.date().optional().nullable(),
   is_automatic: z.boolean().default(false),
   status: z.enum(["active", "scheduled", "expired", "paused", "archived"]).default("scheduled"),
@@ -69,7 +68,7 @@ const discountSchema = z.object({
   min_purchase_amount: z.number().optional(),
   bogo_buy_qty: z.number().optional(),
   bogo_get_qty: z.number().optional(),
-  bogo_get_price: z.number().optional(),
+  bogo_get_discount_percentage: z.number().min(0).max(100).optional(),
   tiered_config: z.array(z.object({
     min_amount: z.number(),
     discount_percent: z.number()
@@ -87,6 +86,14 @@ const discountSchema = z.object({
 });
 
 export type DiscountFormData = z.infer<typeof discountSchema>;
+
+// Calculate total price of selected bundle products
+const calculateBundleTotalPrice = (productsList: any[], bundleProductIds: string[]) => {
+  if (!bundleProductIds.length || !productsList) return 0;
+  return productsList
+    .filter(p => bundleProductIds.includes(p.id))
+    .reduce((sum, p) => sum + Number(p.price || 0), 0);
+};
 
 interface DiscountFormProps {
   initialData?: Partial<DiscountFormData>;
@@ -123,7 +130,7 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, category")
+        .select("id, name, category, price")
         .eq("is_active", true)
         .order("name");
       if (error) throw error;
@@ -144,7 +151,6 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
       min_cart_subtotal: initialData?.min_cart_subtotal || 0,
       min_quantity: initialData?.min_quantity || 0,
       first_order_only: initialData?.first_order_only || false,
-      logged_in_only: initialData?.logged_in_only || false,
       is_stackable: initialData?.is_stackable || false,
       stack_with_shipping: initialData?.stack_with_shipping || true,
       start_date: initialData?.start_date || new Date(),
@@ -332,14 +338,17 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="bogo_get_price">Price for 2nd Item</Label>
+                  <Label htmlFor="bogo_get_discount_percentage">Discount % for 2nd Item</Label>
                   <Input
-                    id="bogo_get_price"
+                    id="bogo_get_discount_percentage"
                     type="number"
+                    min="0"
+                    max="100"
                     step="0.01"
-                    {...form.register("bogo_get_price", { valueAsNumber: true })}
-                    placeholder="5000"
+                    {...form.register("bogo_get_discount_percentage", { valueAsNumber: true })}
+                    placeholder="50"
                   />
+                  <p className="text-xs text-muted-foreground">Discount percentage on the 2nd item</p>
                 </div>
               </>
             )}
@@ -369,17 +378,29 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
               </>
             )}
             
-            {discountType === "bundle" && (
+            {discountType === "bundle" && bundleProducts.length > 0 && (
               <div className="space-y-2">
                 <Label htmlFor="bundle_price">Bundle Price</Label>
                 <Input
                   id="bundle_price"
                   type="number"
                   step="0.01"
-                  {...form.register("bundle_price", { valueAsNumber: true })}
+                  max={calculateBundleTotalPrice(products, bundleProducts)}
+                  {...form.register("bundle_price", {
+                    valueAsNumber: true,
+                    onChange: (e) => {
+                      const value = parseFloat(e.target.value);
+                      const maxPrice = calculateBundleTotalPrice(products, bundleProducts);
+                      if (value > maxPrice) {
+                        form.setValue("bundle_price", maxPrice);
+                      }
+                    }
+                  })}
                   placeholder="90000"
                 />
-                <p className="text-xs text-muted-foreground">Fixed price for the bundle</p>
+                <p className="text-xs text-muted-foreground">
+                  Total price: {calculateBundleTotalPrice(products, bundleProducts).toLocaleString()} ل.س (Max allowed)
+                </p>
               </div>
             )}
             
@@ -410,23 +431,25 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="scope">Applies To</Label>
-              <Select
-                value={form.watch("scope")}
-                onValueChange={(value) => form.setValue("scope", value as any)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="store_wide">Entire Store</SelectItem>
-                  <SelectItem value="categories">Specific Categories</SelectItem>
-                  <SelectItem value="products">Specific Products</SelectItem>
-                  <SelectItem value="flags">Product Flag</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {discountType !== "bundle" && (
+              <div className="space-y-2">
+                <Label htmlFor="scope">Applies To</Label>
+                <Select
+                  value={form.watch("scope")}
+                  onValueChange={(value) => form.setValue("scope", value as any)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="store_wide">Entire Store</SelectItem>
+                    <SelectItem value="categories">Specific Categories</SelectItem>
+                    <SelectItem value="products">Specific Products</SelectItem>
+                    <SelectItem value="flags">Product Flag</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           {/* Category Selection */}
@@ -637,7 +660,7 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
                         htmlFor={`bundle-${product.id}`}
                         className="text-sm font-normal cursor-pointer"
                       >
-                        {product.name}
+                        {product.name} - {Number(product.price || 0).toLocaleString()} ل.س
                         <span className="text-muted-foreground ml-2">({product.category})</span>
                       </Label>
                     </div>
@@ -645,15 +668,20 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
                 )}
               </div>
               {bundleProducts.length > 0 && (
-                <div className="flex gap-2 flex-wrap">
-                  {bundleProducts.map(id => {
-                    const product = products.find((p: any) => p.id === id);
-                    return product ? (
-                      <Badge key={id} variant="secondary">
-                        {product.name}
-                      </Badge>
-                    ) : null;
-                  })}
+                <div className="space-y-2">
+                  <div className="flex gap-2 flex-wrap">
+                    {bundleProducts.map(id => {
+                      const product = products.find((p: any) => p.id === id);
+                      return product ? (
+                        <Badge key={id} variant="secondary">
+                          {product.name}
+                        </Badge>
+                      ) : null;
+                    })}
+                  </div>
+                  <div className="p-2 bg-muted rounded text-sm font-semibold">
+                    Total Price: {calculateBundleTotalPrice(products, bundleProducts).toLocaleString()} ل.س
+                  </div>
                 </div>
               )}
             </div>
@@ -712,15 +740,6 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
 
             <div className="flex items-center space-x-2">
               <Switch
-                id="logged_in_only"
-                checked={form.watch("logged_in_only")}
-                onCheckedChange={(checked) => form.setValue("logged_in_only", checked)}
-              />
-              <Label htmlFor="logged_in_only">Logged-in Users Only</Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Switch
                 id="is_stackable"
                 checked={form.watch("is_stackable")}
                 onCheckedChange={(checked) => form.setValue("is_stackable", checked)}
@@ -753,66 +772,74 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="per_customer_limit">Per Customer Limit</Label>
-            <Input
-              id="per_customer_limit"
-              type="number"
-              {...form.register("per_customer_limit", { valueAsNumber: true })}
-              placeholder="1"
-            />
-            <p className="text-xs text-muted-foreground">
-              Max times a single customer can use this discount
-            </p>
-          </div>
+          {!form.watch("first_order_only") && (
+            <div className="space-y-2">
+              <Label htmlFor="per_customer_limit">Per Customer Limit</Label>
+              <Input
+                id="per_customer_limit"
+                type="number"
+                {...form.register("per_customer_limit", { valueAsNumber: true })}
+                placeholder="1"
+              />
+              <p className="text-xs text-muted-foreground">
+                Max times a single customer can use this discount
+              </p>
+            </div>
+          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="per_order_max_discount">Max Discount per Order ($)</Label>
-            <Input
-              id="per_order_max_discount"
-              type="number"
-              step="0.01"
-              {...form.register("per_order_max_discount", { valueAsNumber: true })}
-              placeholder="No limit"
-            />
-            <p className="text-xs text-muted-foreground">
-              Cap the maximum discount amount per order
-            </p>
-          </div>
+          {discountType !== "bundle" && (
+            <div className="space-y-2">
+              <Label htmlFor="per_order_max_discount">
+                {discountType === "free_shipping" ? "Max Shipping Discount" : "Max Discount per Order ($)"}
+              </Label>
+              <Input
+                id="per_order_max_discount"
+                type="number"
+                step="0.01"
+                {...form.register("per_order_max_discount", { valueAsNumber: true })}
+                placeholder="No limit"
+              />
+              <p className="text-xs text-muted-foreground">
+                {discountType === "free_shipping" ? "Cap the maximum shipping discount" : "Cap the maximum discount amount per order"}
+              </p>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="schedule" className="space-y-4 mt-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Start Date *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !form.watch("start_date") && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {form.watch("start_date") ? (
-                      format(form.watch("start_date"), "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={form.watch("start_date")}
-                    onSelect={(date) => date && form.setValue("start_date", date)}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+            {form.watch("status") !== "active" && (
+              <div className="space-y-2">
+                <Label>Start Date *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !form.watch("start_date") && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {form.watch("start_date") ? (
+                        format(form.watch("start_date"), "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={form.watch("start_date")}
+                      onSelect={(date) => date && form.setValue("start_date", date)}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>End Date (Optional)</Label>

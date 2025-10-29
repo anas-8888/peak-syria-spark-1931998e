@@ -101,7 +101,6 @@ const Discounts = () => {
           min_quantity: data.min_quantity,
           min_purchase_amount: data.min_purchase_amount,
           first_order_only: data.first_order_only,
-          logged_in_only: data.logged_in_only,
           global_usage_limit: data.global_usage_limit,
           per_customer_limit: data.per_customer_limit,
           per_order_max_discount: data.per_order_max_discount,
@@ -115,7 +114,7 @@ const Discounts = () => {
           bogo_config: data.bogo_buy_qty && data.bogo_get_qty ? {
             buy_quantity: data.bogo_buy_qty,
             get_quantity: data.bogo_get_qty,
-            get_price: data.bogo_get_price || 0
+            get_discount_percentage: data.bogo_get_discount_percentage || 0
           } : null,
           bundle_products: data.bundle_products || null,
           bundle_price: data.bundle_price || null,
@@ -179,7 +178,6 @@ const Discounts = () => {
           min_quantity: data.min_quantity,
           min_purchase_amount: data.min_purchase_amount,
           first_order_only: data.first_order_only,
-          logged_in_only: data.logged_in_only,
           global_usage_limit: data.global_usage_limit,
           per_customer_limit: data.per_customer_limit,
           per_order_max_discount: data.per_order_max_discount,
@@ -193,7 +191,7 @@ const Discounts = () => {
           bogo_config: data.bogo_buy_qty && data.bogo_get_qty ? {
             buy_quantity: data.bogo_buy_qty,
             get_quantity: data.bogo_get_qty,
-            get_price: data.bogo_get_price || 0
+            get_discount_percentage: data.bogo_get_discount_percentage || 0
           } : null,
           bundle_products: data.bundle_products || null,
           bundle_price: data.bundle_price || null,
