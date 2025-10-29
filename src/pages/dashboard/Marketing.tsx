@@ -152,6 +152,18 @@ const Marketing = () => {
       return data as Segment[];
     },
   });
+  const { data: regions = [] } = useQuery({
+    queryKey: ["regions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("regions")
+        .select("*")
+        .eq("is_active", true)
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
 
   // Create/Update Campaign
   const saveCampaignMutation = useMutation({
@@ -1163,13 +1175,23 @@ const Marketing = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="location">Location/Country</Label>
-                  <Input
-                    id="location"
+                  <Label htmlFor="location">Location/Region</Label>
+                  <Select
                     value={segmentForm.location}
-                    onChange={(e) => setSegmentForm({ ...segmentForm, location: e.target.value })}
-                    placeholder="e.g., Syria, USA"
-                  />
+                    onValueChange={(value) => setSegmentForm({ ...segmentForm, location: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Regions</SelectItem>
+                      {regions.map((region: any) => (
+                        <SelectItem key={region.id} value={region.name}>
+                          {region.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
