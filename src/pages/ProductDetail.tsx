@@ -39,6 +39,7 @@ const ProductDetail = () => {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedImageUrl, setSelectedImageUrl] = useState("");
+  const [colorImageMap, setColorImageMap] = useState<Record<string, string>>({});
 
   // Fetch product details
   const { data: product, isLoading } = useQuery({
@@ -75,6 +76,45 @@ const ProductDetail = () => {
     },
     enabled: !!id,
   });
+
+  // Fetch product colors with image mappings
+  const { data: productColors = [] } = useQuery({
+    queryKey: ["product-colors", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_colors")
+        .select(`
+          color_id,
+          image_id,
+          colors:color_id (
+            name,
+            hex_code
+          )
+        `)
+        .eq("product_id", id);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  // Build color to image mapping
+  useEffect(() => {
+    if (productColors.length > 0 && images.length > 0) {
+      const mapping: Record<string, string> = {};
+      productColors.forEach((pc) => {
+        const colorName = (pc.colors as any)?.name?.toLowerCase();
+        if (colorName && pc.image_id) {
+          const image = images.find(img => img.id === pc.image_id);
+          if (image) {
+            mapping[colorName] = image.image_url;
+          }
+        }
+      });
+      setColorImageMap(mapping);
+    }
+  }, [productColors, images]);
 
   // Set initial selected image
   useEffect(() => {
@@ -226,27 +266,33 @@ const ProductDetail = () => {
             )}
 
             {/* Color Selection */}
-            {product.colors && product.colors.length > 0 && (
+            {productColors.length > 0 && (
               <div>
                 <label className="block text-sm font-semibold mb-3">Select Color</label>
                 <div className="flex gap-2">
-                  {product.colors.map((colorObj, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setSelectedColor(colorObj.color);
-                        const colorImage = images.find(img => img.id === colorObj.image_id);
-                        if (colorImage) setSelectedImageUrl(colorImage.image_url);
-                      }}
-                      className={`px-4 py-2 rounded-md border-2 transition-all text-sm ${
-                        selectedColor === colorObj.color
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border hover:border-primary"
-                      }`}
-                    >
-                      {colorObj.color}
-                    </button>
-                  ))}
+                  {productColors.map((colorData, idx) => {
+                    const colorName = (colorData.colors as any)?.name || '';
+                    const colorHex = (colorData.colors as any)?.hex_code || '#000000';
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          const colorLower = colorName.toLowerCase();
+                          setSelectedColor(colorLower);
+                          if (colorImageMap[colorLower]) {
+                            setSelectedImageUrl(colorImageMap[colorLower]);
+                          }
+                        }}
+                        className={`w-10 h-10 rounded-full border-2 transition-all ${
+                          selectedColor === colorName.toLowerCase()
+                            ? "border-primary scale-110 ring-2 ring-primary ring-offset-2"
+                            : "border-border hover:border-primary"
+                        }`}
+                        style={{ backgroundColor: colorHex }}
+                        title={colorName}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             )}
