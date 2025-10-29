@@ -14,7 +14,7 @@ const HeroSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
 
   // Fetch hero slides from database
-  const { data: dbSlides } = useQuery({
+  const { data: dbSlides, isLoading } = useQuery({
     queryKey: ["hero-slides"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -23,7 +23,11 @@ const HeroSection = () => {
         .eq("is_active", true)
         .order("display_order", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching hero slides:", error);
+        throw error;
+      }
+      console.log("Fetched hero slides:", data);
       return data;
     },
   });
@@ -48,7 +52,7 @@ const HeroSection = () => {
     },
   ];
 
-  const slides = dbSlides && dbSlides.length > 0 ? dbSlides : [];
+  const slides = dbSlides && dbSlides.length > 0 ? dbSlides : fallbackSlides;
 
   useEffect(() => {
     const timer = setInterval(() => {
