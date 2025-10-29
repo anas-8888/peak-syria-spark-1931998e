@@ -1,27 +1,23 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import ProductCardEnhanced from "@/components/ProductCardEnhanced";
 import ProductFilters from "@/components/ProductFilters";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import PromoBanner from "@/components/PromoBanner";
+import PercentageLoader from "@/components/PercentageLoader";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LayoutGrid, List } from "lucide-react";
-import productShoes1 from "@/assets/product-shoes-1.jpg";
-import productShoes2 from "@/assets/product-shoes-2.jpg";
-import productShoes3 from "@/assets/product-shoes-3.jpg";
-import productShoes4 from "@/assets/product-shoes-4.jpg";
-import productApparel1 from "@/assets/product-apparel-1.jpg";
-import productApparel2 from "@/assets/product-apparel-2.jpg";
-import productApparel3 from "@/assets/product-apparel-3.jpg";
-import productApparel4 from "@/assets/product-apparel-4.jpg";
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   price: number;
+  offer_price?: number | null;
   image: string;
   category: string;
   isNew: boolean;
@@ -29,119 +25,6 @@ interface Product {
   sizes: string[];
   rating: number;
 }
-
-const allProducts: Product[] = [
-  {
-    id: 1,
-    name: "Peak Basketball Pro X",
-    price: 45,
-    image: productShoes1,
-    category: "Basketball",
-    isNew: true,
-    colors: ["black", "red"],
-    sizes: ["40", "41", "42", "43", "44"],
-    rating: 4.8,
-  },
-  {
-    id: 2,
-    name: "Peak Running Elite",
-    price: 35,
-    image: productShoes2,
-    category: "Running",
-    isNew: true,
-    colors: ["black", "white"],
-    sizes: ["39", "40", "41", "42", "43"],
-    rating: 4.6,
-  },
-  {
-    id: 3,
-    name: "Peak Performance Hoodie",
-    price: 25,
-    image: productApparel1,
-    category: "Apparel",
-    isNew: false,
-    colors: ["black"],
-    sizes: ["S", "M", "L", "XL"],
-    rating: 4.5,
-  },
-  {
-    id: 4,
-    name: "Peak Sports Jersey",
-    price: 20,
-    image: productApparel2,
-    category: "Apparel",
-    isNew: false,
-    colors: ["red", "black"],
-    sizes: ["S", "M", "L", "XL", "XXL"],
-    rating: 4.7,
-  },
-  {
-    id: 5,
-    name: "Peak Court Master",
-    price: 42,
-    image: productShoes3,
-    category: "Basketball",
-    isNew: false,
-    colors: ["white", "red"],
-    sizes: ["40", "41", "42", "43", "44", "45"],
-    rating: 4.9,
-  },
-  {
-    id: 6,
-    name: "Peak Speed Runner",
-    price: 38,
-    image: productShoes4,
-    category: "Running",
-    isNew: true,
-    colors: ["gray", "black"],
-    sizes: ["39", "40", "41", "42", "43", "44"],
-    rating: 4.7,
-  },
-  {
-    id: 7,
-    name: "Peak Training Jacket",
-    price: 30,
-    image: productApparel3,
-    category: "Apparel",
-    isNew: false,
-    colors: ["white", "black"],
-    sizes: ["S", "M", "L", "XL"],
-    rating: 4.4,
-  },
-  {
-    id: 8,
-    name: "Peak Athletic Tank",
-    price: 15,
-    image: productApparel4,
-    category: "Apparel",
-    isNew: false,
-    colors: ["black", "red"],
-    sizes: ["S", "M", "L", "XL"],
-    rating: 4.3,
-  },
-  {
-    id: 9,
-    name: "Peak Hoops Legend",
-    price: 50,
-    image: productShoes1,
-    category: "Basketball",
-    isNew: true,
-    colors: ["black", "white", "red"],
-    sizes: ["40", "41", "42", "43", "44"],
-    rating: 5.0,
-  },
-  {
-    id: 10,
-    name: "Peak Marathon Pro",
-    price: 40,
-    image: productShoes2,
-    category: "Running",
-    isNew: false,
-    colors: ["blue", "black"],
-    sizes: ["39", "40", "41", "42", "43"],
-    rating: 4.8,
-  },
-];
 
 const ProductsEnhanced = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -151,7 +34,46 @@ const ProductsEnhanced = () => {
     categories: [] as string[],
     colors: [] as string[],
     sizes: [] as string[],
-    priceRange: [0, 50] as [number, number],
+    priceRange: [0, 1000] as [number, number],
+  });
+
+  // Fetch products from database
+  const { data: allProducts = [], isLoading } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const { data: productsData, error: productsError } = await supabase
+        .from("products")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (productsError) throw productsError;
+
+      // Fetch primary images
+      const { data: imagesData } = await supabase
+        .from("product_images")
+        .select("product_id, image_url")
+        .eq("is_primary", true);
+
+      // Map images to products
+      const productsWithImages = productsData.map((product) => {
+        const primaryImage = imagesData?.find((img) => img.product_id === product.id);
+        return {
+          id: product.id,
+          name: product.name,
+          price: product.offer_price || product.price,
+          offer_price: product.offer_price,
+          image: primaryImage?.image_url || product.image_url || '',
+          category: product.category,
+          isNew: product.flag === 'New Arrival',
+          colors: [],
+          sizes: product.sizes || [],
+          rating: product.rating || 0,
+        };
+      });
+
+      return productsWithImages as Product[];
+    },
   });
 
   // Handle URL query parameters
@@ -165,11 +87,12 @@ const ProductsEnhanced = () => {
     }
   }, [searchParams]);
 
-  const maxPrice = Math.max(...allProducts.map((p) => p.price));
+  const maxPrice = allProducts.length > 0 ? Math.max(...allProducts.map((p) => p.price)) : 1000;
 
   // Apply filters
   const filteredProducts = allProducts.filter((product) => {
-    const categoryMatch = filters.categories.length === 0 || filters.categories.includes(product.category);
+    const categoryMatch = filters.categories.length === 0 || 
+      filters.categories.some(cat => product.category.toLowerCase().includes(cat.toLowerCase()));
     const colorMatch = filters.colors.length === 0 || filters.colors.some((c) => product.colors.includes(c));
     const sizeMatch = filters.sizes.length === 0 || filters.sizes.some((s) => product.sizes.includes(s));
     const priceMatch = product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1];
@@ -185,6 +108,10 @@ const ProductsEnhanced = () => {
     if (sortBy === "rating") return b.rating - a.rating;
     return 0;
   });
+
+  if (isLoading) {
+    return <PercentageLoader message="Loading products..." />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -279,7 +206,17 @@ const ProductsEnhanced = () => {
                       style={{ animationDelay: `${index * 50}ms` }}
                       className="animate-fade-in"
                     >
-                      <ProductCardEnhanced {...product} />
+                      <ProductCardEnhanced 
+                        id={parseInt(product.id)}
+                        name={product.name}
+                        price={product.price}
+                        image={product.image}
+                        category={product.category}
+                        isNew={product.isNew}
+                        colors={product.colors}
+                        sizes={product.sizes}
+                        rating={product.rating}
+                      />
                     </div>
                   ))}
                 </div>

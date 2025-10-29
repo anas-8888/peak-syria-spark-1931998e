@@ -4,72 +4,66 @@ import ProductCardEnhanced from "@/components/ProductCardEnhanced";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import PromoBanner from "@/components/PromoBanner";
+import PercentageLoader from "@/components/PercentageLoader";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, TrendingUp, Zap, Shield } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import productShoes1 from "@/assets/product-shoes-1.jpg";
-import productShoes2 from "@/assets/product-shoes-2.jpg";
-import productShoes3 from "@/assets/product-shoes-3.jpg";
-import productShoes4 from "@/assets/product-shoes-4.jpg";
-import productApparel1 from "@/assets/product-apparel-1.jpg";
-import productApparel2 from "@/assets/product-apparel-2.jpg";
-
-const featuredProducts = [
-  { 
-    id: 1, 
-    name: "Peak Basketball Pro X", 
-    price: 45, 
-    image: productShoes1, 
-    category: "Basketball", 
-    isNew: true,
-    colors: ["black", "red"],
-    sizes: ["40", "41", "42", "43"],
-    rating: 4.8,
-  },
-  { 
-    id: 2, 
-    name: "Peak Running Elite", 
-    price: 35, 
-    image: productShoes2, 
-    category: "Running", 
-    isNew: true,
-    colors: ["black", "white"],
-    sizes: ["40", "41", "42", "43"],
-    rating: 4.6,
-  },
-  { 
-    id: 5, 
-    name: "Peak Court Master", 
-    price: 42, 
-    image: productShoes3, 
-    category: "Basketball", 
-    isNew: false,
-    colors: ["white", "red"],
-    sizes: ["40", "41", "42", "43"],
-    rating: 4.9,
-  },
-  { 
-    id: 6, 
-    name: "Peak Speed Runner", 
-    price: 38, 
-    image: productShoes4, 
-    category: "Running", 
-    isNew: true,
-    colors: ["gray", "black"],
-    sizes: ["40", "41", "42", "43"],
-    rating: 4.7,
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const { t } = useLanguage();
+
+  // Fetch featured products from database
+  const { data: featuredProducts = [], isLoading } = useQuery({
+    queryKey: ["featured-products"],
+    queryFn: async () => {
+      const { data: productsData, error: productsError } = await supabase
+        .from("products")
+        .select("*")
+        .eq("is_active", true)
+        .order("rating", { ascending: false })
+        .limit(8);
+
+      if (productsError) throw productsError;
+
+      // Fetch primary images
+      const { data: imagesData } = await supabase
+        .from("product_images")
+        .select("product_id, image_url")
+        .eq("is_primary", true);
+
+      // Map images to products
+      const productsWithImages = productsData.map((product) => {
+        const primaryImage = imagesData?.find((img) => img.product_id === product.id);
+        return {
+          id: parseInt(product.id),
+          name: product.name,
+          price: product.offer_price || product.price,
+          image: primaryImage?.image_url || product.image_url || '',
+          category: product.category,
+          isNew: product.flag === 'New Arrival',
+          colors: [],
+          sizes: product.sizes || [],
+          rating: product.rating || 0,
+        };
+      });
+
+      return productsWithImages;
+    },
+  });
 
   const categories = [
     { name: t("category.basketball"), icon: TrendingUp, description: t("category.basketballDesc"), path: "basketball" },
     { name: t("category.running"), icon: Zap, description: t("category.runningDesc"), path: "running" },
     { name: t("category.apparel"), icon: Shield, description: t("category.apparelDesc"), path: "apparel" },
   ];
+
+  if (isLoading) {
+    return <PercentageLoader message="Loading homepage..." />;
+  }
+
   return (
     <div className="min-h-screen bg-background w-full">
       <PromoBanner />
