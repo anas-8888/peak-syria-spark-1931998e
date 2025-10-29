@@ -47,8 +47,6 @@ type HeroSlide = {
   updated_at: string;
 };
 
-const flagOptions = ['New Arrival', 'Offer', 'Best Seller', 'Limited Edition'];
-
 const HeroSlides = () => {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -221,21 +219,15 @@ const HeroSlides = () => {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="flag-name">Flag Name *</Label>
-                <Select
+                <Input
+                  id="flag-name"
                   value={slideForm.flag_name}
-                  onValueChange={(value) => setSlideForm({ ...slideForm, flag_name: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select flag name" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background z-50">
-                    {flagOptions.map((flag) => (
-                      <SelectItem key={flag} value={flag}>
-                        {flag}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(e) => setSlideForm({ ...slideForm, flag_name: e.target.value })}
+                  placeholder="e.g. New Arrival, Offer, Best Seller"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Common examples: New Arrival, Offer, Best Seller, Limited Edition
+                </p>
               </div>
 
               <div>
@@ -278,27 +270,6 @@ const HeroSlides = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="width">Image Width (px) *</Label>
-                  <Input
-                    id="width"
-                    type="number"
-                    value={slideForm.image_width}
-                    onChange={(e) => setSlideForm({ ...slideForm, image_width: parseInt(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="height">Image Height (px) *</Label>
-                  <Input
-                    id="height"
-                    type="number"
-                    value={slideForm.image_height}
-                    onChange={(e) => setSlideForm({ ...slideForm, image_height: parseInt(e.target.value) })}
-                  />
-                </div>
-              </div>
-
               <div>
                 <Label htmlFor="display-order">Display Order *</Label>
                 <Input
@@ -311,6 +282,9 @@ const HeroSlides = () => {
 
               <div>
                 <Label htmlFor="image">Slide Image *</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Recommended size: 1920x1080px (16:9 aspect ratio) for best results
+                </p>
                 <div className="mt-2">
                   <Input
                     id="image"
