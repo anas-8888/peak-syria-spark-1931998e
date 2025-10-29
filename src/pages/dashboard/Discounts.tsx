@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -50,6 +51,7 @@ interface Discount {
   end_date: string | null;
   status: string;
   is_automatic: boolean;
+  show_in_banner: boolean;
   total_uses: number;
   total_revenue: number;
   marketing_label: string | null;
@@ -264,7 +266,38 @@ const Discounts = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["discounts"] });
-      toast.success("Status updated successfully");
+      toast.success("Status updated");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update status");
+    },
+  });
+
+  // Toggle banner visibility mutation
+  const toggleBannerMutation = useMutation({
+    mutationFn: async ({ id, showInBanner }: { id: string; showInBanner: boolean }) => {
+      // If turning on, turn off all others first
+      if (showInBanner) {
+        await supabase
+          .from("discounts")
+          .update({ show_in_banner: false })
+          .neq("id", id);
+      }
+
+      const { error } = await supabase
+        .from("discounts")
+        .update({ show_in_banner: showInBanner })
+        .eq("id", id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["discounts"] });
+      queryClient.invalidateQueries({ queryKey: ["banner-discount"] });
+      toast.success("Banner visibility updated");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update banner visibility");
     },
   });
 
@@ -505,6 +538,7 @@ const Discounts = () => {
                   <TableHead>Scope</TableHead>
                   <TableHead>Usage</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Banner</TableHead>
                   <TableHead>Valid Period</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -557,6 +591,24 @@ const Discounts = () => {
                       <Badge variant={getStatusBadge(discount.status)}>
                         {discount.status}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {discount.is_automatic ? (
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={discount.show_in_banner}
+                            onCheckedChange={(checked) =>
+                              toggleBannerMutation.mutate({ id: discount.id, showInBanner: checked })
+                            }
+                            disabled={discount.status !== "active"}
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            {discount.show_in_banner ? "Shown" : "Hidden"}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">N/A</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">

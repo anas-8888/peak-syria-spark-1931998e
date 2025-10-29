@@ -1,10 +1,34 @@
 import { useState, useEffect } from "react";
 import { X, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const PromoBanner = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  // Fetch active automatic discounts that should show in banner
+  const { data: bannerDiscount } = useQuery({
+    queryKey: ["banner-discount"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discounts")
+        .select("*")
+        .eq("is_automatic", true)
+        .eq("show_in_banner", true)
+        .eq("status", "active")
+        .lte("start_date", new Date().toISOString())
+        .or(`end_date.is.null,end_date.gte.${new Date().toISOString()}`)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+      return data;
+    },
+  });
 
   useEffect(() => {
     // Check if banner was previously dismissed
@@ -22,7 +46,19 @@ const PromoBanner = () => {
     }, 300);
   };
 
-  if (!isVisible) return null;
+  // Don't show if no discount or not visible
+  if (!isVisible || !bannerDiscount) return null;
+
+  // Format the discount message
+  const getDiscountMessage = () => {
+    if (bannerDiscount.marketing_label) {
+      return bannerDiscount.marketing_label;
+    }
+    
+    const typeText = bannerDiscount.type === 'percentage' ? `${bannerDiscount.value}%` : `$${bannerDiscount.value}`;
+    const minText = bannerDiscount.min_cart_subtotal > 0 ? ` for orders above $${bannerDiscount.min_cart_subtotal}` : '';
+    return `🔥 ${bannerDiscount.name}: Automatic ${typeText} discount${minText}`;
+  };
 
   return (
     <div className={`relative bg-gradient-to-r from-primary/90 via-primary/85 to-primary/80 text-primary-foreground py-2 sm:py-3 px-3 sm:px-4 text-center text-xs sm:text-sm font-medium overflow-hidden w-full transition-all duration-300 backdrop-blur-sm ${
@@ -45,16 +81,19 @@ const PromoBanner = () => {
         <div className="flex items-center gap-1 sm:gap-2">
           <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 animate-pulse flex-shrink-0 text-white" />
           <p className="animate-fade-in font-semibold text-center text-white drop-shadow-sm whitespace-nowrap text-xs sm:text-sm">
-            🔥 Spring Deal: Automatic 15% discount for orders above $70
+            {getDiscountMessage()}
           </p>
         </div>
         <Button
           variant="ghost"
           size="sm"
           className="text-white hover:bg-white/20 h-5 sm:h-6 px-1 sm:px-2 text-xs flex-shrink-0 transition-all duration-200 hover:scale-105 border border-white/20"
+          asChild
         >
-          Shop Now
-          <ArrowRight className="ml-1 h-2 w-2 sm:h-3 sm:w-3" />
+          <Link to="/products">
+            Shop Now
+            <ArrowRight className="ml-1 h-2 w-2 sm:h-3 sm:w-3" />
+          </Link>
         </Button>
       </div>
 

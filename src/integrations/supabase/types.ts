@@ -359,6 +359,7 @@ export type Database = {
           per_customer_limit: number | null
           per_order_max_discount: number | null
           scope: Database["public"]["Enums"]["discount_scope"]
+          show_in_banner: boolean
           stack_with_shipping: boolean | null
           start_date: string
           status: Database["public"]["Enums"]["discount_status"]
@@ -398,6 +399,7 @@ export type Database = {
           per_customer_limit?: number | null
           per_order_max_discount?: number | null
           scope?: Database["public"]["Enums"]["discount_scope"]
+          show_in_banner?: boolean
           stack_with_shipping?: boolean | null
           start_date: string
           status?: Database["public"]["Enums"]["discount_status"]
@@ -437,6 +439,7 @@ export type Database = {
           per_customer_limit?: number | null
           per_order_max_discount?: number | null
           scope?: Database["public"]["Enums"]["discount_scope"]
+          show_in_banner?: boolean
           stack_with_shipping?: boolean | null
           start_date?: string
           status?: Database["public"]["Enums"]["discount_status"]
