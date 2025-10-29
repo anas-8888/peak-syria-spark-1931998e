@@ -786,18 +786,21 @@ export type Database = {
           color_id: string
           created_at: string | null
           id: string
+          image_id: string | null
           product_id: string
         }
         Insert: {
           color_id: string
           created_at?: string | null
           id?: string
+          image_id?: string | null
           product_id: string
         }
         Update: {
           color_id?: string
           created_at?: string | null
           id?: string
+          image_id?: string | null
           product_id?: string
         }
         Relationships: [
@@ -806,6 +809,13 @@ export type Database = {
             columns: ["color_id"]
             isOneToOne: false
             referencedRelation: "colors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_colors_image_id_fkey"
+            columns: ["image_id"]
+            isOneToOne: false
+            referencedRelation: "product_images"
             referencedColumns: ["id"]
           },
           {

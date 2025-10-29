@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProductImageManager } from "@/components/ProductImageManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ColorSelector } from "@/components/ColorSelector";
+import { ColorImageSelector } from "@/components/ColorImageSelector";
 type Product = {
   id: string;
   name: string;
@@ -80,7 +80,7 @@ const Products = () => {
       image_id: string;
     }[]
   });
-  const [selectedColorIds, setSelectedColorIds] = useState<string[]>([]);
+  const [colorImageMappings, setColorImageMappings] = useState<{ color_id: string; image_id: string | null }[]>([]);
   const [newSize, setNewSize] = useState("");
   const [newFeature, setNewFeature] = useState("");
   const [newColor, setNewColor] = useState({
@@ -181,11 +181,12 @@ const Products = () => {
       }).select().single();
       if (error) throw error;
 
-      // Add color associations
-      if (selectedColorIds.length > 0) {
-        const colorInserts = selectedColorIds.map(colorId => ({
+      // Add color associations with image mappings
+      if (colorImageMappings.length > 0) {
+        const colorInserts = colorImageMappings.map(mapping => ({
           product_id: data.id,
-          color_id: colorId
+          color_id: mapping.color_id,
+          image_id: mapping.image_id
         }));
         const { error: colorError } = await supabase
           .from("product_colors")
@@ -248,7 +249,7 @@ const Products = () => {
       }).eq("id", id);
       if (error) throw error;
 
-      // Update color associations
+      // Update color associations with image mappings
       // First, delete existing associations
       const { error: deleteError } = await supabase
         .from("product_colors")
@@ -256,11 +257,12 @@ const Products = () => {
         .eq("product_id", id);
       if (deleteError) throw deleteError;
 
-      // Then add new ones
-      if (selectedColorIds.length > 0) {
-        const colorInserts = selectedColorIds.map(colorId => ({
+      // Then add new ones with image mappings
+      if (colorImageMappings.length > 0) {
+        const colorInserts = colorImageMappings.map(mapping => ({
           product_id: id,
-          color_id: colorId
+          color_id: mapping.color_id,
+          image_id: mapping.image_id
         }));
         const { error: colorError } = await supabase
           .from("product_colors")
@@ -363,7 +365,7 @@ const Products = () => {
       colors: []
     });
     setSelectedCategoryIds([]);
-    setSelectedColorIds([]);
+    setColorImageMappings([]);
     setActiveTab("details");
     setNewSize("");
     setNewFeature("");
@@ -443,13 +445,16 @@ const Products = () => {
       colors: product.colors || []
     });
 
-    // Load existing color associations
+    // Load existing color-image associations
     const { data: productColors } = await supabase
       .from("product_colors")
-      .select("color_id")
+      .select("color_id, image_id")
       .eq("product_id", product.id);
     
-    setSelectedColorIds(productColors?.map(pc => pc.color_id) || []);
+    setColorImageMappings(productColors?.map(pc => ({
+      color_id: pc.color_id,
+      image_id: pc.image_id
+    })) || []);
     setIsEditDialogOpen(true);
   };
   const getStockStatus = (stock: number) => {
@@ -775,10 +780,10 @@ const Products = () => {
 
             {/* Color Selection */}
             <div className="grid gap-2">
-              <Label>Product Colors</Label>
-              <ColorSelector 
-                selectedColorIds={selectedColorIds}
-                onSelectionChange={setSelectedColorIds}
+              <ColorImageSelector 
+                productId={selectedProduct?.id || null}
+                selectedMappings={colorImageMappings}
+                onMappingChange={setColorImageMappings}
               />
             </div>
 
@@ -1002,10 +1007,10 @@ const Products = () => {
 
             {/* Color Selection */}
             <div className="grid gap-2">
-              <Label>Product Colors</Label>
-              <ColorSelector 
-                selectedColorIds={selectedColorIds}
-                onSelectionChange={setSelectedColorIds}
+              <ColorImageSelector 
+                productId={selectedProduct?.id || null}
+                selectedMappings={colorImageMappings}
+                onMappingChange={setColorImageMappings}
               />
             </div>
 
@@ -1228,10 +1233,10 @@ const Products = () => {
 
             {/* Color Selection */}
             <div className="grid gap-2">
-              <Label>Product Colors</Label>
-              <ColorSelector 
-                selectedColorIds={selectedColorIds}
-                onSelectionChange={setSelectedColorIds}
+              <ColorImageSelector 
+                productId={selectedProduct?.id || null}
+                selectedMappings={colorImageMappings}
+                onMappingChange={setColorImageMappings}
               />
             </div>
 
