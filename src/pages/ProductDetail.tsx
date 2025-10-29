@@ -40,6 +40,14 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedImageUrl, setSelectedImageUrl] = useState("");
   const [colorImageMap, setColorImageMap] = useState<Record<string, string>>({});
+  const [imageZoomOrigin, setImageZoomOrigin] = useState({ x: 50, y: 50 });
+
+  const handleImageMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setImageZoomOrigin({ x, y });
+  };
 
   // Fetch product details
   const { data: product, isLoading } = useQuery({
@@ -171,11 +179,17 @@ const ProductDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="aspect-square bg-muted rounded-lg overflow-hidden group cursor-zoom-in">
+            <div 
+              className="aspect-square bg-muted rounded-lg overflow-hidden group cursor-zoom-in"
+              onMouseMove={handleImageMouseMove}
+            >
               <img 
                 src={selectedImageUrl || images[0]?.image_url || "/placeholder.svg"} 
                 alt={product.name} 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-125" 
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-150" 
+                style={{
+                  transformOrigin: `${imageZoomOrigin.x}% ${imageZoomOrigin.y}%`
+                }}
               />
             </div>
             {images.length > 1 && (
