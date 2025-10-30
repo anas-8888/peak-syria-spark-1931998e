@@ -107,6 +107,7 @@ const FlagProducts = () => {
           rating: product.rating || 0,
           colorImages: Object.keys(colorImages).length > 0 ? colorImages : undefined,
           targetGender: product.target_gender,
+          flag: product.flag,
         };
       });
 

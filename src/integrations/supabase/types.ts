@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      about_us: {
+        Row: {
+          created_at: string
+          hero_subtitle: string
+          hero_title: string
+          id: string
+          mission_content: string
+          mission_title: string
+          story_content: string
+          story_title: string
+          updated_at: string
+          values: Json
+        }
+        Insert: {
+          created_at?: string
+          hero_subtitle?: string
+          hero_title?: string
+          id?: string
+          mission_content?: string
+          mission_title?: string
+          story_content?: string
+          story_title?: string
+          updated_at?: string
+          values?: Json
+        }
+        Update: {
+          created_at?: string
+          hero_subtitle?: string
+          hero_title?: string
+          id?: string
+          mission_content?: string
+          mission_title?: string
+          story_content?: string
+          story_title?: string
+          updated_at?: string
+          values?: Json
+        }
+        Relationships: []
+      }
       ai_chat_rate_limit: {
         Row: {
           created_at: string | null

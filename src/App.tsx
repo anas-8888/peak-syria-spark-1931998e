@@ -43,6 +43,7 @@ import DashboardSettings from "./pages/dashboard/Settings";
 import Categories from "./pages/dashboard/Categories";
 import Regions from "./pages/dashboard/Regions";
 import Colors from "./pages/dashboard/Colors";
+import AboutManagement from "./pages/dashboard/About";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,7 @@ function App() {
                     <Route path="discounts" element={<Discounts />} />
                     <Route path="shipping" element={<Shipping />} />
                     <Route path="marketing" element={<Marketing />} />
+                  <Route path="about" element={<AboutManagement />} />
                     <Route path="settings" element={<DashboardSettings />} />
                   </Route>
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
