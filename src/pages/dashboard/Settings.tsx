@@ -5,7 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -13,6 +15,7 @@ import { Loader2 } from "lucide-react";
 
 const Settings = () => {
   const { user } = useAuth();
+  const { isAdmin } = useAdminCheck();
   const [loading, setLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   
@@ -21,12 +24,22 @@ const Settings = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   
+  // Store Settings State
+  const [storeSettingsId, setStoreSettingsId] = useState<string | null>(null);
+  const [storeEmail, setStoreEmail] = useState("");
+  const [storePhone, setStorePhone] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [brandDescription, setBrandDescription] = useState("");
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [twitterUrl, setTwitterUrl] = useState("");
+  
   // Security State
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Load user profile
+  // Load user profile and store settings
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
@@ -53,8 +66,36 @@ const Settings = () => {
       }
     };
 
+    const loadStoreSettings = async () => {
+      if (!isAdmin) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('store_settings')
+          .select('*')
+          .limit(1)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data) {
+          setStoreSettingsId(data.id);
+          setStoreEmail(data.store_email || "");
+          setStorePhone(data.store_phone || "");
+          setWhatsappNumber(data.whatsapp_number || "");
+          setBrandDescription(data.brand_description || "");
+          setFacebookUrl(data.facebook_url || "");
+          setInstagramUrl(data.instagram_url || "");
+          setTwitterUrl(data.twitter_url || "");
+        }
+      } catch (error) {
+        console.error("Error loading store settings:", error);
+      }
+    };
+
     loadProfile();
-  }, [user]);
+    loadStoreSettings();
+  }, [user, isAdmin]);
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -106,6 +147,35 @@ const Settings = () => {
     } catch (error) {
       console.error("Error updating password:", error);
       toast.error("Failed to update password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveStoreSettings = async () => {
+    if (!storeSettingsId) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('store_settings')
+        .update({
+          store_email: storeEmail,
+          store_phone: storePhone,
+          whatsapp_number: whatsappNumber,
+          brand_description: brandDescription,
+          facebook_url: facebookUrl,
+          instagram_url: instagramUrl,
+          twitter_url: twitterUrl,
+        })
+        .eq('id', storeSettingsId);
+
+      if (error) throw error;
+
+      toast.success("Store settings updated successfully");
+    } catch (error) {
+      console.error("Error updating store settings:", error);
+      toast.error("Failed to update store settings");
     } finally {
       setLoading(false);
     }
@@ -279,42 +349,97 @@ const Settings = () => {
         </CardContent>
       </Card>
 
-      {/* Store Settings */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-green-500/10 rounded-full flex items-center justify-center">
-              <Globe className="h-5 w-5 text-green-500" />
+      {/* Store Settings - Admin Only */}
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-green-500/10 rounded-full flex items-center justify-center">
+                <Globe className="h-5 w-5 text-green-500" />
+              </div>
+              <div>
+                <CardTitle>Store Settings</CardTitle>
+                <CardDescription>Manage store contact information and social media</CardDescription>
+              </div>
             </div>
-            <div>
-              <CardTitle>Store Settings</CardTitle>
-              <CardDescription>Manage store information</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="storeEmail">Store Email</Label>
+              <Input 
+                id="storeEmail" 
+                type="email" 
+                value={storeEmail}
+                onChange={(e) => setStoreEmail(e.target.value)}
+                placeholder="info@peaksyria.com"
+              />
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="storeName">Store Name</Label>
-            <Input id="storeName" defaultValue="PEAK Syria" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="storeEmail">Store Email</Label>
-            <Input id="storeEmail" type="email" defaultValue="info@peaksyria.com" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="storePhone">Store Phone</Label>
-            <Input id="storePhone" defaultValue="+963 11 123 4567" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
-            <Input id="address" defaultValue="Damascus, Syria" />
-          </div>
-          <Button className="gap-2">
-            <Save className="h-4 w-4" />
-            Save Settings
-          </Button>
-        </CardContent>
-      </Card>
+            <div className="space-y-2">
+              <Label htmlFor="storePhone">Store Phone</Label>
+              <Input 
+                id="storePhone" 
+                value={storePhone}
+                onChange={(e) => setStorePhone(e.target.value)}
+                placeholder="+963 XXX XXX XXX"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
+              <Input 
+                id="whatsappNumber" 
+                value={whatsappNumber}
+                onChange={(e) => setWhatsappNumber(e.target.value)}
+                placeholder="963XXXXXXXXX"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="brandDescription">Brand Description</Label>
+              <Textarea
+                id="brandDescription"
+                value={brandDescription}
+                onChange={(e) => setBrandDescription(e.target.value)}
+                placeholder="Official distributor of PEAK sportswear in Syria..."
+                rows={3}
+              />
+            </div>
+            <Separator />
+            <div className="space-y-2">
+              <Label htmlFor="facebookUrl">Facebook URL</Label>
+              <Input 
+                id="facebookUrl" 
+                type="url"
+                value={facebookUrl}
+                onChange={(e) => setFacebookUrl(e.target.value)}
+                placeholder="https://facebook.com/yourpage"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="instagramUrl">Instagram URL</Label>
+              <Input 
+                id="instagramUrl" 
+                type="url"
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                placeholder="https://instagram.com/yourpage"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="twitterUrl">Twitter URL</Label>
+              <Input 
+                id="twitterUrl" 
+                type="url"
+                value={twitterUrl}
+                onChange={(e) => setTwitterUrl(e.target.value)}
+                placeholder="https://twitter.com/yourpage"
+              />
+            </div>
+            <Button className="gap-2" onClick={handleSaveStoreSettings} disabled={loading}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Save Store Settings
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Appearance Settings */}
       <Card>
