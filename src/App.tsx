@@ -80,9 +80,9 @@ function App() {
                   {/* Dashboard Routes */}
                   <Route path="/dashboard" element={<Dashboard />}>
                     <Route index element={<Overview />} />
-                  <Route path="hero-slides" element={<HeroSlides />} />
-                  <Route path="banners" element={<Banners />} />
-                  <Route path="products" element={<Products />} />
+                    <Route path="hero-slides" element={<HeroSlides />} />
+                    <Route path="banners" element={<Banners />} />
+                    <Route path="products" element={<Products />} />
                   <Route path="categories" element={<Categories />} />
                   <Route path="colors" element={<Colors />} />
                   <Route path="regions" element={<Regions />} />
