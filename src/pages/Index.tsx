@@ -80,6 +80,7 @@ const Index = () => {
           rating: product.rating || 0,
           colorImages: Object.keys(colorImages).length > 0 ? colorImages : undefined,
           targetGender: product.target_gender,
+          flag: product.flag,
         };
       });
 
@@ -93,7 +94,7 @@ const Index = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
-        .select("id, name, description, parent_id")
+        .select("id, name, description, parent_id, image_url")
         .eq("is_active", true)
         .is("parent_id", null)
         .order("display_order");
@@ -119,6 +120,7 @@ const Index = () => {
         path: category.name.toLowerCase(),
         icon: TrendingUp,
         hasChildren: categoriesWithChildren.has(category.id),
+        image_url: category.image_url,
       }));
     },
   });
@@ -247,19 +249,31 @@ const Index = () => {
                       key={category.id}
                       to={category.hasChildren ? `/categories/${category.id}` : `/products?category=${category.path}`}
                       style={{ animationDelay: `${index * 150}ms` }}
-                      className="group bg-card p-6 sm:p-8 rounded-lg shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fade-in overflow-hidden relative w-[280px] sm:w-[320px] flex-shrink-0"
+                      className="group bg-card rounded-lg shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fade-in overflow-hidden w-[280px] sm:w-[320px] flex-shrink-0"
                     >
-                      {/* Background gradient effect */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      {/* Category Image */}
+                      {category.image_url ? (
+                        <div className="aspect-video overflow-hidden bg-muted relative">
+                          <img
+                            src={category.image_url}
+                            alt={category.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          {/* Overlay gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-secondary/90 via-secondary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        </div>
+                      ) : (
+                        <div className="aspect-video overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                          <Icon className="h-16 w-16 text-primary/40" />
+                        </div>
+                      )}
                       
-                      <div className="relative z-10">
-                        <div className="flex flex-col items-center gap-4 mb-4">
-                          <div className="bg-primary/10 p-3 sm:p-4 rounded-full group-hover:bg-primary group-hover:scale-110 transition-all duration-300">
-                            <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary group-hover:text-primary-foreground transition-colors" />
-                          </div>
+                      {/* Category Content */}
+                      <div className="p-6 sm:p-8">
+                        <div className="flex flex-col items-center gap-3 mb-4">
                           <h3 className="text-xl sm:text-2xl font-bold group-hover:text-primary transition-colors text-center">{category.name}</h3>
                         </div>
-                        <p className="text-muted-foreground mb-4 text-sm sm:text-base text-center">{category.description}</p>
+                        <p className="text-muted-foreground mb-4 text-sm sm:text-base text-center line-clamp-2">{category.description}</p>
                         <div className="flex items-center justify-center text-primary font-semibold group-hover:gap-3 transition-all">
                           {t("home.explore")}
                           <ArrowRight className="ml-1 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-2 transition-transform duration-300" />

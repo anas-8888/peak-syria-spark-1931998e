@@ -22,6 +22,7 @@ interface ProductCardEnhancedProps {
   colorImages?: Record<string, string>;
   viewMode?: "grid" | "list";
   targetGender?: string;
+  flag?: string;
 }
 
 const ProductCardEnhanced = ({
@@ -37,6 +38,7 @@ const ProductCardEnhanced = ({
   colorImages,
   viewMode = "grid",
   targetGender,
+  flag,
 }: ProductCardEnhancedProps) => {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState(colors[0]);
@@ -202,6 +204,13 @@ const ProductCardEnhanced = ({
               </div>
             )}
           </div>
+
+          {/* Flag Watermark */}
+          {flag && (
+            <div className="absolute bottom-3 left-3 bg-secondary/80 backdrop-blur-sm text-secondary-foreground px-2 py-1 rounded text-[10px] font-semibold uppercase">
+              {flag}
+            </div>
+          )}
         </div>
 
         {/* Product Info */}
