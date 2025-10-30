@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Plus, Trash2, MoveUp, MoveDown, ImagePlus, X } from "lucide-react";
@@ -40,6 +41,7 @@ const HeroShowcase = () => {
   const [editingShowcase, setEditingShowcase] = useState<HeroShowcase | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const { data: showcases, isLoading } = useQuery({
     queryKey: ["admin-hero-showcases"],
@@ -56,13 +58,28 @@ const HeroShowcase = () => {
   const { data: products } = useQuery({
     queryKey: ["products-for-showcase"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: productsData, error: productsError } = await supabase
         .from("products")
         .select("id, name, image_url")
         .eq("is_active", true)
         .limit(50);
-      if (error) throw error;
-      return data;
+      if (productsError) throw productsError;
+
+      // Fetch primary images for each product
+      const { data: imagesData } = await supabase
+        .from("product_images")
+        .select("product_id, image_url, is_primary")
+        .in("product_id", productsData.map(p => p.id));
+
+      // Map images to products
+      return productsData.map(product => {
+        const primaryImage = imagesData?.find(img => img.product_id === product.id && img.is_primary);
+        const anyImage = imagesData?.find(img => img.product_id === product.id);
+        return {
+          ...product,
+          image_url: primaryImage?.image_url || anyImage?.image_url || product.image_url || ""
+        };
+      });
     },
   });
 
@@ -100,6 +117,7 @@ const HeroShowcase = () => {
       toast.success("Hero showcase created successfully");
       setEditingShowcase(null);
       setSelectedProducts([]);
+      setModalOpen(false);
     },
     onError: () => toast.error("Failed to create hero showcase"),
   });
@@ -130,6 +148,7 @@ const HeroShowcase = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-hero-showcases"] });
       toast.success("Hero showcase updated successfully");
+      setModalOpen(false);
     },
     onError: () => toast.error("Failed to update hero showcase"),
   });
@@ -179,6 +198,23 @@ const HeroShowcase = () => {
     setEditingShowcase(showcase);
     const products = await getShowcaseProducts(showcase.id);
     setSelectedProducts(products.map(p => p.product_id));
+    setModalOpen(true);
+  };
+
+  const handleCreateNew = () => {
+    setEditingShowcase({
+      id: "",
+      hero_title: "",
+      hero_subtitle: "",
+      hero_description: "",
+      hero_image_url: "",
+      cta_text: "View Models",
+      cta_url: "/products",
+      position: (showcases?.length || 0),
+      is_active: true,
+    });
+    setSelectedProducts([]);
+    setModalOpen(true);
   };
 
   const handleSave = () => {
@@ -214,31 +250,20 @@ const HeroShowcase = () => {
         </p>
       </div>
 
-      <Button onClick={() => {
-        setEditingShowcase({
-          id: "",
-          hero_title: "",
-          hero_subtitle: "",
-          hero_description: "",
-          hero_image_url: "",
-          cta_text: "View Models",
-          cta_url: "/products",
-          position: (showcases?.length || 0),
-          is_active: true,
-        });
-        setSelectedProducts([]);
-      }}>
-        <Plus className="mr-2 h-4 w-4" />
-        Create Hero Showcase
-      </Button>
-
-      {editingShowcase && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{editingShowcase.id ? "Edit Hero Showcase" : "Create Hero Showcase"}</CardTitle>
-            <CardDescription>Configure your featured product section</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogTrigger asChild>
+          <Button onClick={handleCreateNew}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Hero Showcase
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingShowcase?.id ? "Edit Hero Showcase" : "Create Hero Showcase"}</DialogTitle>
+            <DialogDescription>Configure your featured product section</DialogDescription>
+          </DialogHeader>
+          {editingShowcase && (
+          <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Title</Label>
               <Input
@@ -305,8 +330,8 @@ const HeroShowcase = () => {
 
             <div className="space-y-2">
               <Label>Featured Products (Select up to 4)</Label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {products?.slice(0, 12).map((product) => {
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-[300px] overflow-y-auto p-2 border rounded-lg">
+                {products?.map((product) => {
                   const isSelected = selectedProducts.includes(product.id);
                   return (
                     <div
@@ -320,22 +345,37 @@ const HeroShowcase = () => {
                           toast.error("Maximum 4 products allowed");
                         }
                       }}
-                      className={`relative cursor-pointer border-2 rounded-lg p-2 transition-all ${
-                        isSelected ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+                      className={`relative cursor-pointer border-2 rounded-lg p-2 transition-all hover:shadow-md ${
+                        isSelected ? "border-primary bg-primary/10 shadow-lg" : "border-border hover:border-primary/50"
                       }`}
                     >
                       {isSelected && (
-                        <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                        <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shadow-lg z-10">
                           {selectedProducts.indexOf(product.id) + 1}
                         </div>
                       )}
-                      <img src={product.image_url || ""} alt={product.name} className="w-full h-24 object-cover rounded" />
-                      <p className="text-xs mt-1 truncate">{product.name}</p>
+                      {product.image_url ? (
+                        <img 
+                          src={product.image_url} 
+                          alt={product.name} 
+                          className="w-full h-24 object-cover rounded bg-muted" 
+                          onError={(e) => {
+                            e.currentTarget.src = "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-24 bg-muted rounded flex items-center justify-center">
+                          <ImagePlus className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      )}
+                      <p className="text-xs mt-2 truncate font-medium">{product.name}</p>
                     </div>
                   );
                 })}
               </div>
-              <p className="text-xs text-muted-foreground">Selected: {selectedProducts.length}/4</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Selected: {selectedProducts.length}/4 products
+              </p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -346,23 +386,26 @@ const HeroShowcase = () => {
               <Label>Active</Label>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-4">
               <Button 
                 onClick={handleSave} 
                 disabled={!editingShowcase.hero_title || !editingShowcase.hero_description || !editingShowcase.hero_image_url}
+                className="flex-1"
               >
-                Save Showcase
+                {editingShowcase.id ? "Update Showcase" : "Create Showcase"}
               </Button>
               <Button variant="outline" onClick={() => {
+                setModalOpen(false);
                 setEditingShowcase(null);
                 setSelectedProducts([]);
               }}>
                 Cancel
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4">
         {showcases?.map((showcase, index) => (
