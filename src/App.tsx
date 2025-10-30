@@ -11,6 +11,7 @@ import { HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
 import ProductsEnhanced from "./pages/ProductsEnhanced";
 import FlagProducts from "./pages/FlagProducts";
+import CategoryBrowse from "./pages/CategoryBrowse";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
@@ -60,6 +61,7 @@ function App() {
                   <Route path="/" element={<Index />} />
                   <Route path="/products" element={<ProductsEnhanced />} />
                   <Route path="/flag-products" element={<FlagProducts />} />
+                  <Route path="/categories/:categoryId" element={<CategoryBrowse />} />
                   <Route path="/product/:id" element={<ProductDetail />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />

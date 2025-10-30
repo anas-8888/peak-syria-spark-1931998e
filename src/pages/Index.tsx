@@ -87,23 +87,38 @@ const Index = () => {
     },
   });
 
-  // Fetch categories from database
+  // Fetch root categories only (no parent)
   const { data: categories = [] } = useQuery({
     queryKey: ["categories-home"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
-        .select("id, name, description")
+        .select("id, name, description, parent_id")
         .eq("is_active", true)
+        .is("parent_id", null)
         .order("display_order");
 
       if (error) throw error;
       
+      // Check which categories have children
+      const categoryIds = data?.map(c => c.id) || [];
+      const { data: childrenData } = await supabase
+        .from("categories")
+        .select("parent_id")
+        .in("parent_id", categoryIds)
+        .eq("is_active", true);
+      
+      const categoriesWithChildren = new Set(
+        childrenData?.map(c => c.parent_id) || []
+      );
+      
       return (data || []).map(category => ({
+        id: category.id,
         name: category.name,
         description: category.description || `Explore our ${category.name.toLowerCase()} collection`,
         path: category.name.toLowerCase(),
-        icon: TrendingUp, // Default icon
+        icon: TrendingUp,
+        hasChildren: categoriesWithChildren.has(category.id),
       }));
     },
   });
@@ -192,8 +207,8 @@ const Index = () => {
                   const Icon = category.icon;
                   return (
                     <Link
-                      key={category.name}
-                      to={`/products?category=${category.path}`}
+                      key={category.id}
+                      to={category.hasChildren ? `/categories/${category.id}` : `/products?category=${category.path}`}
                       style={{ animationDelay: `${index * 150}ms` }}
                       className="group bg-card p-6 sm:p-8 rounded-lg shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fade-in overflow-hidden relative w-[280px] sm:w-[320px] flex-shrink-0"
                     >
