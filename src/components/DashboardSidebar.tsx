@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Package, ShoppingBag, CreditCard, Settings, ChevronLeft, ChevronRight, Users, BarChart3, Star, Tag, Truck, Megaphone, Menu, X, FolderTree, Shield, ExternalLink, LogOut, MapPin, Image, Palette, FileText, LayoutGrid, Layers } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, CreditCard, Settings, ChevronLeft, ChevronRight, Users, BarChart3, Star, Tag, Truck, Megaphone, Menu, X, FolderTree, Shield, ExternalLink, LogOut, MapPin, Image, Palette, FileText, LayoutGrid, Presentation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import peakLogo from "@/assets/peak-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,9 +21,9 @@ const menuItems = [{
   icon: LayoutGrid,
   end: false
 }, {
-  title: "Collections",
-  path: "/dashboard/collections",
-  icon: Layers,
+  title: "Product Showcase",
+  path: "/dashboard/showcase",
+  icon: Presentation,
   end: false
 }, {
   title: "Analytics",
