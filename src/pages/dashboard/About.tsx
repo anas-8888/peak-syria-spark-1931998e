@@ -93,8 +93,7 @@ const AboutManagement = () => {
     setValues(newValues);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     updateMutation.mutate();
   };
 
@@ -115,9 +114,8 @@ const AboutManagement = () => {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Hero Section */}
-        <Card>
+      {/* Hero Section */}
+      <Card>
           <CardHeader>
             <CardTitle>Hero Section</CardTitle>
             <CardDescription>The main banner at the top of the About page</CardDescription>
@@ -269,25 +267,24 @@ const AboutManagement = () => {
               />
             </div>
           </CardContent>
-        </Card>
+      </Card>
 
-        <div className="flex justify-end">
-          <Button
-            type="submit"
-            size="lg"
-            disabled={updateMutation.isPending}
-          >
-            {updateMutation.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              "Save Changes"
-            )}
-          </Button>
-        </div>
-      </form>
+      <div className="flex justify-end">
+        <Button
+          onClick={() => updateMutation.mutate()}
+          size="lg"
+          disabled={updateMutation.isPending}
+        >
+          {updateMutation.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            "Save Changes"
+          )}
+        </Button>
+      </div>
     </div>
   );
 };
