@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 const Index = () => {
   const { t } = useLanguage();
 
-  // Fetch featured products from database
+  // Fetch featured products from database (New Arrivals only)
   const { data: featuredProducts = [], isLoading } = useQuery({
     queryKey: ["featured-products"],
     queryFn: async () => {
@@ -23,7 +23,8 @@ const Index = () => {
         .from("products")
         .select("*")
         .eq("is_active", true)
-        .order("rating", { ascending: false })
+        .eq("flag", "New Arrival")
+        .order("created_at", { ascending: false })
         .limit(8);
 
       if (productsError) throw productsError;
@@ -86,11 +87,26 @@ const Index = () => {
     },
   });
 
-  const categories = [
-    { name: t("category.basketball"), icon: TrendingUp, description: t("category.basketballDesc"), path: "basketball" },
-    { name: t("category.running"), icon: Zap, description: t("category.runningDesc"), path: "running" },
-    { name: t("category.apparel"), icon: Shield, description: t("category.apparelDesc"), path: "apparel" },
-  ];
+  // Fetch categories from database
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories-home"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, name, description")
+        .eq("is_active", true)
+        .order("display_order");
+
+      if (error) throw error;
+      
+      return (data || []).map(category => ({
+        name: category.name,
+        description: category.description || `Explore our ${category.name.toLowerCase()} collection`,
+        path: category.name.toLowerCase(),
+        icon: TrendingUp, // Default icon
+      }));
+    },
+  });
 
   if (isLoading) {
     return <PercentageLoader message="Loading homepage..." />;
@@ -144,35 +160,40 @@ const Index = () => {
             <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">{t("home.categoryDesc")}</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {categories.map((category, index) => {
-              const Icon = category.icon;
-              return (
-                <Link
-                  key={category.name}
-                  to={`/products?category=${category.path}`}
-                  style={{ animationDelay: `${index * 150}ms` }}
-                  className="group bg-card p-6 sm:p-8 rounded-lg shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fade-in overflow-hidden relative"
-                >
-                  {/* Background gradient effect */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
-                  <div className="relative z-10">
-                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-4">
-                      <div className="bg-primary/10 p-3 sm:p-4 rounded-full group-hover:bg-primary group-hover:scale-110 transition-all duration-300">
-                        <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary group-hover:text-primary-foreground transition-colors" />
+          {/* Categories Carousel */}
+          <div className="relative">
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex gap-6 sm:gap-8 pb-4" style={{ width: 'max-content' }}>
+                {categories.map((category, index) => {
+                  const Icon = category.icon;
+                  return (
+                    <Link
+                      key={category.name}
+                      to={`/products?category=${category.path}`}
+                      style={{ animationDelay: `${index * 150}ms` }}
+                      className="group bg-card p-6 sm:p-8 rounded-lg shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fade-in overflow-hidden relative w-[280px] sm:w-[320px] flex-shrink-0"
+                    >
+                      {/* Background gradient effect */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      
+                      <div className="relative z-10">
+                        <div className="flex flex-col items-center gap-4 mb-4">
+                          <div className="bg-primary/10 p-3 sm:p-4 rounded-full group-hover:bg-primary group-hover:scale-110 transition-all duration-300">
+                            <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary group-hover:text-primary-foreground transition-colors" />
+                          </div>
+                          <h3 className="text-xl sm:text-2xl font-bold group-hover:text-primary transition-colors text-center">{category.name}</h3>
+                        </div>
+                        <p className="text-muted-foreground mb-4 text-sm sm:text-base text-center">{category.description}</p>
+                        <div className="flex items-center justify-center text-primary font-semibold group-hover:gap-3 transition-all">
+                          {t("home.explore")}
+                          <ArrowRight className="ml-1 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-2 transition-transform duration-300" />
+                        </div>
                       </div>
-                      <h3 className="text-xl sm:text-2xl font-bold group-hover:text-primary transition-colors text-center sm:text-left">{category.name}</h3>
-                    </div>
-                    <p className="text-muted-foreground mb-4 text-sm sm:text-base text-center sm:text-left">{category.description}</p>
-                    <div className="flex items-center justify-center sm:justify-start text-primary font-semibold group-hover:gap-3 transition-all">
-                      {t("home.explore")}
-                      <ArrowRight className="ml-1 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-2 transition-transform duration-300" />
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </section>

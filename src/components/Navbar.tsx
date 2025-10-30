@@ -115,7 +115,7 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
-            {navLinks.map(link => <Link key={link.path} to={link.path} className={`text-sm font-medium transition-colors hover:text-primary relative whitespace-nowrap ${isActive(link.path) ? "text-primary" : "text-foreground/70"}`}>
+            {navLinks.map(link => <Link key={link.path} to={link.path} className={`text-xs font-medium transition-colors hover:text-primary relative whitespace-nowrap ${isActive(link.path) ? "text-primary" : "text-foreground/70"}`}>
                 {link.name}
                 {isActive(link.path) && <span className="absolute -bottom-6 left-0 w-full h-0.5 bg-primary" />}
               </Link>)}
