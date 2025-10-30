@@ -9,6 +9,7 @@ const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
 
   // Fetch hero slides from database
@@ -36,12 +37,12 @@ const HeroSection = () => {
   const slides = dbSlides || [];
 
   useEffect(() => {
-    if (slides.length === 0) return;
+    if (slides.length === 0 || isHovering) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [slides.length]);
+  }, [slides.length, isHovering]);
 
   // If no slides, don't render anything
   if (isLoading || slides.length === 0) {
@@ -82,12 +83,14 @@ const HeroSection = () => {
        onTouchStart={handleTouchStart}
        onTouchMove={handleTouchMove}
        onTouchEnd={handleTouchEnd}
+       onMouseEnter={() => setIsHovering(true)}
+       onMouseLeave={() => setIsHovering(false)}
      >
       {slides.map((slide, index) => (
         <div
           key={index}
           className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === currentSlide ? "opacity-100" : "opacity-0"
+            index === currentSlide ? "opacity-100 z-10" : "opacity-0 pointer-events-none"
           }`}
         >
           <div
