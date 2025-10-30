@@ -28,6 +28,9 @@ const HeroSection = () => {
       console.log("Fetched hero slides:", data);
       return data;
     },
+    staleTime: 1000 * 30, // Consider data stale after 30 seconds
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchOnMount: true, // Refetch when component mounts
   });
 
   const slides = dbSlides || [];
