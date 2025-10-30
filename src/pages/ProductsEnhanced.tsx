@@ -171,12 +171,19 @@ const ProductsEnhanced = () => {
   useEffect(() => {
     const category = searchParams.get('category');
     if (category) {
-      setFilters(prev => ({
-        ...prev,
-        categories: [category]
-      }));
+      // Find matching category (case-insensitive)
+      const matchingCategory = categories.find(
+        cat => cat.toLowerCase() === category.toLowerCase()
+      );
+      
+      if (matchingCategory) {
+        setFilters(prev => ({
+          ...prev,
+          categories: [matchingCategory]
+        }));
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, categories]);
 
   // Initialize price range filter when data loads
   useEffect(() => {
