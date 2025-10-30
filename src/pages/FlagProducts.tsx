@@ -57,22 +57,60 @@ const FlagProducts = () => {
 
       if (productsError) throw productsError;
 
-      // Fetch primary images
-      const { data: imagesData } = await supabase
+      // Fetch ALL product images (not just primary)
+      const { data: allImagesData } = await supabase
         .from("product_images")
-        .select("product_id, image_url")
-        .eq("is_primary", true);
+        .select("id, product_id, image_url, is_primary");
 
-      // Map images to products
+      // Fetch product colors with images
+      const { data: productColorsData } = await supabase
+        .from("product_colors")
+        .select(`
+          product_id,
+          image_id,
+          colors:color_id (
+            name,
+            hex_code
+          )
+        `);
+
+      // Map images and colors to products
       const productsWithImages = productsData.map((product) => {
-        const primaryImage = imagesData?.find((img) => img.product_id === product.id);
+        const primaryImage = allImagesData?.find((img) => img.product_id === product.id && img.is_primary);
+        const productColorsForItem = productColorsData?.filter((pc) => pc.product_id === product.id) || [];
+        
+        const productColors = productColorsForItem
+          .map((pc) => (pc.colors as any)?.name?.toLowerCase() || '')
+          .filter(Boolean);
+
+        // Create color to image mapping
+        const colorImages: Record<string, string> = {};
+        for (const pc of productColorsForItem) {
+          const colorName = (pc.colors as any)?.name?.toLowerCase();
+          if (colorName && pc.image_id) {
+            const colorImage = allImagesData?.find((img) => img.id === pc.image_id);
+            if (colorImage) {
+              colorImages[colorName] = colorImage.image_url;
+            }
+          }
+        }
+
         return {
-          ...product,
-          image_url: primaryImage?.image_url || product.image_url,
+          id: product.id,
+          name: product.name,
+          price: product.offer_price || product.price,
+          image: primaryImage?.image_url || product.image_url || '',
+          category: product.category,
+          isNew: product.flag === 'New Arrival',
+          colors: productColors || [],
+          sizes: product.sizes || [],
+          rating: product.rating || 0,
+          colorImages: Object.keys(colorImages).length > 0 ? colorImages : undefined,
+          targetGender: product.target_gender,
         };
       });
 
-      return productsWithImages as Product[];
+      return productsWithImages;
     },
     enabled: !!flagFromUrl,
   });
@@ -148,14 +186,7 @@ const FlagProducts = () => {
               {products.map((product) => (
                 <ProductCardEnhanced
                   key={product.id}
-                  id={product.id}
-                  name={product.name}
-                  price={product.offer_price || product.price}
-                  image={product.image_url || ''}
-                  category={product.category}
-                  isNew={product.flag === 'New Arrival'}
-                  sizes={product.sizes}
-                  rating={product.rating}
+                  {...product}
                 />
               ))}
             </div>

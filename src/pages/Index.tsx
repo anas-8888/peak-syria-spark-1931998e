@@ -161,8 +161,32 @@ const Index = () => {
           </div>
 
           {/* Categories Carousel */}
-          <div className="relative">
-            <div className="overflow-x-auto scrollbar-hide">
+          <div className="relative group">
+            {/* Left Arrow */}
+            <button
+              onClick={() => {
+                const container = document.getElementById('categories-scroll');
+                if (container) container.scrollBy({ left: -320, behavior: 'smooth' });
+              }}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Scroll left"
+            >
+              <ArrowRight className="h-6 w-6 rotate-180" />
+            </button>
+
+            {/* Right Arrow */}
+            <button
+              onClick={() => {
+                const container = document.getElementById('categories-scroll');
+                if (container) container.scrollBy({ left: 320, behavior: 'smooth' });
+              }}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Scroll right"
+            >
+              <ArrowRight className="h-6 w-6" />
+            </button>
+
+            <div id="categories-scroll" className="overflow-x-auto scrollbar-hide">
               <div className="flex gap-6 sm:gap-8 pb-4" style={{ width: 'max-content' }}>
                 {categories.map((category, index) => {
                   const Icon = category.icon;
