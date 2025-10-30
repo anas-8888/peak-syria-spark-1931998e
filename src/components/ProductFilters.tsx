@@ -28,10 +28,11 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
   const [localFilters, setLocalFilters] = useState(filters);
   const [tempPriceRange, setTempPriceRange] = useState<[number, number]>(filters.priceRange);
 
-  // Update temp price range when filters change externally
+  // Sync local filters with parent filters (e.g., from URL params)
   useEffect(() => {
+    setLocalFilters(filters);
     setTempPriceRange(filters.priceRange);
-  }, [filters.priceRange]);
+  }, [filters]);
 
   const handleCategoryToggle = (category: string) => {
     const newCategories = localFilters.categories.includes(category)
