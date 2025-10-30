@@ -107,10 +107,10 @@ const AboutManagement = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">About Page Management</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-3xl font-bold mb-2">About Page Management</h1>
+        <p className="text-muted-foreground">
           Customize the content displayed on the About page
         </p>
       </div>
