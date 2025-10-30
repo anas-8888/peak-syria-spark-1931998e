@@ -226,4 +226,9 @@ All colors MUST be HSL.
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Carousel container hover state for navigation arrows */
+  .carousel-container:hover .opacity-0 {
+    opacity: 1;
+  }
 }

@@ -147,7 +147,7 @@ const Index = () => {
           </div>
 
           {/* Featured Products Carousel */}
-          <div className="relative group mb-8">
+          <div className="relative carousel-container mb-8">
             {/* Left Arrow */}
             <button
               onClick={(e) => {
@@ -156,7 +156,7 @@ const Index = () => {
                 const container = document.getElementById('featured-scroll');
                 if (container) container.scrollBy({ left: -320, behavior: 'smooth' });
               }}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 carousel-container:hover:opacity-100 transition-opacity pointer-events-auto"
               aria-label="Scroll left"
             >
               <ArrowRight className="h-6 w-6 rotate-180" />
@@ -170,7 +170,7 @@ const Index = () => {
                 const container = document.getElementById('featured-scroll');
                 if (container) container.scrollBy({ left: 320, behavior: 'smooth' });
               }}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 carousel-container:hover:opacity-100 transition-opacity pointer-events-auto"
               aria-label="Scroll right"
             >
               <ArrowRight className="h-6 w-6" />
@@ -211,7 +211,7 @@ const Index = () => {
           </div>
 
           {/* Categories Carousel */}
-          <div className="relative group">
+          <div className="relative carousel-container">
             {/* Left Arrow */}
             <button
               onClick={(e) => {
@@ -220,7 +220,7 @@ const Index = () => {
                 const container = document.getElementById('categories-scroll');
                 if (container) container.scrollBy({ left: -320, behavior: 'smooth' });
               }}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 carousel-container:hover:opacity-100 transition-opacity pointer-events-auto"
               aria-label="Scroll left"
             >
               <ArrowRight className="h-6 w-6 rotate-180" />
@@ -234,7 +234,7 @@ const Index = () => {
                 const container = document.getElementById('categories-scroll');
                 if (container) container.scrollBy({ left: 320, behavior: 'smooth' });
               }}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 carousel-container:hover:opacity-100 transition-opacity pointer-events-auto"
               aria-label="Scroll right"
             >
               <ArrowRight className="h-6 w-6" />
