@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import HomeBanners from "@/components/HomeBanners";
 import ProductCardEnhanced from "@/components/ProductCardEnhanced";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -135,6 +136,11 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <WhatsAppButton />
+
+      {/* Promotional Banners */}
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <HomeBanners />
+      </div>
 
       {/* Featured Products */}
       <section className="py-12 sm:py-16 md:py-20 w-full">

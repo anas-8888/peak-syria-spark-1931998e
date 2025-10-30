@@ -80,6 +80,54 @@ export type Database = {
         }
         Relationships: []
       }
+      banners: {
+        Row: {
+          background_color: string | null
+          created_at: string
+          display_type: string
+          id: string
+          image_url: string
+          is_active: boolean
+          link_text: string | null
+          link_url: string | null
+          position: number
+          subtitle: string | null
+          text_color: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          background_color?: string | null
+          created_at?: string
+          display_type?: string
+          id?: string
+          image_url: string
+          is_active?: boolean
+          link_text?: string | null
+          link_url?: string | null
+          position?: number
+          subtitle?: string | null
+          text_color?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          background_color?: string | null
+          created_at?: string
+          display_type?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          link_text?: string | null
+          link_url?: string | null
+          position?: number
+          subtitle?: string | null
+          text_color?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       campaign_analytics: {
         Row: {
           bounce_count: number | null
