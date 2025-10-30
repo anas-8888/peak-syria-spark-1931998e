@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
-
 interface HeroShowcase {
   id: string;
   hero_title: string;
@@ -13,7 +12,6 @@ interface HeroShowcase {
   cta_text: string;
   cta_url: string | null;
 }
-
 interface ShowcaseProduct {
   product_id: string;
   display_order: number;
@@ -24,27 +22,29 @@ interface ShowcaseProduct {
     price: number;
   };
 }
-
 const ProductShowcase = () => {
-  const { data: showcases } = useQuery({
+  const {
+    data: showcases
+  } = useQuery({
     queryKey: ["product-showcases"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("hero_showcase")
-        .select("*")
-        .eq("is_active", true)
-        .order("position");
+      const {
+        data,
+        error
+      } = await supabase.from("hero_showcase").select("*").eq("is_active", true).order("position");
       if (error) throw error;
       return data as HeroShowcase[];
-    },
+    }
   });
-
-  const { data: showcaseProductsMap } = useQuery({
+  const {
+    data: showcaseProductsMap
+  } = useQuery({
     queryKey: ["showcase-products-map"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("showcase_products")
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from("showcase_products").select(`
           showcase_id,
           product_id,
           display_order,
@@ -54,8 +54,7 @@ const ProductShowcase = () => {
             image_url,
             price
           )
-        `)
-        .order("display_order");
+        `).order("display_order");
       if (error) throw error;
 
       // Group by showcase_id
@@ -67,18 +66,13 @@ const ProductShowcase = () => {
         map[item.showcase_id].push(item);
       });
       return map;
-    },
+    }
   });
-
   if (!showcases || showcases.length === 0) return null;
-
-  return (
-    <div className="w-full space-y-24">
-      {showcases.map((showcase) => {
-        const products = showcaseProductsMap?.[showcase.id] || [];
-
-        return (
-          <section key={showcase.id} className="py-16 overflow-hidden">
+  return <div className="w-full space-y-24">
+      {showcases.map(showcase => {
+      const products = showcaseProductsMap?.[showcase.id] || [];
+      return <section key={showcase.id} className="py-16 overflow-hidden">
             <div className="w-full px-4 sm:px-6 lg:px-8">
               {/* Hero Section - Split Layout */}
               <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
@@ -90,11 +84,7 @@ const ProductShowcase = () => {
                   
                   {/* Main Image */}
                   <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-                    <img
-                      src={showcase.hero_image_url}
-                      alt={showcase.hero_title}
-                      className="w-full h-[500px] object-cover transform group-hover:scale-105 transition-transform duration-700"
-                    />
+                    <img src={showcase.hero_image_url} alt={showcase.hero_title} className="w-full h-[500px] object-cover transform group-hover:scale-105 transition-transform duration-700" />
                   {/* Floating Badge */}
                   <div className="absolute top-6 left-6 bg-primary text-primary-foreground px-6 py-3 rounded-full font-bold text-sm shadow-lg animate-bounce-slow">
                     Featured
@@ -103,18 +93,18 @@ const ProductShowcase = () => {
 
                   {/* Decorative Floating Elements */}
                   <div className="absolute -right-4 top-1/4 w-24 h-24 bg-primary/20 rounded-full blur-2xl animate-pulse" />
-                  <div className="absolute -left-4 bottom-1/4 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+                  <div className="absolute -left-4 bottom-1/4 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse" style={{
+                animationDelay: "1s"
+              }} />
                 </div>
 
                 {/* Right: Content */}
                 <div className="space-y-6 animate-fade-in">
-                  {showcase.hero_subtitle && (
-                    <div className="inline-block">
+                  {showcase.hero_subtitle && <div className="inline-block">
                       <span className="px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold">
                         {showcase.hero_subtitle}
                       </span>
-                    </div>
-                  )}
+                    </div>}
                   
                   <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
                     {showcase.hero_title}
@@ -125,10 +115,7 @@ const ProductShowcase = () => {
                   </p>
 
                   <Link to={showcase.cta_url || "/products"}>
-                    <Button 
-                      size="lg" 
-                      className="group text-lg px-8 py-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                    >
+                    <Button size="lg" className="group text-lg py-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 mx-0 px-[33px] my-[14px]">
                       {showcase.cta_text}
                       <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform" />
                     </Button>
@@ -137,27 +124,16 @@ const ProductShowcase = () => {
               </div>
 
               {/* Product Grid */}
-              {products.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {products.length > 0 && <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   {products.map((item, index) => {
-                    const product = item.products as any;
-                    return (
-                      <Link
-                        key={product.id}
-                        to={`/product/${product.id}`}
-                        className="group relative"
-                        style={{
-                          animationDelay: `${index * 100}ms`,
-                        }}
-                      >
+              const product = item.products as any;
+              return <Link key={product.id} to={`/product/${product.id}`} className="group relative" style={{
+                animationDelay: `${index * 100}ms`
+              }}>
                         <div className="relative overflow-hidden rounded-xl bg-muted shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 animate-fade-in">
                           {/* Product Image */}
                           <div className="aspect-square overflow-hidden bg-background">
-                            <img
-                              src={product.image_url || ""}
-                              alt={product.name}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                            />
+                            <img src={product.image_url || ""} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                           </div>
 
                           {/* Hover Overlay */}
@@ -172,17 +148,12 @@ const ProductShowcase = () => {
                           {/* Corner Animation */}
                           <div className="absolute top-0 right-0 w-16 h-16 bg-primary/20 rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500" />
                         </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
+                      </Link>;
+            })}
+                </div>}
             </div>
-          </section>
-        );
-      })}
-    </div>
-  );
+          </section>;
+    })}
+    </div>;
 };
-
 export default ProductShowcase;
