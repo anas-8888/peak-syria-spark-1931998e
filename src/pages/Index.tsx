@@ -144,16 +144,49 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8">
-            {featuredProducts.map((product, index) => (
-              <div 
-                key={product.id}
-                style={{ animationDelay: `${index * 100}ms` }}
-                className="animate-fade-in"
-              >
-                <ProductCardEnhanced {...product} />
+          {/* Featured Products Carousel */}
+          <div className="relative group mb-8">
+            {/* Left Arrow */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const container = document.getElementById('featured-scroll');
+                if (container) container.scrollBy({ left: -320, behavior: 'smooth' });
+              }}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
+              aria-label="Scroll left"
+            >
+              <ArrowRight className="h-6 w-6 rotate-180" />
+            </button>
+
+            {/* Right Arrow */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const container = document.getElementById('featured-scroll');
+                if (container) container.scrollBy({ left: 320, behavior: 'smooth' });
+              }}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
+              aria-label="Scroll right"
+            >
+              <ArrowRight className="h-6 w-6" />
+            </button>
+
+            <div id="featured-scroll" className="overflow-x-auto scrollbar-hide">
+              <div className="flex gap-6 pb-4" style={{ width: 'max-content' }}>
+                {featuredProducts.map((product, index) => (
+                  <div 
+                    key={product.id}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                    className="animate-fade-in w-[280px] flex-shrink-0"
+                  >
+                    <ProductCardEnhanced {...product} />
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
 
           <div className="text-center">

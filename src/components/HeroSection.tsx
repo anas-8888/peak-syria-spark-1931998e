@@ -147,21 +147,21 @@ const HeroSection = () => {
        {/* Navigation Arrows - Smaller on mobile */}
        <button
          onClick={prevSlide}
-         className="absolute left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1.5 sm:p-3 md:p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg"
+         className="absolute left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1.5 sm:p-3 md:p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20"
          aria-label="Previous slide"
        >
          <ChevronLeft className="h-3 w-3 sm:h-5 sm:w-5 md:h-6 md:w-6" />
        </button>
        <button
          onClick={nextSlide}
-         className="absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1.5 sm:p-3 md:p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg"
+         className="absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1.5 sm:p-3 md:p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20"
          aria-label="Next slide"
        >
          <ChevronRight className="h-3 w-3 sm:h-5 sm:w-5 md:h-6 md:w-6" />
        </button>
 
       {/* Mobile Navigation - Smaller indicators */}
-      <div className="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+      <div className="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
         {slides.map((_, index) => (
           <button
             key={index}
@@ -177,7 +177,7 @@ const HeroSection = () => {
       </div>
 
       {/* Desktop Dots Indicator */}
-      <div className="hidden sm:flex absolute bottom-4 md:bottom-6 lg:bottom-8 left-1/2 -translate-x-1/2 gap-2">
+      <div className="hidden sm:flex absolute bottom-4 md:bottom-6 lg:bottom-8 left-1/2 -translate-x-1/2 gap-2 z-20">
         {slides.map((_, index) => (
           <button
             key={index}
