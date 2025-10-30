@@ -30,6 +30,7 @@ import Dashboard from "./pages/Dashboard";
 import Overview from "./pages/dashboard/Overview";
 import HeroSlides from "./pages/dashboard/HeroSlides";
 import Banners from "./pages/dashboard/Banners";
+import Collections from "./pages/dashboard/Collections";
 import Products from "./pages/dashboard/Products";
 import Orders from "./pages/dashboard/Orders";
 import Payments from "./pages/dashboard/Payments";
@@ -82,6 +83,7 @@ function App() {
                     <Route index element={<Overview />} />
                     <Route path="hero-slides" element={<HeroSlides />} />
                     <Route path="banners" element={<Banners />} />
+                    <Route path="collections" element={<Collections />} />
                     <Route path="products" element={<Products />} />
                   <Route path="categories" element={<Categories />} />
                   <Route path="colors" element={<Colors />} />

@@ -225,6 +225,48 @@ export type Database = {
           },
         ]
       }
+      collections: {
+        Row: {
+          background_gradient: string | null
+          created_at: string
+          description: string | null
+          icon_name: string | null
+          id: string
+          image_url: string
+          is_active: boolean
+          link_url: string | null
+          position: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          background_gradient?: string | null
+          created_at?: string
+          description?: string | null
+          icon_name?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean
+          link_url?: string | null
+          position?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          background_gradient?: string | null
+          created_at?: string
+          description?: string | null
+          icon_name?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          link_url?: string | null
+          position?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       colors: {
         Row: {
           created_at: string

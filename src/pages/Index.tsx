@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import HomeBanners from "@/components/HomeBanners";
+import FeaturedCollections from "@/components/FeaturedCollections";
 import ProductCardEnhanced from "@/components/ProductCardEnhanced";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -293,6 +294,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Featured Collections */}
+      <FeaturedCollections />
 
       {/* Trust Section */}
       <section className="relative py-12 sm:py-16 md:py-20 bg-secondary text-secondary-foreground overflow-hidden">
