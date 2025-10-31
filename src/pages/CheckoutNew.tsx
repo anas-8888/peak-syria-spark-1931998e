@@ -83,6 +83,7 @@ export default function CheckoutNew() {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(CheckoutSchema),
@@ -265,14 +266,18 @@ export default function CheckoutNew() {
 
   // Save form data to localStorage
   useEffect(() => {
-    const formData = {
-      selectedRegion,
-      selectedCarrier,
-      selectedPaymentMethod,
-      discountCode: appliedDiscount?.code || "",
-    };
-    localStorage.setItem("checkoutFormData", JSON.stringify(formData));
-  }, [selectedRegion, selectedCarrier, selectedPaymentMethod, appliedDiscount]);
+    const subscription = watch((value) => {
+      const formData = {
+        selectedRegion,
+        selectedCarrier,
+        selectedPaymentMethod,
+        discountCode: appliedDiscount?.code || "",
+        address: value.address || "",
+      };
+      localStorage.setItem("checkoutFormData", JSON.stringify(formData));
+    });
+    return () => subscription.unsubscribe();
+  }, [selectedRegion, selectedCarrier, selectedPaymentMethod, appliedDiscount, watch]);
 
   // Load saved form data
   useEffect(() => {
@@ -280,15 +285,31 @@ export default function CheckoutNew() {
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
-        if (parsed.selectedRegion) setSelectedRegion(parsed.selectedRegion);
+        if (parsed.selectedRegion) {
+          setSelectedRegion(parsed.selectedRegion);
+          setValue("regionId", parsed.selectedRegion);
+        }
         if (parsed.selectedCarrier) setSelectedCarrier(parsed.selectedCarrier);
         if (parsed.selectedPaymentMethod) setSelectedPaymentMethod(parsed.selectedPaymentMethod);
-        if (parsed.discountCode) setDiscountCode(parsed.discountCode);
+        if (parsed.discountCode) {
+          setDiscountCode(parsed.discountCode);
+          // Auto-validate saved discount code
+          if (cartItems.length > 0) {
+            validateDiscount(parsed.discountCode, true).then((result) => {
+              if (result.is_valid) {
+                toast.success("Previously applied discount restored");
+              }
+            });
+          }
+        }
+        if (parsed.address) {
+          setValue("address", parsed.address);
+        }
       } catch (e) {
         console.error("Error loading saved form data:", e);
       }
     }
-  }, []);
+  }, [setValue]);
 
   const checkAutoDiscounts = async () => {
     try {
@@ -470,6 +491,9 @@ export default function CheckoutNew() {
 
       // Clear cart
       await clearCart();
+
+      // Clear saved checkout form data
+      localStorage.removeItem("checkoutFormData");
 
       toast.success("Order placed successfully!");
 
