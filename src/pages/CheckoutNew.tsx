@@ -237,12 +237,40 @@ export default function CheckoutNew() {
               // Fall back to profile address if no saved address
               setValue("address", data.address);
             }
+            
+            // Auto-select region based on profile address if exists and no saved region
+            if (!parsed.selectedRegion && data.address && regions && regions.length > 0) {
+              const addressLower = data.address.toLowerCase();
+              const matchedRegion = regions.find(region => 
+                addressLower.includes(region.name.toLowerCase()) ||
+                (region.country && addressLower.includes(region.country.toLowerCase()))
+              );
+              
+              if (matchedRegion) {
+                setSelectedRegion(matchedRegion.id);
+                setValue("regionId", matchedRegion.id);
+              }
+            }
           } catch (e) {
             console.error("Error loading saved checkout data:", e);
           }
         } else if (data.address) {
           // No saved checkout data, use profile address
           setValue("address", data.address);
+          
+          // Auto-select region based on profile address
+          if (regions && regions.length > 0) {
+            const addressLower = data.address.toLowerCase();
+            const matchedRegion = regions.find(region => 
+              addressLower.includes(region.name.toLowerCase()) ||
+              (region.country && addressLower.includes(region.country.toLowerCase()))
+            );
+            
+            if (matchedRegion) {
+              setSelectedRegion(matchedRegion.id);
+              setValue("regionId", matchedRegion.id);
+            }
+          }
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -253,7 +281,7 @@ export default function CheckoutNew() {
     };
 
     fetchProfile();
-  }, [user, authLoading, navigate, setValue]);
+  }, [user, authLoading, navigate, setValue, regions]);
 
   useEffect(() => {
     if (paymentMethods && paymentMethods.length > 0 && !selectedPaymentMethod) {

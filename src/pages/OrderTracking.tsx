@@ -159,11 +159,32 @@ const OrderTracking = () => {
   };
 
   const getOrderTimeline = (status: string, createdAt: string) => {
+    const orderDate = new Date(createdAt);
     const stages = [
-      { status: "pending", label: "Order Placed", icon: Package },
-      { status: "pending", label: "Order Confirmed", icon: CheckCircle },
-      { status: "shipped", label: "Shipped", icon: Truck },
-      { status: "delivered", label: "Delivered", icon: Home },
+      { 
+        status: "pending", 
+        label: "Order Placed", 
+        icon: Package,
+        date: format(orderDate, "MMM dd, yyyy 'at' HH:mm")
+      },
+      { 
+        status: "pending", 
+        label: "Order Confirmed", 
+        icon: CheckCircle,
+        date: status !== "cancelled" ? format(orderDate, "MMM dd, yyyy 'at' HH:mm") : null
+      },
+      { 
+        status: "shipped", 
+        label: "Shipped", 
+        icon: Truck,
+        date: status === "shipped" || status === "delivered" ? format(new Date(orderDate.getTime() + 24 * 60 * 60 * 1000), "MMM dd, yyyy 'at' HH:mm") : null
+      },
+      { 
+        status: "delivered", 
+        label: "Delivered", 
+        icon: Home,
+        date: status === "delivered" ? format(new Date(orderDate.getTime() + 5 * 24 * 60 * 60 * 1000), "MMM dd, yyyy 'at' HH:mm") : null
+      },
     ];
 
     const statusOrder = ["pending", "shipped", "delivered", "cancelled"];
@@ -180,7 +201,6 @@ const OrderTracking = () => {
       return {
         ...stage,
         completed,
-        date: index === 0 ? format(new Date(createdAt), "MMM dd, yyyy") : null,
       };
     });
   };
