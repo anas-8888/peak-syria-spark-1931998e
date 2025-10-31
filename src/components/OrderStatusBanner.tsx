@@ -75,39 +75,35 @@ export const OrderStatusBanner = () => {
   const Icon = config.icon;
 
   return (
-    <div className={`sticky top-0 z-50 w-full border-b ${config.borderColor} ${config.bgColor}`}>
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className={`flex-shrink-0 p-2 rounded-full ${config.bgColor}`}>
-              <Icon className={`h-5 w-5 ${config.textColor}`} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className={`font-semibold ${config.textColor} text-sm sm:text-base`}>
-                Your order is {config.label}
-              </p>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                Order #{latestOrder.id.slice(0, 8)}
-              </p>
-            </div>
+    <div className={`fixed bottom-4 right-4 z-50 w-64 shadow-lg rounded-lg border ${config.borderColor} ${config.bgColor} backdrop-blur-sm`}>
+      <div className="p-3">
+        <div className="flex items-start gap-2 mb-2">
+          <div className={`flex-shrink-0 p-1.5 rounded-full ${config.bgColor}`}>
+            <Icon className={`h-4 w-4 ${config.textColor}`} />
           </div>
-          <div className="flex items-center gap-2">
-            <Link to={`/order-tracking?orderId=${latestOrder.id}`}>
-              <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-                Track Order
-              </Button>
-            </Link>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setDismissed(true)}
-              className="h-8 w-8 p-0 hover:bg-background/50"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Dismiss</span>
-            </Button>
+          <div className="flex-1 min-w-0">
+            <p className={`font-semibold ${config.textColor} text-xs`}>
+              {config.label}
+            </p>
+            <p className="text-[10px] text-muted-foreground truncate">
+              Order #{latestOrder.id.slice(0, 8)}
+            </p>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setDismissed(true)}
+            className="h-6 w-6 p-0 hover:bg-background/50 -mt-1"
+          >
+            <X className="h-3 w-3" />
+            <span className="sr-only">Dismiss</span>
+          </Button>
         </div>
+        <Link to={`/order-tracking?orderId=${latestOrder.id}`}>
+          <Button variant="outline" size="sm" className="w-full text-xs h-7">
+            Track Order
+          </Button>
+        </Link>
       </div>
     </div>
   );
