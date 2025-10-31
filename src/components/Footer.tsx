@@ -2,73 +2,50 @@ import { MessageCircle, Facebook, Instagram, Phone, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
 const Footer = () => {
   // Fetch root categories
-  const { data: categories } = useQuery({
+  const {
+    data: categories
+  } = useQuery({
     queryKey: ['footer-categories'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('id, name')
-        .is('parent_id', null)
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
-      
+      const {
+        data,
+        error
+      } = await supabase.from('categories').select('id, name').is('parent_id', null).eq('is_active', true).order('display_order', {
+        ascending: true
+      });
       if (error) throw error;
       return data || [];
     }
   });
 
   // Fetch store settings
-  const { data: settings } = useQuery({
+  const {
+    data: settings
+  } = useQuery({
     queryKey: ['store-settings'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('store_settings')
-        .select('*')
-        .limit(1)
-        .single();
-      
+      const {
+        data,
+        error
+      } = await supabase.from('store_settings').select('*').limit(1).single();
       if (error) throw error;
       return data;
     }
   });
-
-  return (
-    <footer className="relative bg-gradient-to-br from-secondary via-secondary to-secondary/90 text-secondary-foreground border-t-2 border-primary/40 w-full overflow-hidden">
+  return <footer className="relative bg-gradient-to-br from-secondary via-secondary to-secondary/90 text-secondary-foreground border-t-2 border-primary/40 w-full overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-0 left-0 w-96 h-96 bg-primary rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary rounded-full blur-3xl animate-pulse" style={{
+        animationDelay: '1s'
+      }}></div>
       </div>
       
       <div className="relative w-full">
         {/* Newsletter Section */}
-        <div className="border-b border-primary/20 px-4 py-12">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-              <div>
-                <h3 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                  Stay In The Game
-                </h3>
-                <p className="text-secondary-foreground/80">
-                  Get exclusive offers, new arrivals, and sports tips delivered to your inbox.
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <input 
-                  type="email" 
-                  placeholder="Enter your email"
-                  className="flex-1 px-6 py-3 bg-secondary-foreground/10 border border-primary/30 rounded-lg focus:outline-none focus:border-primary transition-colors text-secondary-foreground placeholder:text-secondary-foreground/50"
-                />
-                <button className="px-8 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-primary/50">
-                  Subscribe
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        
 
         {/* Main Footer Content */}
         <div className="px-4 py-16">
@@ -85,21 +62,15 @@ const Footer = () => {
                 <div>
                   <h4 className="font-semibold text-sm mb-4 text-secondary-foreground/90">CONNECT WITH US</h4>
                   <div className="flex gap-3">
-                    {settings?.facebook_url && (
-                      <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="group relative p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
+                    {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="group relative p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
                         <Facebook className="h-5 w-5 text-primary group-hover:text-primary-foreground transition-colors" />
-                      </a>
-                    )}
-                    {settings?.instagram_url && (
-                      <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="group relative p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
+                      </a>}
+                    {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="group relative p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
                         <Instagram className="h-5 w-5 text-primary group-hover:text-primary-foreground transition-colors" />
-                      </a>
-                    )}
-                    {settings?.whatsapp_number && (
-                      <a href={`https://wa.me/${settings.whatsapp_number}`} target="_blank" rel="noopener noreferrer" className="group relative p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
+                      </a>}
+                    {settings?.whatsapp_number && <a href={`https://wa.me/${settings.whatsapp_number}`} target="_blank" rel="noopener noreferrer" className="group relative p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
                         <MessageCircle className="h-5 w-5 text-primary group-hover:text-primary-foreground transition-colors" />
-                      </a>
-                    )}
+                      </a>}
                   </div>
                 </div>
               </div>
@@ -145,20 +116,12 @@ const Footer = () => {
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
                 <ul className="space-y-3">
-                  {categories && categories.length > 0 ? (
-                    categories.slice(0, 5).map((category) => (
-                      <li key={category.id}>
-                        <Link 
-                          to={`/category/${category.id}`} 
-                          className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2"
-                        >
+                  {categories && categories.length > 0 ? categories.slice(0, 5).map(category => <li key={category.id}>
+                        <Link to={`/category/${category.id}`} className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
                           <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                           {category.name}
                         </Link>
-                      </li>
-                    ))
-                  ) : (
-                    <>
+                      </li>) : <>
                       <li>
                         <Link to="/products?category=basketball" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
                           <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
@@ -177,8 +140,7 @@ const Footer = () => {
                           Apparel
                         </Link>
                       </li>
-                    </>
-                  )}
+                    </>}
                 </ul>
               </div>
 
@@ -265,14 +227,12 @@ const Footer = () => {
                     <Mail className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                     <span className="break-all">{settings?.store_email || 'info@peaksyria.com'}</span>
                   </li>
-                  {settings?.whatsapp_number && (
-                    <li className="flex items-start gap-3 text-secondary-foreground/80 text-sm">
+                  {settings?.whatsapp_number && <li className="flex items-start gap-3 text-secondary-foreground/80 text-sm">
                       <MessageCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                       <a href={`https://wa.me/${settings.whatsapp_number}`} className="hover:text-primary transition-colors">
                         WhatsApp Support
                       </a>
-                    </li>
-                  )}
+                    </li>}
                 </ul>
               </div>
             </div>
@@ -288,12 +248,7 @@ const Footer = () => {
               </p>
               <p className="text-xs">
                 Developed by{" "}
-                <a 
-                  href="https://nexa-group.net" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:text-primary/90 transition-all duration-300 font-semibold relative inline-block group"
-                >
+                <a href="https://nexa-group.net" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/90 transition-all duration-300 font-semibold relative inline-block group">
                   NEXA GROUP
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300"></span>
                 </a>
@@ -302,8 +257,6 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
