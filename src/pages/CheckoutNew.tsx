@@ -176,6 +176,11 @@ export default function CheckoutNew() {
           setValue("email", data.email || user.email || "");
           setValue("phone", data.phone || "");
           setValue("fullName", data.full_name || "");
+          
+          // Auto-fill address if available
+          if (data.address) {
+            setValue("address", data.address);
+          }
         }
       } catch (error) {
         console.error("Error fetching profile:", error);

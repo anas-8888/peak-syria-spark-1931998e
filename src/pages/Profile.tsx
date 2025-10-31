@@ -11,13 +11,14 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Camera, Loader2, Mail, Phone, MapPin, User } from "lucide-react";
+import { Camera, Loader2, Mail, Phone, MapPin, User, Navigation } from "lucide-react";
 
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -112,6 +113,43 @@ const Profile = () => {
       });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleGetLocation = () => {
+    setLoadingLocation(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            
+            // Use reverse geocoding to get address
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+            );
+            const data = await response.json();
+            
+            if (data.display_name) {
+              setAddress(data.display_name);
+              toast.success("Location detected successfully!");
+            }
+          } catch (error) {
+            console.error("Error getting location details:", error);
+            toast.error("Could not get location details");
+          } finally {
+            setLoadingLocation(false);
+          }
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          toast.error("Could not access your location");
+          setLoadingLocation(false);
+        }
+      );
+    } else {
+      toast.error("Geolocation is not supported by your browser");
+      setLoadingLocation(false);
     }
   };
 
@@ -268,19 +306,34 @@ const Profile = () => {
                   </div>
 
                   {/* Address */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="address" className="flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
                       Address
                     </Label>
-                    <Input
-                      id="address"
-                      type="text"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Your address"
-                      className="rounded-xl"
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        id="address"
+                        type="text"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Your address"
+                        className="rounded-xl flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleGetLocation}
+                        disabled={loadingLocation}
+                        className="rounded-xl"
+                      >
+                        {loadingLocation ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Navigation className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
