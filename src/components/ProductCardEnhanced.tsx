@@ -214,12 +214,12 @@ const ProductCardEnhanced = ({
         </div>
 
         {/* Product Info */}
-        <div className={`space-y-3 ${viewMode === "list" ? "flex-1 p-6 flex flex-col" : "p-4"}`}>
+        <div className={`space-y-2 sm:space-y-3 ${viewMode === "list" ? "flex-1 p-6 flex flex-col" : "p-3 sm:p-4"}`}>
           <div className={viewMode === "list" ? "flex-1" : ""}>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">{category}</p>
+            <p className="text-[9px] sm:text-xs text-muted-foreground uppercase tracking-wider">{category}</p>
             <Link to={`/product/${id}`}>
-              <h3 className={`font-semibold text-card-foreground hover:text-primary transition-colors line-clamp-2 ${
-                viewMode === "list" ? "text-lg mt-1" : "min-h-[3rem]"
+              <h3 className={`font-semibold text-card-foreground hover:text-primary transition-colors line-clamp-2 text-xs sm:text-base ${
+                viewMode === "list" ? "sm:text-lg mt-1" : "min-h-[2.5rem] sm:min-h-[3rem]"
               }`}>
                 {name}
               </h3>
@@ -227,13 +227,13 @@ const ProductCardEnhanced = ({
           </div>
 
           {/* Colors */}
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2">
             {colors.map((color) => (
               <button
                 key={color}
                 onClick={() => handleColorChange(color)}
-                className={`w-6 h-6 rounded-full border-2 transition-all ${
-                  selectedColor === color ? "border-primary scale-110 ring-2 ring-primary ring-offset-2" : "border-border"
+                className={`w-4 h-4 sm:w-6 sm:h-6 rounded-full border transition-all ${
+                  selectedColor === color ? "border-primary scale-110 ring-1 sm:ring-2 ring-primary ring-offset-1 sm:ring-offset-2" : "border-border"
                 }`}
                 style={{ backgroundColor: colorMap[color] || color }}
                 title={color}
@@ -242,24 +242,24 @@ const ProductCardEnhanced = ({
           </div>
 
           {/* Rating */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1">
             {[...Array(5)].map((_, i) => (
-              <span key={i} className={`text-sm ${i < Math.floor(rating) ? "text-primary" : "text-muted-foreground"}`}>
+              <span key={i} className={`text-xs sm:text-sm ${i < Math.floor(rating) ? "text-primary" : "text-muted-foreground"}`}>
                 ★
               </span>
             ))}
-            <span className="text-xs text-muted-foreground ml-1">({rating})</span>
+            <span className="text-[9px] sm:text-xs text-muted-foreground ml-0.5 sm:ml-1">({rating})</span>
           </div>
 
           {/* Sizes */}
           {sizes.length > 0 && (
-            <div className="text-xs text-muted-foreground">
+            <div className="text-[9px] sm:text-xs text-muted-foreground">
               Sizes: {sizes.join(", ")}
             </div>
           )}
 
-          <div className={`flex items-center ${viewMode === "list" ? "justify-between mt-auto pt-4 border-t" : "justify-between pt-2 border-t"}`}>
-            <span className={`font-bold text-primary ${viewMode === "list" ? "text-2xl" : "text-xl"}`}>{formatPrice(price)}</span>
+          <div className={`flex items-center ${viewMode === "list" ? "justify-between mt-auto pt-4 border-t" : "justify-between pt-1.5 sm:pt-2 border-t"}`}>
+            <span className={`font-bold text-primary ${viewMode === "list" ? "text-2xl" : "text-sm sm:text-xl"}`}>{formatPrice(price)}</span>
             {viewMode === "list" ? (
               <div className="flex gap-2">
                 <Button
@@ -284,7 +284,7 @@ const ProductCardEnhanced = ({
                 </Button>
               </div>
             ) : (
-              <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10" asChild>
+              <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10 text-[9px] sm:text-sm h-6 sm:h-9 px-2 sm:px-4" asChild>
                 <Link to={`/product/${id}`}>
                   View Details
                 </Link>
