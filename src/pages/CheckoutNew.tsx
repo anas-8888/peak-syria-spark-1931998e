@@ -282,20 +282,33 @@ export default function CheckoutNew() {
     }
   }, [cartItems]);
 
-  // Save form data to localStorage
+  // Save form data to localStorage whenever key selections change
+  useEffect(() => {
+    const formData = {
+      selectedRegion,
+      selectedCarrier,
+      selectedPaymentMethod,
+      discountCode: appliedDiscount?.code || "",
+    };
+    localStorage.setItem("checkoutFormData", JSON.stringify(formData));
+  }, [selectedRegion, selectedCarrier, selectedPaymentMethod, appliedDiscount]);
+
+  // Save address field separately when it changes
   useEffect(() => {
     const subscription = watch((value) => {
-      const formData = {
-        selectedRegion,
-        selectedCarrier,
-        selectedPaymentMethod,
-        discountCode: appliedDiscount?.code || "",
-        address: value.address || "",
-      };
-      localStorage.setItem("checkoutFormData", JSON.stringify(formData));
+      const savedData = localStorage.getItem("checkoutFormData");
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          parsed.address = value.address || "";
+          localStorage.setItem("checkoutFormData", JSON.stringify(parsed));
+        } catch (e) {
+          console.error("Error updating saved address:", e);
+        }
+      }
     });
     return () => subscription.unsubscribe();
-  }, [selectedRegion, selectedCarrier, selectedPaymentMethod, appliedDiscount, watch]);
+  }, [watch]);
 
   // Load saved form data
   useEffect(() => {
