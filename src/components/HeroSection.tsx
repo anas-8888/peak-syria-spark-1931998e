@@ -121,18 +121,18 @@ const HeroSection = () => {
                     asChild
                     variant="hero" 
                     size="sm" 
-                    className="group w-full sm:w-auto text-[10px] sm:text-sm md:text-base h-7 sm:h-9 md:h-12 px-3 sm:px-6 md:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                    className="group w-full sm:w-auto text-[9px] sm:text-sm md:text-base h-6 sm:h-9 md:h-12 px-2 sm:px-6 md:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                   >
                     <Link to={slide.button_url}>
                       {slide.button_text}
-                      <ArrowRight className="ml-1 sm:ml-2 h-2.5 w-2.5 sm:h-4 sm:w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="ml-1 sm:ml-2 h-2 w-2 sm:h-4 sm:w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </Button>
                   <Button 
                     asChild
                     variant="outlineWhite" 
                     size="sm"
-                    className="w-full sm:w-auto text-[10px] sm:text-sm md:text-base h-7 sm:h-9 md:h-12 px-3 sm:px-6 md:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                    className="w-full sm:w-auto text-[9px] sm:text-sm md:text-base h-6 sm:h-9 md:h-12 px-2 sm:px-6 md:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
                   >
                     <Link to="/products">
                       View All
