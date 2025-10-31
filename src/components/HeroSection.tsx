@@ -105,34 +105,34 @@ const HeroSection = () => {
           </div>
 
            <div className="relative h-full w-full px-4 sm:px-6 md:px-8 lg:px-12 flex items-center">
-             <div className="w-full max-w-3xl lg:max-w-4xl space-y-4 sm:space-y-5 md:space-y-6 lg:space-y-8">
-               <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-4 py-2 text-primary text-sm font-semibold animate-slide-in-left">
-                 <span className="text-xs sm:text-sm">✨</span>
+             <div className="w-full max-w-3xl lg:max-w-4xl space-y-3 sm:space-y-5 md:space-y-6 lg:space-y-8">
+               <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-primary text-xs sm:text-sm font-semibold animate-slide-in-left">
+                 <span className="text-[10px] sm:text-xs md:text-sm">✨</span>
                  {slide.flag_name}
                </div>
-               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight animate-slide-up">
+               <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white leading-tight animate-slide-up">
                  {slide.title}
                </h1>
-               <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 font-medium animate-fade-in" style={{ animationDelay: "200ms" }}>
+               <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 font-medium animate-fade-in" style={{ animationDelay: "200ms" }}>
                  {slide.subtitle}
                </p>
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
                   <Button 
                     asChild
                     variant="hero" 
                     size="sm" 
-                    className="group w-full sm:w-auto text-[10px] sm:text-base h-7 sm:h-12 px-3 sm:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                    className="group w-full sm:w-auto text-[10px] sm:text-sm md:text-base h-7 sm:h-9 md:h-12 px-3 sm:px-6 md:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                   >
                     <Link to={slide.button_url}>
                       {slide.button_text}
-                      <ArrowRight className="ml-1 sm:ml-2 h-2.5 w-2.5 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="ml-1 sm:ml-2 h-2.5 w-2.5 sm:h-4 sm:w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </Button>
                   <Button 
                     asChild
                     variant="outlineWhite" 
                     size="sm"
-                    className="w-full sm:w-auto text-[10px] sm:text-base h-7 sm:h-12 px-3 sm:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                    className="w-full sm:w-auto text-[10px] sm:text-sm md:text-base h-7 sm:h-9 md:h-12 px-3 sm:px-6 md:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
                   >
                     <Link to="/products">
                       View All
