@@ -217,8 +217,8 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-primary/30 px-4 sm:px-6 py-4 sm:py-6">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 text-secondary-foreground/70">
-              <div className="flex flex-col items-center md:items-start gap-3 w-full md:w-auto">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-6 text-secondary-foreground/70">
+              <div className="flex flex-col items-center md:items-start gap-2.5 w-full md:w-auto">
                 <p className="font-semibold text-center md:text-left text-sm">
                   &copy; {new Date().getFullYear()} PEAK Syria. All rights reserved.
                 </p>
