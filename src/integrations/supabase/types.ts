@@ -1351,7 +1351,6 @@ export type Database = {
       }
       shipping_carriers: {
         Row: {
-          base_cost: number
           created_at: string
           description: string | null
           display_order: number
@@ -1363,7 +1362,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          base_cost?: number
           created_at?: string
           description?: string | null
           display_order?: number
@@ -1375,7 +1373,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          base_cost?: number
           created_at?: string
           description?: string | null
           display_order?: number

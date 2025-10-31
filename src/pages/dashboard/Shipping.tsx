@@ -49,7 +49,6 @@ interface ShippingCarrier {
   id: string;
   name: string;
   description: string | null;
-  base_cost: number;
   estimated_days: string | null;
   is_active: boolean;
   display_order: number;
@@ -86,7 +85,6 @@ const Shipping = () => {
   const [carrierForm, setCarrierForm] = useState({
     name: "",
     description: "",
-    base_cost: "",
     estimated_days: "",
     display_order: "0",
     is_active: true,
@@ -238,7 +236,6 @@ const Shipping = () => {
     setCarrierForm({
       name: "",
       description: "",
-      base_cost: "",
       estimated_days: "",
       display_order: "0",
       is_active: true,
@@ -260,7 +257,6 @@ const Shipping = () => {
     setCarrierForm({
       name: carrier.name,
       description: carrier.description || "",
-      base_cost: carrier.base_cost.toString(),
       estimated_days: carrier.estimated_days || "",
       display_order: carrier.display_order.toString(),
       is_active: carrier.is_active,
@@ -309,7 +305,7 @@ const Shipping = () => {
   };
 
   const handleSaveCarrier = () => {
-    if (!carrierForm.name || !carrierForm.base_cost) {
+    if (!carrierForm.name) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -317,7 +313,6 @@ const Shipping = () => {
     saveCarrierMutation.mutate({
       name: carrierForm.name,
       description: carrierForm.description || null,
-      base_cost: parseFloat(carrierForm.base_cost),
       estimated_days: carrierForm.estimated_days || null,
       display_order: parseInt(carrierForm.display_order),
       is_active: carrierForm.is_active,
@@ -409,12 +404,12 @@ const Shipping = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label>Cost (SYP) *</Label>
+                  <Label>Cost ($) *</Label>
                   <Input
                     type="number"
                     value={regionForm.cost}
                     onChange={(e) => setRegionForm({ ...regionForm, cost: e.target.value })}
-                    placeholder="50000"
+                    placeholder="50"
                   />
                 </div>
                 <Button onClick={handleSaveCarrierRegion} className="w-full">
@@ -476,15 +471,6 @@ const Shipping = () => {
                       <p className="text-xs text-muted-foreground">Uploading image...</p>
                     )}
                   </div>
-                </div>
-                <div>
-                  <Label>Base Cost (SYP) *</Label>
-                  <Input
-                    type="number"
-                    value={carrierForm.base_cost}
-                    onChange={(e) => setCarrierForm({ ...carrierForm, base_cost: e.target.value })}
-                    placeholder="50000"
-                  />
                 </div>
                 <div>
                   <Label>Estimated Delivery Time</Label>
@@ -586,7 +572,6 @@ const Shipping = () => {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Base Cost</TableHead>
                 <TableHead>Delivery Time</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
@@ -599,7 +584,6 @@ const Shipping = () => {
                   <TableCell className="text-muted-foreground">
                     {carrier.description || "-"}
                   </TableCell>
-                  <TableCell>{carrier.base_cost.toLocaleString()} SYP</TableCell>
                   <TableCell>{carrier.estimated_days || "-"}</TableCell>
                   <TableCell>
                     <Switch
@@ -665,7 +649,7 @@ const Shipping = () => {
                       </div>
                     </TableCell>
                     <TableCell className="font-semibold">
-                      {Number(cr.cost).toLocaleString()} SYP
+                      ${Number(cr.cost).toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <Button
