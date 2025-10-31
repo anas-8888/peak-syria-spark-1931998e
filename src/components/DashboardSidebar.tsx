@@ -61,6 +61,11 @@ const menuItems = [{
   icon: CreditCard,
   end: false
 }, {
+  title: "Payment Methods",
+  path: "/dashboard/payment-methods",
+  icon: CreditCard,
+  end: false
+}, {
   title: "Reviews",
   path: "/dashboard/reviews",
   icon: Star,
