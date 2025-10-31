@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Eye, Package, Truck, CheckCircle, XCircle } from "lucide-react";
+import { Search, Eye, Package, Truck, CheckCircle, XCircle, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,19 +12,55 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useQuery } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
-type OrderWithItems = {
+type OrderWithDetails = {
   id: string;
   customer_name: string;
   customer_email: string;
+  customer_phone: string;
+  shipping_address: string;
   total_amount: number;
+  shipping_cost: number;
   status: string;
   created_at: string;
   itemCount: number;
+  order_items: Array<{
+    id: string;
+    quantity: number;
+    price: number;
+    products: {
+      name: string;
+      image_url: string;
+    };
+  }>;
+  regions: {
+    name: string;
+  } | null;
+  shipping_carriers: {
+    name: string;
+    image_url: string;
+  } | null;
 };
 
 const statusIcons = {
@@ -50,6 +86,12 @@ const statusLabels = {
 
 const Orders = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<OrderWithDetails | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState("");
+  const queryClient = useQueryClient();
+  const { formatPrice } = useCurrency();
 
   const { data: ordersData, isLoading } = useQuery({
     queryKey: ["orders"],
@@ -60,11 +102,27 @@ const Orders = () => {
           id,
           customer_name,
           customer_email,
+          customer_phone,
+          shipping_address,
           total_amount,
+          shipping_cost,
           status,
           created_at,
           order_items (
-            id
+            id,
+            quantity,
+            price,
+            products (
+              name,
+              image_url
+            )
+          ),
+          regions (
+            name
+          ),
+          shipping_carriers (
+            name,
+            image_url
           )
         `)
         .order("created_at", { ascending: false });
@@ -74,7 +132,26 @@ const Orders = () => {
       return orders.map((order) => ({
         ...order,
         itemCount: order.order_items?.length || 0,
-      })) as OrderWithItems[];
+      })) as OrderWithDetails[];
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status })
+        .eq("id", orderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast.success("Order status updated successfully");
+      setStatusDialogOpen(false);
+      setDetailsDialogOpen(false);
+    },
+    onError: () => {
+      toast.error("Failed to update order status");
     },
   });
 
@@ -231,7 +308,7 @@ const Orders = () => {
                       </TableCell>
                       <TableCell>{order.itemCount} items</TableCell>
                       <TableCell className="font-semibold">
-                        ${order.total_amount.toLocaleString()}
+                        {formatPrice(order.total_amount)}
                       </TableCell>
                       <TableCell>
                         <Badge variant={statusVariants[order.status as keyof typeof statusVariants] as any} className="gap-2">
@@ -241,9 +318,29 @@ const Orders = () => {
                       </TableCell>
                       <TableCell>{format(new Date(order.created_at), "yyyy/MM/dd")}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon">
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setDetailsDialogOpen(true);
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setNewStatus(order.status);
+                              setStatusDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -253,6 +350,165 @@ const Orders = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Order Details Dialog */}
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Order Details</DialogTitle>
+            <DialogDescription>
+              Order #{selectedOrder?.id.slice(0, 8)}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-6">
+              {/* Customer Info */}
+              <div>
+                <h3 className="font-semibold mb-3">Customer Information</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Name:</span>
+                    <span className="font-medium">{selectedOrder.customer_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Email:</span>
+                    <span className="font-medium">{selectedOrder.customer_email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Phone:</span>
+                    <span className="font-medium">{selectedOrder.customer_phone}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Address:</span>
+                    <span className="font-medium text-right max-w-xs">{selectedOrder.shipping_address}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Shipping Info */}
+              <div>
+                <h3 className="font-semibold mb-3">Shipping Information</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Region:</span>
+                    <span className="font-medium">{selectedOrder.regions?.name || "N/A"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Carrier:</span>
+                    <span className="font-medium flex items-center gap-2">
+                      {selectedOrder.shipping_carriers?.image_url && (
+                        <img 
+                          src={selectedOrder.shipping_carriers.image_url} 
+                          alt="" 
+                          className="h-6 w-6 object-contain"
+                        />
+                      )}
+                      {selectedOrder.shipping_carriers?.name || "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Shipping Cost:</span>
+                    <span className="font-medium">{formatPrice(selectedOrder.shipping_cost)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div>
+                <h3 className="font-semibold mb-3">Order Items</h3>
+                <div className="space-y-3">
+                  {selectedOrder.order_items.map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                      <img
+                        src={item.products.image_url}
+                        alt={item.products.name}
+                        className="h-16 w-16 object-cover rounded"
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium">{item.products.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Quantity: {item.quantity} × {formatPrice(item.price)}
+                        </p>
+                      </div>
+                      <div className="font-semibold">
+                        {formatPrice(item.quantity * item.price)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Order Summary */}
+              <div>
+                <h3 className="font-semibold mb-3">Order Summary</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Subtotal:</span>
+                    <span className="font-medium">
+                      {formatPrice(selectedOrder.total_amount - selectedOrder.shipping_cost)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Shipping:</span>
+                    <span className="font-medium">{formatPrice(selectedOrder.shipping_cost)}</span>
+                  </div>
+                  <div className="flex justify-between text-base font-bold pt-2 border-t">
+                    <span>Total:</span>
+                    <span>{formatPrice(selectedOrder.total_amount)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div>
+                <h3 className="font-semibold mb-3">Order Status</h3>
+                <Badge variant={statusVariants[selectedOrder.status as keyof typeof statusVariants] as any} className="gap-2">
+                  {statusLabels[selectedOrder.status as keyof typeof statusLabels]}
+                </Badge>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Update Status Dialog */}
+      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Order Status</DialogTitle>
+            <DialogDescription>
+              Change the status of order #{selectedOrder?.id.slice(0, 8)}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">New Status</label>
+              <Select value={newStatus} onValueChange={setNewStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Processing</SelectItem>
+                  <SelectItem value="shipped">In Transit</SelectItem>
+                  <SelectItem value="delivered">Delivered</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button 
+              className="w-full"
+              onClick={() => {
+                if (selectedOrder) {
+                  updateStatusMutation.mutate({ orderId: selectedOrder.id, status: newStatus });
+                }
+              }}
+              disabled={updateStatusMutation.isPending}
+            >
+              {updateStatusMutation.isPending ? "Updating..." : "Update Status"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

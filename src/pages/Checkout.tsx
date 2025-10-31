@@ -56,11 +56,17 @@ const Checkout = () => {
 
       // Create order using secure RPC function
       const { data: orderId, error: orderError } = await supabase.rpc('create_order_with_items', {
+        p_user_id: user.id,
         p_total_amount: total,
         p_shipping_address: data.address,
         p_customer_name: data.fullName,
         p_customer_phone: data.phone,
         p_customer_email: data.email,
+        p_shipping_carrier_id: null, // Old checkout doesn't have carrier selection
+        p_shipping_region_id: data.regionId,
+        p_shipping_cost: shipping,
+        p_discount_id: null,
+        p_discount_amount: 0,
         p_items: cartItems.map(item => ({
           product_id: item.id,
           quantity: item.quantity

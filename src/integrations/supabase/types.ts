@@ -1511,9 +1511,15 @@ export type Database = {
           p_customer_email: string
           p_customer_name: string
           p_customer_phone: string
-          p_items: Json
+          p_discount_amount?: number
+          p_discount_id?: string
+          p_items?: Json
           p_shipping_address: string
+          p_shipping_carrier_id?: string
+          p_shipping_cost?: number
+          p_shipping_region_id?: string
           p_total_amount: number
+          p_user_id: string
         }
         Returns: string
       }

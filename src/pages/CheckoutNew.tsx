@@ -414,6 +414,11 @@ export default function CheckoutNew() {
           p_customer_name: profile?.full_name || user.email,
           p_customer_email: profile?.email || user.email,
           p_customer_phone: profile?.phone || "",
+          p_shipping_carrier_id: selectedCarrier || "",
+          p_shipping_region_id: data.regionId,
+          p_shipping_cost: shippingCost,
+          p_discount_id: appliedDiscount?.id || null,
+          p_discount_amount: discountAmount,
           p_items: cartItems.map((item) => ({
             product_id: item.product_id,
             quantity: item.quantity,
