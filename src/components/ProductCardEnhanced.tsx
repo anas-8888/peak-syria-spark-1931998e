@@ -157,11 +157,11 @@ const ProductCardEnhanced = ({
   return (
     <>
       <div className={`group relative bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 animate-fade-in ${
-        viewMode === "list" ? "flex flex-row" : ""
+        viewMode === "list" ? "flex flex-col sm:flex-row" : ""
       }`}>
         {/* Product Image */}
         <div className={`relative overflow-hidden bg-muted ${
-          viewMode === "list" ? "w-48 h-48 flex-shrink-0" : "aspect-square"
+          viewMode === "list" ? "w-full sm:w-48 h-48 sm:h-48 flex-shrink-0" : "aspect-square"
         }`}>
           <img
             src={currentImage}
@@ -226,12 +226,12 @@ const ProductCardEnhanced = ({
         </div>
 
         {/* Product Info */}
-        <div className={`space-y-2 sm:space-y-3 ${viewMode === "list" ? "flex-1 p-6 flex flex-col" : "p-3 sm:p-4"}`}>
+        <div className={`space-y-2 sm:space-y-3 ${viewMode === "list" ? "flex-1 p-4 sm:p-6 flex flex-col" : "p-3 sm:p-4"}`}>
           <div className={viewMode === "list" ? "flex-1" : ""}>
-            <p className="text-[9px] sm:text-xs text-muted-foreground uppercase tracking-wider">{category}</p>
+            <p className="text-xs sm:text-xs text-muted-foreground uppercase tracking-wider">{category}</p>
             <Link to={`/product/${id}`}>
-              <h3 className={`font-semibold text-card-foreground hover:text-primary transition-colors line-clamp-2 text-xs sm:text-base ${
-                viewMode === "list" ? "sm:text-lg mt-1" : "min-h-[2.5rem] sm:min-h-[3rem]"
+              <h3 className={`font-semibold text-card-foreground hover:text-primary transition-colors line-clamp-2 ${
+                viewMode === "list" ? "text-base sm:text-lg mt-1" : "text-xs sm:text-base min-h-[2.5rem] sm:min-h-[3rem]"
               }`}>
                 {name}
               </h3>
@@ -244,7 +244,7 @@ const ProductCardEnhanced = ({
               <button
                 key={color}
                 onClick={() => handleColorChange(color)}
-                className={`w-3 h-3 sm:w-6 sm:h-6 rounded-full border transition-all ${
+                className={`w-4 h-4 sm:w-6 sm:h-6 rounded-full border transition-all ${
                   selectedColor === color ? "border-primary scale-110 ring-1 sm:ring-2 ring-primary ring-offset-1 sm:ring-offset-2" : "border-border"
                 }`}
                 style={{ backgroundColor: colorMap[color] || color }}
@@ -260,36 +260,38 @@ const ProductCardEnhanced = ({
                 ★
               </span>
             ))}
-            <span className="text-[9px] sm:text-xs text-muted-foreground ml-0.5 sm:ml-1">({rating})</span>
+            <span className="text-xs sm:text-xs text-muted-foreground ml-0.5 sm:ml-1">({rating})</span>
           </div>
 
           {/* Sizes */}
           {sizes.length > 0 && (
-            <div className="text-[9px] sm:text-xs text-muted-foreground">
+            <div className="text-xs sm:text-xs text-muted-foreground">
               Sizes: {sizes.join(", ")}
             </div>
           )}
 
-          <div className={`flex items-center ${viewMode === "list" ? "justify-between mt-auto pt-4 border-t" : "justify-between pt-1.5 sm:pt-2 border-t"}`}>
-            <span className={`font-bold text-primary ${viewMode === "list" ? "text-2xl" : "text-sm sm:text-xl"}`}>{formatPrice(price)}</span>
+          <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-3 ${viewMode === "list" ? "justify-between mt-auto pt-4 border-t" : "justify-between pt-1.5 sm:pt-2 border-t"}`}>
+            <span className={`font-bold text-primary ${viewMode === "list" ? "text-xl sm:text-2xl" : "text-sm sm:text-xl"}`}>{formatPrice(price)}</span>
             {viewMode === "list" ? (
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => setQuickViewOpen(true)}
+                  className="flex-shrink-0"
                 >
-                  <Eye className="h-5 w-5" />
+                  <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
                 <Button
                   variant={isFavorite ? "hero" : "outline"}
                   size="icon"
                   onClick={handleToggleFavorite}
                   disabled={isLoading}
+                  className="flex-shrink-0"
                 >
-                  <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
+                  <Heart className={`h-4 w-4 sm:h-5 sm:w-5 ${isFavorite ? "fill-current" : ""}`} />
                 </Button>
-                <Button variant="hero" size="lg" asChild>
+                <Button variant="hero" size="default" className="flex-1 sm:flex-initial" asChild>
                   <Link to={`/product/${id}`}>
                     View Details
                   </Link>
