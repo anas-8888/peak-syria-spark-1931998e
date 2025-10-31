@@ -227,12 +227,12 @@ const ProductCardEnhanced = ({
           </div>
 
           {/* Colors */}
-          <div className="flex gap-1.5 sm:gap-2">
+          <div className="flex gap-1 sm:gap-2">
             {colors.map((color) => (
               <button
                 key={color}
                 onClick={() => handleColorChange(color)}
-                className={`w-4 h-4 sm:w-6 sm:h-6 rounded-full border transition-all ${
+                className={`w-3 h-3 sm:w-6 sm:h-6 rounded-full border transition-all ${
                   selectedColor === color ? "border-primary scale-110 ring-1 sm:ring-2 ring-primary ring-offset-1 sm:ring-offset-2" : "border-border"
                 }`}
                 style={{ backgroundColor: colorMap[color] || color }}
