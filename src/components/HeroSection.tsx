@@ -168,8 +168,8 @@ const HeroSection = () => {
             onClick={() => setCurrentSlide(index)}
             className={`transition-all duration-300 ${
               index === currentSlide 
-                ? "h-0.5 w-2 bg-primary rounded-full" 
-                : "h-0.5 w-0.5 bg-white/40 hover:bg-white/60 rounded-full"
+                ? "h-[2px] w-[6px] bg-primary rounded-full" 
+                : "h-[2px] w-[2px] bg-white/40 hover:bg-white/60 rounded-full"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />
