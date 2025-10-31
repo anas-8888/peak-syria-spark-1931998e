@@ -184,12 +184,12 @@ const Index = () => {
             </button>
 
             <div id="featured-scroll" className="overflow-x-auto scrollbar-hide">
-              <div className="flex gap-6 pb-4" style={{ width: 'max-content' }}>
+              <div className="flex gap-4 sm:gap-6 pb-4" style={{ width: 'max-content' }}>
                 {featuredProducts.map((product, index) => (
                   <div 
                     key={product.id}
                     style={{ animationDelay: `${index * 100}ms` }}
-                    className="animate-fade-in w-[280px] flex-shrink-0"
+                    className="animate-fade-in w-[165px] sm:w-[280px] flex-shrink-0"
                   >
                     <ProductCardEnhanced {...product} />
                   </div>
@@ -248,7 +248,7 @@ const Index = () => {
             </button>
 
             <div id="categories-scroll" className="overflow-x-auto scrollbar-hide">
-              <div className="flex gap-6 sm:gap-8 pb-4" style={{ width: 'max-content' }}>
+              <div className="flex gap-4 sm:gap-6 md:gap-8 pb-4" style={{ width: 'max-content' }}>
                 {categories.map((category, index) => {
                   const Icon = category.icon;
                   return (
@@ -256,7 +256,7 @@ const Index = () => {
                       key={category.id}
                       to={category.hasChildren ? `/categories/${category.id}` : `/products?category=${category.path}`}
                       style={{ animationDelay: `${index * 150}ms` }}
-                      className="group bg-card rounded-lg shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fade-in overflow-hidden w-[280px] sm:w-[320px] flex-shrink-0"
+                      className="group bg-card rounded-lg shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fade-in overflow-hidden w-[165px] sm:w-[280px] md:w-[320px] flex-shrink-0"
                     >
                       {/* Category Image */}
                       {category.image_url ? (
