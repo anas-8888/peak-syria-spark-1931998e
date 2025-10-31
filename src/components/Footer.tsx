@@ -78,7 +78,7 @@ const Footer = () => {
                   Shop
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-2 sm:space-y-3">
+                <ul className="space-y-1.5 sm:space-y-2">
                   <li>
                     <Link to="/products" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
@@ -112,7 +112,7 @@ const Footer = () => {
                   Categories
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-2 sm:space-y-3">
+                <ul className="space-y-1.5 sm:space-y-2">
                   {categories && categories.length > 0 ? categories.slice(0, 5).map(category => <li key={category.id}>
                         <Link to={`/category/${category.id}`} className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                           <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
@@ -147,7 +147,7 @@ const Footer = () => {
                   Support
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-2 sm:space-y-3">
+                <ul className="space-y-1.5 sm:space-y-2">
                   <li>
                     <Link to="/contact" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
@@ -187,7 +187,7 @@ const Footer = () => {
                   Legal
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-2 sm:space-y-3">
+                <ul className="space-y-1.5 sm:space-y-2">
                   <li>
                     <Link to="/terms" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
@@ -215,7 +215,7 @@ const Footer = () => {
                   Get In Touch
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-3 sm:space-y-4">
+                <ul className="space-y-2 sm:space-y-2.5">
                   <li className="flex items-start gap-3 text-secondary-foreground/80 text-sm">
                     <Phone className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                     <span>{settings?.store_phone || '+963 XXX XXX XXX'}</span>
