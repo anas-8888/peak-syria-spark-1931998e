@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import PromoBanner from "@/components/PromoBanner";
 import PercentageLoader from "@/components/PercentageLoader";
+import { OrderStatusBanner } from "@/components/OrderStatusBanner";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, TrendingUp, Zap, Shield } from "lucide-react";
@@ -135,6 +136,7 @@ const Index = () => {
     <div className="min-h-screen bg-background w-full">
       <PromoBanner />
       <Navbar />
+      <OrderStatusBanner />
       <HeroSection />
       <WhatsAppButton />
 

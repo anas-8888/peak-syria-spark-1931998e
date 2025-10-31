@@ -44,6 +44,8 @@ type OrderWithDetails = {
   shipping_cost: number;
   status: string;
   created_at: string;
+  customer_confirmed_receipt: boolean;
+  receipt_confirmed_at: string | null;
   itemCount: number;
   order_items: Array<{
     id: string;
@@ -108,6 +110,8 @@ const Orders = () => {
           shipping_cost,
           status,
           created_at,
+          customer_confirmed_receipt,
+          receipt_confirmed_at,
           order_items (
             id,
             quantity,
@@ -465,6 +469,34 @@ const Orders = () => {
                 <Badge variant={statusVariants[selectedOrder.status as keyof typeof statusVariants] as any} className="gap-2">
                   {statusLabels[selectedOrder.status as keyof typeof statusLabels]}
                 </Badge>
+                
+                {/* Customer Receipt Confirmation */}
+                {selectedOrder.status === 'delivered' && (
+                  <div className="mt-4 p-3 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-2 text-sm">
+                      {selectedOrder.customer_confirmed_receipt ? (
+                        <>
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="text-green-700 dark:text-green-400 font-medium">
+                            Customer confirmed receipt
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Package className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">
+                            Waiting for customer to confirm receipt
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    {selectedOrder.receipt_confirmed_at && (
+                      <p className="text-xs text-muted-foreground mt-1 ml-6">
+                        Confirmed on {format(new Date(selectedOrder.receipt_confirmed_at), "MMM dd, yyyy 'at' HH:mm")}
+                      </p>
+                    )}
+                  </div>
+                )}
                 
                 {/* Quick Status Actions */}
                 <div className="mt-4">

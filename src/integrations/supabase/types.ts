@@ -843,11 +843,18 @@ export type Database = {
       }
       orders: {
         Row: {
+          cancelled_at: string | null
           created_at: string | null
+          customer_confirmed_receipt: boolean | null
           customer_email: string | null
           customer_name: string | null
           customer_phone: string | null
+          delivered_at: string | null
           id: string
+          pending_at: string | null
+          processing_at: string | null
+          receipt_confirmed_at: string | null
+          shipped_at: string | null
           shipping_address: string | null
           shipping_carrier_id: string | null
           shipping_cost: number | null
@@ -858,11 +865,18 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cancelled_at?: string | null
           created_at?: string | null
+          customer_confirmed_receipt?: boolean | null
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          delivered_at?: string | null
           id?: string
+          pending_at?: string | null
+          processing_at?: string | null
+          receipt_confirmed_at?: string | null
+          shipped_at?: string | null
           shipping_address?: string | null
           shipping_carrier_id?: string | null
           shipping_cost?: number | null
@@ -873,11 +887,18 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cancelled_at?: string | null
           created_at?: string | null
+          customer_confirmed_receipt?: boolean | null
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          delivered_at?: string | null
           id?: string
+          pending_at?: string | null
+          processing_at?: string | null
+          receipt_confirmed_at?: string | null
+          shipped_at?: string | null
           shipping_address?: string | null
           shipping_carrier_id?: string | null
           shipping_cost?: number | null

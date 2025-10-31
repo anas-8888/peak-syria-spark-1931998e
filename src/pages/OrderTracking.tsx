@@ -17,8 +17,9 @@ import { ArrowLeft, Package, CheckCircle, Truck, XCircle, Clock, Home } from "lu
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 type OrderWithDetails = {
@@ -31,6 +32,13 @@ type OrderWithDetails = {
   shipping_cost: number;
   status: string;
   created_at: string;
+  customer_confirmed_receipt: boolean;
+  receipt_confirmed_at: string | null;
+  pending_at: string | null;
+  processing_at: string | null;
+  shipped_at: string | null;
+  delivered_at: string | null;
+  cancelled_at: string | null;
   order_items: Array<{
     id: string;
     quantity: number;
@@ -80,6 +88,7 @@ const statusLabels = {
 const OrderTracking = () => {
   const { formatPrice } = useCurrency();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const orderIdFromUrl = searchParams.get("orderId");
   const [selectedOrderId, setSelectedOrderId] = useState<string>(orderIdFromUrl || "");
@@ -117,6 +126,13 @@ const OrderTracking = () => {
           shipping_cost,
           status,
           created_at,
+          customer_confirmed_receipt,
+          receipt_confirmed_at,
+          pending_at,
+          processing_at,
+          shipped_at,
+          delivered_at,
+          cancelled_at,
           order_items (
             id,
             quantity,
@@ -144,6 +160,34 @@ const OrderTracking = () => {
     refetchInterval: 10000, // Auto-refresh every 10 seconds
   });
 
+  // Mutation to confirm receipt
+  const confirmReceiptMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      const { error } = await supabase
+        .from("orders")
+        .update({ 
+          customer_confirmed_receipt: true,
+          receipt_confirmed_at: new Date().toISOString()
+        })
+        .eq("id", orderId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["order-details"] });
+      queryClient.invalidateQueries({ queryKey: ["user-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["latest-order"] });
+      toast.success("Thank you for confirming receipt!", {
+        description: "We hope you enjoy your purchase!",
+      });
+    },
+    onError: () => {
+      toast.error("Failed to confirm receipt", {
+        description: "Please try again later.",
+      });
+    },
+  });
+
   // Update selected order when URL changes or when user's first order loads
   useEffect(() => {
     if (orderIdFromUrl) {
@@ -158,41 +202,40 @@ const OrderTracking = () => {
     setSearchParams({ orderId });
   };
 
-  const getOrderTimeline = (status: string, createdAt: string) => {
-    const orderDate = new Date(createdAt);
+  const getOrderTimeline = (order: OrderWithDetails) => {
     const stages = [
       { 
         status: "pending", 
         label: "Order Placed", 
         icon: Package,
-        date: format(orderDate, "MMM dd, yyyy 'at' HH:mm")
+        date: order.pending_at || order.created_at
       },
       { 
-        status: "pending", 
+        status: "processing", 
         label: "Order Confirmed", 
         icon: CheckCircle,
-        date: status !== "cancelled" ? format(orderDate, "MMM dd, yyyy 'at' HH:mm") : null
+        date: order.processing_at
       },
       { 
         status: "shipped", 
         label: "Shipped", 
         icon: Truck,
-        date: status === "shipped" || status === "delivered" ? format(new Date(orderDate.getTime() + 24 * 60 * 60 * 1000), "MMM dd, yyyy 'at' HH:mm") : null
+        date: order.shipped_at
       },
       { 
         status: "delivered", 
         label: "Delivered", 
         icon: Home,
-        date: status === "delivered" ? format(new Date(orderDate.getTime() + 5 * 24 * 60 * 60 * 1000), "MMM dd, yyyy 'at' HH:mm") : null
+        date: order.delivered_at
       },
     ];
 
-    const statusOrder = ["pending", "shipped", "delivered", "cancelled"];
-    const currentIndex = statusOrder.indexOf(status);
+    const statusOrder = ["pending", "processing", "shipped", "delivered", "cancelled"];
+    const currentIndex = statusOrder.indexOf(order.status);
 
     return stages.map((stage, index) => {
       let completed = false;
-      if (status === "cancelled") {
+      if (order.status === "cancelled") {
         completed = index === 0; // Only first stage completed for cancelled
       } else {
         completed = statusOrder.indexOf(stage.status) <= currentIndex;
@@ -305,7 +348,7 @@ const OrderTracking = () => {
                   <CardContent>
                     {/* Timeline */}
                     <div className="space-y-6">
-                      {getOrderTimeline(orderDetails.status, orderDetails.created_at).map((stage, index) => (
+                      {getOrderTimeline(orderDetails).map((stage, index) => (
                         <div key={index} className="flex gap-4">
                           <div className="flex flex-col items-center">
                             <div
@@ -334,12 +377,42 @@ const OrderTracking = () => {
                               {stage.label}
                             </h3>
                             {stage.date && (
-                              <p className="text-sm text-muted-foreground">{stage.date}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {format(new Date(stage.date), "MMM dd, yyyy 'at' HH:mm")}
+                              </p>
                             )}
                           </div>
                         </div>
                       ))}
                     </div>
+
+                    {orderDetails.status === "delivered" && !orderDetails.customer_confirmed_receipt && (
+                      <div className="mt-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                        <p className="text-sm font-medium mb-3">
+                          Have you received your order?
+                        </p>
+                        <Button
+                          onClick={() => confirmReceiptMutation.mutate(orderDetails.id)}
+                          disabled={confirmReceiptMutation.isPending}
+                          size="sm"
+                          className="w-full sm:w-auto"
+                        >
+                          {confirmReceiptMutation.isPending ? "Confirming..." : "Confirm Receipt"}
+                        </Button>
+                      </div>
+                    )}
+
+                    {orderDetails.customer_confirmed_receipt && (
+                      <div className="mt-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                            You confirmed receipt on{" "}
+                            {format(new Date(orderDetails.receipt_confirmed_at!), "MMM dd, yyyy 'at' HH:mm")}
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     {orderDetails.status === "cancelled" && (
                       <div className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
