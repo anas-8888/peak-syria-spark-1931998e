@@ -217,22 +217,22 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-primary/30 px-4 sm:px-6 py-4 sm:py-6">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4 text-xs sm:text-sm text-secondary-foreground/70">
-              <div className="flex flex-col items-center md:items-start gap-1.5">
-                <p className="font-medium text-center md:text-left text-xs sm:text-sm">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 text-secondary-foreground/70">
+              <div className="flex flex-col items-center md:items-start gap-3 w-full md:w-auto">
+                <p className="font-semibold text-center md:text-left text-sm">
                   &copy; {new Date().getFullYear()} PEAK Syria. All rights reserved.
                 </p>
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 text-[9px] sm:text-xs">
-                  <Link to="/terms" className="hover:text-primary transition-colors whitespace-nowrap">Terms</Link>
-                  <span className="text-[8px]">•</span>
-                  <Link to="/privacy" className="hover:text-primary transition-colors whitespace-nowrap">Privacy</Link>
-                  <span className="text-[8px]">•</span>
-                  <Link to="/refund" className="hover:text-primary transition-colors whitespace-nowrap">Refund Policy</Link>
+                <div className="flex items-center gap-2 text-xs">
+                  <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>
+                  <span>•</span>
+                  <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+                  <span>•</span>
+                  <Link to="/refund" className="hover:text-primary transition-colors">Refund Policy</Link>
                 </div>
               </div>
-              <p className="text-[9px] sm:text-xs text-center md:text-right">
+              <p className="text-xs text-center md:text-right">
                 Developed by{" "}
-                <a href="https://nexa-group.net" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/90 transition-all duration-300 font-semibold relative inline-block group whitespace-nowrap">
+                <a href="https://nexa-group.net" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/90 transition-all duration-300 font-semibold relative inline-block group">
                   NEXA GROUP
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300"></span>
                 </a>
