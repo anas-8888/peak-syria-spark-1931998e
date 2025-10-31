@@ -77,17 +77,14 @@ export default function CartNew() {
                 <div className="flex gap-4">
                   {/* Product Image */}
                   <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
-                    {item.product.image_url ? (
-                      <img
-                        src={item.product.image_url}
-                        alt={item.product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <ShoppingBag className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                    )}
+                    <img
+                      src={item.product.image_url || '/placeholder.svg'}
+                      alt={item.product.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = '/placeholder.svg';
+                      }}
+                    />
                   </div>
 
                   {/* Product Details */}

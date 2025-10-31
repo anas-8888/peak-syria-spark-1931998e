@@ -51,13 +51,41 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           product_id,
           quantity,
           notes,
-          product:products(id, name, price, image_url, offer_price)
+          product:products(
+            id, 
+            name, 
+            price, 
+            offer_price,
+            image_url
+          )
         `)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setCartItems(data as CartItem[]);
+
+      // Fetch primary images for each product
+      const itemsWithImages = await Promise.all(
+        (data || []).map(async (item: any) => {
+          // First try to get primary image from product_images table
+          const { data: imageData } = await supabase
+            .from("product_images")
+            .select("image_url")
+            .eq("product_id", item.product_id)
+            .eq("is_primary", true)
+            .single();
+
+          return {
+            ...item,
+            product: {
+              ...item.product,
+              image_url: imageData?.image_url || item.product.image_url
+            }
+          };
+        })
+      );
+
+      setCartItems(itemsWithImages as CartItem[]);
     } catch (error) {
       console.error("Error fetching cart:", error);
       toast.error("Failed to load cart");
