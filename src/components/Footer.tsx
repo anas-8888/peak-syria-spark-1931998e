@@ -47,9 +47,9 @@ const Footer = () => {
         {/* Main Footer Content */}
         <div className="px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6 sm:gap-10 lg:gap-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-10 lg:gap-12">
               {/* About PEAK Syria - Spans 2 columns */}
-              <div className="lg:col-span-2 space-y-3 sm:space-y-6">
+              <div className="lg:col-span-2 space-y-2 sm:space-y-6">
                 <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                   PEAK Syria
                 </h3>
@@ -57,15 +57,15 @@ const Footer = () => {
                   {settings?.brand_description || 'Official distributor of PEAK sportswear in Syria. Premium quality, authentic products.'}
                 </p>
                 <div>
-                  <h4 className="font-semibold text-xs sm:text-sm mb-3 sm:mb-4 text-secondary-foreground/90">CONNECT WITH US</h4>
+                  <h4 className="font-semibold text-xs sm:text-sm mb-2 sm:mb-4 text-secondary-foreground/90">CONNECT WITH US</h4>
                   <div className="flex gap-2 sm:gap-3">
-                    {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="group relative p-2 sm:p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
+                    {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="group relative p-2 sm:p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110 flex items-center justify-center">
                         <Facebook className="h-4 w-4 sm:h-5 sm:w-5 text-primary group-hover:text-primary-foreground transition-colors" />
                       </a>}
-                    {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="group relative p-2 sm:p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
+                    {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="group relative p-2 sm:p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110 flex items-center justify-center">
                         <Instagram className="h-4 w-4 sm:h-5 sm:w-5 text-primary group-hover:text-primary-foreground transition-colors" />
                       </a>}
-                    {settings?.whatsapp_number && <a href={`https://wa.me/${settings.whatsapp_number}`} target="_blank" rel="noopener noreferrer" className="group relative p-2 sm:p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
+                    {settings?.whatsapp_number && <a href={`https://wa.me/${settings.whatsapp_number}`} target="_blank" rel="noopener noreferrer" className="group relative p-2 sm:p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110 flex items-center justify-center">
                         <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary group-hover:text-primary-foreground transition-colors" />
                       </a>}
                   </div>
@@ -74,11 +74,11 @@ const Footer = () => {
 
               {/* Shop */}
               <div>
-                <h4 className="font-bold text-xs sm:text-sm uppercase mb-4 sm:mb-6 relative inline-block tracking-wider">
+                <h4 className="font-bold text-xs sm:text-sm uppercase mb-3 sm:mb-6 relative inline-block tracking-wider">
                   Shop
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-1 sm:space-y-1.5">
+                <ul className="space-y-0.5 sm:space-y-1.5">
                   <li>
                     <Link to="/products" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
@@ -114,11 +114,11 @@ const Footer = () => {
 
               {/* Categories */}
               <div>
-                <h4 className="font-bold text-xs sm:text-sm uppercase mb-4 sm:mb-6 relative inline-block tracking-wider">
+                <h4 className="font-bold text-xs sm:text-sm uppercase mb-3 sm:mb-6 relative inline-block tracking-wider">
                   Categories
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-1 sm:space-y-1.5">
+                <ul className="space-y-0.5 sm:space-y-1.5">
                   {categories && categories.length > 0 ? categories.slice(0, 5).map(category => <li key={category.id}>
                         <Link to={`/category/${category.id}`} className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                           <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
@@ -149,11 +149,11 @@ const Footer = () => {
 
               {/* Support */}
               <div>
-                <h4 className="font-bold text-xs sm:text-sm uppercase mb-4 sm:mb-6 relative inline-block tracking-wider">
+                <h4 className="font-bold text-xs sm:text-sm uppercase mb-3 sm:mb-6 relative inline-block tracking-wider">
                   Support
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-1 sm:space-y-1.5">
+                <ul className="space-y-0.5 sm:space-y-1.5">
                   <li>
                     <Link to="/contact" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
@@ -189,11 +189,11 @@ const Footer = () => {
 
               {/* Get In Touch */}
               <div>
-                <h4 className="font-bold text-xs sm:text-sm uppercase mb-4 sm:mb-6 relative inline-block tracking-wider">
+                <h4 className="font-bold text-xs sm:text-sm uppercase mb-3 sm:mb-6 relative inline-block tracking-wider">
                   Get In Touch
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-1 sm:space-y-2">
+                <ul className="space-y-0.5 sm:space-y-2">
                   <li className="flex items-start gap-3 text-secondary-foreground/80 text-sm">
                     <Phone className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                     <span>{settings?.store_phone || '+963 XXX XXX XXX'}</span>
@@ -217,22 +217,22 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-primary/30 px-4 sm:px-6 py-4 sm:py-6">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-2 sm:gap-4 text-xs sm:text-sm text-secondary-foreground/70">
-              <div className="flex flex-col items-center md:items-start gap-1">
-                <p className="font-medium text-center md:text-left">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4 text-xs sm:text-sm text-secondary-foreground/70">
+              <div className="flex flex-col items-center md:items-start gap-1.5">
+                <p className="font-medium text-center md:text-left text-xs sm:text-sm">
                   &copy; {new Date().getFullYear()} PEAK Syria. All rights reserved.
                 </p>
-                <div className="flex items-center gap-2 text-[10px] sm:text-xs">
-                  <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>
-                  <span>•</span>
-                  <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
-                  <span>•</span>
-                  <Link to="/refund" className="hover:text-primary transition-colors">Refund Policy</Link>
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 text-[9px] sm:text-xs">
+                  <Link to="/terms" className="hover:text-primary transition-colors whitespace-nowrap">Terms</Link>
+                  <span className="text-[8px]">•</span>
+                  <Link to="/privacy" className="hover:text-primary transition-colors whitespace-nowrap">Privacy</Link>
+                  <span className="text-[8px]">•</span>
+                  <Link to="/refund" className="hover:text-primary transition-colors whitespace-nowrap">Refund Policy</Link>
                 </div>
               </div>
-              <p className="text-xs text-center md:text-right">
+              <p className="text-[9px] sm:text-xs text-center md:text-right">
                 Developed by{" "}
-                <a href="https://nexa-group.net" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/90 transition-all duration-300 font-semibold relative inline-block group">
+                <a href="https://nexa-group.net" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/90 transition-all duration-300 font-semibold relative inline-block group whitespace-nowrap">
                   NEXA GROUP
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300"></span>
                 </a>
