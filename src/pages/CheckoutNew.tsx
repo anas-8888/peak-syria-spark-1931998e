@@ -108,6 +108,28 @@ export default function CheckoutNew() {
     },
   });
 
+  // Restore saved region when regions data is loaded
+  useEffect(() => {
+    if (regions && regions.length > 0 && !selectedRegion) {
+      const savedData = localStorage.getItem("checkoutFormData");
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          if (parsed.selectedRegion) {
+            // Verify the saved region still exists in the database
+            const regionExists = regions.find(r => r.id === parsed.selectedRegion);
+            if (regionExists) {
+              setSelectedRegion(parsed.selectedRegion);
+              setValue("regionId", parsed.selectedRegion);
+            }
+          }
+        } catch (e) {
+          console.error("Error restoring saved region:", e);
+        }
+      }
+    }
+  }, [regions, selectedRegion, setValue]);
+
   // Fetch shipping carriers
   const { data: carriers, isLoading: carriersLoading } = useQuery({
     queryKey: ["shipping-carriers"],
@@ -184,11 +206,7 @@ export default function CheckoutNew() {
           try {
             const parsed = JSON.parse(savedData);
             
-            // Restore region
-            if (parsed.selectedRegion) {
-              setSelectedRegion(parsed.selectedRegion);
-              setValue("regionId", parsed.selectedRegion);
-            }
+            // Region will be restored by the regions effect above when regions data loads
             
             // Restore carrier
             if (parsed.selectedCarrier) {
