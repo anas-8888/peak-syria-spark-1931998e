@@ -50,6 +50,7 @@ interface ShippingCarrier {
   description: string | null;
   estimated_days: string | null;
   is_active: boolean;
+  image_url: string | null;
 }
 
 interface CarrierRegion {
@@ -72,6 +73,11 @@ export default function CheckoutNew() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [useGPS, setUseGPS] = useState(false);
   const [loadingLocation, setLoadingLocation] = useState(false);
+  const [discountCode, setDiscountCode] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [validatingDiscount, setValidatingDiscount] = useState(false);
+  const [autoDiscountChecked, setAutoDiscountChecked] = useState(false);
 
   const {
     register,
@@ -203,7 +209,6 @@ export default function CheckoutNew() {
             const data = await response.json();
             
             if (data.address) {
-              setValue("city", data.address.city || data.address.town || data.address.village || "");
               setValue("address", data.display_name || "");
               
               // Try to match with a region
@@ -238,7 +243,121 @@ export default function CheckoutNew() {
     }
   };
 
-  const total = cartTotal + shippingCost;
+  // Check for auto-apply discounts when cart loads
+  useEffect(() => {
+    if (cartItems.length > 0 && !autoDiscountChecked) {
+      checkAutoDiscounts();
+      setAutoDiscountChecked(true);
+    }
+  }, [cartItems]);
+
+  // Save form data to localStorage
+  useEffect(() => {
+    const formData = {
+      selectedRegion,
+      selectedCarrier,
+      selectedPaymentMethod,
+      discountCode: appliedDiscount?.code || "",
+    };
+    localStorage.setItem("checkoutFormData", JSON.stringify(formData));
+  }, [selectedRegion, selectedCarrier, selectedPaymentMethod, appliedDiscount]);
+
+  // Load saved form data
+  useEffect(() => {
+    const savedData = localStorage.getItem("checkoutFormData");
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        if (parsed.selectedRegion) setSelectedRegion(parsed.selectedRegion);
+        if (parsed.selectedCarrier) setSelectedCarrier(parsed.selectedCarrier);
+        if (parsed.selectedPaymentMethod) setSelectedPaymentMethod(parsed.selectedPaymentMethod);
+        if (parsed.discountCode) setDiscountCode(parsed.discountCode);
+      } catch (e) {
+        console.error("Error loading saved form data:", e);
+      }
+    }
+  }, []);
+
+  const checkAutoDiscounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("discounts")
+        .select("*")
+        .eq("is_automatic", true)
+        .eq("status", "active")
+        .lte("start_date", new Date().toISOString())
+        .or(`end_date.is.null,end_date.gte.${new Date().toISOString()}`);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // Validate the first auto discount
+        const autoDiscount = data[0];
+        const result = await validateDiscount(autoDiscount.code);
+        if (result.is_valid) {
+          toast.success(`Automatic discount "${autoDiscount.name}" applied!`);
+        }
+      }
+    } catch (error) {
+      console.error("Error checking auto discounts:", error);
+    }
+  };
+
+  const validateDiscount = async (code: string) => {
+    try {
+      const { data, error } = await supabase.rpc("validate_discount_code", {
+        p_code: code,
+        p_user_id: user?.id || null,
+        p_cart_subtotal: cartTotal,
+        p_cart_items: cartItems.map((item) => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+        })),
+      });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const result = data[0];
+        if (result.is_valid) {
+          setAppliedDiscount({
+            id: result.discount_id,
+            code: code,
+            amount: result.discount_amount,
+            message: result.message,
+          });
+          setDiscountAmount(Number(result.discount_amount));
+          return result;
+        } else {
+          toast.error(result.message || "Invalid discount code");
+          return result;
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Error validating discount");
+      return { is_valid: false };
+    }
+  };
+
+  const handleApplyDiscount = async () => {
+    if (!discountCode.trim()) {
+      toast.error("Please enter a discount code");
+      return;
+    }
+
+    setValidatingDiscount(true);
+    await validateDiscount(discountCode.trim());
+    setValidatingDiscount(false);
+  };
+
+  const handleRemoveDiscount = () => {
+    setAppliedDiscount(null);
+    setDiscountAmount(0);
+    setDiscountCode("");
+    toast.success("Discount removed");
+  };
+
+  const total = cartTotal + shippingCost - discountAmount;
 
   const onSubmit = async (data: CheckoutFormData) => {
     if (!user || !profile) {
@@ -275,7 +394,7 @@ export default function CheckoutNew() {
         {
           p_user_id: user.id,
           p_total_amount: total,
-          p_shipping_address: `${data.address}, ${data.city}`,
+          p_shipping_address: data.address,
           p_customer_name: profile.full_name || user.email,
           p_customer_email: profile.email || user.email,
           p_customer_phone: profile.phone || "",
@@ -298,11 +417,21 @@ export default function CheckoutNew() {
           shipping_carrier_id: selectedCarrier,
           shipping_region_id: selectedRegion,
           shipping_cost: shippingCost,
-          city: data.city,
         })
         .eq("id", orderId);
 
       if (updateError) throw updateError;
+
+      // Record discount usage if applied
+      if (appliedDiscount) {
+        await supabase.rpc("record_discount_usage", {
+          p_discount_id: appliedDiscount.id,
+          p_order_id: orderId,
+          p_user_id: user.id,
+          p_discount_amount: discountAmount,
+          p_order_subtotal: cartTotal,
+        });
+      }
 
       // Get selected payment method name
       const paymentMethod = paymentMethods?.find((pm) => pm.id === selectedPaymentMethod);
@@ -482,25 +611,16 @@ export default function CheckoutNew() {
               {/* Shipping Address */}
               <Card className="p-6">
                 <h2 className="text-xl font-bold mb-4">Shipping Address</h2>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="city">City *</Label>
-                    <Input id="city" {...register("city")} placeholder="City name" />
-                    {errors.city && (
-                      <p className="text-sm text-destructive mt-1">{errors.city.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="address">Detailed Address *</Label>
-                    <Input
-                      id="address"
-                      {...register("address")}
-                      placeholder="Street, building number, floor, etc."
-                    />
-                    {errors.address && (
-                      <p className="text-sm text-destructive mt-1">{errors.address.message}</p>
-                    )}
-                  </div>
+                <div>
+                  <Label htmlFor="address">Detailed Address *</Label>
+                  <Input
+                    id="address"
+                    {...register("address")}
+                    placeholder="Street, building number, floor, etc."
+                  />
+                  {errors.address && (
+                    <p className="text-sm text-destructive mt-1">{errors.address.message}</p>
+                  )}
                 </div>
               </Card>
 
@@ -528,20 +648,29 @@ export default function CheckoutNew() {
                             <RadioGroupItem value={carrier.id} id={carrier.id} />
                             <Label
                               htmlFor={carrier.id}
-                              className="flex items-center justify-between flex-1 cursor-pointer"
+                              className="flex items-center justify-between flex-1 cursor-pointer gap-3"
                             >
-                              <div>
-                                <div className="font-medium">{carrier.name}</div>
-                                {carrier.description && (
-                                  <div className="text-sm text-muted-foreground">
-                                    {carrier.description}
-                                  </div>
+                              <div className="flex items-center gap-3 flex-1">
+                                {carrier.image_url && (
+                                  <img
+                                    src={carrier.image_url}
+                                    alt={carrier.name}
+                                    className="w-12 h-12 object-contain rounded"
+                                  />
                                 )}
-                                {carrier.estimated_days && (
-                                  <div className="text-sm text-muted-foreground">
-                                    Delivery: {carrier.estimated_days}
-                                  </div>
-                                )}
+                                <div>
+                                  <div className="font-medium">{carrier.name}</div>
+                                  {carrier.description && (
+                                    <div className="text-sm text-muted-foreground">
+                                      {carrier.description}
+                                    </div>
+                                  )}
+                                  {carrier.estimated_days && (
+                                    <div className="text-sm text-muted-foreground">
+                                      Delivery: {carrier.estimated_days}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                               <div className="font-semibold">
                                 {formatPrice(Number(mapping?.cost || 0))}
@@ -639,7 +768,64 @@ export default function CheckoutNew() {
                     {shippingCost > 0 ? formatPrice(shippingCost) : "Select shipping method"}
                   </span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Discount</span>
+                    <span className="font-medium">-{formatPrice(discountAmount)}</span>
+                  </div>
+                )}
               </div>
+
+              {/* Discount Code Section */}
+              {!appliedDiscount ? (
+                <div className="mb-4">
+                  <Label htmlFor="discount">Discount Code</Label>
+                  <div className="flex gap-2 mt-1">
+                    <Input
+                      id="discount"
+                      value={discountCode}
+                      onChange={(e) => setDiscountCode(e.target.value)}
+                      placeholder="Enter code"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleApplyDiscount();
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleApplyDiscount}
+                      disabled={validatingDiscount}
+                    >
+                      {validatingDiscount ? "..." : "Apply"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                        {appliedDiscount.message}
+                      </p>
+                      <p className="text-xs text-green-600 dark:text-green-400">
+                        Code: {appliedDiscount.code}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemoveDiscount}
+                      className="text-green-800 hover:text-green-900 dark:text-green-200"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <Separator className="my-4" />
 

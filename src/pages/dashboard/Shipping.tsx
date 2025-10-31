@@ -53,6 +53,7 @@ interface ShippingCarrier {
   estimated_days: string | null;
   is_active: boolean;
   display_order: number;
+  image_url: string | null;
 }
 
 interface Region {
@@ -89,7 +90,9 @@ const Shipping = () => {
     estimated_days: "",
     display_order: "0",
     is_active: true,
+    image_url: "",
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Form state for region mapping
   const [regionForm, setRegionForm] = useState({
@@ -239,6 +242,7 @@ const Shipping = () => {
       estimated_days: "",
       display_order: "0",
       is_active: true,
+      image_url: "",
     });
     setEditingCarrier(null);
   };
@@ -260,8 +264,48 @@ const Shipping = () => {
       estimated_days: carrier.estimated_days || "",
       display_order: carrier.display_order.toString(),
       is_active: carrier.is_active,
+      image_url: carrier.image_url || "",
     });
     setCarrierDialogOpen(true);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image size should be less than 2MB");
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `shipping-carriers/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("product-images")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("product-images").getPublicUrl(filePath);
+
+      setCarrierForm({ ...carrierForm, image_url: data.publicUrl });
+      toast.success("Image uploaded successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload image");
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSaveCarrier = () => {
@@ -277,6 +321,7 @@ const Shipping = () => {
       estimated_days: carrierForm.estimated_days || null,
       display_order: parseInt(carrierForm.display_order),
       is_active: carrierForm.is_active,
+      image_url: carrierForm.image_url || null,
     });
   };
 
@@ -408,6 +453,29 @@ const Shipping = () => {
                     onChange={(e) => setCarrierForm({ ...carrierForm, description: e.target.value })}
                     placeholder="Fast and reliable delivery service"
                   />
+                </div>
+                <div>
+                  <Label>Carrier Image</Label>
+                  <div className="space-y-2">
+                    {carrierForm.image_url && (
+                      <div className="relative w-24 h-24 rounded-lg overflow-hidden border">
+                        <img
+                          src={carrierForm.image_url}
+                          alt="Carrier"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    )}
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploadingImage}
+                    />
+                    {uploadingImage && (
+                      <p className="text-xs text-muted-foreground">Uploading image...</p>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <Label>Base Cost (SYP) *</Label>

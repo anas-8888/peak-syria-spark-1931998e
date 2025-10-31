@@ -843,7 +843,6 @@ export type Database = {
       }
       orders: {
         Row: {
-          city: string | null
           created_at: string | null
           customer_email: string | null
           customer_name: string | null
@@ -859,7 +858,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          city?: string | null
           created_at?: string | null
           customer_email?: string | null
           customer_name?: string | null
@@ -875,7 +873,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          city?: string | null
           created_at?: string | null
           customer_email?: string | null
           customer_name?: string | null
@@ -1360,6 +1357,7 @@ export type Database = {
           display_order: number
           estimated_days: string | null
           id: string
+          image_url: string | null
           is_active: boolean
           name: string
           updated_at: string
@@ -1371,6 +1369,7 @@ export type Database = {
           display_order?: number
           estimated_days?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           name: string
           updated_at?: string
@@ -1382,6 +1381,7 @@ export type Database = {
           display_order?: number
           estimated_days?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           name?: string
           updated_at?: string

@@ -57,7 +57,7 @@ const Checkout = () => {
       // Create order using secure RPC function
       const { data: orderId, error: orderError } = await supabase.rpc('create_order_with_items', {
         p_total_amount: total,
-        p_shipping_address: `${data.address}, ${data.city}`,
+        p_shipping_address: data.address,
         p_customer_name: data.fullName,
         p_customer_phone: data.phone,
         p_customer_email: data.email,
@@ -182,24 +182,6 @@ const Checkout = () => {
                     {errors.address && (
                       <p className="text-sm text-destructive mt-1">{errors.address.message}</p>
                     )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="city">{t("checkout.city")}</Label>
-                      <Input 
-                        id="city" 
-                        type="text" 
-                        {...register("city")}
-                        className="mt-1" 
-                      />
-                      {errors.city && (
-                        <p className="text-sm text-destructive mt-1">{errors.city.message}</p>
-                      )}
-                    </div>
-                    <div>
-                      <Label htmlFor="postal">{t("checkout.postalCode")}</Label>
-                      <Input id="postal" type="text" className="mt-1" />
-                    </div>
                   </div>
                 </div>
               </div>

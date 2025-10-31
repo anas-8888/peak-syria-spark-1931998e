@@ -11,15 +11,24 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
 
 export default function CartNew() {
   const { cartItems, updateQuantity, updateNotes, removeFromCart, loading, cartTotal } = useCart();
   const { formatPrice } = useCurrency();
+  const { user } = useAuth();
   const [noteTexts, setNoteTexts] = useState<Record<string, string>>({});
   const saveTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const [discountCode, setDiscountCode] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [validatingDiscount, setValidatingDiscount] = useState(false);
 
-  const shippingCost = 5000;
-  const total = cartTotal + shippingCost;
+  const shippingCost = 0; // Will be calculated at checkout
+  const total = cartTotal - discountAmount;
 
   // Initialize note texts from cart items
   useEffect(() => {
@@ -53,6 +62,61 @@ export default function CartNew() {
       });
     };
   }, []);
+
+  const validateDiscount = async (code: string) => {
+    try {
+      const { data, error } = await supabase.rpc("validate_discount_code", {
+        p_code: code,
+        p_user_id: user?.id || null,
+        p_cart_subtotal: cartTotal,
+        p_cart_items: cartItems.map((item) => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+        })),
+      });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const result = data[0];
+        if (result.is_valid) {
+          setAppliedDiscount({
+            id: result.discount_id,
+            code: code,
+            amount: result.discount_amount,
+            message: result.message,
+          });
+          setDiscountAmount(Number(result.discount_amount));
+          toast.success(result.message || "Discount applied successfully!");
+          return result;
+        } else {
+          toast.error(result.message || "Invalid discount code");
+          return result;
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Error validating discount");
+      return { is_valid: false };
+    }
+  };
+
+  const handleApplyDiscount = async () => {
+    if (!discountCode.trim()) {
+      toast.error("Please enter a discount code");
+      return;
+    }
+
+    setValidatingDiscount(true);
+    await validateDiscount(discountCode.trim());
+    setValidatingDiscount(false);
+  };
+
+  const handleRemoveDiscount = () => {
+    setAppliedDiscount(null);
+    setDiscountAmount(0);
+    setDiscountCode("");
+    toast.success("Discount removed");
+  };
 
   if (loading) {
     return (
@@ -197,9 +261,15 @@ export default function CartNew() {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span className="font-medium">{formatPrice(cartTotal)}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Discount</span>
+                    <span className="font-medium">-{formatPrice(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className="font-medium">{formatPrice(shippingCost)}</span>
+                  <span className="font-medium text-xs">Calculated at checkout</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
@@ -207,6 +277,57 @@ export default function CartNew() {
                   <span>{formatPrice(total)}</span>
                 </div>
               </div>
+
+              {/* Discount Code Section */}
+              {!appliedDiscount ? (
+                <div className="mb-4">
+                  <Label htmlFor="discount">Discount Code</Label>
+                  <div className="flex gap-2 mt-1">
+                    <Input
+                      id="discount"
+                      value={discountCode}
+                      onChange={(e) => setDiscountCode(e.target.value)}
+                      placeholder="Enter code"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleApplyDiscount();
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleApplyDiscount}
+                      disabled={validatingDiscount}
+                    >
+                      {validatingDiscount ? "..." : "Apply"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                        {appliedDiscount.message}
+                      </p>
+                      <p className="text-xs text-green-600 dark:text-green-400">
+                        Code: {appliedDiscount.code}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemoveDiscount}
+                      className="text-green-800 hover:text-green-900 dark:text-green-200"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <Button asChild className="w-full mb-3">
                 <Link to="/checkout">Proceed to Checkout</Link>
