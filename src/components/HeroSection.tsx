@@ -116,23 +116,23 @@ const HeroSection = () => {
                <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 font-medium animate-fade-in" style={{ animationDelay: "200ms" }}>
                  {slide.subtitle}
                </p>
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
                   <Button 
                     asChild
                     variant="hero" 
-                    size="lg" 
-                    className="group w-full sm:w-auto text-sm sm:text-base h-10 sm:h-12 px-6 sm:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                    size="sm" 
+                    className="group w-full sm:w-auto text-xs sm:text-base h-8 sm:h-12 px-4 sm:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                   >
                     <Link to={slide.button_url}>
                       {slide.button_text}
-                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </Button>
                   <Button 
                     asChild
                     variant="outlineWhite" 
-                    size="lg"
-                    className="w-full sm:w-auto text-sm sm:text-base h-10 sm:h-12 px-6 sm:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                    size="sm"
+                    className="w-full sm:w-auto text-xs sm:text-base h-8 sm:h-12 px-4 sm:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
                   >
                     <Link to="/products">
                       View All
@@ -147,29 +147,29 @@ const HeroSection = () => {
        {/* Navigation Arrows - Smaller on mobile */}
        <button
          onClick={prevSlide}
-         className="absolute left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1.5 sm:p-3 md:p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20"
+         className="absolute left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1.5 sm:p-3 md:p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20 flex items-center justify-center"
          aria-label="Previous slide"
        >
          <ChevronLeft className="h-3 w-3 sm:h-5 sm:w-5 md:h-6 md:w-6" />
        </button>
        <button
          onClick={nextSlide}
-         className="absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1.5 sm:p-3 md:p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20"
+         className="absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1.5 sm:p-3 md:p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20 flex items-center justify-center"
          aria-label="Next slide"
        >
          <ChevronRight className="h-3 w-3 sm:h-5 sm:w-5 md:h-6 md:w-6" />
        </button>
 
       {/* Mobile Navigation - Smaller indicators */}
-      <div className="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+      <div className="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 z-20">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
             className={`transition-all duration-300 ${
               index === currentSlide 
-                ? "h-1.5 w-4 bg-primary rounded-full" 
-                : "h-1.5 w-1.5 bg-white/40 hover:bg-white/60 rounded-full"
+                ? "h-1 w-3 bg-primary rounded-full" 
+                : "h-1 w-1 bg-white/40 hover:bg-white/60 rounded-full"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />

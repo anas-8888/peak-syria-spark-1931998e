@@ -200,9 +200,9 @@ const Index = () => {
 
           <div className="text-center">
             <Link to="/products">
-              <Button variant="default" size="lg" className="group w-full sm:w-auto">
+              <Button variant="default" size="sm" className="group w-full sm:w-auto text-xs sm:text-base h-8 sm:h-10 px-4 sm:px-6">
                 {t("home.viewAll")}
-                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
           </div>

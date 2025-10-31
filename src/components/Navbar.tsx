@@ -201,8 +201,8 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <button className="lg:hidden p-2 rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          <button className="lg:hidden p-1.5 rounded-md hover:bg-accent transition-colors text-xs" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
 
@@ -212,19 +212,21 @@ const Navbar = () => {
                 {link.name}
               </Link>)}
             <div className="flex flex-col items-center justify-center gap-3 pt-4 border-t">
-              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full hover:bg-accent/50" asChild>
-                <Link to="/search">
-                  <SearchIcon className="h-5 w-5" />
-                </Link>
-              </Button>
-              <Link to="/cart">
-                <Button variant="ghost" size="icon" className="relative h-12 w-12 rounded-full hover:bg-accent/50">
-                  <ShoppingCart className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-primary to-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold">
-                    0
-                  </span>
+              <div className="flex items-center justify-center gap-3">
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-accent/50" asChild>
+                  <Link to="/search">
+                    <SearchIcon className="h-5 w-5" />
+                  </Link>
                 </Button>
-              </Link>
+                <Link to="/cart">
+                  <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full hover:bg-accent/50">
+                    <ShoppingCart className="h-5 w-5" />
+                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-primary to-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                      0
+                    </span>
+                  </Button>
+                </Link>
+              </div>
               {user ? <div className="flex flex-col gap-2 w-full px-4">
                   <div className="flex items-center justify-center gap-2 p-2 bg-accent/50 rounded-full">
                     <Avatar className="h-10 w-10 border-2 border-primary/20">
