@@ -47,9 +47,9 @@ const Footer = () => {
         {/* Main Footer Content */}
         <div className="px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8 sm:gap-10 lg:gap-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6 sm:gap-10 lg:gap-12">
               {/* About PEAK Syria - Spans 2 columns */}
-              <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+              <div className="lg:col-span-2 space-y-3 sm:space-y-6">
                 <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                   PEAK Syria
                 </h3>
@@ -193,7 +193,7 @@ const Footer = () => {
                   Get In Touch
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-1.5 sm:space-y-2">
+                <ul className="space-y-1 sm:space-y-2">
                   <li className="flex items-start gap-3 text-secondary-foreground/80 text-sm">
                     <Phone className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                     <span>{settings?.store_phone || '+963 XXX XXX XXX'}</span>
@@ -217,7 +217,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-primary/30 px-4 sm:px-6 py-4 sm:py-6">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4 text-xs sm:text-sm text-secondary-foreground/70">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-2 sm:gap-4 text-xs sm:text-sm text-secondary-foreground/70">
               <div className="flex flex-col items-center md:items-start gap-1">
                 <p className="font-medium text-center md:text-left">
                   &copy; {new Date().getFullYear()} PEAK Syria. All rights reserved.
