@@ -633,6 +633,36 @@ export type Database = {
         }
         Relationships: []
       }
+      legal_pages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          last_updated: string | null
+          page_type: string
+          title: string
+          updated_by: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          last_updated?: string | null
+          page_type: string
+          title: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          last_updated?: string | null
+          page_type?: string
+          title?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       marketing_campaigns: {
         Row: {
           completed_at: string | null

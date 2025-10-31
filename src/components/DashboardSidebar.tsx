@@ -86,6 +86,11 @@ const menuItems = [{
   icon: FileText,
   end: false
 }, {
+  title: "Legal Pages",
+  path: "/dashboard/legal-pages",
+  icon: FileText,
+  end: false
+}, {
   title: "Roles",
   path: "/dashboard/roles",
   icon: Shield,

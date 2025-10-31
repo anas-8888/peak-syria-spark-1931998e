@@ -46,6 +46,10 @@ import Categories from "./pages/dashboard/Categories";
 import Regions from "./pages/dashboard/Regions";
 import Colors from "./pages/dashboard/Colors";
 import AboutManagement from "./pages/dashboard/About";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import Refund from "./pages/Refund";
+import LegalPages from "./pages/dashboard/LegalPages";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +82,9 @@ function App() {
                   <Route path="/search" element={<Search />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/refund" element={<Refund />} />
                   {/* Dashboard Routes */}
                   <Route path="/dashboard" element={<Dashboard />}>
                     <Route index element={<Overview />} />
@@ -98,6 +105,7 @@ function App() {
                     <Route path="shipping" element={<Shipping />} />
                     <Route path="marketing" element={<Marketing />} />
                   <Route path="about" element={<AboutManagement />} />
+                  <Route path="legal-pages" element={<LegalPages />} />
                     <Route path="settings" element={<DashboardSettings />} />
                   </Route>
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

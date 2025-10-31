@@ -78,7 +78,7 @@ const Footer = () => {
                   Shop
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-1.5 sm:space-y-2">
+                <ul className="space-y-1 sm:space-y-1.5">
                   <li>
                     <Link to="/products" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
@@ -98,6 +98,12 @@ const Footer = () => {
                     </Link>
                   </li>
                   <li>
+                    <Link to="/products?flag=limited-edition" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
+                      <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
+                      Limited Edition
+                    </Link>
+                  </li>
+                  <li>
                     <Link to="/products?flag=offer" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Special Offers
@@ -112,7 +118,7 @@ const Footer = () => {
                   Categories
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-1.5 sm:space-y-2">
+                <ul className="space-y-1 sm:space-y-1.5">
                   {categories && categories.length > 0 ? categories.slice(0, 5).map(category => <li key={category.id}>
                         <Link to={`/category/${category.id}`} className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                           <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
@@ -147,7 +153,7 @@ const Footer = () => {
                   Support
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-1.5 sm:space-y-2">
+                <ul className="space-y-1 sm:space-y-1.5">
                   <li>
                     <Link to="/contact" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
@@ -181,41 +187,13 @@ const Footer = () => {
                 </ul>
               </div>
 
-              {/* Legal */}
-              <div>
-                <h4 className="font-bold text-xs sm:text-sm uppercase mb-4 sm:mb-6 relative inline-block tracking-wider">
-                  Legal
-                  <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
-                </h4>
-                <ul className="space-y-1.5 sm:space-y-2">
-                  <li>
-                    <Link to="/terms" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
-                      <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                      Terms of Service
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/privacy" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
-                      <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                      Privacy Policy
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/refund" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
-                      <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                      Refund Policy
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Contact Info */}
+              {/* Get In Touch */}
               <div>
                 <h4 className="font-bold text-xs sm:text-sm uppercase mb-4 sm:mb-6 relative inline-block tracking-wider">
                   Get In Touch
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-2 sm:space-y-2.5">
+                <ul className="space-y-1.5 sm:space-y-2">
                   <li className="flex items-start gap-3 text-secondary-foreground/80 text-sm">
                     <Phone className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                     <span>{settings?.store_phone || '+963 XXX XXX XXX'}</span>
@@ -240,9 +218,18 @@ const Footer = () => {
         <div className="border-t border-primary/30 px-4 sm:px-6 py-4 sm:py-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4 text-xs sm:text-sm text-secondary-foreground/70">
-              <p className="font-medium text-center md:text-left">
-                &copy; {new Date().getFullYear()} PEAK Syria. All rights reserved.
-              </p>
+              <div className="flex flex-col items-center md:items-start gap-1">
+                <p className="font-medium text-center md:text-left">
+                  &copy; {new Date().getFullYear()} PEAK Syria. All rights reserved.
+                </p>
+                <div className="flex items-center gap-2 text-[10px] sm:text-xs">
+                  <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>
+                  <span>•</span>
+                  <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+                  <span>•</span>
+                  <Link to="/refund" className="hover:text-primary transition-colors">Refund Policy</Link>
+                </div>
+              </div>
               <p className="text-xs text-center md:text-right">
                 Developed by{" "}
                 <a href="https://nexa-group.net" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/90 transition-all duration-300 font-semibold relative inline-block group">
