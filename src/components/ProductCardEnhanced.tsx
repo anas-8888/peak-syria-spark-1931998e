@@ -7,6 +7,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 
 interface ProductCardEnhancedProps {
@@ -48,6 +49,7 @@ const ProductCardEnhanced = ({
   const { formatPrice } = useCurrency();
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
 
   // Update current image when image prop changes
@@ -91,6 +93,15 @@ const ProductCardEnhanced = ({
     if (colorImages && colorImages[color]) {
       setCurrentImage(colorImages[color]);
     }
+  };
+
+  const handleAddToCart = async () => {
+    if (!user) {
+      toast.error("Please log in to add items to cart");
+      navigate("/login");
+      return;
+    }
+    await addToCart(id, 1);
   };
 
   const handleToggleFavorite = async () => {
@@ -183,6 +194,7 @@ const ProductCardEnhanced = ({
               <Button
                 variant="hero"
                 size="lg"
+                onClick={handleAddToCart}
                 className="w-5/6 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-150"
               >
                 <ShoppingCart className="mr-2 h-5 w-5" />

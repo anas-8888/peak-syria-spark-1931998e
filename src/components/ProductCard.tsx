@@ -1,6 +1,9 @@
 import { ShoppingCart, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface ProductCardProps {
   id: number;
@@ -12,6 +15,19 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardProps) => {
+  const { addToCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleAddToCart = async () => {
+    if (!user) {
+      toast.error("Please log in to add items to cart");
+      navigate("/login");
+      return;
+    }
+    await addToCart(id.toString(), 1);
+  };
+
   return (
     <div className="group relative bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
       {/* Product Image */}
@@ -29,7 +45,7 @@ const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardPro
               <Eye className="h-5 w-5" />
             </Button>
           </Link>
-          <Button variant="hero" size="icon">
+          <Button variant="hero" size="icon" onClick={handleAddToCart}>
             <ShoppingCart className="h-5 w-5" />
           </Button>
         </div>
@@ -48,7 +64,7 @@ const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardPro
         <h3 className="font-semibold text-card-foreground mb-2 line-clamp-1">{name}</h3>
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-primary">{price.toLocaleString()} SYP</span>
-          <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10">
+          <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10" onClick={handleAddToCart}>
             Add to Cart
           </Button>
         </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Minus, Plus, ShoppingCart, Heart, Share2, ArrowLeft, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 type ProductImage = {
   id: string;
@@ -36,6 +38,9 @@ type Product = {
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
@@ -362,7 +367,16 @@ const ProductDetail = () => {
                 variant="hero" 
                 size="lg" 
                 className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold"
-                onClick={() => toast.success("Added to cart!")}
+                onClick={async () => {
+                  if (!user) {
+                    toast.error("Please log in to add items to cart");
+                    navigate("/login");
+                    return;
+                  }
+                  if (id) {
+                    await addToCart(id, quantity);
+                  }
+                }}
                 disabled={product.stock_quantity === 0}
               >
                 <ShoppingCart className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
