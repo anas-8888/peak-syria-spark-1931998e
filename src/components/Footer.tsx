@@ -36,31 +36,37 @@ const Footer = () => {
   });
 
   return (
-    <footer className="bg-secondary text-secondary-foreground border-t border-primary/20 w-full">
-      <div className="w-full px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="relative bg-gradient-to-br from-secondary via-secondary to-secondary/80 text-secondary-foreground border-t border-primary/30 w-full overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-primary rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+      
+      <div className="relative w-full px-4 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Brand */}
-          <div>
-            <h3 className="text-2xl font-bold mb-4">
-              <span className="text-primary">PEAK</span> Syria
+          <div className="space-y-6">
+            <h3 className="text-3xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              PEAK Syria
             </h3>
-            <p className="text-secondary-foreground/70 mb-4">
+            <p className="text-secondary-foreground/80 leading-relaxed">
               {settings?.brand_description || 'Official distributor of PEAK sportswear in Syria. Premium quality, authentic products.'}
             </p>
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               {settings?.facebook_url && (
-                <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  <Facebook className="h-5 w-5" />
+                <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="group relative p-3 bg-secondary-foreground/5 rounded-lg hover:bg-primary/10 transition-all duration-300 hover:scale-110">
+                  <Facebook className="h-5 w-5 group-hover:text-primary transition-colors" />
                 </a>
               )}
               {settings?.instagram_url && (
-                <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  <Instagram className="h-5 w-5" />
+                <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="group relative p-3 bg-secondary-foreground/5 rounded-lg hover:bg-primary/10 transition-all duration-300 hover:scale-110">
+                  <Instagram className="h-5 w-5 group-hover:text-primary transition-colors" />
                 </a>
               )}
               {settings?.whatsapp_number && (
-                <a href={`https://wa.me/${settings.whatsapp_number}`} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  <MessageCircle className="h-5 w-5" />
+                <a href={`https://wa.me/${settings.whatsapp_number}`} target="_blank" rel="noopener noreferrer" className="group relative p-3 bg-secondary-foreground/5 rounded-lg hover:bg-primary/10 transition-all duration-300 hover:scale-110">
+                  <MessageCircle className="h-5 w-5 group-hover:text-primary transition-colors" />
                 </a>
               )}
             </div>
@@ -68,25 +74,32 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-bold text-lg mb-4">Quick Links</h4>
-            <ul className="space-y-2">
+            <h4 className="font-bold text-lg mb-6 relative inline-block">
+              Quick Links
+              <span className="absolute -bottom-2 left-0 w-12 h-1 bg-primary rounded-full"></span>
+            </h4>
+            <ul className="space-y-3">
               <li>
-                <Link to="/products" className="text-secondary-foreground/70 hover:text-primary transition-colors">
+                <Link to="/products" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 hover:translate-x-1">
+                  <span className="w-0 h-0.5 bg-primary group-hover:w-4 transition-all duration-300"></span>
                   All Products
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-secondary-foreground/70 hover:text-primary transition-colors">
+                <Link to="/about" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 hover:translate-x-1">
+                  <span className="w-0 h-0.5 bg-primary group-hover:w-4 transition-all duration-300"></span>
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-secondary-foreground/70 hover:text-primary transition-colors">
+                <Link to="/contact" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 hover:translate-x-1">
+                  <span className="w-0 h-0.5 bg-primary group-hover:w-4 transition-all duration-300"></span>
                   Contact
                 </Link>
               </li>
               <li>
-                <Link to="/cart" className="text-secondary-foreground/70 hover:text-primary transition-colors">
+                <Link to="/cart" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 hover:translate-x-1">
+                  <span className="w-0 h-0.5 bg-primary group-hover:w-4 transition-all duration-300"></span>
                   Shopping Cart
                 </Link>
               </li>
@@ -95,15 +108,19 @@ const Footer = () => {
 
           {/* Categories */}
           <div>
-            <h4 className="font-bold text-lg mb-4">Categories</h4>
-            <ul className="space-y-2">
+            <h4 className="font-bold text-lg mb-6 relative inline-block">
+              Categories
+              <span className="absolute -bottom-2 left-0 w-12 h-1 bg-primary rounded-full"></span>
+            </h4>
+            <ul className="space-y-3">
               {categories && categories.length > 0 ? (
                 categories.map((category) => (
                   <li key={category.id}>
                     <Link 
                       to={`/category/${category.id}`} 
-                      className="text-secondary-foreground/70 hover:text-primary transition-colors"
+                      className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 hover:translate-x-1"
                     >
+                      <span className="w-0 h-0.5 bg-primary group-hover:w-4 transition-all duration-300"></span>
                       {category.name}
                     </Link>
                   </li>
@@ -111,22 +128,26 @@ const Footer = () => {
               ) : (
                 <>
                   <li>
-                    <Link to="/products?category=basketball" className="text-secondary-foreground/70 hover:text-primary transition-colors">
+                    <Link to="/products?category=basketball" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 hover:translate-x-1">
+                      <span className="w-0 h-0.5 bg-primary group-hover:w-4 transition-all duration-300"></span>
                       Basketball
                     </Link>
                   </li>
                   <li>
-                    <Link to="/products?category=running" className="text-secondary-foreground/70 hover:text-primary transition-colors">
+                    <Link to="/products?category=running" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 hover:translate-x-1">
+                      <span className="w-0 h-0.5 bg-primary group-hover:w-4 transition-all duration-300"></span>
                       Running
                     </Link>
                   </li>
                   <li>
-                    <Link to="/products?category=apparel" className="text-secondary-foreground/70 hover:text-primary transition-colors">
+                    <Link to="/products?category=apparel" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 hover:translate-x-1">
+                      <span className="w-0 h-0.5 bg-primary group-hover:w-4 transition-all duration-300"></span>
                       Apparel
                     </Link>
                   </li>
                   <li>
-                    <Link to="/products?category=accessories" className="text-secondary-foreground/70 hover:text-primary transition-colors">
+                    <Link to="/products?category=accessories" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 hover:translate-x-1">
+                      <span className="w-0 h-0.5 bg-primary group-hover:w-4 transition-all duration-300"></span>
                       Accessories
                     </Link>
                   </li>
@@ -137,19 +158,28 @@ const Footer = () => {
 
           {/* Contact */}
           <div>
-            <h4 className="font-bold text-lg mb-4">Contact Us</h4>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-secondary-foreground/70">
-                <Phone className="h-4 w-4 text-primary" />
+            <h4 className="font-bold text-lg mb-6 relative inline-block">
+              Contact Us
+              <span className="absolute -bottom-2 left-0 w-12 h-1 bg-primary rounded-full"></span>
+            </h4>
+            <ul className="space-y-4">
+              <li className="group flex items-center gap-3 text-secondary-foreground/80 hover:text-primary transition-colors">
+                <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                  <Phone className="h-4 w-4 text-primary" />
+                </div>
                 <span>{settings?.store_phone || '+963 XXX XXX XXX'}</span>
               </li>
-              <li className="flex items-center gap-2 text-secondary-foreground/70">
-                <Mail className="h-4 w-4 text-primary" />
+              <li className="group flex items-center gap-3 text-secondary-foreground/80 hover:text-primary transition-colors">
+                <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                  <Mail className="h-4 w-4 text-primary" />
+                </div>
                 <span>{settings?.store_email || 'info@peaksyria.com'}</span>
               </li>
               {settings?.whatsapp_number && (
-                <li className="flex items-center gap-2 text-secondary-foreground/70">
-                  <MessageCircle className="h-4 w-4 text-primary" />
+                <li className="group flex items-center gap-3 text-secondary-foreground/80">
+                  <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                    <MessageCircle className="h-4 w-4 text-primary" />
+                  </div>
                   <a href={`https://wa.me/${settings.whatsapp_number}`} className="hover:text-primary transition-colors">
                     WhatsApp Support
                   </a>
@@ -159,17 +189,18 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-primary/20 mt-8 pt-8 text-center text-secondary-foreground/60 text-sm space-y-2">
-          <p>&copy; {new Date().getFullYear()} PEAK Syria. All rights reserved. Powered by passion for sports.</p>
+        <div className="border-t border-primary/30 mt-12 pt-8 text-center text-secondary-foreground/70 text-sm space-y-3">
+          <p className="font-medium">&copy; {new Date().getFullYear()} PEAK Syria. All rights reserved. Powered by passion for sports.</p>
           <p className="text-xs">
             Developed by{" "}
             <a 
               href="https://nexa-group.net" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-primary hover:text-primary/80 transition-colors font-semibold"
+              className="text-primary hover:text-primary/90 transition-all duration-300 font-semibold relative inline-block group"
             >
               NEXA GROUP
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300"></span>
             </a>
           </p>
         </div>
