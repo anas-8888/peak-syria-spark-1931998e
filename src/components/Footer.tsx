@@ -185,7 +185,32 @@ const Footer = () => {
               </div>
 
               {/* Legal */}
-              
+              <div>
+                <h4 className="font-bold text-sm uppercase mb-6 relative inline-block tracking-wider">
+                  Legal
+                  <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
+                </h4>
+                <ul className="space-y-3">
+                  <li>
+                    <Link to="/terms" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                      <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
+                      Terms of Service
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/privacy" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                      <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
+                      Privacy Policy
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/refund" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                      <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
+                      Refund Policy
+                    </Link>
+                  </li>
+                </ul>
+              </div>
 
               {/* Contact Info */}
               <div>
