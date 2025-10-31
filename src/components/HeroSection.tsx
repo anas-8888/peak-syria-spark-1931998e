@@ -121,18 +121,18 @@ const HeroSection = () => {
                     asChild
                     variant="hero" 
                     size="sm" 
-                    className="group w-full sm:w-auto text-xs sm:text-base h-8 sm:h-12 px-4 sm:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                    className="group w-full sm:w-auto text-[10px] sm:text-base h-7 sm:h-12 px-3 sm:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                   >
                     <Link to={slide.button_url}>
                       {slide.button_text}
-                      <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="ml-1 sm:ml-2 h-2.5 w-2.5 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </Button>
                   <Button 
                     asChild
                     variant="outlineWhite" 
                     size="sm"
-                    className="w-full sm:w-auto text-xs sm:text-base h-8 sm:h-12 px-4 sm:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                    className="w-full sm:w-auto text-[10px] sm:text-base h-7 sm:h-12 px-3 sm:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
                   >
                     <Link to="/products">
                       View All
@@ -161,15 +161,15 @@ const HeroSection = () => {
        </button>
 
       {/* Mobile Navigation - Smaller indicators */}
-      <div className="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 z-20">
+      <div className="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-0.5 z-20">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
             className={`transition-all duration-300 ${
               index === currentSlide 
-                ? "h-1 w-3 bg-primary rounded-full" 
-                : "h-1 w-1 bg-white/40 hover:bg-white/60 rounded-full"
+                ? "h-0.5 w-2 bg-primary rounded-full" 
+                : "h-0.5 w-0.5 bg-white/40 hover:bg-white/60 rounded-full"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />
