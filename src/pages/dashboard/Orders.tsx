@@ -551,6 +551,7 @@ const Orders = () => {
                   <SelectItem value="pending">Processing</SelectItem>
                   <SelectItem value="shipped">In Transit</SelectItem>
                   <SelectItem value="delivered">Delivered</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
