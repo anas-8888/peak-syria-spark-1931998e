@@ -44,32 +44,29 @@ const Footer = () => {
       </div>
       
       <div className="relative w-full">
-        {/* Newsletter Section */}
-        
-
         {/* Main Footer Content */}
-        <div className="px-4 py-16">
+        <div className="px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8 sm:gap-10 lg:gap-12">
               {/* About PEAK Syria - Spans 2 columns */}
-              <div className="lg:col-span-2 space-y-6">
-                <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+                <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                   PEAK Syria
                 </h3>
-                <p className="text-secondary-foreground/80 leading-relaxed">
+                <p className="text-secondary-foreground/80 leading-relaxed text-sm sm:text-base">
                   {settings?.brand_description || 'Official distributor of PEAK sportswear in Syria. Premium quality, authentic products.'}
                 </p>
                 <div>
-                  <h4 className="font-semibold text-sm mb-4 text-secondary-foreground/90">CONNECT WITH US</h4>
-                  <div className="flex gap-3">
-                    {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="group relative p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
-                        <Facebook className="h-5 w-5 text-primary group-hover:text-primary-foreground transition-colors" />
+                  <h4 className="font-semibold text-xs sm:text-sm mb-3 sm:mb-4 text-secondary-foreground/90">CONNECT WITH US</h4>
+                  <div className="flex gap-2 sm:gap-3">
+                    {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="group relative p-2 sm:p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
+                        <Facebook className="h-4 w-4 sm:h-5 sm:w-5 text-primary group-hover:text-primary-foreground transition-colors" />
                       </a>}
-                    {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="group relative p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
-                        <Instagram className="h-5 w-5 text-primary group-hover:text-primary-foreground transition-colors" />
+                    {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="group relative p-2 sm:p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
+                        <Instagram className="h-4 w-4 sm:h-5 sm:w-5 text-primary group-hover:text-primary-foreground transition-colors" />
                       </a>}
-                    {settings?.whatsapp_number && <a href={`https://wa.me/${settings.whatsapp_number}`} target="_blank" rel="noopener noreferrer" className="group relative p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
-                        <MessageCircle className="h-5 w-5 text-primary group-hover:text-primary-foreground transition-colors" />
+                    {settings?.whatsapp_number && <a href={`https://wa.me/${settings.whatsapp_number}`} target="_blank" rel="noopener noreferrer" className="group relative p-2 sm:p-3 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110">
+                        <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary group-hover:text-primary-foreground transition-colors" />
                       </a>}
                   </div>
                 </div>
@@ -77,31 +74,31 @@ const Footer = () => {
 
               {/* Shop */}
               <div>
-                <h4 className="font-bold text-sm uppercase mb-6 relative inline-block tracking-wider">
+                <h4 className="font-bold text-xs sm:text-sm uppercase mb-4 sm:mb-6 relative inline-block tracking-wider">
                   Shop
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-3">
+                <ul className="space-y-2 sm:space-y-3">
                   <li>
-                    <Link to="/products" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                    <Link to="/products" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       All Products
                     </Link>
                   </li>
                   <li>
-                    <Link to="/products?flag=new-arrival" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                    <Link to="/products?flag=new-arrival" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       New Arrivals
                     </Link>
                   </li>
                   <li>
-                    <Link to="/products?flag=best-seller" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                    <Link to="/products?flag=best-seller" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Best Sellers
                     </Link>
                   </li>
                   <li>
-                    <Link to="/products?flag=offer" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                    <Link to="/products?flag=offer" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Special Offers
                     </Link>
@@ -111,31 +108,31 @@ const Footer = () => {
 
               {/* Categories */}
               <div>
-                <h4 className="font-bold text-sm uppercase mb-6 relative inline-block tracking-wider">
+                <h4 className="font-bold text-xs sm:text-sm uppercase mb-4 sm:mb-6 relative inline-block tracking-wider">
                   Categories
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-3">
+                <ul className="space-y-2 sm:space-y-3">
                   {categories && categories.length > 0 ? categories.slice(0, 5).map(category => <li key={category.id}>
-                        <Link to={`/category/${category.id}`} className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                        <Link to={`/category/${category.id}`} className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                           <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                           {category.name}
                         </Link>
                       </li>) : <>
                       <li>
-                        <Link to="/products?category=basketball" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                        <Link to="/products?category=basketball" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                           <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                           Basketball
                         </Link>
                       </li>
                       <li>
-                        <Link to="/products?category=running" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                        <Link to="/products?category=running" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                           <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                           Running
                         </Link>
                       </li>
                       <li>
-                        <Link to="/products?category=apparel" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                        <Link to="/products?category=apparel" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                           <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                           Apparel
                         </Link>
@@ -146,37 +143,37 @@ const Footer = () => {
 
               {/* Support */}
               <div>
-                <h4 className="font-bold text-sm uppercase mb-6 relative inline-block tracking-wider">
+                <h4 className="font-bold text-xs sm:text-sm uppercase mb-4 sm:mb-6 relative inline-block tracking-wider">
                   Support
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-3">
+                <ul className="space-y-2 sm:space-y-3">
                   <li>
-                    <Link to="/contact" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                    <Link to="/contact" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Contact Us
                     </Link>
                   </li>
                   <li>
-                    <Link to="/about" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                    <Link to="/about" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       About Us
                     </Link>
                   </li>
                   <li>
-                    <Link to="/order-tracking" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                    <Link to="/order-tracking" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Track Order
                     </Link>
                   </li>
                   <li>
-                    <Link to="/cart" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                    <Link to="/cart" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Shopping Cart
                     </Link>
                   </li>
                   <li>
-                    <Link to="/wishlist" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                    <Link to="/wishlist" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Wishlist
                     </Link>
@@ -186,25 +183,25 @@ const Footer = () => {
 
               {/* Legal */}
               <div>
-                <h4 className="font-bold text-sm uppercase mb-6 relative inline-block tracking-wider">
+                <h4 className="font-bold text-xs sm:text-sm uppercase mb-4 sm:mb-6 relative inline-block tracking-wider">
                   Legal
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-3">
+                <ul className="space-y-2 sm:space-y-3">
                   <li>
-                    <Link to="/terms" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                    <Link to="/terms" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Terms of Service
                     </Link>
                   </li>
                   <li>
-                    <Link to="/privacy" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                    <Link to="/privacy" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Privacy Policy
                     </Link>
                   </li>
                   <li>
-                    <Link to="/refund" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2">
+                    <Link to="/refund" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-2 text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Refund Policy
                     </Link>
@@ -214,11 +211,11 @@ const Footer = () => {
 
               {/* Contact Info */}
               <div>
-                <h4 className="font-bold text-sm uppercase mb-6 relative inline-block tracking-wider">
+                <h4 className="font-bold text-xs sm:text-sm uppercase mb-4 sm:mb-6 relative inline-block tracking-wider">
                   Get In Touch
                   <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-4">
+                <ul className="space-y-3 sm:space-y-4">
                   <li className="flex items-start gap-3 text-secondary-foreground/80 text-sm">
                     <Phone className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                     <span>{settings?.store_phone || '+963 XXX XXX XXX'}</span>
@@ -240,13 +237,13 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-primary/30 px-4 py-6">
+        <div className="border-t border-primary/30 px-4 sm:px-6 py-4 sm:py-6">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-secondary-foreground/70">
-              <p className="font-medium">
-                &copy; {new Date().getFullYear()} PEAK Syria. All rights reserved. Powered by passion for sports.
+            <div className="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4 text-xs sm:text-sm text-secondary-foreground/70">
+              <p className="font-medium text-center md:text-left">
+                &copy; {new Date().getFullYear()} PEAK Syria. All rights reserved.
               </p>
-              <p className="text-xs">
+              <p className="text-xs text-center md:text-right">
                 Developed by{" "}
                 <a href="https://nexa-group.net" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/90 transition-all duration-300 font-semibold relative inline-block group">
                   NEXA GROUP
