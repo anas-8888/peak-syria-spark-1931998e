@@ -77,7 +77,6 @@ export default function CheckoutNew() {
   const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [validatingDiscount, setValidatingDiscount] = useState(false);
-  const [autoDiscountChecked, setAutoDiscountChecked] = useState(false);
 
   const {
     register,
@@ -369,13 +368,37 @@ export default function CheckoutNew() {
     }
   };
 
-  // Check for auto-apply discounts when cart loads
-  useEffect(() => {
-    if (cartItems.length > 0 && !autoDiscountChecked) {
-      checkAutoDiscounts();
-      setAutoDiscountChecked(true);
+  const checkAutoDiscounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("discounts")
+        .select("*")
+        .eq("is_automatic", true)
+        .eq("status", "active")
+        .lte("start_date", new Date().toISOString())
+        .or(`end_date.is.null,end_date.gte.${new Date().toISOString()}`);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // Validate the first auto discount
+        const autoDiscount = data[0];
+        const result = await validateDiscount(autoDiscount.code, true);
+        if (result.is_valid) {
+          toast.success(`Automatic discount "${autoDiscount.name}" applied!`);
+        }
+      }
+    } catch (error) {
+      console.error("Error checking auto discounts:", error);
     }
-  }, [cartItems]);
+  };
+
+  // Check for auto-apply discounts when cart loads or when returning to checkout
+  useEffect(() => {
+    if (cartItems.length > 0 && !appliedDiscount) {
+      checkAutoDiscounts();
+    }
+  }, [cartItems, appliedDiscount]);
 
   // Save form data to localStorage whenever key selections change
   useEffect(() => {
@@ -422,31 +445,6 @@ export default function CheckoutNew() {
   useEffect(() => {
     // Saved data loading moved to profile fetch to ensure correct order
   }, []);
-
-  const checkAutoDiscounts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("discounts")
-        .select("*")
-        .eq("is_automatic", true)
-        .eq("status", "active")
-        .lte("start_date", new Date().toISOString())
-        .or(`end_date.is.null,end_date.gte.${new Date().toISOString()}`);
-
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        // Validate the first auto discount
-        const autoDiscount = data[0];
-        const result = await validateDiscount(autoDiscount.code, true);
-        if (result.is_valid) {
-          toast.success(`Automatic discount "${autoDiscount.name}" applied!`);
-        }
-      }
-    } catch (error) {
-      console.error("Error checking auto discounts:", error);
-    }
-  };
 
   const validateDiscount = async (code: string, silent = false) => {
     try {
