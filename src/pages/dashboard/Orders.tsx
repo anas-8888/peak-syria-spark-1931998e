@@ -468,48 +468,61 @@ const Orders = () => {
                 
                 {/* Quick Status Actions */}
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium mb-3">Update Status</h4>
+                  <h4 className="text-sm font-medium mb-3">Quick Actions</h4>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => updateStatusMutation.mutate({ orderId: selectedOrder.id, status: 'pending' })}
-                      disabled={selectedOrder.status === 'pending' || updateStatusMutation.isPending}
-                      className="gap-2"
-                    >
-                      <Package className="h-4 w-4" />
-                      Confirm
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => updateStatusMutation.mutate({ orderId: selectedOrder.id, status: 'shipped' })}
-                      disabled={selectedOrder.status === 'shipped' || updateStatusMutation.isPending}
-                      className="gap-2"
-                    >
-                      <Truck className="h-4 w-4" />
-                      In Transit
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => updateStatusMutation.mutate({ orderId: selectedOrder.id, status: 'delivered' })}
-                      disabled={selectedOrder.status === 'delivered' || updateStatusMutation.isPending}
-                      className="gap-2"
-                    >
-                      <CheckCircle className="h-4 w-4" />
-                      Delivered
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={() => updateStatusMutation.mutate({ orderId: selectedOrder.id, status: 'cancelled' })}
-                      disabled={selectedOrder.status === 'cancelled' || updateStatusMutation.isPending}
-                      className="gap-2"
-                    >
-                      <XCircle className="h-4 w-4" />
-                      Cancel
-                    </Button>
+                    {selectedOrder.status === 'pending' && (
+                      <>
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          onClick={() => updateStatusMutation.mutate({ orderId: selectedOrder.id, status: 'pending' })}
+                          disabled={updateStatusMutation.isPending}
+                          className="gap-2"
+                        >
+                          <Package className="h-4 w-4" />
+                          Confirm Order
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => updateStatusMutation.mutate({ orderId: selectedOrder.id, status: 'cancelled' })}
+                          disabled={updateStatusMutation.isPending}
+                          className="gap-2"
+                        >
+                          <XCircle className="h-4 w-4" />
+                          Reject Order
+                        </Button>
+                      </>
+                    )}
+                    {selectedOrder.status === 'pending' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => updateStatusMutation.mutate({ orderId: selectedOrder.id, status: 'shipped' })}
+                        disabled={updateStatusMutation.isPending}
+                        className="gap-2 col-span-2"
+                      >
+                        <Truck className="h-4 w-4" />
+                        Mark as Shipped
+                      </Button>
+                    )}
+                    {selectedOrder.status === 'shipped' && (
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => updateStatusMutation.mutate({ orderId: selectedOrder.id, status: 'delivered' })}
+                        disabled={updateStatusMutation.isPending}
+                        className="gap-2 col-span-2"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        Mark as Delivered
+                      </Button>
+                    )}
+                    {(selectedOrder.status === 'delivered' || selectedOrder.status === 'cancelled') && (
+                      <div className="col-span-2 text-center text-sm text-muted-foreground py-2">
+                        Order is {selectedOrder.status}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

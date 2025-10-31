@@ -509,6 +509,25 @@ export default function CheckoutNew() {
     setSubmitting(true);
 
     try {
+      // Check stock availability for all items
+      for (const item of cartItems) {
+        const { data: product, error: stockError } = await supabase
+          .from("products")
+          .select("stock_quantity, name")
+          .eq("id", item.product_id)
+          .single();
+
+        if (stockError) throw stockError;
+
+        if (product.stock_quantity < item.quantity) {
+          toast.error(
+            `Insufficient stock for ${product.name}. Available: ${product.stock_quantity}, Requested: ${item.quantity}`
+          );
+          setSubmitting(false);
+          return;
+        }
+      }
+
       // Create order with items
       const { data: orderData, error: orderError } = await supabase.rpc(
         "create_order_with_items",

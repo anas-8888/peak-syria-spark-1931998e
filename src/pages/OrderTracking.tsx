@@ -63,6 +63,13 @@ const statusColors = {
   cancelled: "bg-red-500",
 };
 
+const statusVariants = {
+  delivered: "default",
+  shipped: "secondary",
+  pending: "secondary",
+  cancelled: "destructive",
+};
+
 const statusLabels = {
   delivered: "Delivered",
   shipped: "In Transit",
@@ -93,7 +100,7 @@ const OrderTracking = () => {
     enabled: !!user,
   });
 
-  // Fetch selected order details
+  // Fetch selected order details with auto-refresh
   const { data: orderDetails, isLoading: detailsLoading } = useQuery({
     queryKey: ["order-details", selectedOrderId],
     queryFn: async () => {
@@ -134,6 +141,7 @@ const OrderTracking = () => {
       return data as OrderWithDetails | null;
     },
     enabled: !!selectedOrderId,
+    refetchInterval: 10000, // Auto-refresh every 10 seconds
   });
 
   // Update selected order when URL changes or when user's first order loads
@@ -264,13 +272,7 @@ const OrderTracking = () => {
                         </p>
                       </div>
                       <Badge
-                        variant={
-                          orderDetails.status === "delivered"
-                            ? "default"
-                            : orderDetails.status === "cancelled"
-                            ? "destructive"
-                            : "secondary"
-                        }
+                        variant={statusVariants[orderDetails.status as keyof typeof statusVariants] as any}
                         className="gap-2"
                       >
                         {React.createElement(statusIcons[orderDetails.status as keyof typeof statusIcons], {

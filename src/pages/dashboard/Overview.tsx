@@ -92,10 +92,17 @@ const Overview = () => {
           status,
           created_at,
           customer_name,
-          profiles:user_id (full_name)
+          customer_email,
+          order_items (
+            id,
+            quantity,
+            products (
+              name
+            )
+          )
         `)
         .order("created_at", { ascending: false })
-        .limit(4);
+        .limit(5);
       
       if (error) throw error;
       return data || [];
@@ -209,14 +216,22 @@ const Overview = () => {
     }
   };
 
-  const recentOrders = recentOrdersData.map((order: any) => ({
-    id: `#${order.id.slice(0, 8)}`,
-    customer: order.customer_name || order.profiles?.full_name || 'Unknown',
-    product: '-',
-    amount: `$${Number(order.total_amount || 0).toFixed(2)}`,
-    status: order.status || 'pending',
-    statusColor: getStatusColor(order.status),
-  }));
+  const recentOrders = recentOrdersData.map((order: any) => {
+    const productNames = order.order_items?.map((item: any) => item.products?.name).filter(Boolean) || [];
+    const productSummary = productNames.length > 0 
+      ? `${productNames[0]}${productNames.length > 1 ? ` +${productNames.length - 1} more` : ''}`
+      : 'No items';
+    
+    return {
+      id: `#${order.id.slice(0, 8)}`,
+      customer: order.customer_name || order.customer_email || 'Unknown',
+      product: productSummary,
+      amount: `$${Number(order.total_amount || 0).toFixed(2)}`,
+      status: order.status || 'pending',
+      statusColor: getStatusColor(order.status),
+      date: new Date(order.created_at).toLocaleDateString(),
+    };
+  });
   return (
     <div className="p-4 md:p-8 space-y-6 md:space-y-8">
       {/* Header */}
@@ -393,39 +408,56 @@ const Overview = () => {
           <CardTitle className="text-base md:text-xl">Recent Orders</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3 md:space-y-4">
-            {recentOrders.map((order, index) => (
-              <div
-                key={order.id}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 md:p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors animate-fade-in"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
-                  <div className="h-10 w-10 md:h-12 md:w-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                    <ShoppingBag className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+          {recentOrders.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No orders yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentOrders.map((order, index) => (
+                <div
+                  key={order.id}
+                  className="flex flex-col gap-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                        <ShoppingBag className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm truncate">{order.customer}</p>
+                        <p className="text-xs text-muted-foreground truncate">{order.product}</p>
+                      </div>
+                    </div>
+                    <Badge 
+                      variant={order.status === 'delivered' ? 'default' : order.status === 'cancelled' ? 'destructive' : 'secondary'}
+                      className="gap-1"
+                    >
+                      <div className={`h-2 w-2 rounded-full ${order.statusColor}`} />
+                      {order.status}
+                    </Badge>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-sm md:text-base truncate">{order.customer}</p>
-                    <p className="text-xs md:text-sm text-muted-foreground truncate">{order.product}</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Order ID</p>
+                        <p className="font-mono font-semibold">{order.id}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Date</p>
+                        <p className="font-medium">{order.date}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Amount</p>
+                      <p className="font-semibold text-primary">{order.amount}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between sm:justify-end gap-4 md:gap-6">
-                  <div className="text-left sm:text-right">
-                    <p className="text-xs text-muted-foreground">Order ID</p>
-                    <p className="font-semibold text-sm md:text-base">{order.id}</p>
-                  </div>
-                  <div className="text-left sm:text-right">
-                    <p className="text-xs text-muted-foreground">Amount</p>
-                    <p className="font-semibold text-sm md:text-base">{order.amount}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className={`h-2 w-2 rounded-full ${order.statusColor}`} />
-                    <span className="text-xs md:text-sm font-medium whitespace-nowrap">{order.status}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
