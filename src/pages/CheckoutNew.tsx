@@ -61,7 +61,7 @@ interface CarrierRegion {
 
 export default function CheckoutNew() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { cartItems, cartTotal, clearCart, loading: cartLoading } = useCart();
   const { formatPrice } = useCurrency();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
@@ -149,6 +149,11 @@ export default function CheckoutNew() {
   });
 
   useEffect(() => {
+    // Wait for auth to finish loading before checking user
+    if (authLoading) {
+      return;
+    }
+
     if (!user) {
       toast.error("Please log in to checkout");
       navigate("/login");
@@ -181,7 +186,7 @@ export default function CheckoutNew() {
     };
 
     fetchProfile();
-  }, [user, navigate, setValue]);
+  }, [user, authLoading, navigate, setValue]);
 
   useEffect(() => {
     if (paymentMethods && paymentMethods.length > 0 && !selectedPaymentMethod) {
@@ -524,7 +529,7 @@ export default function CheckoutNew() {
     }
   };
 
-  if (!user) {
+  if (authLoading || !user) {
     return null;
   }
 
