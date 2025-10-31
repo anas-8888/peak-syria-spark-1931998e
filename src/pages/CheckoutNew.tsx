@@ -293,7 +293,7 @@ export default function CheckoutNew() {
       if (data && data.length > 0) {
         // Validate the first auto discount
         const autoDiscount = data[0];
-        const result = await validateDiscount(autoDiscount.code);
+        const result = await validateDiscount(autoDiscount.code, true);
         if (result.is_valid) {
           toast.success(`Automatic discount "${autoDiscount.name}" applied!`);
         }
@@ -303,7 +303,7 @@ export default function CheckoutNew() {
     }
   };
 
-  const validateDiscount = async (code: string) => {
+  const validateDiscount = async (code: string, silent = false) => {
     try {
       const { data, error } = await supabase.rpc("validate_discount_code", {
         p_code: code,
@@ -329,12 +329,16 @@ export default function CheckoutNew() {
           setDiscountAmount(Number(result.discount_amount));
           return result;
         } else {
-          toast.error(result.message || "Invalid discount code");
+          if (!silent) {
+            toast.error(result.message || "Invalid discount code");
+          }
           return result;
         }
       }
     } catch (error: any) {
-      toast.error(error.message || "Error validating discount");
+      if (!silent) {
+        toast.error(error.message || "Error validating discount");
+      }
       return { is_valid: false };
     }
   };
