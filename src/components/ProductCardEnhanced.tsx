@@ -157,11 +157,11 @@ const ProductCardEnhanced = ({
   return (
     <>
       <div className={`group relative bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 animate-fade-in ${
-        viewMode === "list" ? "flex flex-col sm:flex-row" : ""
+        viewMode === "list" ? "flex flex-row" : ""
       }`}>
         {/* Product Image */}
         <div className={`relative overflow-hidden bg-muted ${
-          viewMode === "list" ? "w-full sm:w-48 h-48 sm:h-48 flex-shrink-0" : "aspect-square"
+          viewMode === "list" ? "w-24 sm:w-32 md:w-48 h-24 sm:h-32 md:h-48 flex-shrink-0" : "aspect-square"
         }`}>
           <img
             src={currentImage}
@@ -226,12 +226,12 @@ const ProductCardEnhanced = ({
         </div>
 
         {/* Product Info */}
-        <div className={`space-y-2 sm:space-y-3 ${viewMode === "list" ? "flex-1 p-4 sm:p-6 flex flex-col" : "p-3 sm:p-4"}`}>
+        <div className={`space-y-1 sm:space-y-2 md:space-y-3 ${viewMode === "list" ? "flex-1 p-2 sm:p-4 md:p-6 flex flex-col" : "p-3 sm:p-4"}`}>
           <div className={viewMode === "list" ? "flex-1" : ""}>
-            <p className="text-xs sm:text-xs text-muted-foreground uppercase tracking-wider">{category}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">{category}</p>
             <Link to={`/product/${id}`}>
-              <h3 className={`font-semibold text-card-foreground hover:text-primary transition-colors line-clamp-2 ${
-                viewMode === "list" ? "text-base sm:text-lg mt-1" : "text-xs sm:text-base min-h-[2.5rem] sm:min-h-[3rem]"
+              <h3 className={`font-semibold text-card-foreground hover:text-primary transition-colors ${
+                viewMode === "list" ? "text-sm sm:text-base md:text-lg mt-1 line-clamp-2" : "text-xs sm:text-base min-h-[2.5rem] sm:min-h-[3rem] line-clamp-2"
               }`}>
                 {name}
               </h3>
@@ -240,60 +240,66 @@ const ProductCardEnhanced = ({
 
           {/* Colors */}
           <div className="flex gap-1 sm:gap-2">
-            {colors.map((color) => (
+            {colors.slice(0, viewMode === "list" ? 3 : colors.length).map((color) => (
               <button
                 key={color}
                 onClick={() => handleColorChange(color)}
-                className={`w-4 h-4 sm:w-6 sm:h-6 rounded-full border transition-all ${
-                  selectedColor === color ? "border-primary scale-110 ring-1 sm:ring-2 ring-primary ring-offset-1 sm:ring-offset-2" : "border-border"
+                className={`rounded-full border transition-all ${
+                  viewMode === "list" 
+                    ? `w-3 h-3 sm:w-4 sm:h-4 md:w-6 md:h-6 ${selectedColor === color ? "border-primary scale-110 ring-1 ring-primary ring-offset-1" : "border-border"}`
+                    : `w-4 h-4 sm:w-6 sm:h-6 ${selectedColor === color ? "border-primary scale-110 ring-1 sm:ring-2 ring-primary ring-offset-1 sm:ring-offset-2" : "border-border"}`
                 }`}
                 style={{ backgroundColor: colorMap[color] || color }}
                 title={color}
               />
             ))}
+            {viewMode === "list" && colors.length > 3 && (
+              <span className="text-[10px] sm:text-xs text-muted-foreground self-center">+{colors.length - 3}</span>
+            )}
           </div>
 
           {/* Rating */}
           <div className="flex items-center gap-0.5 sm:gap-1">
             {[...Array(5)].map((_, i) => (
-              <span key={i} className={`text-xs sm:text-sm ${i < Math.floor(rating) ? "text-primary" : "text-muted-foreground"}`}>
+              <span key={i} className={`${viewMode === "list" ? "text-[10px] sm:text-xs md:text-sm" : "text-xs sm:text-sm"} ${i < Math.floor(rating) ? "text-primary" : "text-muted-foreground"}`}>
                 ★
               </span>
             ))}
-            <span className="text-xs sm:text-xs text-muted-foreground ml-0.5 sm:ml-1">({rating})</span>
+            <span className={`${viewMode === "list" ? "text-[10px] sm:text-xs" : "text-xs"} text-muted-foreground ml-0.5 sm:ml-1`}>({rating})</span>
           </div>
 
-          {/* Sizes */}
+          {/* Sizes - Hide on small mobile in list view */}
           {sizes.length > 0 && (
-            <div className="text-xs sm:text-xs text-muted-foreground">
-              Sizes: {sizes.join(", ")}
+            <div className={`${viewMode === "list" ? "hidden sm:block text-[10px] sm:text-xs" : "text-xs sm:text-xs"} text-muted-foreground`}>
+              Sizes: {sizes.slice(0, 4).join(", ")}{sizes.length > 4 && "..."}
             </div>
           )}
 
-          <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-3 ${viewMode === "list" ? "justify-between mt-auto pt-4 border-t" : "justify-between pt-1.5 sm:pt-2 border-t"}`}>
-            <span className={`font-bold text-primary ${viewMode === "list" ? "text-xl sm:text-2xl" : "text-sm sm:text-xl"}`}>{formatPrice(price)}</span>
+          <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 ${viewMode === "list" ? "justify-between mt-auto pt-2 sm:pt-4 border-t" : "justify-between pt-1.5 sm:pt-2 border-t"}`}>
+            <span className={`font-bold text-primary ${viewMode === "list" ? "text-base sm:text-xl md:text-2xl" : "text-sm sm:text-xl"}`}>{formatPrice(price)}</span>
             {viewMode === "list" ? (
-              <div className="flex gap-2 w-full sm:w-auto">
+              <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => setQuickViewOpen(true)}
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10"
                 >
-                  <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
                 </Button>
                 <Button
                   variant={isFavorite ? "hero" : "outline"}
                   size="icon"
                   onClick={handleToggleFavorite}
                   disabled={isLoading}
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10"
                 >
-                  <Heart className={`h-4 w-4 sm:h-5 sm:w-5 ${isFavorite ? "fill-current" : ""}`} />
+                  <Heart className={`h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 ${isFavorite ? "fill-current" : ""}`} />
                 </Button>
-                <Button variant="hero" size="default" className="flex-1 sm:flex-initial" asChild>
+                <Button variant="hero" size="sm" className="flex-1 sm:flex-initial text-xs sm:text-sm h-8 sm:h-10" asChild>
                   <Link to={`/product/${id}`}>
-                    View Details
+                    <span className="hidden sm:inline">View Details</span>
+                    <span className="sm:hidden">View</span>
                   </Link>
                 </Button>
               </div>
