@@ -381,11 +381,37 @@ export default function CheckoutNew() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        // Validate the first auto discount
         const autoDiscount = data[0];
-        const result = await validateDiscount(autoDiscount.code, true);
-        if (result.is_valid) {
-          toast.success(`Automatic discount "${autoDiscount.name}" applied!`);
+        
+        // Check if cart meets minimum requirements
+        if (cartTotal < autoDiscount.min_cart_subtotal) {
+          return;
+        }
+
+        // For automatic discounts without codes, apply directly
+        if (!autoDiscount.code) {
+          let discountValue = 0;
+          
+          if (autoDiscount.type === "percentage") {
+            discountValue = cartTotal * (autoDiscount.value / 100);
+          } else if (autoDiscount.type === "fixed_amount") {
+            discountValue = autoDiscount.value;
+          }
+
+          setAppliedDiscount({
+            id: autoDiscount.id,
+            code: null,
+            amount: discountValue,
+            message: autoDiscount.marketing_label || `${autoDiscount.name} applied!`,
+          });
+          setDiscountAmount(discountValue);
+          toast.success(`${autoDiscount.name} applied! You save ${formatPrice(discountValue)}`);
+        } else {
+          // For automatic discounts with codes, validate normally
+          const result = await validateDiscount(autoDiscount.code, true);
+          if (result.is_valid) {
+            toast.success(`Automatic discount "${autoDiscount.name}" applied!`);
+          }
         }
       }
     } catch (error) {
