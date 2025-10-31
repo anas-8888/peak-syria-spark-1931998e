@@ -197,6 +197,10 @@ export default function CheckoutNew() {
       );
       if (mapping) {
         setShippingCost(Number(mapping.cost));
+      } else {
+        // Clear carrier selection if not available in new region
+        setSelectedCarrier(null);
+        setShippingCost(0);
       }
     }
   }, [selectedRegion, selectedCarrier, carrierRegions]);
@@ -208,6 +212,15 @@ export default function CheckoutNew() {
       (cr) => cr.carrier_id === carrier.id && cr.region_id === selectedRegion
     );
   });
+
+  // Auto-select carrier if only one available
+  useEffect(() => {
+    if (availableCarriers && availableCarriers.length === 1 && !selectedCarrier) {
+      const singleCarrier = availableCarriers[0];
+      setSelectedCarrier(singleCarrier.id);
+      setValue("carrierId", singleCarrier.id);
+    }
+  }, [availableCarriers, selectedCarrier, setValue]);
 
   const handleGetLocation = () => {
     setLoadingLocation(true);
