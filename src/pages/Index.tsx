@@ -271,19 +271,19 @@ const Index = () => {
                         </div>
                       ) : (
                         <div className="aspect-video overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                          <Icon className="h-16 w-16 text-primary/40" />
+                          <Icon className="h-8 w-8 sm:h-16 sm:w-16 text-primary/40" />
                         </div>
                       )}
                       
                       {/* Category Content */}
-                      <div className="p-6 sm:p-8">
-                        <div className="flex flex-col items-center gap-3 mb-4">
-                          <h3 className="text-xl sm:text-2xl font-bold group-hover:text-primary transition-colors text-center">{category.name}</h3>
+                      <div className="p-3 sm:p-6 md:p-8">
+                        <div className="flex flex-col items-center gap-1.5 sm:gap-3 mb-2 sm:mb-4">
+                          <h3 className="text-sm sm:text-xl md:text-2xl font-bold group-hover:text-primary transition-colors text-center">{category.name}</h3>
                         </div>
-                        <p className="text-muted-foreground mb-4 text-sm sm:text-base text-center line-clamp-2">{category.description}</p>
-                        <div className="flex items-center justify-center text-primary font-semibold group-hover:gap-3 transition-all">
+                        <p className="text-muted-foreground mb-2 sm:mb-4 text-[10px] sm:text-sm md:text-base text-center line-clamp-2">{category.description}</p>
+                        <div className="flex items-center justify-center text-primary font-semibold group-hover:gap-3 transition-all text-[10px] sm:text-sm md:text-base">
                           {t("home.explore")}
-                          <ArrowRight className="ml-1 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-2 transition-transform duration-300" />
+                          <ArrowRight className="ml-0.5 sm:ml-1 h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 group-hover:translate-x-2 transition-transform duration-300" />
                         </div>
                       </div>
                     </Link>
