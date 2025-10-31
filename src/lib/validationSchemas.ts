@@ -25,7 +25,13 @@ export const CheckoutSchema = z.object({
   city: z.string()
     .trim()
     .min(2, { message: "اسم المدينة قصير جداً" })
-    .max(100, { message: "اسم المدينة طويل جداً" })
+    .max(100, { message: "اسم المدينة طويل جداً" }),
+  
+  regionId: z.string()
+    .min(1, { message: "يرجى اختيار المنطقة" }),
+  
+  carrierId: z.string()
+    .min(1, { message: "يرجى اختيار طريقة الشحن" })
 });
 
 export const PaymentSchema = z.object({

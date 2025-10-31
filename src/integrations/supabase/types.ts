@@ -843,42 +843,69 @@ export type Database = {
       }
       orders: {
         Row: {
+          city: string | null
           created_at: string | null
           customer_email: string | null
           customer_name: string | null
           customer_phone: string | null
           id: string
           shipping_address: string | null
+          shipping_carrier_id: string | null
+          shipping_cost: number | null
+          shipping_region_id: string | null
           status: string
           total_amount: number
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          city?: string | null
           created_at?: string | null
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           id?: string
           shipping_address?: string | null
+          shipping_carrier_id?: string | null
+          shipping_cost?: number | null
+          shipping_region_id?: string | null
           status?: string
           total_amount: number
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          city?: string | null
           created_at?: string | null
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           id?: string
           shipping_address?: string | null
+          shipping_carrier_id?: string | null
+          shipping_cost?: number | null
+          shipping_region_id?: string | null
           status?: string
           total_amount?: number
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_shipping_carrier_id_fkey"
+            columns: ["shipping_carrier_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_carriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_shipping_region_id_fkey"
+            columns: ["shipping_region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_methods: {
         Row: {
@@ -1283,6 +1310,81 @@ export type Database = {
           created_at?: string | null
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      shipping_carrier_regions: {
+        Row: {
+          carrier_id: string
+          cost: number
+          created_at: string
+          id: string
+          region_id: string
+        }
+        Insert: {
+          carrier_id: string
+          cost?: number
+          created_at?: string
+          id?: string
+          region_id: string
+        }
+        Update: {
+          carrier_id?: string
+          cost?: number
+          created_at?: string
+          id?: string
+          region_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_carrier_regions_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_carriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipping_carrier_regions_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipping_carriers: {
+        Row: {
+          base_cost: number
+          created_at: string
+          description: string | null
+          display_order: number
+          estimated_days: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          base_cost?: number
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          estimated_days?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          base_cost?: number
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          estimated_days?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { CheckoutSchema, type CheckoutFormData } from "@/lib/validationSchemas";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, CreditCard } from "lucide-react";
+import { ArrowLeft, CreditCard, MapPin } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -20,14 +20,13 @@ import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import * as LucideIcons from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-
-const shippingAddressSchema = z.object({
-  address: z.string().min(5, "Address is required"),
-  city: z.string().min(2, "City is required"),
-  postalCode: z.string().min(4, "Postal code is required"),
-});
-
-type ShippingFormData = z.infer<typeof shippingAddressSchema>;
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface PaymentMethod {
   id: string;
@@ -38,24 +37,92 @@ interface PaymentMethod {
   display_order: number;
 }
 
+interface Region {
+  id: string;
+  name: string;
+  country: string | null;
+  is_active: boolean;
+}
+
+interface ShippingCarrier {
+  id: string;
+  name: string;
+  description: string | null;
+  estimated_days: string | null;
+  is_active: boolean;
+}
+
+interface CarrierRegion {
+  carrier_id: string;
+  region_id: string;
+  cost: number;
+}
+
 export default function CheckoutNew() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { cartItems, cartTotal, clearCart, loading: cartLoading } = useCart();
   const { formatPrice } = useCurrency();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
+  const [selectedRegion, setSelectedRegion] = useState<string>("");
+  const [selectedCarrier, setSelectedCarrier] = useState<string>("");
+  const [shippingCost, setShippingCost] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [useGPS, setUseGPS] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
-  } = useForm<ShippingFormData>({
-    resolver: zodResolver(shippingAddressSchema),
+  } = useForm<CheckoutFormData>({
+    resolver: zodResolver(CheckoutSchema),
   });
 
+  // Fetch regions
+  const { data: regions, isLoading: regionsLoading } = useQuery({
+    queryKey: ["regions-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("regions")
+        .select("*")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data as Region[];
+    },
+  });
+
+  // Fetch shipping carriers
+  const { data: carriers, isLoading: carriersLoading } = useQuery({
+    queryKey: ["shipping-carriers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("shipping_carriers")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order");
+      if (error) throw error;
+      return data as ShippingCarrier[];
+    },
+  });
+
+  // Fetch carrier-region mappings
+  const { data: carrierRegions, isLoading: carrierRegionsLoading } = useQuery({
+    queryKey: ["shipping-carrier-regions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("shipping_carrier_regions")
+        .select("*");
+      if (error) throw error;
+      return data as CarrierRegion[];
+    },
+  });
+
+  // Fetch payment methods
   const { data: paymentMethods, isLoading: paymentMethodsLoading } = useQuery({
     queryKey: ["payment-methods-active"],
     queryFn: async () => {
@@ -63,8 +130,7 @@ export default function CheckoutNew() {
         .from("payment_methods")
         .select("*")
         .eq("is_active", true)
-        .order("display_order", { ascending: true });
-
+        .order("display_order");
       if (error) throw error;
       return data as PaymentMethod[];
     },
@@ -104,10 +170,77 @@ export default function CheckoutNew() {
     }
   }, [paymentMethods]);
 
-  const shippingCost = 5000;
+  // Update shipping cost when region and carrier change
+  useEffect(() => {
+    if (selectedRegion && selectedCarrier && carrierRegions) {
+      const mapping = carrierRegions.find(
+        (cr) => cr.carrier_id === selectedCarrier && cr.region_id === selectedRegion
+      );
+      if (mapping) {
+        setShippingCost(Number(mapping.cost));
+      }
+    }
+  }, [selectedRegion, selectedCarrier, carrierRegions]);
+
+  // Filter available carriers based on selected region
+  const availableCarriers = carriers?.filter((carrier) => {
+    if (!selectedRegion) return false;
+    return carrierRegions?.some(
+      (cr) => cr.carrier_id === carrier.id && cr.region_id === selectedRegion
+    );
+  });
+
+  const handleGetLocation = () => {
+    setLoadingLocation(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            // Use reverse geocoding to get location details
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`
+            );
+            const data = await response.json();
+            
+            if (data.address) {
+              setValue("city", data.address.city || data.address.town || data.address.village || "");
+              setValue("address", data.display_name || "");
+              
+              // Try to match with a region
+              const matchedRegion = regions?.find((r) => 
+                r.name.toLowerCase().includes(data.address.city?.toLowerCase() || "") ||
+                r.name.toLowerCase().includes(data.address.state?.toLowerCase() || "")
+              );
+              
+              if (matchedRegion) {
+                setSelectedRegion(matchedRegion.id);
+                setValue("regionId", matchedRegion.id);
+              }
+              
+              toast.success("Location detected successfully!");
+            }
+          } catch (error) {
+            console.error("Error getting location details:", error);
+            toast.error("Could not get location details");
+          } finally {
+            setLoadingLocation(false);
+          }
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          toast.error("Could not access your location");
+          setLoadingLocation(false);
+        }
+      );
+    } else {
+      toast.error("Geolocation is not supported by your browser");
+      setLoadingLocation(false);
+    }
+  };
+
   const total = cartTotal + shippingCost;
 
-  const onSubmit = async (data: ShippingFormData) => {
+  const onSubmit = async (data: CheckoutFormData) => {
     if (!user || !profile) {
       toast.error("User information not found");
       return;
@@ -115,6 +248,16 @@ export default function CheckoutNew() {
 
     if (!selectedPaymentMethod) {
       toast.error("Please select a payment method");
+      return;
+    }
+
+    if (!selectedRegion) {
+      toast.error("Please select a region");
+      return;
+    }
+
+    if (!selectedCarrier) {
+      toast.error("Please select a shipping method");
       return;
     }
 
@@ -132,7 +275,7 @@ export default function CheckoutNew() {
         {
           p_user_id: user.id,
           p_total_amount: total,
-          p_shipping_address: `${data.address}, ${data.city}, ${data.postalCode}`,
+          p_shipping_address: `${data.address}, ${data.city}`,
           p_customer_name: profile.full_name || user.email,
           p_customer_email: profile.email || user.email,
           p_customer_phone: profile.phone || "",
@@ -147,6 +290,19 @@ export default function CheckoutNew() {
       if (orderError) throw orderError;
 
       const orderId = orderData;
+
+      // Update order with shipping info
+      const { error: updateError } = await supabase
+        .from("orders")
+        .update({
+          shipping_carrier_id: selectedCarrier,
+          shipping_region_id: selectedRegion,
+          shipping_cost: shippingCost,
+          city: data.city,
+        })
+        .eq("id", orderId);
+
+      if (updateError) throw updateError;
 
       // Get selected payment method name
       const paymentMethod = paymentMethods?.find((pm) => pm.id === selectedPaymentMethod);
@@ -185,7 +341,7 @@ export default function CheckoutNew() {
     return null;
   }
 
-  if (cartLoading || profileLoading || paymentMethodsLoading) {
+  if (cartLoading || profileLoading || paymentMethodsLoading || regionsLoading || carriersLoading || carrierRegionsLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -239,28 +395,87 @@ export default function CheckoutNew() {
           {/* Checkout Form */}
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Contact Information - Auto-filled, non-editable */}
+              {/* Contact Information */}
               <Card className="p-6">
                 <h2 className="text-xl font-bold mb-4">Contact Information</h2>
                 <div className="space-y-4">
                   <div>
-                    <Label>Email</Label>
-                    <Input value={profile?.email || user.email} disabled className="bg-muted" />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      From your account (cannot be changed here)
-                    </p>
+                    <Label>Email *</Label>
+                    <Input
+                      {...register("email")}
+                      defaultValue={profile?.email || user.email}
+                      placeholder="your@email.com"
+                    />
+                    {errors.email && (
+                      <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
+                    )}
                   </div>
                   <div>
-                    <Label>Phone</Label>
+                    <Label>Phone *</Label>
                     <Input
-                      value={profile?.phone || "Not provided"}
-                      disabled
-                      className="bg-muted"
+                      {...register("phone")}
+                      defaultValue={profile?.phone || ""}
+                      placeholder="+963 XXX XXX XXX"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      From your account (cannot be changed here)
-                    </p>
+                    {errors.phone && (
+                      <p className="text-sm text-destructive mt-1">{errors.phone.message}</p>
+                    )}
                   </div>
+                  <div>
+                    <Label>Full Name *</Label>
+                    <Input
+                      {...register("fullName")}
+                      defaultValue={profile?.full_name || ""}
+                      placeholder="Your full name"
+                    />
+                    {errors.fullName && (
+                      <p className="text-sm text-destructive mt-1">{errors.fullName.message}</p>
+                    )}
+                  </div>
+                </div>
+              </Card>
+
+              {/* Region Selection */}
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold">Delivery Region</h2>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGetLocation}
+                    disabled={loadingLocation}
+                    className="gap-2"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    {loadingLocation ? "Getting Location..." : "Use GPS"}
+                  </Button>
+                </div>
+                <div>
+                  <Label htmlFor="regionId">Select Region *</Label>
+                  <Select
+                    value={selectedRegion}
+                    onValueChange={(value) => {
+                      setSelectedRegion(value);
+                      setValue("regionId", value);
+                      setSelectedCarrier("");
+                      setValue("carrierId", "");
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose your region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {regions?.map((region) => (
+                        <SelectItem key={region.id} value={region.id}>
+                          {region.name} {region.country && `- ${region.country}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.regionId && (
+                    <p className="text-sm text-destructive mt-1">{errors.regionId.message}</p>
+                  )}
                 </div>
               </Card>
 
@@ -269,47 +484,83 @@ export default function CheckoutNew() {
                 <h2 className="text-xl font-bold mb-4">Shipping Address</h2>
                 <div className="space-y-4">
                   <div>
-                    <Label>Full Name</Label>
-                    <Input
-                      value={profile?.full_name || user.email}
-                      disabled
-                      className="bg-muted"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      From your account (cannot be changed here)
-                    </p>
+                    <Label htmlFor="city">City *</Label>
+                    <Input id="city" {...register("city")} placeholder="City name" />
+                    {errors.city && (
+                      <p className="text-sm text-destructive mt-1">{errors.city.message}</p>
+                    )}
                   </div>
                   <div>
-                    <Label htmlFor="address">Address *</Label>
+                    <Label htmlFor="address">Detailed Address *</Label>
                     <Input
                       id="address"
                       {...register("address")}
-                      placeholder="Street address, building number"
+                      placeholder="Street, building number, floor, etc."
                     />
                     {errors.address && (
                       <p className="text-sm text-destructive mt-1">{errors.address.message}</p>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="city">City *</Label>
-                      <Input id="city" {...register("city")} placeholder="City" />
-                      {errors.city && (
-                        <p className="text-sm text-destructive mt-1">{errors.city.message}</p>
-                      )}
-                    </div>
-                    <div>
-                      <Label htmlFor="postalCode">Postal Code *</Label>
-                      <Input id="postalCode" {...register("postalCode")} placeholder="12345" />
-                      {errors.postalCode && (
-                        <p className="text-sm text-destructive mt-1">
-                          {errors.postalCode.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </Card>
+
+              {/* Shipping Method */}
+              {selectedRegion && (
+                <Card className="p-6">
+                  <h2 className="text-xl font-bold mb-4">Shipping Method</h2>
+                  {availableCarriers && availableCarriers.length > 0 ? (
+                    <RadioGroup
+                      value={selectedCarrier}
+                      onValueChange={(value) => {
+                        setSelectedCarrier(value);
+                        setValue("carrierId", value);
+                      }}
+                    >
+                      {availableCarriers.map((carrier) => {
+                        const mapping = carrierRegions?.find(
+                          (cr) => cr.carrier_id === carrier.id && cr.region_id === selectedRegion
+                        );
+                        return (
+                          <div
+                            key={carrier.id}
+                            className="flex items-center space-x-3 p-4 border rounded-lg"
+                          >
+                            <RadioGroupItem value={carrier.id} id={carrier.id} />
+                            <Label
+                              htmlFor={carrier.id}
+                              className="flex items-center justify-between flex-1 cursor-pointer"
+                            >
+                              <div>
+                                <div className="font-medium">{carrier.name}</div>
+                                {carrier.description && (
+                                  <div className="text-sm text-muted-foreground">
+                                    {carrier.description}
+                                  </div>
+                                )}
+                                {carrier.estimated_days && (
+                                  <div className="text-sm text-muted-foreground">
+                                    Delivery: {carrier.estimated_days}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="font-semibold">
+                                {formatPrice(Number(mapping?.cost || 0))}
+                              </div>
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </RadioGroup>
+                  ) : (
+                    <p className="text-muted-foreground">
+                      No shipping methods available for this region
+                    </p>
+                  )}
+                  {errors.carrierId && (
+                    <p className="text-sm text-destructive mt-2">{errors.carrierId.message}</p>
+                  )}
+                </Card>
+              )}
 
               {/* Payment Method */}
               <Card className="p-6">
@@ -341,7 +592,7 @@ export default function CheckoutNew() {
                 )}
               </Card>
 
-              <Button type="submit" size="lg" className="w-full" disabled={submitting}>
+              <Button type="submit" size="lg" className="w-full" disabled={submitting || !selectedCarrier}>
                 {submitting ? "Processing..." : `Place Order - ${formatPrice(total)}`}
               </Button>
             </form>
@@ -384,7 +635,9 @@ export default function CheckoutNew() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className="font-medium">{formatPrice(shippingCost)}</span>
+                  <span className="font-medium">
+                    {shippingCost > 0 ? formatPrice(shippingCost) : "Select shipping method"}
+                  </span>
                 </div>
               </div>
 
