@@ -10,22 +10,49 @@ import { Trash2, Minus, Plus, ShoppingBag } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function CartNew() {
   const { cartItems, updateQuantity, updateNotes, removeFromCart, loading, cartTotal } = useCart();
   const { formatPrice } = useCurrency();
-  const [editingNotes, setEditingNotes] = useState<string | null>(null);
-  const [noteText, setNoteText] = useState("");
+  const [noteTexts, setNoteTexts] = useState<Record<string, string>>({});
+  const saveTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   const shippingCost = 5000;
   const total = cartTotal + shippingCost;
 
-  const handleSaveNotes = async (itemId: string) => {
-    await updateNotes(itemId, noteText);
-    setEditingNotes(null);
-    setNoteText("");
+  // Initialize note texts from cart items
+  useEffect(() => {
+    const initialNotes: Record<string, string> = {};
+    cartItems.forEach((item) => {
+      initialNotes[item.id] = item.notes || "";
+    });
+    setNoteTexts(initialNotes);
+  }, [cartItems.length]); // Only re-initialize when cart items count changes
+
+  // Auto-save notes with debouncing
+  const handleNoteChange = (itemId: string, value: string) => {
+    setNoteTexts((prev) => ({ ...prev, [itemId]: value }));
+
+    // Clear existing timeout for this item
+    if (saveTimeoutRef.current[itemId]) {
+      clearTimeout(saveTimeoutRef.current[itemId]);
+    }
+
+    // Set new timeout to save after 1 second of no typing
+    saveTimeoutRef.current[itemId] = setTimeout(() => {
+      updateNotes(itemId, value);
+    }, 1000);
   };
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(saveTimeoutRef.current).forEach((timeout) => {
+        clearTimeout(timeout);
+      });
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -140,64 +167,20 @@ export default function CartNew() {
                       </span>
                     </div>
 
-                    {/* Notes */}
-                    {editingNotes === item.id ? (
-                      <div className="space-y-2">
-                        <Textarea
-                          placeholder="Add notes for this item..."
-                          value={noteText}
-                          onChange={(e) => setNoteText(e.target.value)}
-                          className="min-h-[60px]"
-                        />
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => handleSaveNotes(item.id)}>
-                            Save
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setEditingNotes(null);
-                              setNoteText("");
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        {item.notes ? (
-                          <div className="bg-muted p-2 rounded text-sm">
-                            <p className="text-muted-foreground mb-1">Notes:</p>
-                            <p>{item.notes}</p>
-                            <Button
-                              size="sm"
-                              variant="link"
-                              className="h-auto p-0 mt-1"
-                              onClick={() => {
-                                setEditingNotes(item.id);
-                                setNoteText(item.notes || "");
-                              }}
-                            >
-                              Edit notes
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="link"
-                            className="h-auto p-0"
-                            onClick={() => {
-                              setEditingNotes(item.id);
-                              setNoteText("");
-                            }}
-                          >
-                            Add notes
-                          </Button>
-                        )}
-                      </div>
-                    )}
+                    {/* Notes - Auto-save */}
+                    <div className="space-y-2">
+                      <Textarea
+                        placeholder="Add notes for this item (saves automatically)..."
+                        value={noteTexts[item.id] || ""}
+                        onChange={(e) => handleNoteChange(item.id, e.target.value)}
+                        className="min-h-[60px]"
+                      />
+                      {noteTexts[item.id] && (
+                        <p className="text-xs text-muted-foreground">
+                          ✓ Notes saved automatically
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Card>
