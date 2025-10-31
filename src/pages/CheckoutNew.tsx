@@ -86,6 +86,11 @@ export default function CheckoutNew() {
     formState: { errors },
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(CheckoutSchema),
+    defaultValues: {
+      email: "",
+      phone: "",
+      fullName: "",
+    },
   });
 
   // Fetch regions
@@ -159,6 +164,13 @@ export default function CheckoutNew() {
 
         if (error) throw error;
         setProfile(data);
+        
+        // Set form values with profile data
+        if (data) {
+          setValue("email", data.email || user.email || "");
+          setValue("phone", data.phone || "");
+          setValue("fullName", data.full_name || "");
+        }
       } catch (error) {
         console.error("Error fetching profile:", error);
         toast.error("Failed to load profile information");
@@ -168,7 +180,7 @@ export default function CheckoutNew() {
     };
 
     fetchProfile();
-  }, [user, navigate]);
+  }, [user, navigate, setValue]);
 
   useEffect(() => {
     if (paymentMethods && paymentMethods.length > 0 && !selectedPaymentMethod) {
@@ -399,9 +411,9 @@ export default function CheckoutNew() {
           p_user_id: user.id,
           p_total_amount: total,
           p_shipping_address: data.address,
-          p_customer_name: profile.full_name || user.email,
-          p_customer_email: profile.email || user.email,
-          p_customer_phone: profile.phone || "",
+          p_customer_name: profile?.full_name || user.email,
+          p_customer_email: profile?.email || user.email,
+          p_customer_phone: profile?.phone || "",
           p_items: cartItems.map((item) => ({
             product_id: item.product_id,
             quantity: item.quantity,
@@ -446,7 +458,7 @@ export default function CheckoutNew() {
         amount: total,
         payment_method: paymentMethod?.name || "Unknown",
         status: "pending",
-        customer_name: profile.full_name || user.email,
+        customer_name: profile?.full_name || user.email,
       });
 
       if (paymentError) throw paymentError;
@@ -533,38 +545,26 @@ export default function CheckoutNew() {
                 <h2 className="text-xl font-bold mb-4">Contact Information</h2>
                 <div className="space-y-4">
                   <div>
-                    <Label>Email *</Label>
-                    <Input
-                      {...register("email")}
-                      defaultValue={profile?.email || user.email}
-                      placeholder="your@email.com"
-                    />
-                    {errors.email && (
-                      <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
-                    )}
+                    <Label>Email</Label>
+                    <div className="mt-1 p-3 bg-muted rounded-md text-sm">
+                      {profile?.email || user.email}
+                    </div>
                   </div>
                   <div>
-                    <Label>Phone *</Label>
-                    <Input
-                      {...register("phone")}
-                      defaultValue={profile?.phone || ""}
-                      placeholder="+963 XXX XXX XXX"
-                    />
-                    {errors.phone && (
-                      <p className="text-sm text-destructive mt-1">{errors.phone.message}</p>
-                    )}
+                    <Label>Phone</Label>
+                    <div className="mt-1 p-3 bg-muted rounded-md text-sm">
+                      {profile?.phone || "Not provided"}
+                    </div>
                   </div>
                   <div>
-                    <Label>Full Name *</Label>
-                    <Input
-                      {...register("fullName")}
-                      defaultValue={profile?.full_name || ""}
-                      placeholder="Your full name"
-                    />
-                    {errors.fullName && (
-                      <p className="text-sm text-destructive mt-1">{errors.fullName.message}</p>
-                    )}
+                    <Label>Full Name</Label>
+                    <div className="mt-1 p-3 bg-muted rounded-md text-sm">
+                      {profile?.full_name || "Not provided"}
+                    </div>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    To update your contact information, please visit your profile page.
+                  </p>
                 </div>
               </Card>
 
