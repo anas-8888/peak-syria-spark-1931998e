@@ -118,6 +118,38 @@ export default function CartNew() {
     toast.success("Discount removed");
   };
 
+  const checkAutoDiscounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("discounts")
+        .select("*")
+        .eq("is_automatic", true)
+        .eq("status", "active")
+        .lte("start_date", new Date().toISOString())
+        .or(`end_date.is.null,end_date.gte.${new Date().toISOString()}`);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // Validate the first auto discount
+        const autoDiscount = data[0];
+        const result = await validateDiscount(autoDiscount.code);
+        if (result && result.is_valid) {
+          toast.success(`Automatic discount "${autoDiscount.name}" applied!`);
+        }
+      }
+    } catch (error) {
+      console.error("Error checking auto discounts:", error);
+    }
+  };
+
+  // Check for auto-apply discounts when cart total changes
+  useEffect(() => {
+    if (cartItems.length > 0 && !appliedDiscount && cartTotal > 0) {
+      checkAutoDiscounts();
+    }
+  }, [cartTotal, appliedDiscount]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
