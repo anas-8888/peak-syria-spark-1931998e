@@ -171,16 +171,60 @@ export default function CheckoutNew() {
         if (error) throw error;
         setProfile(data);
         
-        // Set form values with profile data
+        // Set form values with profile data (will be overridden by saved checkout data if exists)
         if (data) {
           setValue("email", data.email || user.email || "");
           setValue("phone", data.phone || "");
           setValue("fullName", data.full_name || "");
-          
-          // Auto-fill address if available
-          if (data.address) {
-            setValue("address", data.address);
+        }
+        
+        // Load saved checkout data after profile loads
+        const savedData = localStorage.getItem("checkoutFormData");
+        if (savedData) {
+          try {
+            const parsed = JSON.parse(savedData);
+            
+            // Restore region
+            if (parsed.selectedRegion) {
+              setSelectedRegion(parsed.selectedRegion);
+              setValue("regionId", parsed.selectedRegion);
+            }
+            
+            // Restore carrier
+            if (parsed.selectedCarrier) {
+              setSelectedCarrier(parsed.selectedCarrier);
+            }
+            
+            // Restore payment method
+            if (parsed.selectedPaymentMethod) {
+              setSelectedPaymentMethod(parsed.selectedPaymentMethod);
+            }
+            
+            // Restore discount code
+            if (parsed.discountCode) {
+              setDiscountCode(parsed.discountCode);
+              if (cartItems.length > 0) {
+                validateDiscount(parsed.discountCode, true).then((result) => {
+                  if (result.is_valid) {
+                    toast.success("Previously applied discount restored");
+                  }
+                });
+              }
+            }
+            
+            // Restore address (takes priority over profile address)
+            if (parsed.address) {
+              setValue("address", parsed.address);
+            } else if (data.address) {
+              // Fall back to profile address if no saved address
+              setValue("address", data.address);
+            }
+          } catch (e) {
+            console.error("Error loading saved checkout data:", e);
           }
+        } else if (data.address) {
+          // No saved checkout data, use profile address
+          setValue("address", data.address);
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -301,51 +345,37 @@ export default function CheckoutNew() {
   // Save address field separately when it changes
   useEffect(() => {
     const subscription = watch((value) => {
-      const savedData = localStorage.getItem("checkoutFormData");
-      if (savedData) {
-        try {
-          const parsed = JSON.parse(savedData);
-          parsed.address = value.address || "";
-          localStorage.setItem("checkoutFormData", JSON.stringify(parsed));
-        } catch (e) {
-          console.error("Error updating saved address:", e);
+      if (value.address !== undefined) {
+        const savedData = localStorage.getItem("checkoutFormData");
+        if (savedData) {
+          try {
+            const parsed = JSON.parse(savedData);
+            parsed.address = value.address || "";
+            localStorage.setItem("checkoutFormData", JSON.stringify(parsed));
+          } catch (e) {
+            console.error("Error updating saved address:", e);
+          }
+        } else {
+          // Create initial save with address
+          const formData = {
+            selectedRegion,
+            selectedCarrier,
+            selectedPaymentMethod,
+            discountCode: appliedDiscount?.code || "",
+            address: value.address || "",
+          };
+          localStorage.setItem("checkoutFormData", JSON.stringify(formData));
         }
       }
     });
     return () => subscription.unsubscribe();
-  }, [watch]);
+  }, [watch, selectedRegion, selectedCarrier, selectedPaymentMethod, appliedDiscount]);
 
-  // Load saved form data
+  // Load saved form data is now handled in the profile fetch effect above
+  // This empty effect is kept for clarity
   useEffect(() => {
-    const savedData = localStorage.getItem("checkoutFormData");
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        if (parsed.selectedRegion) {
-          setSelectedRegion(parsed.selectedRegion);
-          setValue("regionId", parsed.selectedRegion);
-        }
-        if (parsed.selectedCarrier) setSelectedCarrier(parsed.selectedCarrier);
-        if (parsed.selectedPaymentMethod) setSelectedPaymentMethod(parsed.selectedPaymentMethod);
-        if (parsed.discountCode) {
-          setDiscountCode(parsed.discountCode);
-          // Auto-validate saved discount code
-          if (cartItems.length > 0) {
-            validateDiscount(parsed.discountCode, true).then((result) => {
-              if (result.is_valid) {
-                toast.success("Previously applied discount restored");
-              }
-            });
-          }
-        }
-        if (parsed.address) {
-          setValue("address", parsed.address);
-        }
-      } catch (e) {
-        console.error("Error loading saved form data:", e);
-      }
-    }
-  }, [setValue]);
+    // Saved data loading moved to profile fetch to ensure correct order
+  }, []);
 
   const checkAutoDiscounts = async () => {
     try {
