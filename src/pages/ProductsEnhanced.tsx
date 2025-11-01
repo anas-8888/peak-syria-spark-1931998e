@@ -211,9 +211,13 @@ const ProductsEnhanced = () => {
       filters.sizes.some((s) => product.sizes.includes(s));
     const actualPrice = product.offer_price || product.price;
     const priceMatch = actualPrice >= filters.priceRange[0] && actualPrice <= filters.priceRange[1];
+    
+    console.log('Filtering product:', product.name, 'Price:', actualPrice, 'Range:', filters.priceRange, 'Match:', priceMatch);
 
     return categoryMatch && colorMatch && sizeMatch && priceMatch;
   });
+  
+  console.log('Total products:', allProducts.length, 'Filtered:', filteredProducts.length, 'Price range:', filters.priceRange);
 
   // Apply sorting
   const sortedProducts = [...filteredProducts].sort((a, b) => {

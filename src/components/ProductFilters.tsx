@@ -77,6 +77,9 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
       priceRange: newPriceRange
     };
     
+    console.log('Price filter changed:', newPriceRange);
+    console.log('Calling onFilterChange with:', newFilters);
+    
     setLocalFilters(newFilters);
     onFilterChange(newFilters);
   };
