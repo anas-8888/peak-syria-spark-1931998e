@@ -108,9 +108,10 @@ export default function CheckoutNew() {
     },
   });
 
-  // Restore saved region when regions data is loaded
+  // Restore saved region when regions data and profile are loaded
   useEffect(() => {
-    if (regions && regions.length > 0 && !selectedRegion) {
+    if (regions && regions.length > 0 && !selectedRegion && profile) {
+      // Priority 1: Check localStorage for previously selected region
       const savedData = localStorage.getItem("checkoutFormData");
       if (savedData) {
         try {
@@ -121,14 +122,24 @@ export default function CheckoutNew() {
             if (regionExists) {
               setSelectedRegion(parsed.selectedRegion);
               setValue("regionId", parsed.selectedRegion);
+              return;
             }
           }
         } catch (e) {
           console.error("Error restoring saved region:", e);
         }
       }
+
+      // Priority 2: Use profile's region_id if available
+      if (profile.region_id) {
+        const profileRegion = regions.find(r => r.id === profile.region_id);
+        if (profileRegion) {
+          setSelectedRegion(profile.region_id);
+          setValue("regionId", profile.region_id);
+        }
+      }
     }
-  }, [regions, selectedRegion, setValue]);
+  }, [regions, selectedRegion, profile, setValue]);
 
   // Fetch shipping carriers
   const { data: carriers, isLoading: carriersLoading } = useQuery({
@@ -237,40 +248,12 @@ export default function CheckoutNew() {
               // Fall back to profile address if no saved address
               setValue("address", data.address);
             }
-            
-            // Auto-select region based on profile address if exists and no saved region
-            if (!parsed.selectedRegion && data.address && regions && regions.length > 0) {
-              const addressLower = data.address.toLowerCase();
-              const matchedRegion = regions.find(region => 
-                addressLower.includes(region.name.toLowerCase()) ||
-                (region.country && addressLower.includes(region.country.toLowerCase()))
-              );
-              
-              if (matchedRegion) {
-                setSelectedRegion(matchedRegion.id);
-                setValue("regionId", matchedRegion.id);
-              }
-            }
           } catch (e) {
             console.error("Error loading saved checkout data:", e);
           }
         } else if (data.address) {
           // No saved checkout data, use profile address
           setValue("address", data.address);
-          
-          // Auto-select region based on profile address
-          if (regions && regions.length > 0) {
-            const addressLower = data.address.toLowerCase();
-            const matchedRegion = regions.find(region => 
-              addressLower.includes(region.name.toLowerCase()) ||
-              (region.country && addressLower.includes(region.country.toLowerCase()))
-            );
-            
-            if (matchedRegion) {
-              setSelectedRegion(matchedRegion.id);
-              setValue("regionId", matchedRegion.id);
-            }
-          }
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
