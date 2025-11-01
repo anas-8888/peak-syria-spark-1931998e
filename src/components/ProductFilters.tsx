@@ -70,16 +70,12 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
   // Handle slider release - apply the filter
   const handleSliderRelease = (value: number[]) => {
     const newPriceRange: [number, number] = [value[0], value[1]];
-    setSliderValue(newPriceRange);
-    
     const newFilters = {
       ...localFilters,
       priceRange: newPriceRange
     };
     
-    console.log('Price filter changed:', newPriceRange);
-    console.log('Calling onFilterChange with:', newFilters);
-    
+    setSliderValue(newPriceRange);
     setLocalFilters(newFilters);
     onFilterChange(newFilters);
   };
