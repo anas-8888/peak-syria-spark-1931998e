@@ -26,16 +26,14 @@ interface ProductFiltersProps {
 
 const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, minPrice, maxPrice }: ProductFiltersProps) => {
   const [localFilters, setLocalFilters] = useState(filters);
-  const [tempPriceRange, setTempPriceRange] = useState<[number, number]>(filters.priceRange);
-  const [isDragging, setIsDragging] = useState(false);
+  // Separate state for price slider - this is what the slider displays
+  const [sliderValue, setSliderValue] = useState<[number, number]>(filters.priceRange);
 
-  // Sync local filters with parent filters only when not dragging
+  // Update local state when parent filters change
   useEffect(() => {
-    if (!isDragging) {
-      setLocalFilters(filters);
-      setTempPriceRange(filters.priceRange);
-    }
-  }, [filters, isDragging]);
+    setLocalFilters(filters);
+    setSliderValue(filters.priceRange);
+  }, [filters]);
 
   const handleCategoryToggle = (category: string) => {
     const newCategories = localFilters.categories.includes(category)
@@ -64,26 +62,26 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
     onFilterChange(newFilters);
   };
 
-  const handlePriceChange = (value: number[]) => {
-    // Set dragging state to prevent parent sync
-    setIsDragging(true);
-    // Update visual state only while dragging
-    setTempPriceRange([value[0], value[1]] as [number, number]);
+  // Handle slider drag - only update visual state
+  const handleSliderChange = (value: number[]) => {
+    setSliderValue([value[0], value[1]] as [number, number]);
   };
 
-  const handlePriceCommit = (value: number[]) => {
-    // Release dragging state
-    setIsDragging(false);
-    // Apply filter when user releases the slider
-    const priceRange = [value[0], value[1]] as [number, number];
-    setTempPriceRange(priceRange);
-    const newFilters = { ...localFilters, priceRange };
+  // Handle slider release - apply the filter
+  const handleSliderRelease = (value: number[]) => {
+    const newPriceRange: [number, number] = [value[0], value[1]];
+    setSliderValue(newPriceRange);
+    
+    const newFilters = {
+      ...localFilters,
+      priceRange: newPriceRange
+    };
+    
     setLocalFilters(newFilters);
     onFilterChange(newFilters);
   };
 
   const clearAllFilters = () => {
-    setIsDragging(false);
     const resetFilters: FilterOptions = {
       categories: [],
       colors: [],
@@ -91,7 +89,7 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
       priceRange: [minPrice, maxPrice],
     };
     setLocalFilters(resetFilters);
-    setTempPriceRange([minPrice, maxPrice]);
+    setSliderValue([minPrice, maxPrice]);
     onFilterChange(resetFilters);
   };
 
@@ -101,8 +99,8 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
       {(localFilters.categories.length > 0 ||
         localFilters.colors.length > 0 ||
         localFilters.sizes.length > 0 ||
-        tempPriceRange[0] !== minPrice ||
-        tempPriceRange[1] !== maxPrice) && (
+        sliderValue[0] !== minPrice ||
+        sliderValue[1] !== maxPrice) && (
         <Button variant="outline" onClick={clearAllFilters} className="w-full">
           <X className="mr-2 h-4 w-4" />
           Clear All Filters
@@ -186,14 +184,14 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
             min={minPrice}
             max={maxPrice}
             step={1}
-            value={tempPriceRange}
-            onValueChange={handlePriceChange}
-            onValueCommit={handlePriceCommit}
+            value={sliderValue}
+            onValueChange={handleSliderChange}
+            onValueCommit={handleSliderRelease}
             className="mb-4"
           />
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>${tempPriceRange[0].toFixed(2)}</span>
-            <span>${tempPriceRange[1].toFixed(2)}</span>
+            <span>${sliderValue[0].toFixed(2)}</span>
+            <span>${sliderValue[1].toFixed(2)}</span>
           </div>
         </div>
       </div>
