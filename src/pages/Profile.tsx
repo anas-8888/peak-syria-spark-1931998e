@@ -112,10 +112,11 @@ const Profile = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // Get public URL with cache-busting timestamp
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      const avatarUrlWithTimestamp = `${urlData.publicUrl}?t=${Date.now()}`;
 
-      // Update profile with new avatar URL
+      // Update profile with new avatar URL (without timestamp for storage)
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ avatar_url: urlData.publicUrl })
@@ -123,7 +124,8 @@ const Profile = () => {
 
       if (updateError) throw updateError;
 
-      setAvatarUrl(urlData.publicUrl);
+      // Set local state with timestamp to force browser refresh
+      setAvatarUrl(avatarUrlWithTimestamp);
       toast.success("Avatar Updated! 📸", {
         description: "Your profile picture has been updated successfully",
       });
