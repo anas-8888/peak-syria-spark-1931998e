@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Star, MessageSquare, ThumbsUp, Eye, CheckCircle, XCircle, Trash2 } from "lucide-react";
+import { Search, Star, MessageSquare, ThumbsUp, Eye, CheckCircle, XCircle, Trash2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -277,40 +277,59 @@ const Reviews = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {review.status === "pending" && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              updateStatusMutation.mutate({
-                                id: review.id,
-                                status: "approved",
-                              })
-                            }
-                            disabled={updateStatusMutation.isPending}
-                          >
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              updateStatusMutation.mutate({
-                                id: review.id,
-                                status: "rejected",
-                              })
-                            }
-                            disabled={updateStatusMutation.isPending}
-                          >
-                            <XCircle className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </>
+                      {review.status !== "approved" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            updateStatusMutation.mutate({
+                              id: review.id,
+                              status: "approved",
+                            })
+                          }
+                          disabled={updateStatusMutation.isPending}
+                          title="Approve"
+                        >
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        </Button>
+                      )}
+                      {review.status !== "rejected" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            updateStatusMutation.mutate({
+                              id: review.id,
+                              status: "rejected",
+                            })
+                          }
+                          disabled={updateStatusMutation.isPending}
+                          title="Reject"
+                        >
+                          <XCircle className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
+                      {review.status !== "pending" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            updateStatusMutation.mutate({
+                              id: review.id,
+                              status: "pending",
+                            })
+                          }
+                          disabled={updateStatusMutation.isPending}
+                          title="Set to Pending"
+                        >
+                          <Clock className="h-4 w-4 text-yellow-600" />
+                        </Button>
                       )}
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setDeleteId(review.id)}
+                        title="Delete"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

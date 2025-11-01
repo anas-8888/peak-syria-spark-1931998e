@@ -146,29 +146,41 @@ const ProductDetail = () => {
     enabled: !!id && !!product,
   });
 
-  // Fetch product reviews
+  // Fetch product reviews with auto-refresh
   const { data: reviews = [], refetch: refetchReviews } = useQuery({
     queryKey: ["product-reviews", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("product_reviews")
         .select(`
-          id,
-          rating,
-          comment,
-          created_at,
-          profiles:user_id (
-            full_name
-          )
+          *
         `)
         .eq("product_id", id)
         .eq("status", "approved")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      
+      // Fetch profiles separately
+      const reviewsWithProfiles = await Promise.all(
+        data.map(async (review) => {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", review.user_id)
+            .maybeSingle();
+          
+          return {
+            ...review,
+            profiles: profile,
+          };
+        })
+      );
+      
+      return reviewsWithProfiles;
     },
     enabled: !!id,
+    refetchInterval: 5000, // Auto-refresh every 5 seconds
   });
 
   // Build color to image mapping
