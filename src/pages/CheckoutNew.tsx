@@ -79,6 +79,7 @@ export default function CheckoutNew() {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [validatingDiscount, setValidatingDiscount] = useState(false);
   const [autoDiscountsDisabled, setAutoDiscountsDisabled] = useState(false);
+  const [selectedAutoDiscountId, setSelectedAutoDiscountId] = useState<string | null>(null);
 
   const {
     register,
@@ -362,6 +363,27 @@ export default function CheckoutNew() {
         return;
       }
 
+      // Check for selected auto discount ID from cart
+      const selectedId = localStorage.getItem("selectedAutoDiscountId");
+      if (selectedId) {
+        setSelectedAutoDiscountId(selectedId);
+        // Will be validated by the cart, just load it here
+        const savedCartDiscounts = localStorage.getItem("appliedCartDiscounts");
+        const savedCartDiscountAmount = localStorage.getItem("appliedCartDiscountAmount");
+        
+        if (savedCartDiscounts && savedCartDiscountAmount) {
+          try {
+            const cartDiscounts = JSON.parse(savedCartDiscounts);
+            const amount = parseFloat(savedCartDiscountAmount);
+            setAppliedDiscounts(cartDiscounts);
+            setDiscountAmount(amount);
+            return;
+          } catch (e) {
+            console.error("Error parsing saved cart discounts:", e);
+          }
+        }
+      }
+
       // First check if there are multiple discounts from cart
       const savedCartDiscounts = localStorage.getItem("appliedCartDiscounts");
       const savedCartDiscountAmount = localStorage.getItem("appliedCartDiscountAmount");
@@ -624,21 +646,25 @@ export default function CheckoutNew() {
     setAppliedDiscounts([]);
     setDiscountAmount(0);
     setDiscountCode("");
+    setSelectedAutoDiscountId(null);
     setAutoDiscountsDisabled(false);
     localStorage.removeItem("autoDiscountsDisabled");
     localStorage.removeItem("appliedCartDiscount");
     localStorage.removeItem("appliedCartDiscounts");
     localStorage.removeItem("appliedCartDiscountAmount");
+    localStorage.removeItem("selectedAutoDiscountId");
     toast.success("Discount removed");
   };
 
   const handleRemoveAutoDiscounts = () => {
     setAppliedDiscounts([]);
     setDiscountAmount(0);
+    setSelectedAutoDiscountId(null);
     setAutoDiscountsDisabled(true);
     localStorage.setItem("autoDiscountsDisabled", "true");
     localStorage.removeItem("appliedCartDiscounts");
     localStorage.removeItem("appliedCartDiscountAmount");
+    localStorage.removeItem("selectedAutoDiscountId");
     toast.success("Automatic discounts removed. You can now apply a discount code.");
   };
 

@@ -31,6 +31,7 @@ export default function CartNew() {
   const [availableAutoDiscounts, setAvailableAutoDiscounts] = useState<any[]>([]);
   const [showingAvailableDiscounts, setShowingAvailableDiscounts] = useState(false);
   const [checkingAutoDiscounts, setCheckingAutoDiscounts] = useState(false);
+  const [selectedAutoDiscountId, setSelectedAutoDiscountId] = useState<string | null>(null);
   const lastAppliedDiscountIds = useRef<string>("");
   const isCheckingDiscounts = useRef<boolean>(false);
   const lastCartSnapshot = useRef<string>("");
@@ -133,24 +134,111 @@ export default function CartNew() {
     setAppliedDiscounts([]);
     setDiscountAmount(0);
     setDiscountCode("");
+    setSelectedAutoDiscountId(null);
     lastAppliedDiscountIds.current = "";
     setAutoDiscountsDisabled(false);
     localStorage.removeItem("autoDiscountsDisabled");
     localStorage.removeItem("appliedCartDiscount");
     localStorage.removeItem("appliedCartDiscounts");
     localStorage.removeItem("appliedCartDiscountAmount");
+    localStorage.removeItem("selectedAutoDiscountId");
     toast.success("Discount removed");
   };
 
   const handleRemoveAutoDiscounts = () => {
     setAppliedDiscounts([]);
     setDiscountAmount(0);
+    setSelectedAutoDiscountId(null);
     lastAppliedDiscountIds.current = "";
     setAutoDiscountsDisabled(true);
     localStorage.setItem("autoDiscountsDisabled", "true");
     localStorage.removeItem("appliedCartDiscounts");
     localStorage.removeItem("appliedCartDiscountAmount");
+    localStorage.removeItem("selectedAutoDiscountId");
     toast.success("Automatic discounts removed. You can now apply a discount code.");
+  };
+
+  const handleApplySelectedDiscount = async (discountId: string) => {
+    try {
+      // Fetch the specific discount
+      const { data: discount, error } = await supabase
+        .from("discounts")
+        .select("*, discount_products(product_id), discount_categories(category_id)")
+        .eq("id", discountId)
+        .single();
+
+      if (error) throw error;
+
+      // Validate the discount still qualifies
+      const meetsMinimum = cartTotal >= (discount.min_cart_subtotal || 0);
+      
+      let meetsQuantity = true;
+      if (discount.min_quantity && discount.min_quantity > 0) {
+        const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+        meetsQuantity = totalQuantity >= discount.min_quantity;
+      }
+
+      let matchingItems = cartItems;
+      let meetsScope = true;
+      if (discount.scope === "products") {
+        const discountProductIds = (discount.discount_products as any[])?.map(dp => dp.product_id) || [];
+        matchingItems = cartItems.filter(item => discountProductIds.includes(item.product_id));
+        meetsScope = matchingItems.length > 0;
+      } else if (discount.scope === "categories") {
+        meetsScope = false;
+      }
+
+      if (!meetsMinimum || !meetsQuantity || !meetsScope) {
+        toast.error("You no longer qualify for this discount");
+        return;
+      }
+
+      // Calculate discount value
+      let discountValue = 0;
+      const perCustomerLimit = discount.per_customer_limit || 999999;
+      
+      if (discount.type === "percentage") {
+        let totalQuantityProcessed = 0;
+        
+        for (const item of matchingItems) {
+          const quantityToApply = Math.min(
+            item.quantity,
+            perCustomerLimit - totalQuantityProcessed
+          );
+          
+          if (quantityToApply <= 0) break;
+          
+          const itemPrice = item.product.offer_price || item.product.price;
+          discountValue += (itemPrice * quantityToApply) * (discount.value / 100);
+          totalQuantityProcessed += quantityToApply;
+          
+          if (totalQuantityProcessed >= perCustomerLimit) break;
+        }
+      } else if (discount.type === "fixed_amount") {
+        discountValue = discount.value;
+      }
+
+      // Apply the discount
+      setAppliedDiscounts([{
+        ...discount,
+        calculatedAmount: discountValue,
+        message: discount.marketing_label || discount.name,
+      }]);
+      setDiscountAmount(discountValue);
+      setSelectedAutoDiscountId(discountId);
+      setAutoDiscountsDisabled(false);
+      lastAppliedDiscountIds.current = discountId;
+      
+      // Save to localStorage
+      localStorage.setItem("selectedAutoDiscountId", discountId);
+      localStorage.removeItem("autoDiscountsDisabled");
+      
+      toast.success(`${discount.name} applied! You save ${formatPrice(discountValue)}`);
+      setShowingAvailableDiscounts(false);
+    } catch (error) {
+      console.error("Error applying discount:", error);
+      toast.error("Failed to apply discount");
+    }
   };
 
   const handleCheckAvailableDiscounts = async () => {
@@ -271,6 +359,101 @@ export default function CartNew() {
 
     try {
       isCheckingDiscounts.current = true;
+
+      // If user has manually selected a specific auto discount, validate it
+      if (selectedAutoDiscountId) {
+        const { data: selectedDiscount, error } = await supabase
+          .from("discounts")
+          .select("*, discount_products(product_id), discount_categories(category_id)")
+          .eq("id", selectedAutoDiscountId)
+          .eq("is_automatic", true)
+          .eq("status", "active")
+          .single();
+
+        if (error || !selectedDiscount) {
+          // Selected discount no longer valid
+          setAppliedDiscounts([]);
+          setDiscountAmount(0);
+          setSelectedAutoDiscountId(null);
+          localStorage.removeItem("selectedAutoDiscountId");
+          toast.error("Your selected discount is no longer available");
+          return;
+        }
+
+        // Check if still qualifies
+        const meetsMinimum = cartTotal >= (selectedDiscount.min_cart_subtotal || 0);
+        
+        let meetsQuantity = true;
+        if (selectedDiscount.min_quantity && selectedDiscount.min_quantity > 0) {
+          const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+          meetsQuantity = totalQuantity >= selectedDiscount.min_quantity;
+        }
+
+        let matchingItems = cartItems;
+        let meetsScope = true;
+        if (selectedDiscount.scope === "products") {
+          const discountProductIds = (selectedDiscount.discount_products as any[])?.map(dp => dp.product_id) || [];
+          matchingItems = cartItems.filter(item => discountProductIds.includes(item.product_id));
+          meetsScope = matchingItems.length > 0;
+        } else if (selectedDiscount.scope === "categories") {
+          meetsScope = false;
+        }
+
+        if (!meetsMinimum || !meetsQuantity || !meetsScope) {
+          // No longer qualifies
+          setAppliedDiscounts([]);
+          setDiscountAmount(0);
+          setSelectedAutoDiscountId(null);
+          localStorage.removeItem("selectedAutoDiscountId");
+          
+          let reason = "";
+          if (!meetsMinimum) {
+            const missing = (selectedDiscount.min_cart_subtotal || 0) - cartTotal;
+            reason = `Add ${formatPrice(missing)} more to your cart`;
+          } else if (!meetsQuantity) {
+            reason = `You need ${selectedDiscount.min_quantity} items`;
+          } else if (!meetsScope) {
+            reason = "Required products removed from cart";
+          }
+          
+          toast.error(`Discount removed: ${reason}`);
+          return;
+        }
+
+        // Still qualifies, recalculate amount
+        let discountValue = 0;
+        const perCustomerLimit = selectedDiscount.per_customer_limit || 999999;
+        
+        if (selectedDiscount.type === "percentage") {
+          let totalQuantityProcessed = 0;
+          
+          for (const item of matchingItems) {
+            const quantityToApply = Math.min(
+              item.quantity,
+              perCustomerLimit - totalQuantityProcessed
+            );
+            
+            if (quantityToApply <= 0) break;
+            
+            const itemPrice = item.product.offer_price || item.product.price;
+            discountValue += (itemPrice * quantityToApply) * (selectedDiscount.value / 100);
+            totalQuantityProcessed += quantityToApply;
+            
+            if (totalQuantityProcessed >= perCustomerLimit) break;
+          }
+        } else if (selectedDiscount.type === "fixed_amount") {
+          discountValue = selectedDiscount.value;
+        }
+
+        // Update with recalculated amount
+        setAppliedDiscounts([{
+          ...selectedDiscount,
+          calculatedAmount: discountValue,
+          message: selectedDiscount.marketing_label || selectedDiscount.name,
+        }]);
+        setDiscountAmount(discountValue);
+        return;
+      }
 
       const { data, error } = await supabase
         .from("discounts")
@@ -435,11 +618,16 @@ export default function CartNew() {
     }
   };
 
-  // Load auto discounts disabled state on mount
+  // Load auto discounts disabled state and selected discount on mount
   useEffect(() => {
     const disabled = localStorage.getItem("autoDiscountsDisabled");
     if (disabled === "true") {
       setAutoDiscountsDisabled(true);
+    }
+    
+    const selectedId = localStorage.getItem("selectedAutoDiscountId");
+    if (selectedId) {
+      setSelectedAutoDiscountId(selectedId);
     }
   }, []);
 
@@ -479,14 +667,15 @@ export default function CartNew() {
 
     // Increased debounce to reduce API calls during rapid changes
     const timeoutId = setTimeout(() => {
-      // Only recalculate if no manual discount is applied
+      // Only recalculate if no manual discount code is applied
+      // But DO check if a selected auto discount still qualifies
       if (!appliedDiscount) {
         checkAutoDiscounts();
       }
     }, 500); // Longer debounce for better performance
 
     return () => clearTimeout(timeoutId);
-  }, [cartItems, cartTotal]);
+  }, [cartItems, cartTotal, selectedAutoDiscountId]);
 
   if (loading) {
     return (
@@ -748,9 +937,10 @@ export default function CartNew() {
                         key={idx}
                         className={`p-3 ${
                           discount.isQualified
-                            ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800'
+                            ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 transition-colors'
                             : 'bg-muted/50 border-muted'
                         }`}
+                        onClick={() => discount.isQualified && handleApplySelectedDiscount(discount.id)}
                       >
                         <div className="space-y-1">
                           <div className="flex items-start justify-between gap-2">
@@ -789,9 +979,14 @@ export default function CartNew() {
                           )}
 
                           {discount.isQualified && (
-                            <p className="text-xs text-green-600 dark:text-green-400">
-                              ✓ You qualify! {discount.is_stackable ? '(Stackable)' : '(Not stackable)'}
-                            </p>
+                            <div className="flex items-center justify-between mt-1">
+                              <p className="text-xs text-green-600 dark:text-green-400">
+                                ✓ You qualify! {discount.is_stackable ? '(Stackable)' : '(Not stackable)'}
+                              </p>
+                              <span className="text-xs text-green-700 dark:text-green-300 font-medium">
+                                Click to apply
+                              </span>
+                            </div>
                           )}
                         </div>
                       </Card>
@@ -818,11 +1013,16 @@ export default function CartNew() {
                     localStorage.removeItem("appliedCartDiscounts");
                     localStorage.removeItem("appliedCartDiscountAmount");
                   }
-                  // Persist auto discount preference
+                  // Persist auto discount and selection preferences
                   if (autoDiscountsDisabled) {
                     localStorage.setItem("autoDiscountsDisabled", "true");
                   } else {
                     localStorage.removeItem("autoDiscountsDisabled");
+                  }
+                  if (selectedAutoDiscountId) {
+                    localStorage.setItem("selectedAutoDiscountId", selectedAutoDiscountId);
+                  } else {
+                    localStorage.removeItem("selectedAutoDiscountId");
                   }
                 }}
               >
