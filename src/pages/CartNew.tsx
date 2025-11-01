@@ -24,6 +24,7 @@ export default function CartNew() {
   const saveTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
   const [discountCode, setDiscountCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
+  const [appliedDiscounts, setAppliedDiscounts] = useState<any[]>([]);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [validatingDiscount, setValidatingDiscount] = useState(false);
 
@@ -113,6 +114,7 @@ export default function CartNew() {
 
   const handleRemoveDiscount = () => {
     setAppliedDiscount(null);
+    setAppliedDiscounts([]);
     setDiscountAmount(0);
     setDiscountCode("");
     toast.success("Discount removed");
@@ -130,82 +132,121 @@ export default function CartNew() {
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
-        for (const autoDiscount of data) {
-          // Check if cart meets minimum requirements
-          if (cartTotal < (autoDiscount.min_cart_subtotal || 0)) {
-            continue;
-          }
+      if (!data || data.length === 0) return;
 
-          // Check minimum quantity if specified
-          if (autoDiscount.min_quantity && autoDiscount.min_quantity > 0) {
-            const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-            if (totalQuantity < autoDiscount.min_quantity) {
-              continue;
-            }
-          }
+      // Calculate discount amount for each applicable discount
+      const applicableDiscounts: any[] = [];
 
-          // Check scope restrictions
-          let matchingItems = cartItems;
-          if (autoDiscount.scope === "products") {
-            const discountProductIds = (autoDiscount.discount_products as any[])?.map(dp => dp.product_id) || [];
-            matchingItems = cartItems.filter(item => discountProductIds.includes(item.product_id));
-            if (matchingItems.length === 0) {
-              continue;
-            }
-          } else if (autoDiscount.scope === "categories") {
-            const discountCategoryIds = (autoDiscount.discount_categories as any[])?.map(dc => dc.category_id) || [];
-            // Would need to join with products to check category, skipping for now
-            continue;
-          }
+      for (const autoDiscount of data) {
+        // Check if cart meets minimum requirements
+        if (cartTotal < (autoDiscount.min_cart_subtotal || 0)) continue;
 
-          // Apply discount with quantity limits
-          if (!autoDiscount.code) {
-            let discountValue = 0;
-            const perCustomerLimit = autoDiscount.per_customer_limit || 999999;
+        // Check minimum quantity if specified
+        if (autoDiscount.min_quantity && autoDiscount.min_quantity > 0) {
+          const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+          if (totalQuantity < autoDiscount.min_quantity) continue;
+        }
+
+        // Check scope restrictions
+        let matchingItems = cartItems;
+        if (autoDiscount.scope === "products") {
+          const discountProductIds = (autoDiscount.discount_products as any[])?.map(dp => dp.product_id) || [];
+          matchingItems = cartItems.filter(item => discountProductIds.includes(item.product_id));
+          if (matchingItems.length === 0) continue;
+        } else if (autoDiscount.scope === "categories") {
+          const discountCategoryIds = (autoDiscount.discount_categories as any[])?.map(dc => dc.category_id) || [];
+          continue; // Skip category-based for now
+        }
+
+        // Calculate discount value with quantity limits
+        if (!autoDiscount.code) {
+          let discountValue = 0;
+          const perCustomerLimit = autoDiscount.per_customer_limit || 999999;
+          
+          if (autoDiscount.type === "percentage") {
+            let totalQuantityProcessed = 0;
             
-            if (autoDiscount.type === "percentage") {
-              // Calculate based on scope and quantity limits
-              let itemsToDiscount = matchingItems;
-              let totalQuantityProcessed = 0;
+            for (const item of matchingItems) {
+              const quantityToApply = Math.min(
+                item.quantity,
+                perCustomerLimit - totalQuantityProcessed
+              );
               
-              for (const item of itemsToDiscount) {
-                const quantityToApply = Math.min(
-                  item.quantity,
-                  perCustomerLimit - totalQuantityProcessed
-                );
-                
-                if (quantityToApply <= 0) break;
-                
-                const itemPrice = item.product.offer_price || item.product.price;
-                discountValue += (itemPrice * quantityToApply) * (autoDiscount.value / 100);
-                totalQuantityProcessed += quantityToApply;
-                
-                if (totalQuantityProcessed >= perCustomerLimit) break;
-              }
-            } else if (autoDiscount.type === "fixed_amount") {
-              discountValue = autoDiscount.value;
+              if (quantityToApply <= 0) break;
+              
+              const itemPrice = item.product.offer_price || item.product.price;
+              discountValue += (itemPrice * quantityToApply) * (autoDiscount.value / 100);
+              totalQuantityProcessed += quantityToApply;
+              
+              if (totalQuantityProcessed >= perCustomerLimit) break;
             }
+          } else if (autoDiscount.type === "fixed_amount") {
+            discountValue = autoDiscount.value;
+          }
 
-            if (discountValue > 0) {
-              setAppliedDiscount({
-                id: autoDiscount.id,
-                code: null,
-                amount: discountValue,
-                message: autoDiscount.marketing_label || `${autoDiscount.name} applied!`,
-                scope: autoDiscount.scope,
-                product_ids: autoDiscount.scope === "products" 
-                  ? (autoDiscount.discount_products as any[])?.map(dp => dp.product_id) || []
-                  : [],
-                per_customer_limit: perCustomerLimit,
-                discount_percentage: autoDiscount.type === "percentage" ? autoDiscount.value : null,
-              });
-              setDiscountAmount(discountValue);
-              toast.success(`${autoDiscount.name} applied! You save ${formatPrice(discountValue)}`);
-              break;
-            }
+          if (discountValue > 0) {
+            applicableDiscounts.push({
+              ...autoDiscount,
+              calculatedAmount: discountValue,
+              matchingItems,
+              product_ids: autoDiscount.scope === "products" 
+                ? (autoDiscount.discount_products as any[])?.map(dp => dp.product_id) || []
+                : [],
+            });
           }
         }
+      }
+
+      if (applicableDiscounts.length === 0) return;
+
+      // Separate stackable and non-stackable discounts
+      const stackable = applicableDiscounts.filter(d => d.is_stackable);
+      const nonStackable = applicableDiscounts.filter(d => !d.is_stackable);
+
+      let finalDiscounts: any[] = [];
+      let totalDiscount = 0;
+
+      // Strategy: Compare best combinations
+      // Option 1: All stackable discounts combined
+      const stackableTotal = stackable.reduce((sum, d) => sum + d.calculatedAmount, 0);
+
+      // Option 2: Best non-stackable discount
+      const bestNonStackable = nonStackable.length > 0 
+        ? nonStackable.reduce((best, current) => 
+            current.calculatedAmount > best.calculatedAmount ? current : best
+          )
+        : null;
+
+      // Choose the better option
+      if (stackableTotal >= (bestNonStackable?.calculatedAmount || 0) && stackable.length > 0) {
+        // Use all stackable discounts
+        finalDiscounts = stackable;
+        totalDiscount = stackableTotal;
+      } else if (bestNonStackable) {
+        // Use best non-stackable discount
+        finalDiscounts = [bestNonStackable];
+        totalDiscount = bestNonStackable.calculatedAmount;
+      }
+
+      if (finalDiscounts.length > 0 && totalDiscount > 0) {
+        const discountsToApply = finalDiscounts.map(d => ({
+          id: d.id,
+          code: null,
+          amount: d.calculatedAmount,
+          message: d.marketing_label || d.name,
+          scope: d.scope,
+          product_ids: d.product_ids,
+          per_customer_limit: d.per_customer_limit || 999999,
+          discount_percentage: d.type === "percentage" ? d.value : null,
+          is_stackable: d.is_stackable,
+          stack_with_shipping: d.stack_with_shipping,
+        }));
+
+        setAppliedDiscounts(discountsToApply);
+        setDiscountAmount(totalDiscount);
+        
+        const discountNames = finalDiscounts.map(d => d.name).join(" + ");
+        toast.success(`${discountNames} applied! You save ${formatPrice(totalDiscount)}`);
       }
     } catch (error) {
       console.error("Error checking auto discounts:", error);
@@ -214,61 +255,76 @@ export default function CartNew() {
 
   // Check for auto-apply discounts and remove if products removed
   useEffect(() => {
-    if (cartItems.length === 0 && appliedDiscount) {
-      // Cart is empty, remove discount
+    if (cartItems.length === 0 && (appliedDiscount || appliedDiscounts.length > 0)) {
+      // Cart is empty, remove discounts
       setAppliedDiscount(null);
+      setAppliedDiscounts([]);
       setDiscountAmount(0);
       return;
     }
 
-    if (appliedDiscount && appliedDiscount.scope === "products" && appliedDiscount.product_ids) {
-      // Check if any of the discount's products are still in cart
-      const hasMatchingProduct = cartItems.some(item => 
-        appliedDiscount.product_ids.includes(item.product_id)
-      );
-      
-      if (!hasMatchingProduct) {
-        // No matching products, remove discount
-        setAppliedDiscount(null);
+    // Recalculate discounts when cart changes
+    if (appliedDiscounts.length > 0) {
+      let totalNewDiscount = 0;
+      const updatedDiscounts: any[] = [];
+      let shouldRemove = false;
+
+      for (const discount of appliedDiscounts) {
+        if (discount.scope === "products" && discount.product_ids) {
+          // Check if any matching products are still in cart
+          const matchingItems = cartItems.filter(item => 
+            discount.product_ids.includes(item.product_id)
+          );
+          
+          if (matchingItems.length === 0) {
+            shouldRemove = true;
+            continue;
+          }
+          
+          // Recalculate discount
+          let newDiscountValue = 0;
+          const perCustomerLimit = discount.per_customer_limit || 999999;
+          let totalQuantityProcessed = 0;
+          
+          for (const item of matchingItems) {
+            const quantityToApply = Math.min(
+              item.quantity,
+              perCustomerLimit - totalQuantityProcessed
+            );
+            
+            if (quantityToApply <= 0) break;
+            
+            const itemPrice = item.product.offer_price || item.product.price;
+            const discountPercent = discount.discount_percentage || (discount.amount / cartTotal * 100);
+            newDiscountValue += (itemPrice * quantityToApply) * (discountPercent / 100);
+            totalQuantityProcessed += quantityToApply;
+            
+            if (totalQuantityProcessed >= perCustomerLimit) break;
+          }
+          
+          updatedDiscounts.push({
+            ...discount,
+            amount: newDiscountValue,
+          });
+          totalNewDiscount += newDiscountValue;
+        } else {
+          updatedDiscounts.push(discount);
+          totalNewDiscount += discount.amount;
+        }
+      }
+
+      if (shouldRemove) {
+        setAppliedDiscounts([]);
         setDiscountAmount(0);
         toast.info("Discount removed: product no longer in cart");
-        return;
+        // Recheck for new applicable discounts
+        setTimeout(() => checkAutoDiscounts(), 100);
+      } else if (Math.abs(totalNewDiscount - discountAmount) > 0.01) {
+        setAppliedDiscounts(updatedDiscounts);
+        setDiscountAmount(totalNewDiscount);
       }
-      
-      // Recalculate discount based on current quantities
-      const matchingItems = cartItems.filter(item => 
-        appliedDiscount.product_ids.includes(item.product_id)
-      );
-      
-      let newDiscountValue = 0;
-      const perCustomerLimit = appliedDiscount.per_customer_limit || 999999;
-      let totalQuantityProcessed = 0;
-      
-      for (const item of matchingItems) {
-        const quantityToApply = Math.min(
-          item.quantity,
-          perCustomerLimit - totalQuantityProcessed
-        );
-        
-        if (quantityToApply <= 0) break;
-        
-        const itemPrice = item.product.offer_price || item.product.price;
-        const discountPercent = appliedDiscount.discount_percentage || (appliedDiscount.amount / cartTotal * 100);
-        newDiscountValue += (itemPrice * quantityToApply) * (discountPercent / 100);
-        totalQuantityProcessed += quantityToApply;
-        
-        if (totalQuantityProcessed >= perCustomerLimit) break;
-      }
-      
-      if (Math.abs(newDiscountValue - appliedDiscount.amount) > 0.01) {
-        setAppliedDiscount({
-          ...appliedDiscount,
-          amount: newDiscountValue,
-        });
-        setDiscountAmount(newDiscountValue);
-      }
-    } else if (cartItems.length > 0 && !appliedDiscount && cartTotal > 0) {
-      // No discount applied, check for auto-discounts
+    } else if (cartItems.length > 0 && !appliedDiscount && appliedDiscounts.length === 0 && cartTotal > 0) {
+      // No discounts applied, check for auto-discounts
       checkAutoDiscounts();
     }
   }, [cartItems, cartTotal]);
@@ -434,7 +490,7 @@ export default function CartNew() {
               </div>
 
               {/* Discount Code Section */}
-              {!appliedDiscount ? (
+              {!appliedDiscount && appliedDiscounts.length === 0 ? (
                 <div className="mb-4">
                   <Label htmlFor="discount">Discount Code</Label>
                   <div className="flex gap-2 mt-1">
@@ -462,14 +518,31 @@ export default function CartNew() {
                 </div>
               ) : (
                 <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                      {appliedDiscount.message}
-                    </p>
-                    <p className="text-xs text-green-600 dark:text-green-400">
-                      Code: {appliedDiscount.code}
-                    </p>
-                  </div>
+                  {appliedDiscount && (
+                    <div>
+                      <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                        {appliedDiscount.message}
+                      </p>
+                      <p className="text-xs text-green-600 dark:text-green-400">
+                        Code: {appliedDiscount.code}
+                      </p>
+                    </div>
+                  )}
+                  {appliedDiscounts.length > 0 && (
+                    <div>
+                      <p className="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">
+                        {appliedDiscounts.length > 1 ? "Multiple Discounts Applied" : "Automatic Discount Applied"}
+                      </p>
+                      {appliedDiscounts.map((discount, idx) => (
+                        <p key={idx} className="text-xs text-green-600 dark:text-green-400">
+                          • {discount.message}
+                        </p>
+                      ))}
+                      <p className="text-sm font-bold text-green-700 dark:text-green-300 mt-2">
+                        Total Savings: {formatPrice(discountAmount)}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -480,8 +553,13 @@ export default function CartNew() {
                   // Save discount info to localStorage for checkout
                   if (appliedDiscount) {
                     localStorage.setItem("appliedCartDiscount", JSON.stringify(appliedDiscount));
+                  } else if (appliedDiscounts.length > 0) {
+                    localStorage.setItem("appliedCartDiscounts", JSON.stringify(appliedDiscounts));
+                    localStorage.setItem("appliedCartDiscountAmount", discountAmount.toString());
                   } else {
                     localStorage.removeItem("appliedCartDiscount");
+                    localStorage.removeItem("appliedCartDiscounts");
+                    localStorage.removeItem("appliedCartDiscountAmount");
                   }
                 }}
               >

@@ -75,6 +75,7 @@ export default function CheckoutNew() {
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [discountCode, setDiscountCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
+  const [appliedDiscounts, setAppliedDiscounts] = useState<any[]>([]);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [validatingDiscount, setValidatingDiscount] = useState(false);
 
@@ -370,7 +371,23 @@ export default function CheckoutNew() {
 
   const checkAutoDiscounts = async () => {
     try {
-      // First check if there's a discount from cart
+      // First check if there are multiple discounts from cart
+      const savedCartDiscounts = localStorage.getItem("appliedCartDiscounts");
+      const savedCartDiscountAmount = localStorage.getItem("appliedCartDiscountAmount");
+      
+      if (savedCartDiscounts && savedCartDiscountAmount) {
+        try {
+          const cartDiscounts = JSON.parse(savedCartDiscounts);
+          const amount = parseFloat(savedCartDiscountAmount);
+          setAppliedDiscounts(cartDiscounts);
+          setDiscountAmount(amount);
+          return;
+        } catch (e) {
+          console.error("Error parsing saved cart discounts:", e);
+        }
+      }
+      
+      // Check for single discount from cart
       const savedCartDiscount = localStorage.getItem("appliedCartDiscount");
       if (savedCartDiscount) {
         try {
@@ -393,71 +410,104 @@ export default function CheckoutNew() {
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
-        for (const autoDiscount of data) {
-          // Check if cart meets minimum requirements
-          if (cartTotal < (autoDiscount.min_cart_subtotal || 0)) {
-            continue;
-          }
+      if (!data || data.length === 0) return;
 
-          // Check minimum quantity
-          if (autoDiscount.min_quantity && autoDiscount.min_quantity > 0) {
-            const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-            if (totalQuantity < autoDiscount.min_quantity) {
-              continue;
-            }
-          }
+      // Calculate discount amount for each applicable discount
+      const applicableDiscounts: any[] = [];
 
-          // Check scope restrictions
-          let matchingItems = cartItems;
-          if (autoDiscount.scope === "products") {
-            const discountProductIds = (autoDiscount.discount_products as any[])?.map(dp => dp.product_id) || [];
-            matchingItems = cartItems.filter(item => discountProductIds.includes(item.product_id));
-            if (matchingItems.length === 0) {
-              continue;
-            }
-          } else if (autoDiscount.scope === "categories") {
-            continue;
-          }
+      for (const autoDiscount of data) {
+        // Check if cart meets minimum requirements
+        if (cartTotal < (autoDiscount.min_cart_subtotal || 0)) continue;
 
-          // Apply discount with quantity limits
-          if (!autoDiscount.code) {
-            let discountValue = 0;
-            const perCustomerLimit = autoDiscount.per_customer_limit || 999999;
+        // Check minimum quantity
+        if (autoDiscount.min_quantity && autoDiscount.min_quantity > 0) {
+          const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+          if (totalQuantity < autoDiscount.min_quantity) continue;
+        }
+
+        // Check scope restrictions
+        let matchingItems = cartItems;
+        if (autoDiscount.scope === "products") {
+          const discountProductIds = (autoDiscount.discount_products as any[])?.map(dp => dp.product_id) || [];
+          matchingItems = cartItems.filter(item => discountProductIds.includes(item.product_id));
+          if (matchingItems.length === 0) continue;
+        } else if (autoDiscount.scope === "categories") {
+          continue;
+        }
+
+        // Calculate discount value with quantity limits
+        if (!autoDiscount.code) {
+          let discountValue = 0;
+          const perCustomerLimit = autoDiscount.per_customer_limit || 999999;
+          
+          if (autoDiscount.type === "percentage") {
+            let totalQuantityProcessed = 0;
             
-            if (autoDiscount.type === "percentage") {
-              let totalQuantityProcessed = 0;
+            for (const item of matchingItems) {
+              const quantityToApply = Math.min(
+                item.quantity,
+                perCustomerLimit - totalQuantityProcessed
+              );
               
-              for (const item of matchingItems) {
-                const quantityToApply = Math.min(
-                  item.quantity,
-                  perCustomerLimit - totalQuantityProcessed
-                );
-                
-                if (quantityToApply <= 0) break;
-                
-                const itemPrice = item.product.offer_price || item.product.price;
-                discountValue += (itemPrice * quantityToApply) * (autoDiscount.value / 100);
-                totalQuantityProcessed += quantityToApply;
-                
-                if (totalQuantityProcessed >= perCustomerLimit) break;
-              }
-            } else if (autoDiscount.type === "fixed_amount") {
-              discountValue = autoDiscount.value;
+              if (quantityToApply <= 0) break;
+              
+              const itemPrice = item.product.offer_price || item.product.price;
+              discountValue += (itemPrice * quantityToApply) * (autoDiscount.value / 100);
+              totalQuantityProcessed += quantityToApply;
+              
+              if (totalQuantityProcessed >= perCustomerLimit) break;
             }
+          } else if (autoDiscount.type === "fixed_amount") {
+            discountValue = autoDiscount.value;
+          }
 
-            if (discountValue > 0) {
-              setAppliedDiscount({
-                id: autoDiscount.id,
-                code: null,
-                amount: discountValue,
-                message: autoDiscount.marketing_label || `${autoDiscount.name} applied!`,
-              });
-              setDiscountAmount(discountValue);
-              break;
-            }
+          if (discountValue > 0) {
+            applicableDiscounts.push({
+              ...autoDiscount,
+              calculatedAmount: discountValue,
+            });
           }
         }
+      }
+
+      if (applicableDiscounts.length === 0) return;
+
+      // Separate stackable and non-stackable discounts
+      const stackable = applicableDiscounts.filter(d => d.is_stackable);
+      const nonStackable = applicableDiscounts.filter(d => !d.is_stackable);
+
+      let finalDiscounts: any[] = [];
+      let totalDiscount = 0;
+
+      // Compare best combinations
+      const stackableTotal = stackable.reduce((sum, d) => sum + d.calculatedAmount, 0);
+      const bestNonStackable = nonStackable.length > 0 
+        ? nonStackable.reduce((best, current) => 
+            current.calculatedAmount > best.calculatedAmount ? current : best
+          )
+        : null;
+
+      // Choose the better option
+      if (stackableTotal >= (bestNonStackable?.calculatedAmount || 0) && stackable.length > 0) {
+        finalDiscounts = stackable;
+        totalDiscount = stackableTotal;
+      } else if (bestNonStackable) {
+        finalDiscounts = [bestNonStackable];
+        totalDiscount = bestNonStackable.calculatedAmount;
+      }
+
+      if (finalDiscounts.length > 0 && totalDiscount > 0) {
+        const discountsToApply = finalDiscounts.map(d => ({
+          id: d.id,
+          code: null,
+          amount: d.calculatedAmount,
+          message: d.marketing_label || d.name,
+          is_stackable: d.is_stackable,
+          stack_with_shipping: d.stack_with_shipping,
+        }));
+
+        setAppliedDiscounts(discountsToApply);
+        setDiscountAmount(totalDiscount);
       }
     } catch (error) {
       console.error("Error checking auto discounts:", error);
@@ -466,10 +516,10 @@ export default function CheckoutNew() {
 
   // Check for auto-apply discounts when cart loads or when returning to checkout
   useEffect(() => {
-    if (cartItems.length > 0 && !appliedDiscount) {
+    if (cartItems.length > 0 && !appliedDiscount && appliedDiscounts.length === 0) {
       checkAutoDiscounts();
     }
-  }, [cartItems, appliedDiscount]);
+  }, [cartItems, appliedDiscount, appliedDiscounts]);
 
   // Save form data to localStorage whenever key selections change
   useEffect(() => {
@@ -570,8 +620,12 @@ export default function CheckoutNew() {
 
   const handleRemoveDiscount = () => {
     setAppliedDiscount(null);
+    setAppliedDiscounts([]);
     setDiscountAmount(0);
     setDiscountCode("");
+    localStorage.removeItem("appliedCartDiscount");
+    localStorage.removeItem("appliedCartDiscounts");
+    localStorage.removeItem("appliedCartDiscountAmount");
     toast.success("Discount removed");
   };
 
@@ -670,9 +724,22 @@ export default function CheckoutNew() {
           p_discount_id: appliedDiscount.id,
           p_order_id: orderId,
           p_user_id: user.id,
-          p_discount_amount: discountAmount,
+          p_discount_amount: appliedDiscount.amount,
           p_order_subtotal: cartTotal,
         });
+      }
+      
+      // Record multiple discount usages if applied
+      if (appliedDiscounts.length > 0) {
+        for (const discount of appliedDiscounts) {
+          await supabase.rpc("record_discount_usage", {
+            p_discount_id: discount.id,
+            p_order_id: orderId,
+            p_user_id: user.id,
+            p_discount_amount: discount.amount,
+            p_order_subtotal: cartTotal,
+          });
+        }
       }
 
       // Get selected payment method name
@@ -692,9 +759,11 @@ export default function CheckoutNew() {
       // Clear cart
       await clearCart();
 
-      // Clear saved checkout form data
+      // Clear saved checkout form data and discounts
       localStorage.removeItem("checkoutFormData");
       localStorage.removeItem("appliedCartDiscount");
+      localStorage.removeItem("appliedCartDiscounts");
+      localStorage.removeItem("appliedCartDiscountAmount");
 
       toast.success("Order placed successfully!");
 
@@ -1011,7 +1080,7 @@ export default function CheckoutNew() {
               </div>
 
               {/* Discount Code Section */}
-              {!appliedDiscount ? (
+              {!appliedDiscount && appliedDiscounts.length === 0 ? (
                 <div className="mb-4">
                   <Label htmlFor="discount">Discount Code</Label>
                   <div className="flex gap-2 mt-1">
@@ -1039,25 +1108,42 @@ export default function CheckoutNew() {
                 </div>
               ) : (
                 <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-                  <div className="flex items-center justify-between">
+                  {appliedDiscount && (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                          {appliedDiscount.message}
+                        </p>
+                        <p className="text-xs text-green-600 dark:text-green-400">
+                          Code: {appliedDiscount.code}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveDiscount}
+                        className="text-green-800 hover:text-green-900 dark:text-green-200"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  )}
+                  {appliedDiscounts.length > 0 && (
                     <div>
-                      <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                        {appliedDiscount.message}
+                      <p className="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">
+                        {appliedDiscounts.length > 1 ? "Multiple Discounts Applied" : "Automatic Discount Applied"}
                       </p>
-                      <p className="text-xs text-green-600 dark:text-green-400">
-                        Code: {appliedDiscount.code}
+                      {appliedDiscounts.map((discount, idx) => (
+                        <p key={idx} className="text-xs text-green-600 dark:text-green-400">
+                          • {discount.message}
+                        </p>
+                      ))}
+                      <p className="text-sm font-bold text-green-700 dark:text-green-300 mt-2">
+                        Total Savings: {formatPrice(discountAmount)}
                       </p>
                     </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleRemoveDiscount}
-                      className="text-green-800 hover:text-green-900 dark:text-green-200"
-                    >
-                      Remove
-                    </Button>
-                  </div>
+                  )}
                 </div>
               )}
 
