@@ -173,9 +173,11 @@ const Navbar = () => {
                   <Button variant="ghost" className="gap-2 rounded-full px-3 py-2 h-auto hover:bg-accent/50 transition-all duration-300 hover:scale-105">
                     <Avatar className="h-8 w-8 border-2 border-primary/20">
                       <AvatarImage src={avatarUrl} alt={fullName} />
-                      <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold text-sm">
-                        {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
+                      {!avatarUrl && (
+                        <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold text-sm">
+                          {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      )}
                     </Avatar>
                     <span className="font-semibold hidden xl:inline-block">
                       {fullName || user.email?.split('@')[0]}
@@ -260,9 +262,11 @@ const Navbar = () => {
                   <div className="flex items-center justify-center gap-2 p-2 bg-accent/50 rounded-full">
                     <Avatar className="h-10 w-10 border-2 border-primary/20">
                       <AvatarImage src={avatarUrl} alt={fullName} />
-                      <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold">
-                        {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
+                      {!avatarUrl && (
+                        <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold">
+                          {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      )}
                     </Avatar>
                     <span className="font-semibold text-sm">
                       {fullName || user.email?.split('@')[0]}

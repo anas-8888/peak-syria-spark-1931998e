@@ -265,9 +265,11 @@ const Profile = () => {
                 <div className="relative group">
                   <Avatar key={avatarKey} className="h-32 w-32 border-4 border-primary/20 transition-all duration-300 group-hover:border-primary/40">
                     <AvatarImage src={avatarUrl} alt={fullName} />
-                    <AvatarFallback className="text-3xl bg-gradient-to-r from-primary to-red-500 text-white">
-                      {fullName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
+                    {!avatarUrl && (
+                      <AvatarFallback className="text-3xl bg-gradient-to-r from-primary to-red-500 text-white">
+                        {fullName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    )}
                   </Avatar>
                   <label 
                     htmlFor="avatar-upload" 
