@@ -215,7 +215,7 @@ const Navbar = () => {
                     Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu> : null}
+              </DropdownMenu> : <GoogleSignInButton />}
           </div>
 
           {/* Mobile Menu Button */}
@@ -283,13 +283,12 @@ const Navbar = () => {
                     <LogOut className="h-3 w-3" />
                     Sign Out
                   </Button>
-                </div> : null}
+                </div> : <div className="w-full px-3 pt-2">
+                    <GoogleSignInButton />
+                  </div>}
             </div>
           </div>}
       </div>
-
-      {/* Floating Google Sign-In Button */}
-      <GoogleSignInButton />
     </nav>;
 };
 export default Navbar;
