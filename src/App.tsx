@@ -27,6 +27,7 @@ import Search from "./pages/Search";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import AdminLogin from "./pages/AdminLogin";
 import Dashboard from "./pages/Dashboard";
 import Overview from "./pages/dashboard/Overview";
 import HeroSlides from "./pages/dashboard/HeroSlides";
@@ -83,6 +84,7 @@ function App() {
                   <Route path="/search" element={<Search />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
+                  <Route path="/admin-login" element={<AdminLogin />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/refund" element={<Refund />} />
