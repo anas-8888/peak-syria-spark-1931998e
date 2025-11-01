@@ -104,17 +104,17 @@ const HeroSection = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
           </div>
 
-          <div className="relative h-full w-full px-4 sm:px-6 md:px-8 lg:px-12 flex items-center">
-            <div className="w-full max-w-3xl lg:max-w-4xl space-y-3 sm:space-y-5 md:space-y-6 lg:space-y-8">
-              <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-primary text-xs sm:text-sm font-semibold animate-slide-in-left">
+          <div className="relative h-full w-full px-3 sm:px-6 md:px-8 lg:px-12 flex items-center">
+            <div className="w-full max-w-3xl lg:max-w-4xl space-y-2 sm:space-y-4 md:space-y-5 lg:space-y-7">
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 text-primary text-[10px] sm:text-xs md:text-sm font-semibold animate-slide-in-left">
                 <span className="text-[10px] sm:text-xs md:text-sm">✨</span>
-                {slide.flag_name}
+                <span className="text-[10px] sm:text-xs md:text-sm">{slide.flag_name}</span>
               </div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white leading-tight animate-slide-up">
+              <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white leading-tight animate-slide-up">
                 {slide.title}
               </h1>
               <p
-                className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 font-medium animate-fade-in"
+                className="text-xs sm:text-base md:text-lg lg:text-xl text-white/90 font-medium animate-fade-in"
                 style={{ animationDelay: "200ms" }}
               >
                 {slide.subtitle}
@@ -127,18 +127,18 @@ const HeroSection = () => {
                   asChild
                   variant="hero"
                   size="sm"
-                  className="group w-full sm:w-auto text-[9px] sm:text-sm md:text-base h-6 sm:h-9 md:h-12 px-2 sm:px-6 md:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  className="group w-full sm:w-auto text-[10px] sm:text-sm md:text-base h-7 sm:h-9 md:h-11 px-3 sm:px-6 md:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 >
                   <Link to={slide.button_url}>
                     {slide.button_text}
-                    <ArrowRight className="ml-1 sm:ml-2 h-2 w-2 sm:h-4 sm:w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>
                 <Button
                   asChild
                   variant="outlineWhite"
                   size="sm"
-                  className="w-full sm:w-auto text-[9px] sm:text-sm md:text-base h-6 sm:h-9 md:h-12 px-2 sm:px-6 md:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                  className="w-full sm:w-auto text-[10px] sm:text-sm md:text-base h-7 sm:h-9 md:h-11 px-3 sm:px-6 md:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
                 >
                   <Link to="/products">View All</Link>
                 </Button>
@@ -151,28 +151,28 @@ const HeroSection = () => {
       {/* Navigation Arrows */}
       <button
         onClick={prevSlide}
-        className="absolute left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1 sm:p-2 md:p-3 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20 flex items-center justify-center"
+        className="absolute left-2 sm:left-4 md:left-6 top-[45%] sm:top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/40 backdrop-blur text-white p-1 sm:p-2 md:p-3 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20 flex items-center justify-center"
         aria-label="Previous slide"
       >
         <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
       </button>
       <button
         onClick={nextSlide}
-        className="absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1 sm:p-2 md:p-3 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20 flex items-center justify-center"
+        className="absolute right-2 sm:right-4 md:right-6 top-[45%] sm:top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/40 backdrop-blur text-white p-1 sm:p-2 md:p-3 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20 flex items-center justify-center"
         aria-label="Next slide"
       >
         <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
       </button>
 
       {/* Dots Indicator */}
-      <div className="flex absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 gap-2 z-20">
+      <div className="flex absolute bottom-4 left-1/2 -translate-x-1/2 gap-1.5 sm:gap-2 z-20">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`transition-all duration-300 hover:scale-110 ${
+            className={`transition-all duration-300 hover:scale-110 shadow-md ${
               index === currentSlide
-                ? "h-1.5 w-6 bg-red-500 rounded-full"
+                ? "h-1.5 w-4 bg-red-500 rounded-full"
                 : "h-1.5 w-2 bg-gray-400 hover:bg-gray-300 rounded-full"
             }`}
             aria-label={`Go to slide ${index + 1}`}
