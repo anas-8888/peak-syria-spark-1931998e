@@ -27,6 +27,7 @@ const Profile = () => {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [regionId, setRegionId] = useState("");
   const [regions, setRegions] = useState<Array<{ id: string; name: string; country: string }>>([]);
+  const [avatarKey, setAvatarKey] = useState(Date.now());
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -114,7 +115,8 @@ const Profile = () => {
 
       // Get public URL with cache-busting timestamp
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-      const avatarUrlWithTimestamp = `${urlData.publicUrl}?t=${Date.now()}`;
+      const timestamp = Date.now();
+      const avatarUrlWithTimestamp = `${urlData.publicUrl}?t=${timestamp}`;
 
       // Update profile with new avatar URL (without timestamp for storage)
       const { error: updateError } = await supabase
@@ -124,8 +126,9 @@ const Profile = () => {
 
       if (updateError) throw updateError;
 
-      // Set local state with timestamp to force browser refresh
+      // Force complete re-render of Avatar component
       setAvatarUrl(avatarUrlWithTimestamp);
+      setAvatarKey(timestamp);
       toast.success("Avatar Updated! 📸", {
         description: "Your profile picture has been updated successfully",
       });
@@ -252,7 +255,7 @@ const Profile = () => {
             <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4">
                 <div className="relative group">
-                  <Avatar className="h-32 w-32 border-4 border-primary/20 transition-all duration-300 group-hover:border-primary/40">
+                  <Avatar key={avatarKey} className="h-32 w-32 border-4 border-primary/20 transition-all duration-300 group-hover:border-primary/40">
                     <AvatarImage src={avatarUrl} alt={fullName} />
                     <AvatarFallback className="text-3xl bg-gradient-to-r from-primary to-red-500 text-white">
                       {fullName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
