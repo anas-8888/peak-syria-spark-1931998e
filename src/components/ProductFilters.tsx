@@ -71,20 +71,16 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
     onFilterChange(newFilters);
   };
 
-  // Handle slider drag - only update visual state
+  // Handle slider change - apply filter immediately
   const handleSliderChange = (value: number[]) => {
-    setSliderValue([value[0], value[1]] as [number, number]);
-  };
-
-  // Handle slider release - apply the filter
-  const handleSliderRelease = (value: number[]) => {
     const newPriceRange: [number, number] = [value[0], value[1]];
+    setSliderValue(newPriceRange);
+    
     const newFilters = {
       ...localFilters,
       priceRange: newPriceRange
     };
     
-    setSliderValue(newPriceRange);
     setLocalFilters(newFilters);
     onFilterChange(newFilters);
   };
@@ -194,7 +190,6 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
             step={1}
             value={sliderValue}
             onValueChange={handleSliderChange}
-            onValueCommit={handleSliderRelease}
             className="mb-4"
           />
           <div className="flex justify-between text-sm text-muted-foreground">
