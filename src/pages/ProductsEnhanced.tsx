@@ -11,6 +11,7 @@ import PromoBanner from "@/components/PromoBanner";
 import PercentageLoader from "@/components/PercentageLoader";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 import { LayoutGrid, List } from "lucide-react";
 
 interface Product {
@@ -32,6 +33,8 @@ const ProductsEnhanced = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("featured");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
   const [filters, setFilters] = useState({
     categories: [] as string[],
     colors: [] as string[],
@@ -221,6 +224,53 @@ const ProductsEnhanced = () => {
     return 0;
   });
 
+  // Calculate pagination
+  const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedProducts = sortedProducts.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, sortBy]);
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages: (number | 'ellipsis')[] = [];
+    const showEllipsis = totalPages > 7;
+
+    if (!showEllipsis) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    // Always show first page
+    pages.push(1);
+
+    if (currentPage > 3) {
+      pages.push('ellipsis');
+    }
+
+    // Show pages around current page
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    if (currentPage < totalPages - 2) {
+      pages.push('ellipsis');
+    }
+
+    // Always show last page
+    if (totalPages > 1) {
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
   if (isLoading) {
     return <PercentageLoader message="Loading products..." />;
   }
@@ -313,36 +363,75 @@ const ProductsEnhanced = () => {
 
               {/* Products Grid/List */}
               {sortedProducts.length > 0 ? (
-                <div
-                  className={
-                    viewMode === "grid"
-                      ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
-                      : "space-y-3 sm:space-y-4"
-                  }
-                >
-                  {sortedProducts.map((product, index) => (
-                    <div
-                      key={product.id}
-                      style={{ animationDelay: `${index * 50}ms` }}
-                      className="animate-fade-in"
-                    >
-                      <ProductCardEnhanced 
-                        id={product.id}
-                        name={product.name}
-                        price={product.price}
-                        image={product.image}
-                        category={product.category}
-                        isNew={product.isNew}
-                        colors={product.colors}
-                        sizes={product.sizes}
-                        rating={product.rating}
-                        colorImages={product.colorImages}
-                        viewMode={viewMode}
-                        targetGender={product.target_gender}
-                      />
-                    </div>
-                  ))}
-                </div>
+                <>
+                  <div
+                    className={
+                      viewMode === "grid"
+                        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                        : "space-y-3 sm:space-y-4"
+                    }
+                  >
+                    {paginatedProducts.map((product, index) => (
+                      <div
+                        key={product.id}
+                        style={{ animationDelay: `${index * 50}ms` }}
+                        className="animate-fade-in"
+                      >
+                        <ProductCardEnhanced 
+                          id={product.id}
+                          name={product.name}
+                          price={product.price}
+                          image={product.image}
+                          category={product.category}
+                          isNew={product.isNew}
+                          colors={product.colors}
+                          sizes={product.sizes}
+                          rating={product.rating}
+                          colorImages={product.colorImages}
+                          viewMode={viewMode}
+                          targetGender={product.target_gender}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <Pagination className="mt-8">
+                      <PaginationContent className="flex-wrap gap-1">
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+
+                        {getPageNumbers().map((pageNum, idx) => (
+                          <PaginationItem key={idx}>
+                            {pageNum === 'ellipsis' ? (
+                              <PaginationEllipsis />
+                            ) : (
+                              <PaginationLink
+                                onClick={() => setCurrentPage(pageNum as number)}
+                                isActive={currentPage === pageNum}
+                                className="cursor-pointer"
+                              >
+                                {pageNum}
+                              </PaginationLink>
+                            )}
+                          </PaginationItem>
+                        ))}
+
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-12 sm:py-16 bg-card rounded-lg">
                   <p className="text-muted-foreground text-base sm:text-lg mb-4">
