@@ -62,13 +62,36 @@ const Navbar = () => {
       loadProfile();
     }
   }, [user]);
+
+  // Reload profile when navigating to profile page to catch any avatar updates
+  useEffect(() => {
+    if (user && location.pathname === "/profile") {
+      loadProfile();
+    }
+  }, [location.pathname, user]);
+
+  // Listen for avatar update events from Profile page
+  useEffect(() => {
+    const handleAvatarUpdate = () => {
+      if (user) {
+        loadProfile();
+      }
+    };
+
+    window.addEventListener('avatarUpdated', handleAvatarUpdate);
+    return () => window.removeEventListener('avatarUpdated', handleAvatarUpdate);
+  }, [user]);
   const loadProfile = async () => {
     try {
       const {
         data: profileData
       } = await supabase.from("profiles").select("avatar_url, full_name, role_id").eq("id", user?.id).single();
       if (profileData) {
-        setAvatarUrl(profileData.avatar_url || "");
+        // Add cache-busting timestamp to avatar URL to prevent caching issues
+        const avatarWithTimestamp = profileData.avatar_url 
+          ? `${profileData.avatar_url}?t=${Date.now()}`
+          : "";
+        setAvatarUrl(avatarWithTimestamp);
         setFullName(profileData.full_name || "");
 
         // Get role name

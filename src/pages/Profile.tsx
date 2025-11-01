@@ -73,7 +73,11 @@ const Profile = () => {
         setEmail(data.email || user?.email || "");
         setPhone(data.phone || "");
         setAddress(data.address || "");
-        setAvatarUrl(data.avatar_url || "");
+        // Add cache-busting timestamp to avatar URL
+        const avatarWithTimestamp = data.avatar_url 
+          ? `${data.avatar_url}?t=${Date.now()}`
+          : "";
+        setAvatarUrl(avatarWithTimestamp);
         setRegionId(data.region_id || "");
       }
     } catch (error: any) {
@@ -129,6 +133,10 @@ const Profile = () => {
       // Force complete re-render of Avatar component
       setAvatarUrl(avatarUrlWithTimestamp);
       setAvatarKey(timestamp);
+      
+      // Trigger a custom event to notify Navbar to refresh
+      window.dispatchEvent(new CustomEvent('avatarUpdated'));
+      
       toast.success("Avatar Updated! 📸", {
         description: "Your profile picture has been updated successfully",
       });
