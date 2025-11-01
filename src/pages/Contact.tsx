@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,19 @@ const Contact = () => {
     message: ""
   });
   const [submitting, setSubmitting] = useState(false);
+
+  const { data: storeSettings } = useQuery({
+    queryKey: ["store-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_settings")
+        .select("*")
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,59 +168,82 @@ const Contact = () => {
             </div>
 
             <div className="space-y-4 sm:space-y-6">
-              <div className="flex items-start gap-3 sm:gap-4 bg-card p-4 sm:p-6 rounded-lg hover:shadow-md transition-shadow">
-                <div className="bg-primary/10 p-2 sm:p-3 rounded-full flex-shrink-0">
-                  <Phone className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              {storeSettings?.store_phone && (
+                <div className="flex items-start gap-3 sm:gap-4 bg-card p-4 sm:p-6 rounded-lg hover:shadow-md transition-shadow">
+                  <div className="bg-primary/10 p-2 sm:p-3 rounded-full flex-shrink-0">
+                    <Phone className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">Phone</h3>
+                    <a
+                      href={`tel:${storeSettings.store_phone}`}
+                      className="text-muted-foreground hover:text-primary transition-colors text-sm sm:text-base"
+                    >
+                      {storeSettings.store_phone}
+                    </a>
+                    {storeSettings.business_hours && (
+                      <p className="text-xs sm:text-sm text-muted-foreground">{storeSettings.business_hours}</p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold mb-1 text-sm sm:text-base">Phone</h3>
-                  <p className="text-muted-foreground text-sm sm:text-base">+963 XXX XXX XXX</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Mon-Sat, 9AM-8PM</p>
-                </div>
-              </div>
+              )}
 
-              <div className="flex items-start gap-3 sm:gap-4 bg-card p-4 sm:p-6 rounded-lg hover:shadow-md transition-shadow">
-                <div className="bg-primary/10 p-2 sm:p-3 rounded-full flex-shrink-0">
-                  <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              {storeSettings?.whatsapp_number && (
+                <div className="flex items-start gap-3 sm:gap-4 bg-card p-4 sm:p-6 rounded-lg hover:shadow-md transition-shadow">
+                  <div className="bg-primary/10 p-2 sm:p-3 rounded-full flex-shrink-0">
+                    <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">WhatsApp</h3>
+                    <a
+                      href={`https://wa.me/${storeSettings.whatsapp_number.replace(/\D/g, '')}`}
+                      className="text-primary hover:text-primary/80 transition-colors text-sm sm:text-base"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Chat with us on WhatsApp
+                    </a>
+                    {storeSettings.whatsapp_description && (
+                      <p className="text-xs sm:text-sm text-muted-foreground">{storeSettings.whatsapp_description}</p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold mb-1 text-sm sm:text-base">WhatsApp</h3>
-                  <a
-                    href="https://wa.me/963XXXXXXXXX"
-                    className="text-primary hover:text-primary/80 transition-colors text-sm sm:text-base"
-                  >
-                    Chat with us on WhatsApp
-                  </a>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Quick responses guaranteed</p>
-                </div>
-              </div>
+              )}
 
-              <div className="flex items-start gap-3 sm:gap-4 bg-card p-4 sm:p-6 rounded-lg hover:shadow-md transition-shadow">
-                <div className="bg-primary/10 p-2 sm:p-3 rounded-full flex-shrink-0">
-                  <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              {storeSettings?.store_email && (
+                <div className="flex items-start gap-3 sm:gap-4 bg-card p-4 sm:p-6 rounded-lg hover:shadow-md transition-shadow">
+                  <div className="bg-primary/10 p-2 sm:p-3 rounded-full flex-shrink-0">
+                    <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">Email</h3>
+                    <a
+                      href={`mailto:${storeSettings.store_email}`}
+                      className="text-primary hover:text-primary/80 transition-colors text-sm sm:text-base"
+                    >
+                      {storeSettings.store_email}
+                    </a>
+                    {storeSettings.email_response_time && (
+                      <p className="text-xs sm:text-sm text-muted-foreground">{storeSettings.email_response_time}</p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold mb-1 text-sm sm:text-base">Email</h3>
-                  <a
-                    href="mailto:info@peaksyria.com"
-                    className="text-primary hover:text-primary/80 transition-colors text-sm sm:text-base"
-                  >
-                    info@peaksyria.com
-                  </a>
-                  <p className="text-xs sm:text-sm text-muted-foreground">We'll reply within 24 hours</p>
-                </div>
-              </div>
+              )}
 
-              <div className="flex items-start gap-3 sm:gap-4 bg-card p-4 sm:p-6 rounded-lg hover:shadow-md transition-shadow">
-                <div className="bg-primary/10 p-2 sm:p-3 rounded-full flex-shrink-0">
-                  <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              {storeSettings?.physical_address && (
+                <div className="flex items-start gap-3 sm:gap-4 bg-card p-4 sm:p-6 rounded-lg hover:shadow-md transition-shadow">
+                  <div className="bg-primary/10 p-2 sm:p-3 rounded-full flex-shrink-0">
+                    <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">Location</h3>
+                    <p className="text-muted-foreground text-sm sm:text-base">{storeSettings.physical_address}</p>
+                    {storeSettings.location_description && (
+                      <p className="text-xs sm:text-sm text-muted-foreground">{storeSettings.location_description}</p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold mb-1 text-sm sm:text-base">Location</h3>
-                  <p className="text-muted-foreground text-sm sm:text-base">Damascus, Syria</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Visit us at our showroom</p>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

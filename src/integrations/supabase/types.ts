@@ -1538,38 +1538,56 @@ export type Database = {
       store_settings: {
         Row: {
           brand_description: string | null
+          business_hours: string | null
           created_at: string
+          email_response_time: string | null
           facebook_url: string | null
           id: string
           instagram_url: string | null
+          location_description: string | null
+          phone_description: string | null
+          physical_address: string | null
           store_email: string | null
           store_phone: string | null
           twitter_url: string | null
           updated_at: string
+          whatsapp_description: string | null
           whatsapp_number: string | null
         }
         Insert: {
           brand_description?: string | null
+          business_hours?: string | null
           created_at?: string
+          email_response_time?: string | null
           facebook_url?: string | null
           id?: string
           instagram_url?: string | null
+          location_description?: string | null
+          phone_description?: string | null
+          physical_address?: string | null
           store_email?: string | null
           store_phone?: string | null
           twitter_url?: string | null
           updated_at?: string
+          whatsapp_description?: string | null
           whatsapp_number?: string | null
         }
         Update: {
           brand_description?: string | null
+          business_hours?: string | null
           created_at?: string
+          email_response_time?: string | null
           facebook_url?: string | null
           id?: string
           instagram_url?: string | null
+          location_description?: string | null
+          phone_description?: string | null
+          physical_address?: string | null
           store_email?: string | null
           store_phone?: string | null
           twitter_url?: string | null
           updated_at?: string
+          whatsapp_description?: string | null
           whatsapp_number?: string | null
         }
         Relationships: []

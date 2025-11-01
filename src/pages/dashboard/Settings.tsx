@@ -33,6 +33,11 @@ const Settings = () => {
   const [facebookUrl, setFacebookUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
   const [twitterUrl, setTwitterUrl] = useState("");
+  const [businessHours, setBusinessHours] = useState("");
+  const [physicalAddress, setPhysicalAddress] = useState("");
+  const [emailResponseTime, setEmailResponseTime] = useState("");
+  const [whatsappDescription, setWhatsappDescription] = useState("");
+  const [locationDescription, setLocationDescription] = useState("");
   
   // Security State
   const [currentPassword, setCurrentPassword] = useState("");
@@ -87,6 +92,11 @@ const Settings = () => {
           setFacebookUrl(data.facebook_url || "");
           setInstagramUrl(data.instagram_url || "");
           setTwitterUrl(data.twitter_url || "");
+          setBusinessHours(data.business_hours || "");
+          setPhysicalAddress(data.physical_address || "");
+          setEmailResponseTime(data.email_response_time || "");
+          setWhatsappDescription(data.whatsapp_description || "");
+          setLocationDescription(data.location_description || "");
         }
       } catch (error) {
         console.error("Error loading store settings:", error);
@@ -167,6 +177,11 @@ const Settings = () => {
           facebook_url: facebookUrl,
           instagram_url: instagramUrl,
           twitter_url: twitterUrl,
+          business_hours: businessHours,
+          physical_address: physicalAddress,
+          email_response_time: emailResponseTime,
+          whatsapp_description: whatsappDescription,
+          location_description: locationDescription,
         })
         .eq('id', storeSettingsId);
 
@@ -384,12 +399,57 @@ const Settings = () => {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="businessHours">Business Hours</Label>
+              <Input 
+                id="businessHours" 
+                value={businessHours}
+                onChange={(e) => setBusinessHours(e.target.value)}
+                placeholder="Mon-Sat, 9AM-8PM"
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
               <Input 
                 id="whatsappNumber" 
                 value={whatsappNumber}
                 onChange={(e) => setWhatsappNumber(e.target.value)}
                 placeholder="963XXXXXXXXX"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="whatsappDescription">WhatsApp Description</Label>
+              <Input 
+                id="whatsappDescription" 
+                value={whatsappDescription}
+                onChange={(e) => setWhatsappDescription(e.target.value)}
+                placeholder="Quick responses guaranteed"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="emailResponseTime">Email Response Time</Label>
+              <Input 
+                id="emailResponseTime" 
+                value={emailResponseTime}
+                onChange={(e) => setEmailResponseTime(e.target.value)}
+                placeholder="We'll reply within 24 hours"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="physicalAddress">Physical Address</Label>
+              <Input 
+                id="physicalAddress" 
+                value={physicalAddress}
+                onChange={(e) => setPhysicalAddress(e.target.value)}
+                placeholder="Damascus, Syria"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="locationDescription">Location Description</Label>
+              <Input 
+                id="locationDescription" 
+                value={locationDescription}
+                onChange={(e) => setLocationDescription(e.target.value)}
+                placeholder="Visit us at our showroom"
               />
             </div>
             <div className="space-y-2">
