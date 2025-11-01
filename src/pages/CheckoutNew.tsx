@@ -370,9 +370,22 @@ export default function CheckoutNew() {
 
   const checkAutoDiscounts = async () => {
     try {
+      // First check if there's a discount from cart
+      const savedCartDiscount = localStorage.getItem("appliedCartDiscount");
+      if (savedCartDiscount) {
+        try {
+          const cartDiscount = JSON.parse(savedCartDiscount);
+          setAppliedDiscount(cartDiscount);
+          setDiscountAmount(cartDiscount.amount);
+          return;
+        } catch (e) {
+          console.error("Error parsing saved cart discount:", e);
+        }
+      }
+
       const { data, error } = await supabase
         .from("discounts")
-        .select("*")
+        .select("*, discount_products(product_id), discount_categories(category_id)")
         .eq("is_automatic", true)
         .eq("status", "active")
         .lte("start_date", new Date().toISOString())
@@ -381,36 +394,68 @@ export default function CheckoutNew() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        const autoDiscount = data[0];
-        
-        // Check if cart meets minimum requirements
-        if (cartTotal < autoDiscount.min_cart_subtotal) {
-          return;
-        }
-
-        // For automatic discounts without codes, apply directly
-        if (!autoDiscount.code) {
-          let discountValue = 0;
-          
-          if (autoDiscount.type === "percentage") {
-            discountValue = cartTotal * (autoDiscount.value / 100);
-          } else if (autoDiscount.type === "fixed_amount") {
-            discountValue = autoDiscount.value;
+        for (const autoDiscount of data) {
+          // Check if cart meets minimum requirements
+          if (cartTotal < (autoDiscount.min_cart_subtotal || 0)) {
+            continue;
           }
 
-          setAppliedDiscount({
-            id: autoDiscount.id,
-            code: null,
-            amount: discountValue,
-            message: autoDiscount.marketing_label || `${autoDiscount.name} applied!`,
-          });
-          setDiscountAmount(discountValue);
-          toast.success(`${autoDiscount.name} applied! You save ${formatPrice(discountValue)}`);
-        } else {
-          // For automatic discounts with codes, validate normally
-          const result = await validateDiscount(autoDiscount.code, true);
-          if (result.is_valid) {
-            toast.success(`Automatic discount "${autoDiscount.name}" applied!`);
+          // Check minimum quantity
+          if (autoDiscount.min_quantity && autoDiscount.min_quantity > 0) {
+            const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+            if (totalQuantity < autoDiscount.min_quantity) {
+              continue;
+            }
+          }
+
+          // Check scope restrictions
+          let matchingItems = cartItems;
+          if (autoDiscount.scope === "products") {
+            const discountProductIds = (autoDiscount.discount_products as any[])?.map(dp => dp.product_id) || [];
+            matchingItems = cartItems.filter(item => discountProductIds.includes(item.product_id));
+            if (matchingItems.length === 0) {
+              continue;
+            }
+          } else if (autoDiscount.scope === "categories") {
+            continue;
+          }
+
+          // Apply discount with quantity limits
+          if (!autoDiscount.code) {
+            let discountValue = 0;
+            const perCustomerLimit = autoDiscount.per_customer_limit || 999999;
+            
+            if (autoDiscount.type === "percentage") {
+              let totalQuantityProcessed = 0;
+              
+              for (const item of matchingItems) {
+                const quantityToApply = Math.min(
+                  item.quantity,
+                  perCustomerLimit - totalQuantityProcessed
+                );
+                
+                if (quantityToApply <= 0) break;
+                
+                const itemPrice = item.product.offer_price || item.product.price;
+                discountValue += (itemPrice * quantityToApply) * (autoDiscount.value / 100);
+                totalQuantityProcessed += quantityToApply;
+                
+                if (totalQuantityProcessed >= perCustomerLimit) break;
+              }
+            } else if (autoDiscount.type === "fixed_amount") {
+              discountValue = autoDiscount.value;
+            }
+
+            if (discountValue > 0) {
+              setAppliedDiscount({
+                id: autoDiscount.id,
+                code: null,
+                amount: discountValue,
+                message: autoDiscount.marketing_label || `${autoDiscount.name} applied!`,
+              });
+              setDiscountAmount(discountValue);
+              break;
+            }
           }
         }
       }
@@ -649,6 +694,7 @@ export default function CheckoutNew() {
 
       // Clear saved checkout form data
       localStorage.removeItem("checkoutFormData");
+      localStorage.removeItem("appliedCartDiscount");
 
       toast.success("Order placed successfully!");
 

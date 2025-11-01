@@ -137,11 +137,20 @@ export default function CartNew() {
             continue;
           }
 
+          // Check minimum quantity if specified
+          if (autoDiscount.min_quantity && autoDiscount.min_quantity > 0) {
+            const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+            if (totalQuantity < autoDiscount.min_quantity) {
+              continue;
+            }
+          }
+
           // Check scope restrictions
+          let matchingItems = cartItems;
           if (autoDiscount.scope === "products") {
             const discountProductIds = (autoDiscount.discount_products as any[])?.map(dp => dp.product_id) || [];
-            const hasMatchingProduct = cartItems.some(item => discountProductIds.includes(item.product_id));
-            if (!hasMatchingProduct) {
+            matchingItems = cartItems.filter(item => discountProductIds.includes(item.product_id));
+            if (matchingItems.length === 0) {
               continue;
             }
           } else if (autoDiscount.scope === "categories") {
@@ -150,20 +159,29 @@ export default function CartNew() {
             continue;
           }
 
-          // Apply discount
+          // Apply discount with quantity limits
           if (!autoDiscount.code) {
             let discountValue = 0;
+            const perCustomerLimit = autoDiscount.per_customer_limit || 999999;
             
             if (autoDiscount.type === "percentage") {
-              // For product-scoped discounts, calculate only on matching products
-              if (autoDiscount.scope === "products") {
-                const discountProductIds = (autoDiscount.discount_products as any[])?.map(dp => dp.product_id) || [];
-                const matchingItemsTotal = cartItems
-                  .filter(item => discountProductIds.includes(item.product_id))
-                  .reduce((sum, item) => sum + (item.product.offer_price || item.product.price) * item.quantity, 0);
-                discountValue = matchingItemsTotal * (autoDiscount.value / 100);
-              } else {
-                discountValue = cartTotal * (autoDiscount.value / 100);
+              // Calculate based on scope and quantity limits
+              let itemsToDiscount = matchingItems;
+              let totalQuantityProcessed = 0;
+              
+              for (const item of itemsToDiscount) {
+                const quantityToApply = Math.min(
+                  item.quantity,
+                  perCustomerLimit - totalQuantityProcessed
+                );
+                
+                if (quantityToApply <= 0) break;
+                
+                const itemPrice = item.product.offer_price || item.product.price;
+                discountValue += (itemPrice * quantityToApply) * (autoDiscount.value / 100);
+                totalQuantityProcessed += quantityToApply;
+                
+                if (totalQuantityProcessed >= perCustomerLimit) break;
               }
             } else if (autoDiscount.type === "fixed_amount") {
               discountValue = autoDiscount.value;
@@ -175,6 +193,12 @@ export default function CartNew() {
                 code: null,
                 amount: discountValue,
                 message: autoDiscount.marketing_label || `${autoDiscount.name} applied!`,
+                scope: autoDiscount.scope,
+                product_ids: autoDiscount.scope === "products" 
+                  ? (autoDiscount.discount_products as any[])?.map(dp => dp.product_id) || []
+                  : [],
+                per_customer_limit: perCustomerLimit,
+                discount_percentage: autoDiscount.type === "percentage" ? autoDiscount.value : null,
               });
               setDiscountAmount(discountValue);
               toast.success(`${autoDiscount.name} applied! You save ${formatPrice(discountValue)}`);
@@ -188,12 +212,66 @@ export default function CartNew() {
     }
   };
 
-  // Check for auto-apply discounts when cart total changes
+  // Check for auto-apply discounts and remove if products removed
   useEffect(() => {
-    if (cartItems.length > 0 && !appliedDiscount && cartTotal > 0) {
+    if (cartItems.length === 0 && appliedDiscount) {
+      // Cart is empty, remove discount
+      setAppliedDiscount(null);
+      setDiscountAmount(0);
+      return;
+    }
+
+    if (appliedDiscount && appliedDiscount.scope === "products" && appliedDiscount.product_ids) {
+      // Check if any of the discount's products are still in cart
+      const hasMatchingProduct = cartItems.some(item => 
+        appliedDiscount.product_ids.includes(item.product_id)
+      );
+      
+      if (!hasMatchingProduct) {
+        // No matching products, remove discount
+        setAppliedDiscount(null);
+        setDiscountAmount(0);
+        toast.info("Discount removed: product no longer in cart");
+        return;
+      }
+      
+      // Recalculate discount based on current quantities
+      const matchingItems = cartItems.filter(item => 
+        appliedDiscount.product_ids.includes(item.product_id)
+      );
+      
+      let newDiscountValue = 0;
+      const perCustomerLimit = appliedDiscount.per_customer_limit || 999999;
+      let totalQuantityProcessed = 0;
+      
+      for (const item of matchingItems) {
+        const quantityToApply = Math.min(
+          item.quantity,
+          perCustomerLimit - totalQuantityProcessed
+        );
+        
+        if (quantityToApply <= 0) break;
+        
+        const itemPrice = item.product.offer_price || item.product.price;
+        const discountPercent = appliedDiscount.discount_percentage || (appliedDiscount.amount / cartTotal * 100);
+        newDiscountValue += (itemPrice * quantityToApply) * (discountPercent / 100);
+        totalQuantityProcessed += quantityToApply;
+        
+        if (totalQuantityProcessed >= perCustomerLimit) break;
+      }
+      
+      if (Math.abs(newDiscountValue - appliedDiscount.amount) > 0.01) {
+        setAppliedDiscount({
+          ...appliedDiscount,
+          amount: newDiscountValue,
+        });
+        setDiscountAmount(newDiscountValue);
+      }
+    } else if (cartItems.length > 0 && !appliedDiscount && cartTotal > 0) {
+      // No discount applied, check for auto-discounts
       checkAutoDiscounts();
     }
-  }, [cartTotal, appliedDiscount]);
+  }, [cartItems, cartTotal]);
 
   if (loading) {
     return (
@@ -395,7 +473,18 @@ export default function CartNew() {
                 </div>
               )}
 
-              <Button asChild className="w-full mb-3">
+              <Button 
+                asChild 
+                className="w-full mb-3"
+                onClick={() => {
+                  // Save discount info to localStorage for checkout
+                  if (appliedDiscount) {
+                    localStorage.setItem("appliedCartDiscount", JSON.stringify(appliedDiscount));
+                  } else {
+                    localStorage.removeItem("appliedCartDiscount");
+                  }
+                }}
+              >
                 <Link to="/checkout">Proceed to Checkout</Link>
               </Button>
               <Button asChild variant="outline" className="w-full">
