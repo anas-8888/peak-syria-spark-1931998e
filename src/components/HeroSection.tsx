@@ -120,25 +120,25 @@ const HeroSection = () => {
                 {slide.subtitle}
               </p>
               <div
-                className="flex flex-col sm:flex-row gap-1.5 sm:gap-2.5 md:gap-4 animate-fade-in"
+                className="flex flex-col sm:flex-row gap-1 sm:gap-2.5 md:gap-4 animate-fade-in"
                 style={{ animationDelay: "400ms" }}
               >
                 <Button
                   asChild
                   variant="hero"
                   size="sm"
-                  className="group w-full sm:w-auto text-[9px] sm:text-xs md:text-sm h-6 sm:h-8 md:h-10 px-2 sm:px-4 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  className="group w-full sm:w-auto text-[8px] sm:text-xs md:text-sm h-5 sm:h-8 md:h-10 px-1.5 sm:px-4 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 >
                   <Link to={slide.button_url}>
                     {slide.button_text}
-                    <ArrowRight className="ml-1 sm:ml-1.5 h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-0.5 sm:ml-1.5 h-2 w-2 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>
                 <Button
                   asChild
                   variant="outlineWhite"
                   size="sm"
-                  className="w-full sm:w-auto text-[9px] sm:text-xs md:text-sm h-6 sm:h-8 md:h-10 px-2 sm:px-4 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                  className="w-full sm:w-auto text-[8px] sm:text-xs md:text-sm h-5 sm:h-8 md:h-10 px-1.5 sm:px-4 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
                 >
                   <Link to="/products">View All</Link>
                 </Button>
