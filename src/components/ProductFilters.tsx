@@ -27,12 +27,15 @@ interface ProductFiltersProps {
 const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, minPrice, maxPrice }: ProductFiltersProps) => {
   const [localFilters, setLocalFilters] = useState(filters);
   const [tempPriceRange, setTempPriceRange] = useState<[number, number]>(filters.priceRange);
+  const [isDragging, setIsDragging] = useState(false);
 
-  // Sync local filters with parent filters
+  // Sync local filters with parent filters only when not dragging
   useEffect(() => {
-    setLocalFilters(filters);
-    setTempPriceRange(filters.priceRange);
-  }, [filters]);
+    if (!isDragging) {
+      setLocalFilters(filters);
+      setTempPriceRange(filters.priceRange);
+    }
+  }, [filters, isDragging]);
 
   const handleCategoryToggle = (category: string) => {
     const newCategories = localFilters.categories.includes(category)
@@ -62,19 +65,25 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
   };
 
   const handlePriceChange = (value: number[]) => {
-    // Update visual state only while dragging - smooth and responsive
+    // Set dragging state to prevent parent sync
+    setIsDragging(true);
+    // Update visual state only while dragging
     setTempPriceRange([value[0], value[1]] as [number, number]);
   };
 
   const handlePriceCommit = (value: number[]) => {
-    // Apply filter only when user releases the slider
+    // Release dragging state
+    setIsDragging(false);
+    // Apply filter when user releases the slider
     const priceRange = [value[0], value[1]] as [number, number];
+    setTempPriceRange(priceRange);
     const newFilters = { ...localFilters, priceRange };
     setLocalFilters(newFilters);
     onFilterChange(newFilters);
   };
 
   const clearAllFilters = () => {
+    setIsDragging(false);
     const resetFilters: FilterOptions = {
       categories: [],
       colors: [],
