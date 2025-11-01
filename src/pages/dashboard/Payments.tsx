@@ -1,4 +1,4 @@
-import { DollarSign, CreditCard, Banknote, TrendingUp, Download } from "lucide-react";
+import { DollarSign, CreditCard, Banknote, TrendingUp, Download, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +11,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useQuery } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import { useState } from "react";
 
 type Payment = {
   id: string;
@@ -26,6 +42,11 @@ type Payment = {
 };
 
 const Payments = () => {
+  const queryClient = useQueryClient();
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState("");
+
   // Fetch all payments
   const { data: paymentsData, isLoading } = useQuery({
     queryKey: ["payments"],
@@ -37,6 +58,24 @@ const Payments = () => {
 
       if (error) throw error;
       return data as Payment[];
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ paymentId, status }: { paymentId: string; status: string }) => {
+      const { error } = await supabase
+        .from("payments")
+        .update({ status })
+        .eq("id", paymentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      toast.success("Payment status updated successfully");
+      setEditDialogOpen(false);
+    },
+    onError: () => {
+      toast.error("Failed to update payment status");
     },
   });
 
@@ -222,6 +261,7 @@ const Payments = () => {
                 <TableHead>Payment Method</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -235,11 +275,12 @@ const Payments = () => {
                     <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                   </TableRow>
                 ))
               ) : payments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     No payments found
                   </TableCell>
                 </TableRow>
@@ -271,6 +312,21 @@ const Payments = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>{format(new Date(payment.created_at), "yyyy/MM/dd")}</TableCell>
+                    <TableCell>
+                      {payment.payment_method.toLowerCase().includes("cash") && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedPayment(payment);
+                            setNewStatus(payment.status);
+                            setEditDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -278,6 +334,64 @@ const Payments = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Edit Payment Status Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Payment Status</DialogTitle>
+            <DialogDescription>
+              Change the payment status for this Cash on Delivery order
+            </DialogDescription>
+          </DialogHeader>
+          {selectedPayment && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Order ID: #{selectedPayment.order_id.slice(0, 8)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Customer: {selectedPayment.customer_name}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Amount: ${Number(selectedPayment.amount).toLocaleString()}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Payment Status</label>
+                <Select value={newStatus} onValueChange={setNewStatus}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    if (selectedPayment) {
+                      updateStatusMutation.mutate({
+                        paymentId: selectedPayment.id,
+                        status: newStatus,
+                      });
+                    }
+                  }}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  {updateStatusMutation.isPending ? "Updating..." : "Update Status"}
+                </Button>
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -803,6 +803,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          notes: string | null
           order_id: string
           price: number
           product_id: string
@@ -811,6 +812,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          notes?: string | null
           order_id: string
           price: number
           product_id: string
@@ -819,6 +821,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          notes?: string | null
           order_id?: string
           price?: number
           product_id?: string

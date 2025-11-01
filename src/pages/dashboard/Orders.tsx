@@ -51,6 +51,7 @@ type OrderWithDetails = {
     id: string;
     quantity: number;
     price: number;
+    notes: string | null;
     products: {
       name: string;
       image_url: string;
@@ -116,6 +117,7 @@ const Orders = () => {
             id,
             quantity,
             price,
+            notes,
             products (
               name,
               image_url
@@ -422,7 +424,7 @@ const Orders = () => {
                 <h3 className="font-semibold mb-3">Order Items</h3>
                 <div className="space-y-3">
                   {selectedOrder.order_items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                    <div key={item.id} className="flex items-start gap-3 p-3 border rounded-lg">
                       <img
                         src={item.products.image_url}
                         alt={item.products.name}
@@ -433,6 +435,11 @@ const Orders = () => {
                         <p className="text-sm text-muted-foreground">
                           Quantity: {item.quantity} × {formatPrice(item.price)}
                         </p>
+                        {item.notes && (
+                          <p className="text-sm text-muted-foreground mt-1 italic">
+                            Note: {item.notes}
+                          </p>
+                        )}
                       </div>
                       <div className="font-semibold">
                         {formatPrice(item.quantity * item.price)}

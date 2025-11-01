@@ -27,6 +27,7 @@ import Search from "./pages/Search";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import ServerError from "./pages/ServerError";
 import AdminLogin from "./pages/AdminLogin";
 import Dashboard from "./pages/Dashboard";
 import Overview from "./pages/dashboard/Overview";
@@ -88,6 +89,7 @@ function App() {
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/refund" element={<Refund />} />
+                  <Route path="/500" element={<ServerError />} />
                   {/* Dashboard Routes */}
                   <Route path="/dashboard" element={<Dashboard />}>
                     <Route index element={<Overview />} />

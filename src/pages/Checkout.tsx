@@ -67,10 +67,11 @@ const Checkout = () => {
         p_shipping_cost: shipping,
         p_discount_id: null,
         p_discount_amount: 0,
-        p_items: cartItems.map(item => ({
-          product_id: item.id,
-          quantity: item.quantity
-        }))
+          p_items: cartItems.map(item => ({
+            product_id: item.id,
+            quantity: item.quantity,
+            notes: ""
+          }))
       });
 
       if (orderError) {

@@ -718,6 +718,14 @@ export default function CheckoutNew() {
         }
       }
 
+      // Check phone number requirement
+      if (!profile?.phone || profile.phone.trim() === "") {
+        toast.error("Please add your phone number in your profile to complete the order");
+        navigate("/profile");
+        setSubmitting(false);
+        return;
+      }
+
       // Create order with items
       const { data: orderData, error: orderError } = await supabase.rpc(
         "create_order_with_items",
@@ -737,6 +745,7 @@ export default function CheckoutNew() {
             product_id: item.product_id,
             quantity: item.quantity,
             price: item.product.offer_price || item.product.price,
+            notes: item.notes || "",
           })),
         }
       );
