@@ -28,7 +28,7 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
   const [localFilters, setLocalFilters] = useState(filters);
   const [tempPriceRange, setTempPriceRange] = useState<[number, number]>(filters.priceRange);
 
-  // Sync local filters with parent filters (e.g., from URL params)
+  // Sync local filters with parent filters
   useEffect(() => {
     setLocalFilters(filters);
     setTempPriceRange(filters.priceRange);
@@ -62,13 +62,14 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
   };
 
   const handlePriceChange = (value: number[]) => {
-    // Only update visual display while dragging
+    // Update visual state only while dragging - smooth and responsive
     setTempPriceRange([value[0], value[1]] as [number, number]);
   };
 
   const handlePriceCommit = (value: number[]) => {
-    // Only submit when user releases the slider
-    const newFilters = { ...localFilters, priceRange: [value[0], value[1]] as [number, number] };
+    // Apply filter only when user releases the slider
+    const priceRange = [value[0], value[1]] as [number, number];
+    const newFilters = { ...localFilters, priceRange };
     setLocalFilters(newFilters);
     onFilterChange(newFilters);
   };
