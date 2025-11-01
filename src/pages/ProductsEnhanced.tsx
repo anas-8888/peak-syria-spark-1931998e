@@ -188,7 +188,7 @@ const ProductsEnhanced = () => {
     }
   }, [searchParams, categories]);
 
-  // Initialize price range filter when data loads
+  // Initialize price range filter when data loads (only once)
   useEffect(() => {
     if (allProducts.length > 0 && filters.priceRange[0] === 0 && filters.priceRange[1] === 1000) {
       setFilters(prev => ({
@@ -196,7 +196,7 @@ const ProductsEnhanced = () => {
         priceRange: [minPrice, maxPrice]
       }));
     }
-  }, [allProducts, minPrice, maxPrice]);
+  }, [allProducts.length, minPrice, maxPrice]);
 
   // Apply filters
   const filteredProducts = allProducts.filter((product) => {
