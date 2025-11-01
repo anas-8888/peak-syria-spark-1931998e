@@ -631,6 +631,106 @@ export default function CartNew() {
     }
   }, []);
 
+  // Restore and validate previously selected discount on mount
+  useEffect(() => {
+    const restoreSelectedDiscount = async () => {
+      if (!selectedAutoDiscountId || cartItems.length === 0) return;
+
+      try {
+        const { data: discount, error } = await supabase
+          .from("discounts")
+          .select("*, discount_products(product_id), discount_categories(category_id)")
+          .eq("id", selectedAutoDiscountId)
+          .eq("is_automatic", true)
+          .eq("status", "active")
+          .single();
+
+        if (error || !discount) {
+          // Discount no longer exists
+          setSelectedAutoDiscountId(null);
+          localStorage.removeItem("selectedAutoDiscountId");
+          return;
+        }
+
+        // Check if still qualifies
+        const meetsMinimum = cartTotal >= (discount.min_cart_subtotal || 0);
+        
+        let meetsQuantity = true;
+        if (discount.min_quantity && discount.min_quantity > 0) {
+          const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+          meetsQuantity = totalQuantity >= discount.min_quantity;
+        }
+
+        let matchingItems = cartItems;
+        let meetsScope = true;
+        if (discount.scope === "products") {
+          const discountProductIds = (discount.discount_products as any[])?.map(dp => dp.product_id) || [];
+          matchingItems = cartItems.filter(item => discountProductIds.includes(item.product_id));
+          meetsScope = matchingItems.length > 0;
+        } else if (discount.scope === "categories") {
+          meetsScope = false;
+        }
+
+        if (!meetsMinimum || !meetsQuantity || !meetsScope) {
+          // No longer qualifies
+          setAppliedDiscounts([]);
+          setDiscountAmount(0);
+          setSelectedAutoDiscountId(null);
+          localStorage.removeItem("selectedAutoDiscountId");
+          localStorage.removeItem("appliedCartDiscounts");
+          localStorage.removeItem("appliedCartDiscountAmount");
+          return;
+        }
+
+        // Calculate discount value
+        let discountValue = 0;
+        const perCustomerLimit = discount.per_customer_limit || 999999;
+        
+        if (discount.type === "percentage") {
+          let totalQuantityProcessed = 0;
+          
+          for (const item of matchingItems) {
+            const quantityToApply = Math.min(
+              item.quantity,
+              perCustomerLimit - totalQuantityProcessed
+            );
+            
+            if (quantityToApply <= 0) break;
+            
+            const itemPrice = item.product.offer_price || item.product.price;
+            discountValue += (itemPrice * quantityToApply) * (discount.value / 100);
+            totalQuantityProcessed += quantityToApply;
+            
+            if (totalQuantityProcessed >= perCustomerLimit) break;
+          }
+        } else if (discount.type === "fixed_amount") {
+          discountValue = discount.value;
+        }
+
+        // Restore the discount
+        const appliedDiscount = {
+          ...discount,
+          calculatedAmount: discountValue,
+          message: discount.marketing_label || discount.name,
+        };
+        
+        setAppliedDiscounts([appliedDiscount]);
+        setDiscountAmount(discountValue);
+        
+        // Save to localStorage for checkout
+        localStorage.setItem("appliedCartDiscounts", JSON.stringify([appliedDiscount]));
+        localStorage.setItem("appliedCartDiscountAmount", discountValue.toString());
+      } catch (error) {
+        console.error("Error restoring selected discount:", error);
+      }
+    };
+
+    // Only run once on mount when cart is loaded
+    if (cartItems.length > 0 && selectedAutoDiscountId && !loading) {
+      restoreSelectedDiscount();
+    }
+  }, [loading]); // Only depend on loading to run once when cart loads
+
   // Automatically recalculate discounts on cart changes with optimization
   useEffect(() => {
     // Empty cart - clear all discounts
