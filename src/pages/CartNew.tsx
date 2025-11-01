@@ -28,6 +28,8 @@ export default function CartNew() {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [validatingDiscount, setValidatingDiscount] = useState(false);
   const lastAppliedDiscountIds = useRef<string>("");
+  const isCheckingDiscounts = useRef<boolean>(false);
+  const lastCartSnapshot = useRef<string>("");
 
   const shippingCost = 0; // Will be calculated at checkout
   const total = cartTotal - discountAmount;
@@ -123,7 +125,14 @@ export default function CartNew() {
   };
 
   const checkAutoDiscounts = async () => {
+    // Prevent concurrent discount checks
+    if (isCheckingDiscounts.current) {
+      return;
+    }
+
     try {
+      isCheckingDiscounts.current = true;
+
       const { data, error } = await supabase
         .from("discounts")
         .select("*, discount_products(product_id), discount_categories(category_id)")
@@ -134,7 +143,15 @@ export default function CartNew() {
 
       if (error) throw error;
 
-      if (!data || data.length === 0) return;
+      if (!data || data.length === 0) {
+        // Clear discounts if none are applicable
+        if (appliedDiscounts.length > 0) {
+          setAppliedDiscounts([]);
+          setDiscountAmount(0);
+          lastAppliedDiscountIds.current = "";
+        }
+        return;
+      }
 
       // Calculate discount amount for each applicable discount
       const applicableDiscounts: any[] = [];
@@ -199,7 +216,15 @@ export default function CartNew() {
         }
       }
 
-      if (applicableDiscounts.length === 0) return;
+      if (applicableDiscounts.length === 0) {
+        // Clear discounts if none are applicable
+        if (appliedDiscounts.length > 0) {
+          setAppliedDiscounts([]);
+          setDiscountAmount(0);
+          lastAppliedDiscountIds.current = "";
+        }
+        return;
+      }
 
       // Separate stackable and non-stackable discounts
       const stackable = applicableDiscounts.filter(d => d.is_stackable);
@@ -266,10 +291,12 @@ export default function CartNew() {
       }
     } catch (error) {
       console.error("Error checking auto discounts:", error);
+    } finally {
+      isCheckingDiscounts.current = false;
     }
   };
 
-  // Automatically recalculate discounts on any cart change
+  // Automatically recalculate discounts on cart changes with optimization
   useEffect(() => {
     // Empty cart - clear all discounts
     if (cartItems.length === 0) {
@@ -285,15 +312,28 @@ export default function CartNew() {
     // Skip if cart total is 0
     if (cartTotal <= 0) return;
 
-    // Debounce discount recalculation slightly to avoid excessive calculations
+    // Create cart snapshot to detect meaningful changes
+    const cartSnapshot = JSON.stringify(
+      cartItems.map(item => ({
+        id: item.product_id,
+        qty: item.quantity,
+      }))
+    );
+
+    // Only check discounts if cart actually changed
+    if (cartSnapshot === lastCartSnapshot.current) {
+      return;
+    }
+
+    lastCartSnapshot.current = cartSnapshot;
+
+    // Increased debounce to reduce API calls during rapid changes
     const timeoutId = setTimeout(() => {
-      // Always recheck discounts from scratch on cart changes
-      // This ensures the best discount combination is always applied
+      // Only recalculate if no manual discount is applied
       if (!appliedDiscount) {
-        // Recalculate auto discounts on every cart change
         checkAutoDiscounts();
       }
-    }, 150); // Short debounce for responsive UX
+    }, 500); // Longer debounce for better performance
 
     return () => clearTimeout(timeoutId);
   }, [cartItems, cartTotal]);
