@@ -35,6 +35,7 @@ const ProductsEnhanced = () => {
   const [sortBy, setSortBy] = useState("featured");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
+  const [priceInitialized, setPriceInitialized] = useState(false);
   const [filters, setFilters] = useState({
     categories: [] as string[],
     colors: [] as string[],
@@ -190,13 +191,14 @@ const ProductsEnhanced = () => {
 
   // Initialize price range filter when data loads (only once)
   useEffect(() => {
-    if (allProducts.length > 0 && filters.priceRange[0] === 0 && filters.priceRange[1] === 1000) {
+    if (allProducts.length > 0 && !priceInitialized) {
       setFilters(prev => ({
         ...prev,
         priceRange: [minPrice, maxPrice]
       }));
+      setPriceInitialized(true);
     }
-  }, [allProducts.length, minPrice, maxPrice]);
+  }, [allProducts.length, minPrice, maxPrice, priceInitialized]);
 
   // Apply filters
   const filteredProducts = allProducts.filter((product) => {
