@@ -46,6 +46,9 @@ type OrderWithDetails = {
   created_at: string;
   customer_confirmed_receipt: boolean;
   receipt_confirmed_at: string | null;
+  cancel_reason: string | null;
+  cancel_status: string | null;
+  cancelled_at: string | null;
   itemCount: number;
   order_items: Array<{
     id: string;
@@ -113,6 +116,9 @@ const Orders = () => {
           created_at,
           customer_confirmed_receipt,
           receipt_confirmed_at,
+          cancel_reason,
+          cancel_status,
+          cancelled_at,
           order_items (
             id,
             quantity,
@@ -477,6 +483,35 @@ const Orders = () => {
                   {statusLabels[selectedOrder.status as keyof typeof statusLabels]}
                 </Badge>
                 
+                {/* Cancellation Information */}
+                {selectedOrder.status === 'cancelled' && selectedOrder.cancel_reason && (
+                  <div className="mt-4 p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+                    <div className="flex items-start gap-2">
+                      <XCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-destructive mb-1">Order Cancelled</h4>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          <span className="font-medium">Reason: </span>
+                          {selectedOrder.cancel_reason}
+                        </p>
+                        {selectedOrder.cancel_status && (
+                          <p className="text-sm text-muted-foreground">
+                            <span className="font-medium">Status: </span>
+                            {selectedOrder.cancel_status === 'approved' ? 'Cancellation Approved' : 
+                             selectedOrder.cancel_status === 'rejected' ? 'Cancellation Rejected' : 
+                             'Pending Approval'}
+                          </p>
+                        )}
+                        {selectedOrder.cancelled_at && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Cancelled on {format(new Date(selectedOrder.cancelled_at), "MMM dd, yyyy 'at' HH:mm")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Customer Receipt Confirmation */}
                 {selectedOrder.status === 'delivered' && (
                   <div className="mt-4 p-3 rounded-lg bg-muted/50">
