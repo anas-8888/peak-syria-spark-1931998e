@@ -1,6 +1,7 @@
 import { Star, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 
 type Review = {
@@ -10,6 +11,7 @@ type Review = {
   created_at: string;
   profiles: {
     full_name: string | null;
+    avatar_url: string | null;
   } | null;
 };
 
@@ -35,9 +37,12 @@ export const ReviewsList = ({ reviews }: ReviewsListProps) => {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-start gap-4">
-                <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="h-5 w-5 text-primary" />
-                </div>
+                <Avatar className="h-10 w-10 flex-shrink-0">
+                  <AvatarImage src={review.profiles?.avatar_url || ""} alt={review.profiles?.full_name || "User"} />
+                  <AvatarFallback className="bg-primary/10">
+                    <User className="h-5 w-5 text-primary" />
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold">

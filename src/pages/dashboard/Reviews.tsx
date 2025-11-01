@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Star, MessageSquare, ThumbsUp, Eye, CheckCircle, XCircle, Trash2, Clock } from "lucide-react";
+import { Search, Star, MessageSquare, ThumbsUp, Eye, CheckCircle, XCircle, Trash2, Clock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -35,6 +36,7 @@ type Review = {
   created_at: string;
   profiles: {
     full_name: string | null;
+    avatar_url: string | null;
   } | null;
   products: {
     name: string;
@@ -66,7 +68,7 @@ const Reviews = () => {
         data.map(async (review) => {
           const { data: profile } = await supabase
             .from("profiles")
-            .select("full_name")
+            .select("full_name, avatar_url")
             .eq("id", review.user_id)
             .single();
           
@@ -250,7 +252,15 @@ const Reviews = () => {
               {filteredReviews.map((review) => (
                 <TableRow key={review.id} className="hover:bg-muted/50">
                   <TableCell className="font-medium">
-                    {review.profiles?.full_name || "Anonymous"}
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={review.profiles?.avatar_url || ""} alt={review.profiles?.full_name || "User"} />
+                        <AvatarFallback className="bg-primary/10">
+                          <User className="h-4 w-4 text-primary" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{review.profiles?.full_name || "Anonymous"}</span>
+                    </div>
                   </TableCell>
                   <TableCell>{review.products.name}</TableCell>
                   <TableCell>
