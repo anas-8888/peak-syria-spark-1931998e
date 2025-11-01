@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -27,7 +27,6 @@ interface ProductFiltersProps {
 const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, minPrice, maxPrice }: ProductFiltersProps) => {
   const [localFilters, setLocalFilters] = useState(filters);
   const [tempPriceRange, setTempPriceRange] = useState<[number, number]>(filters.priceRange);
-  const [priceDebounceTimer, setPriceDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
   // Sync local filters with parent filters (e.g., from URL params)
   useEffect(() => {
@@ -62,48 +61,17 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
     onFilterChange(newFilters);
   };
 
-  const commitPriceChange = useCallback((value: [number, number]) => {
-    const newFilters = { ...localFilters, priceRange: value };
-    setLocalFilters(newFilters);
-    onFilterChange(newFilters);
-  }, [localFilters, onFilterChange]);
-
   const handlePriceChange = (value: number[]) => {
-    const newRange = [value[0], value[1]] as [number, number];
-    setTempPriceRange(newRange);
-    
-    // Clear existing timer
-    if (priceDebounceTimer) {
-      clearTimeout(priceDebounceTimer);
-    }
-    
-    // Set new timer for auto-commit after 800ms of inactivity
-    const timer = setTimeout(() => {
-      commitPriceChange(newRange);
-    }, 800);
-    
-    setPriceDebounceTimer(timer);
+    // Only update visual display while dragging
+    setTempPriceRange([value[0], value[1]] as [number, number]);
   };
 
   const handlePriceCommit = (value: number[]) => {
-    // Clear debounce timer if exists
-    if (priceDebounceTimer) {
-      clearTimeout(priceDebounceTimer);
-      setPriceDebounceTimer(null);
-    }
-    
-    const newRange = [value[0], value[1]] as [number, number];
-    commitPriceChange(newRange);
+    // Only submit when user releases the slider
+    const newFilters = { ...localFilters, priceRange: [value[0], value[1]] as [number, number] };
+    setLocalFilters(newFilters);
+    onFilterChange(newFilters);
   };
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (priceDebounceTimer) {
-        clearTimeout(priceDebounceTimer);
-      }
-    };
-  }, [priceDebounceTimer]);
 
   const clearAllFilters = () => {
     const resetFilters: FilterOptions = {
