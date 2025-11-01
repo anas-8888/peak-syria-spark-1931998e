@@ -63,7 +63,7 @@ const HeroSection = () => {
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
+
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
@@ -77,15 +77,15 @@ const HeroSection = () => {
   };
 
   return (
-     <section 
-       ref={sectionRef}
-       className="relative h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] xl:h-[800px] overflow-hidden bg-secondary w-full"
-       onTouchStart={handleTouchStart}
-       onTouchMove={handleTouchMove}
-       onTouchEnd={handleTouchEnd}
-       onMouseEnter={() => setIsHovering(true)}
-       onMouseLeave={() => setIsHovering(false)}
-     >
+    <section
+      ref={sectionRef}
+      className="relative h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] xl:h-[800px] overflow-hidden bg-secondary w-full"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
       {slides.map((slide, index) => (
         <div
           key={index}
@@ -95,70 +95,74 @@ const HeroSection = () => {
         >
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ 
+            style={{
               backgroundImage: `url(${slide.image_url})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center center'
+              backgroundSize: "cover",
+              backgroundPosition: "center center",
             }}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
           </div>
 
-           <div className="relative h-full w-full px-4 sm:px-6 md:px-8 lg:px-12 flex items-center">
-             <div className="w-full max-w-3xl lg:max-w-4xl space-y-3 sm:space-y-5 md:space-y-6 lg:space-y-8">
-               <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-primary text-xs sm:text-sm font-semibold animate-slide-in-left">
-                 <span className="text-[10px] sm:text-xs md:text-sm">✨</span>
-                 {slide.flag_name}
-               </div>
-               <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white leading-tight animate-slide-up">
-                 {slide.title}
-               </h1>
-               <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 font-medium animate-fade-in" style={{ animationDelay: "200ms" }}>
-                 {slide.subtitle}
-               </p>
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
-                  <Button 
-                    asChild
-                    variant="hero" 
-                    size="sm" 
-                    className="group w-full sm:w-auto text-[9px] sm:text-sm md:text-base h-6 sm:h-9 md:h-12 px-2 sm:px-6 md:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                  >
-                    <Link to={slide.button_url}>
-                      {slide.button_text}
-                      <ArrowRight className="ml-1 sm:ml-2 h-2 w-2 sm:h-4 sm:w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </Button>
-                  <Button 
-                    asChild
-                    variant="outlineWhite" 
-                    size="sm"
-                    className="w-full sm:w-auto text-[9px] sm:text-sm md:text-base h-6 sm:h-9 md:h-12 px-2 sm:px-6 md:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
-                  >
-                    <Link to="/products">
-                      View All
-                    </Link>
-                  </Button>
-                </div>
-             </div>
-           </div>
+          <div className="relative h-full w-full px-4 sm:px-6 md:px-8 lg:px-12 flex items-center">
+            <div className="w-full max-w-3xl lg:max-w-4xl space-y-3 sm:space-y-5 md:space-y-6 lg:space-y-8">
+              <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-primary text-xs sm:text-sm font-semibold animate-slide-in-left">
+                <span className="text-[10px] sm:text-xs md:text-sm">anas✨</span>
+                {slide.flag_name}
+              </div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white leading-tight animate-slide-up">
+                {slide.title}
+              </h1>
+              <p
+                className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 font-medium animate-fade-in"
+                style={{ animationDelay: "200ms" }}
+              >
+                {slide.subtitle}
+              </p>
+              <div
+                className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 animate-fade-in"
+                style={{ animationDelay: "400ms" }}
+              >
+                <Button
+                  asChild
+                  variant="hero"
+                  size="sm"
+                  className="group w-full sm:w-auto text-[9px] sm:text-sm md:text-base h-6 sm:h-9 md:h-12 px-2 sm:px-6 md:px-8 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                >
+                  <Link to={slide.button_url}>
+                    {slide.button_text}
+                    <ArrowRight className="ml-1 sm:ml-2 h-2 w-2 sm:h-4 sm:w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outlineWhite"
+                  size="sm"
+                  className="w-full sm:w-auto text-[9px] sm:text-sm md:text-base h-6 sm:h-9 md:h-12 px-2 sm:px-6 md:px-8 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                >
+                  <Link to="/products">View All</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       ))}
 
-       {/* Navigation Arrows - Smaller on mobile */}
-       <button
-         onClick={prevSlide}
-         className="absolute left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1.5 sm:p-3 md:p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20 flex items-center justify-center"
-         aria-label="Previous slide"
-       >
-         <ChevronLeft className="h-3 w-3 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-       </button>
-       <button
-         onClick={nextSlide}
-         className="absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1.5 sm:p-3 md:p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20 flex items-center justify-center"
-         aria-label="Next slide"
-       >
-         <ChevronRight className="h-3 w-3 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-       </button>
+      {/* Navigation Arrows - Smaller on mobile */}
+      <button
+        onClick={prevSlide}
+        className="absolute left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1.5 sm:p-3 md:p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20 flex items-center justify-center"
+        aria-label="Previous slide"
+      >
+        <ChevronLeft className="h-3 w-3 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+      </button>
+      <button
+        onClick={nextSlide}
+        className="absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-1.5 sm:p-3 md:p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20 flex items-center justify-center"
+        aria-label="Next slide"
+      >
+        <ChevronRight className="h-3 w-3 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+      </button>
 
       {/* Mobile Navigation - Smaller indicators */}
       <div className="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-0.5 z-20">
@@ -167,8 +171,8 @@ const HeroSection = () => {
             key={index}
             onClick={() => setCurrentSlide(index)}
             className={`transition-all duration-300 ${
-              index === currentSlide 
-                ? "h-[2px] w-[6px] bg-primary rounded-full" 
+              index === currentSlide
+                ? "h-[2px] w-[6px] bg-primary rounded-full"
                 : "h-[2px] w-[2px] bg-white/40 hover:bg-white/60 rounded-full"
             }`}
             aria-label={`Go to slide ${index + 1}`}
@@ -183,8 +187,8 @@ const HeroSection = () => {
             key={index}
             onClick={() => setCurrentSlide(index)}
             className={`transition-all duration-300 hover:scale-110 ${
-              index === currentSlide 
-                ? "h-2 md:h-3 w-8 md:w-10 bg-red-500 rounded-full" 
+              index === currentSlide
+                ? "h-2 md:h-3 w-8 md:w-10 bg-red-500 rounded-full"
                 : "h-2 md:h-3 w-2 md:w-3 bg-gray-400 hover:bg-gray-300 rounded-full"
             }`}
             aria-label={`Go to slide ${index + 1}`}
