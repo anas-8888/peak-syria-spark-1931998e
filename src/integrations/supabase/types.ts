@@ -1215,6 +1215,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          region_id: string | null
           role_id: string
           updated_at: string
         }
@@ -1226,6 +1227,7 @@ export type Database = {
           full_name?: string | null
           id: string
           phone?: string | null
+          region_id?: string | null
           role_id: string
           updated_at?: string
         }
@@ -1237,10 +1239,18 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          region_id?: string | null
           role_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_role_id_fkey"
             columns: ["role_id"]

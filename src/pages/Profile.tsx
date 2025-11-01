@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -24,6 +25,8 @@ const Profile = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [regionId, setRegionId] = useState("");
+  const [regions, setRegions] = useState<Array<{ id: string; name: string; country: string }>>([]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -34,8 +37,24 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       loadProfile();
+      loadRegions();
     }
   }, [user]);
+
+  const loadRegions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("regions")
+        .select("id, name, country")
+        .eq("is_active", true)
+        .order("name");
+
+      if (error) throw error;
+      if (data) setRegions(data);
+    } catch (error: any) {
+      console.error("Error loading regions:", error);
+    }
+  };
 
   const loadProfile = async () => {
     try {
@@ -54,6 +73,7 @@ const Profile = () => {
         setPhone(data.phone || "");
         setAddress(data.address || "");
         setAvatarUrl(data.avatar_url || "");
+        setRegionId(data.region_id || "");
       }
     } catch (error: any) {
       console.error("Error loading profile:", error);
@@ -93,17 +113,17 @@ const Profile = () => {
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
       // Update profile with new avatar URL
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ avatar_url: data.publicUrl })
+        .update({ avatar_url: urlData.publicUrl })
         .eq("id", user?.id);
 
       if (updateError) throw updateError;
 
-      setAvatarUrl(data.publicUrl);
+      setAvatarUrl(urlData.publicUrl);
       toast.success("Avatar Updated! 📸", {
         description: "Your profile picture has been updated successfully",
       });
@@ -132,7 +152,26 @@ const Profile = () => {
             
             if (data.display_name) {
               setAddress(data.display_name);
-              toast.success("Location detected successfully!");
+              
+              // Try to match region based on location data
+              const locationCountry = data.address?.country || "";
+              const locationState = data.address?.state || "";
+              const locationCity = data.address?.city || data.address?.town || "";
+              
+              // Find matching region
+              const matchedRegion = regions.find(region => 
+                region.name.toLowerCase().includes(locationCity.toLowerCase()) ||
+                region.name.toLowerCase().includes(locationState.toLowerCase()) ||
+                locationCity.toLowerCase().includes(region.name.toLowerCase()) ||
+                locationState.toLowerCase().includes(region.name.toLowerCase())
+              );
+              
+              if (matchedRegion) {
+                setRegionId(matchedRegion.id);
+                toast.success("Location and region detected successfully!");
+              } else {
+                toast.success("Location detected! Please select your region manually.");
+              }
             }
           } catch (error) {
             console.error("Error getting location details:", error);
@@ -166,6 +205,7 @@ const Profile = () => {
           email: email,
           phone: phone,
           address: address,
+          region_id: regionId || null,
         })
         .eq("id", user?.id);
 
@@ -334,6 +374,26 @@ const Profile = () => {
                         )}
                       </Button>
                     </div>
+                  </div>
+
+                  {/* Region */}
+                  <div className="space-y-2">
+                    <Label htmlFor="region" className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      Region
+                    </Label>
+                    <Select value={regionId} onValueChange={setRegionId}>
+                      <SelectTrigger className="rounded-xl">
+                        <SelectValue placeholder="Select your region" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {regions.map((region) => (
+                          <SelectItem key={region.id} value={region.id}>
+                            {region.name} {region.country && `(${region.country})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
