@@ -340,29 +340,34 @@ const Discounts = () => {
   };
 
   const handleEditDiscount = async (discount: Discount) => {
-    setEditingDiscount(discount);
-
     // Load associated categories
+    let categoriesData: string[] = [];
     if (discount.scope === "categories") {
       const { data: categories } = await supabase
         .from("discount_categories")
         .select("category_id")
         .eq("discount_id", discount.id);
-      setEditingCategories(categories?.map(c => c.category_id) || []);
+      categoriesData = categories?.map(c => c.category_id) || [];
+      setEditingCategories(categoriesData);
     } else {
       setEditingCategories([]);
     }
 
     // Load associated products
+    let productsData: string[] = [];
     if (discount.scope === "products") {
       const { data: products } = await supabase
         .from("discount_products")
         .select("product_id")
         .eq("discount_id", discount.id);
-      setEditingProducts(products?.map(p => p.product_id) || []);
+      productsData = products?.map(p => p.product_id) || [];
+      setEditingProducts(productsData);
     } else {
       setEditingProducts([]);
     }
+
+    // Set editing discount (separate from associations which are in state)
+    setEditingDiscount(discount);
   };
 
   const handleDuplicate = (discount: Discount) => {

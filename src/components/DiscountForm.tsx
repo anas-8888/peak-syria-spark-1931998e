@@ -106,9 +106,28 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
   const [selectedProducts, setSelectedProducts] = useState<string[]>(initialData?.selected_products || []);
   const [categorySearch, setCategorySearch] = useState("");
   const [productSearch, setProductSearch] = useState("");
-  const [selectedFlag, setSelectedFlag] = useState<string>("");
-  const [tiers, setTiers] = useState<Array<{min_amount: number, discount_percent: number}>>([]);
-  const [bundleProducts, setBundleProducts] = useState<string[]>([]);
+  const [selectedFlag, setSelectedFlag] = useState<string>(initialData?.selectedFlag || "");
+  const [tiers, setTiers] = useState<Array<{min_amount: number, discount_percent: number}>>(
+    (initialData?.tiered_config || []).map(t => ({
+      min_amount: t.min_amount || 0,
+      discount_percent: t.discount_percent || 0
+    }))
+  );
+  const [bundleProducts, setBundleProducts] = useState<string[]>(initialData?.bundle_products || []);
+
+  // Update state when initialData changes (for edit mode)
+  useEffect(() => {
+    if (initialData) {
+      setSelectedCategories(initialData.selected_categories || []);
+      setSelectedProducts(initialData.selected_products || []);
+      setSelectedFlag(initialData.selectedFlag || "");
+      setTiers((initialData.tiered_config || []).map(t => ({
+        min_amount: t.min_amount || 0,
+        discount_percent: t.discount_percent || 0
+      })));
+      setBundleProducts(initialData.bundle_products || []);
+    }
+  }, [initialData]);
 
   // Fetch categories
   const { data: categories = [] } = useQuery({

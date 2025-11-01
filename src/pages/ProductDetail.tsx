@@ -113,6 +113,37 @@ const ProductDetail = () => {
     enabled: !!id,
   });
 
+  // Fetch applicable automatic discounts for this product
+  const { data: applicableDiscounts = [] } = useQuery({
+    queryKey: ["product-discounts", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discounts")
+        .select("*, discount_products(product_id)")
+        .eq("is_automatic", true)
+        .eq("status", "active")
+        .lte("start_date", new Date().toISOString())
+        .or(`end_date.is.null,end_date.gte.${new Date().toISOString()}`);
+
+      if (error) throw error;
+      
+      // Filter to only show discounts that apply to this product
+      return data.filter(discount => {
+        if (discount.scope === "store_wide") return true;
+        if (discount.scope === "products") {
+          const discountProductIds = (discount.discount_products as any[])?.map(dp => dp.product_id) || [];
+          return discountProductIds.includes(id);
+        }
+        if (discount.scope === "flags" && product?.flag) {
+          // Would need to check flag match
+          return false;
+        }
+        return false;
+      });
+    },
+    enabled: !!id && !!product,
+  });
+
   // Build color to image mapping
   useEffect(() => {
     if (productColors.length > 0 && images.length > 0) {
@@ -277,6 +308,52 @@ const ProductDetail = () => {
               <p className="text-muted-foreground leading-relaxed">
                 {product.description}
               </p>
+            )}
+
+            {/* Automatic Discounts */}
+            {applicableDiscounts.length > 0 && (
+              <div className="border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 rounded-lg p-4 space-y-3">
+                <h3 className="font-semibold text-green-800 dark:text-green-200 flex items-center gap-2">
+                  <Badge className="bg-green-600">Auto Applied</Badge>
+                  Active Discounts
+                </h3>
+                {applicableDiscounts.map((discount: any) => (
+                  <div key={discount.id} className="space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-medium text-green-800 dark:text-green-200">
+                          {discount.marketing_label || discount.name}
+                        </p>
+                        <p className="text-sm text-green-700 dark:text-green-300">
+                          {discount.type === "percentage" ? `${discount.value}% off` : `$${discount.value} off`}
+                          {discount.scope === "products" && " - Applies to this product"}
+                          {discount.scope === "store_wide" && " - Store-wide"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-xs text-green-600 dark:text-green-400 space-y-1">
+                      {discount.min_cart_subtotal > 0 && (
+                        <p>• Minimum cart: ${discount.min_cart_subtotal.toFixed(2)}</p>
+                      )}
+                      {discount.min_quantity > 0 && (
+                        <p>• Minimum quantity: {discount.min_quantity}</p>
+                      )}
+                      {discount.per_customer_limit && (
+                        <p>• Limit: {discount.per_customer_limit} use{discount.per_customer_limit > 1 ? 's' : ''} per customer</p>
+                      )}
+                      {discount.first_order_only && (
+                        <p>• First order only</p>
+                      )}
+                      {discount.end_date && (
+                        <p>• Valid until: {new Date(discount.end_date).toLocaleDateString()}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                <p className="text-xs text-green-600 dark:text-green-400 italic">
+                  ✓ Discount will be automatically applied at checkout when conditions are met
+                </p>
+              </div>
             )}
 
             {/* Size Selection */}

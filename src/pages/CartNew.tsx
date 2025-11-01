@@ -122,7 +122,7 @@ export default function CartNew() {
     try {
       const { data, error } = await supabase
         .from("discounts")
-        .select("*")
+        .select("*, discount_products(product_id), discount_categories(category_id)")
         .eq("is_automatic", true)
         .eq("status", "active")
         .lte("start_date", new Date().toISOString())
@@ -131,36 +131,55 @@ export default function CartNew() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        const autoDiscount = data[0];
-        
-        // Check if cart meets minimum requirements
-        if (cartTotal < autoDiscount.min_cart_subtotal) {
-          return;
-        }
-
-        // For automatic discounts without codes, apply directly
-        if (!autoDiscount.code) {
-          let discountValue = 0;
-          
-          if (autoDiscount.type === "percentage") {
-            discountValue = cartTotal * (autoDiscount.value / 100);
-          } else if (autoDiscount.type === "fixed_amount") {
-            discountValue = autoDiscount.value;
+        for (const autoDiscount of data) {
+          // Check if cart meets minimum requirements
+          if (cartTotal < (autoDiscount.min_cart_subtotal || 0)) {
+            continue;
           }
 
-          setAppliedDiscount({
-            id: autoDiscount.id,
-            code: null,
-            amount: discountValue,
-            message: autoDiscount.marketing_label || `${autoDiscount.name} applied!`,
-          });
-          setDiscountAmount(discountValue);
-          toast.success(`${autoDiscount.name} applied! You save ${formatPrice(discountValue)}`);
-        } else {
-          // For automatic discounts with codes, validate normally
-          const result = await validateDiscount(autoDiscount.code);
-          if (result && result.is_valid) {
-            toast.success(`Automatic discount "${autoDiscount.name}" applied!`);
+          // Check scope restrictions
+          if (autoDiscount.scope === "products") {
+            const discountProductIds = (autoDiscount.discount_products as any[])?.map(dp => dp.product_id) || [];
+            const hasMatchingProduct = cartItems.some(item => discountProductIds.includes(item.product_id));
+            if (!hasMatchingProduct) {
+              continue;
+            }
+          } else if (autoDiscount.scope === "categories") {
+            const discountCategoryIds = (autoDiscount.discount_categories as any[])?.map(dc => dc.category_id) || [];
+            // Would need to join with products to check category, skipping for now
+            continue;
+          }
+
+          // Apply discount
+          if (!autoDiscount.code) {
+            let discountValue = 0;
+            
+            if (autoDiscount.type === "percentage") {
+              // For product-scoped discounts, calculate only on matching products
+              if (autoDiscount.scope === "products") {
+                const discountProductIds = (autoDiscount.discount_products as any[])?.map(dp => dp.product_id) || [];
+                const matchingItemsTotal = cartItems
+                  .filter(item => discountProductIds.includes(item.product_id))
+                  .reduce((sum, item) => sum + (item.product.offer_price || item.product.price) * item.quantity, 0);
+                discountValue = matchingItemsTotal * (autoDiscount.value / 100);
+              } else {
+                discountValue = cartTotal * (autoDiscount.value / 100);
+              }
+            } else if (autoDiscount.type === "fixed_amount") {
+              discountValue = autoDiscount.value;
+            }
+
+            if (discountValue > 0) {
+              setAppliedDiscount({
+                id: autoDiscount.id,
+                code: null,
+                amount: discountValue,
+                message: autoDiscount.marketing_label || `${autoDiscount.name} applied!`,
+              });
+              setDiscountAmount(discountValue);
+              toast.success(`${autoDiscount.name} applied! You save ${formatPrice(discountValue)}`);
+              break;
+            }
           }
         }
       }
