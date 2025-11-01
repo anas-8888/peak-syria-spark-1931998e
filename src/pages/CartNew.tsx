@@ -365,24 +365,13 @@ export default function CartNew() {
                 </div>
               ) : (
                 <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                        {appliedDiscount.message}
-                      </p>
-                      <p className="text-xs text-green-600 dark:text-green-400">
-                        Code: {appliedDiscount.code}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleRemoveDiscount}
-                      className="text-green-800 hover:text-green-900 dark:text-green-200"
-                    >
-                      Remove
-                    </Button>
+                  <div>
+                    <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                      {appliedDiscount.message}
+                    </p>
+                    <p className="text-xs text-green-600 dark:text-green-400">
+                      Code: {appliedDiscount.code}
+                    </p>
                   </div>
                 </div>
               )}
