@@ -9,6 +9,7 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { HelmetProvider } from "react-helmet-async";
+import ProfileCompletionCheck from "./components/ProfileCompletionCheck";
 import Index from "./pages/Index";
 import ProductsEnhanced from "./pages/ProductsEnhanced";
 import FlagProducts from "./pages/FlagProducts";
@@ -20,7 +21,6 @@ import Checkout from "./pages/Checkout";
 import CheckoutNew from "./pages/CheckoutNew";
 import Payment from "./pages/Payment";
 import OrderTracking from "./pages/OrderTracking";
-import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Wishlist from "./pages/Wishlist";
 import Search from "./pages/Search";
@@ -64,10 +64,11 @@ function App() {
             <LanguageProvider>
               <CurrencyProvider>
                 <CartProvider>
-                  <TooltipProvider>
-                    <Toaster />
-                    <Sonner />
-                    <Routes>
+                  <ProfileCompletionCheck>
+                    <TooltipProvider>
+                      <Toaster />
+                      <Sonner />
+                      <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/products" element={<ProductsEnhanced />} />
                   <Route path="/flag-products" element={<FlagProducts />} />
@@ -77,10 +78,6 @@ function App() {
                   <Route path="/checkout" element={<CheckoutNew />} />
                   <Route path="/payment" element={<Payment />} />
                   <Route path="/order-tracking" element={<OrderTracking />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/login" element={<Auth />} />
-                  <Route path="/signup" element={<Auth />} />
-                  <Route path="/admin-login" element={<Auth />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="/search" element={<Search />} />
@@ -115,8 +112,9 @@ function App() {
                   </Route>
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </TooltipProvider>
+                    </Routes>
+                  </TooltipProvider>
+                </ProfileCompletionCheck>
               </CartProvider>
             </CurrencyProvider>
           </LanguageProvider>

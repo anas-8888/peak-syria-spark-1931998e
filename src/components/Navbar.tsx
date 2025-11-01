@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Menu, X, Search as SearchIcon, LogOut, LogIn, User, LayoutDashboard, Heart } from "lucide-react";
+import { ShoppingCart, Menu, X, Search as SearchIcon, LogOut, User, LayoutDashboard, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import GoogleSignInButton from "./GoogleSignInButton";
 import peakLogo from "@/assets/peak-logo.png";
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -214,19 +215,7 @@ const Navbar = () => {
                     Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu> : <div className="flex items-center gap-2">
-                <Link to="/login">
-                  <Button variant="ghost" size="sm" className="gap-2 rounded-full px-4 py-2 hover:bg-accent/50 transition-all duration-300 hover:scale-105 font-semibold">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link to="/signup">
-                  <Button variant="default" size="sm" className="gap-2 rounded-full px-6 py-2 bg-gradient-to-r from-primary via-red-500 to-primary bg-[length:200%_100%] hover:bg-[position:100%_0] transition-all duration-500 hover:scale-105 font-semibold shadow-lg hover:shadow-xl">
-                    <LogIn className="h-4 w-4" />
-                    Sign Up
-                  </Button>
-                </Link>
-              </div>}
+              </DropdownMenu> : null}
           </div>
 
           {/* Mobile Menu Button */}
@@ -294,22 +283,13 @@ const Navbar = () => {
                     <LogOut className="h-3 w-3" />
                     Sign Out
                   </Button>
-                </div> : <div className="flex flex-col gap-1.5 w-full px-3">
-                  <Link to="/login" className="w-full">
-                    <Button variant="outline" size="sm" className="gap-1.5 w-full rounded-full border hover:bg-accent/50 font-semibold h-7 text-xs">
-                      Sign In
-                    </Button>
-                  </Link>
-                  <Link to="/signup" className="w-full">
-                    <Button variant="default" size="sm" className="gap-1.5 w-full rounded-full bg-gradient-to-r from-primary via-red-500 to-primary bg-[length:200%_100%] font-semibold shadow-lg h-7 text-xs">
-                      <LogIn className="h-3 w-3" />
-                      Sign Up
-                    </Button>
-                  </Link>
-                </div>}
+                </div> : null}
             </div>
           </div>}
       </div>
+
+      {/* Floating Google Sign-In Button */}
+      <GoogleSignInButton />
     </nav>;
 };
 export default Navbar;
