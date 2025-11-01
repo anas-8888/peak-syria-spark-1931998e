@@ -236,73 +236,73 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Menu */}
-        {mobileMenuOpen && <div className="lg:hidden py-4 space-y-4 animate-fade-in border-t bg-background/95 backdrop-blur-md">
-            {navLinks.map(link => <Link key={link.path} to={link.path} className={`block text-sm font-medium py-3 px-4 rounded-lg transition-colors ${isActive(link.path) ? "text-primary bg-primary/10" : "text-foreground/70 hover:text-primary hover:bg-accent/50"}`} onClick={() => setMobileMenuOpen(false)}>
+        {mobileMenuOpen && <div className="lg:hidden py-2 space-y-1 animate-fade-in border-t bg-background/95 backdrop-blur-md">
+            {navLinks.map(link => <Link key={link.path} to={link.path} className={`block text-xs font-medium py-1.5 px-3 rounded-lg transition-colors ${isActive(link.path) ? "text-primary bg-primary/10" : "text-foreground/70 hover:text-primary hover:bg-accent/50"}`} onClick={() => setMobileMenuOpen(false)}>
                 {link.name}
               </Link>)}
-            <div className="flex flex-col items-center justify-center gap-3 pt-4 border-t">
-              <div className="flex items-center justify-center gap-3">
-                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-accent/50" asChild>
+            <div className="flex flex-col items-center justify-center gap-2 pt-2 border-t">
+              <div className="flex items-center justify-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-accent/50" asChild>
                   <Link to="/search">
-                    <SearchIcon className="h-5 w-5" />
+                    <SearchIcon className="h-4 w-4" />
                   </Link>
                 </Button>
                 <Link to="/cart">
-                  <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full hover:bg-accent/50">
-                    <ShoppingCart className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" className="relative h-8 w-8 rounded-full hover:bg-accent/50">
+                    <ShoppingCart className="h-4 w-4" />
                     {cartCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-gradient-to-r from-primary to-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                      <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-primary to-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold">
                         {cartCount}
                       </span>
                     )}
                   </Button>
                 </Link>
               </div>
-              {user ? <div className="flex flex-col gap-2 w-full px-4">
-                  <div className="flex items-center justify-center gap-2 p-2 bg-accent/50 rounded-full">
-                    <Avatar className="h-10 w-10 border-2 border-primary/20">
+              {user ? <div className="flex flex-col gap-1.5 w-full px-3">
+                  <div className="flex items-center justify-center gap-1.5 p-1.5 bg-accent/50 rounded-full">
+                    <Avatar className="h-7 w-7 border border-primary/20">
                       <AvatarImage src={avatarUrl} alt={fullName} />
                       {!avatarUrl && (
-                        <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold">
+                        <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold text-xs">
                           {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       )}
                     </Avatar>
-                    <span className="font-semibold text-sm">
+                    <span className="font-semibold text-xs">
                       {fullName || user.email?.split('@')[0]}
                     </span>
                   </div>
                   {userRole && userRole !== "customer" && <Link to="/dashboard" className="w-full">
-                      <Button variant="outline" size="sm" className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold">
-                        <LayoutDashboard className="h-4 w-4" />
+                      <Button variant="outline" size="sm" className="gap-1.5 w-full rounded-full border hover:bg-accent/50 font-semibold h-7 text-xs">
+                        <LayoutDashboard className="h-3 w-3" />
                         Dashboard
                       </Button>
                     </Link>}
                   <Link to="/profile" className="w-full">
-                    <Button variant="outline" size="sm" className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold">
-                      <User className="h-4 w-4" />
+                    <Button variant="outline" size="sm" className="gap-1.5 w-full rounded-full border hover:bg-accent/50 font-semibold h-7 text-xs">
+                      <User className="h-3 w-3" />
                       My Profile
                     </Button>
                   </Link>
                   <Link to="/wishlist" className="w-full">
-                    <Button variant="outline" size="sm" className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold">
-                      <Heart className="h-4 w-4" />
+                    <Button variant="outline" size="sm" className="gap-1.5 w-full rounded-full border hover:bg-accent/50 font-semibold h-7 text-xs">
+                      <Heart className="h-3 w-3" />
                       My Wishlist
                     </Button>
                   </Link>
-                  <Button variant="outline" size="sm" onClick={() => signOut()} className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold text-red-600 hover:text-red-600">
-                    <LogOut className="h-4 w-4" />
+                  <Button variant="outline" size="sm" onClick={() => signOut()} className="gap-1.5 w-full rounded-full border hover:bg-accent/50 font-semibold text-red-600 hover:text-red-600 h-7 text-xs">
+                    <LogOut className="h-3 w-3" />
                     Sign Out
                   </Button>
-                </div> : <div className="flex flex-col gap-2 w-full px-4">
+                </div> : <div className="flex flex-col gap-1.5 w-full px-3">
                   <Link to="/login" className="w-full">
-                    <Button variant="outline" size="sm" className="gap-2 w-full rounded-full border-2 hover:bg-accent/50 font-semibold">
+                    <Button variant="outline" size="sm" className="gap-1.5 w-full rounded-full border hover:bg-accent/50 font-semibold h-7 text-xs">
                       Sign In
                     </Button>
                   </Link>
                   <Link to="/signup" className="w-full">
-                    <Button variant="default" size="sm" className="gap-2 w-full rounded-full bg-gradient-to-r from-primary via-red-500 to-primary bg-[length:200%_100%] font-semibold shadow-lg">
-                      <LogIn className="h-4 w-4" />
+                    <Button variant="default" size="sm" className="gap-1.5 w-full rounded-full bg-gradient-to-r from-primary via-red-500 to-primary bg-[length:200%_100%] font-semibold shadow-lg h-7 text-xs">
+                      <LogIn className="h-3 w-3" />
                       Sign Up
                     </Button>
                   </Link>
