@@ -21,6 +21,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { OrderCancellationDialog } from "@/components/OrderCancellationDialog";
 
 type OrderWithDetails = {
   id: string;
@@ -39,6 +40,9 @@ type OrderWithDetails = {
   shipped_at: string | null;
   delivered_at: string | null;
   cancelled_at: string | null;
+  cancel_reason: string | null;
+  cancel_date: string | null;
+  cancel_status: string | null;
   order_items: Array<{
     id: string;
     quantity: number;
@@ -92,6 +96,7 @@ const OrderTracking = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const orderIdFromUrl = searchParams.get("orderId");
   const [selectedOrderId, setSelectedOrderId] = useState<string>(orderIdFromUrl || "");
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   // Fetch user's orders
   const { data: userOrders, isLoading: ordersLoading } = useQuery({
@@ -414,6 +419,29 @@ const OrderTracking = () => {
                       </div>
                     )}
 
+                    {orderDetails.status === "pending" && !orderDetails.cancel_status && (
+                      <div className="mt-6">
+                        <Button
+                          variant="destructive"
+                          onClick={() => setCancelDialogOpen(true)}
+                          className="w-full sm:w-auto"
+                        >
+                          Cancel Order
+                        </Button>
+                      </div>
+                    )}
+
+                    {orderDetails.cancel_status === "pending" && (
+                      <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                        <p className="text-sm font-medium">
+                          Cancellation request pending admin approval
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Reason: {orderDetails.cancel_reason}
+                        </p>
+                      </div>
+                    )}
+
                     {orderDetails.status === "cancelled" && (
                       <div className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
                         <p className="text-sm text-destructive font-medium">
@@ -566,6 +594,19 @@ const OrderTracking = () => {
       </div>
 
       <Footer />
+
+      {/* Cancellation Dialog */}
+      {orderDetails && (
+        <OrderCancellationDialog
+          orderId={orderDetails.id}
+          open={cancelDialogOpen}
+          onOpenChange={setCancelDialogOpen}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["order-details"] });
+            queryClient.invalidateQueries({ queryKey: ["user-orders"] });
+          }}
+        />
+      )}
     </div>
   );
 };

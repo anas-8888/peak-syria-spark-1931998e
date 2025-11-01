@@ -293,6 +293,33 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_messages: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
       customer_segments: {
         Row: {
           created_at: string
@@ -846,6 +873,9 @@ export type Database = {
       }
       orders: {
         Row: {
+          cancel_date: string | null
+          cancel_reason: string | null
+          cancel_status: string | null
           cancelled_at: string | null
           created_at: string | null
           customer_confirmed_receipt: boolean | null
@@ -868,6 +898,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cancel_date?: string | null
+          cancel_reason?: string | null
+          cancel_status?: string | null
           cancelled_at?: string | null
           created_at?: string | null
           customer_confirmed_receipt?: boolean | null
@@ -890,6 +923,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cancel_date?: string | null
+          cancel_reason?: string | null
+          cancel_status?: string | null
           cancelled_at?: string | null
           created_at?: string | null
           customer_confirmed_receipt?: boolean | null
@@ -1139,6 +1175,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_reviews: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          product_id: string
+          rating: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          id?: string
+          product_id: string
+          rating: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          product_id?: string
+          rating?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"

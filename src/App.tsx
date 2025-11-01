@@ -42,6 +42,7 @@ import Users from "./pages/dashboard/Users";
 import Roles from "./pages/dashboard/Roles";
 import Analytics from "./pages/dashboard/Analytics";
 import Reviews from "./pages/dashboard/Reviews";
+import Messages from "./pages/dashboard/Messages";
 import Discounts from "./pages/dashboard/Discounts";
 import Shipping from "./pages/dashboard/Shipping";
 import Marketing from "./pages/dashboard/Marketing";
@@ -107,6 +108,7 @@ function App() {
                     <Route path="roles" element={<Roles />} />
                     <Route path="analytics" element={<Analytics />} />
                     <Route path="reviews" element={<Reviews />} />
+                    <Route path="messages" element={<Messages />} />
                     <Route path="discounts" element={<Discounts />} />
                     <Route path="shipping" element={<Shipping />} />
                     <Route path="marketing" element={<Marketing />} />

@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Search, Star, MessageSquare, ThumbsUp, Eye } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Search, Star, MessageSquare, ThumbsUp, Eye, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,68 +14,126 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { format } from "date-fns";
 
-const reviews = [
-  {
-    id: 1,
-    customer: "Ahmad Mohammad",
-    product: "Peak Basketball Pro X",
-    rating: 5,
-    comment: "Excellent quality! Very comfortable for long games.",
-    date: "2025/01/15",
-    status: "Published",
-    helpful: 12,
-  },
-  {
-    id: 2,
-    customer: "Sara Ali",
-    product: "Peak Running Elite",
-    rating: 4,
-    comment: "Great shoes, but sizing runs a bit small.",
-    date: "2025/01/14",
-    status: "Published",
-    helpful: 8,
-  },
-  {
-    id: 3,
-    customer: "Mahmoud Khaled",
-    product: "Peak Court Master",
-    rating: 5,
-    comment: "Best basketball shoes I have ever owned!",
-    date: "2025/01/13",
-    status: "Published",
-    helpful: 15,
-  },
-  {
-    id: 4,
-    customer: "Layla Hassan",
-    product: "Peak Speed Runner",
-    rating: 3,
-    comment: "Good but expected better cushioning.",
-    date: "2025/01/12",
-    status: "Pending",
-    helpful: 3,
-  },
-  {
-    id: 5,
-    customer: "Omar Yousef",
-    product: "Peak Basketball Pro X",
-    rating: 2,
-    comment: "Not satisfied with the quality for the price.",
-    date: "2025/01/10",
-    status: "Pending",
-    helpful: 1,
-  },
-];
+type Review = {
+  id: string;
+  rating: number;
+  comment: string;
+  status: string;
+  created_at: string;
+  profiles: {
+    full_name: string | null;
+  } | null;
+  products: {
+    name: string;
+  };
+};
 
 const Reviews = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const { data: reviews = [], isLoading } = useQuery({
+    queryKey: ["admin-reviews"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_reviews")
+        .select(`
+          *,
+          products:product_id (
+            name
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      
+      // Fetch profiles separately
+      const reviewsWithProfiles = await Promise.all(
+        data.map(async (review) => {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", review.user_id)
+            .single();
+          
+          return {
+            ...review,
+            profiles: profile,
+          };
+        })
+      );
+      
+      return reviewsWithProfiles as Review[];
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase
+        .from("product_reviews")
+        .update({ status })
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
+      toast.success("Review status updated");
+    },
+    onError: () => {
+      toast.error("Failed to update review status");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("product_reviews")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
+      toast.success("Review deleted successfully");
+      setDeleteId(null);
+    },
+    onError: () => {
+      toast.error("Failed to delete review");
+    },
+  });
 
   const filteredReviews = reviews.filter(
     (review) =>
-      review.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      review.product.toLowerCase().includes(searchTerm.toLowerCase())
+      review.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      review.products.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      review.comment.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const stats = {
+    total: reviews.length,
+    pending: reviews.filter((r) => r.status === "pending").length,
+    approved: reviews.filter((r) => r.status === "approved").length,
+    rejected: reviews.filter((r) => r.status === "rejected").length,
+    averageRating: reviews.length > 0
+      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+      : "0.0",
+  };
 
   const renderStars = (rating: number) => {
     return Array(5)
@@ -190,36 +249,71 @@ const Reviews = () => {
             <TableBody>
               {filteredReviews.map((review) => (
                 <TableRow key={review.id} className="hover:bg-muted/50">
-                  <TableCell className="font-medium">{review.customer}</TableCell>
-                  <TableCell>{review.product}</TableCell>
+                  <TableCell className="font-medium">
+                    {review.profiles?.full_name || "Anonymous"}
+                  </TableCell>
+                  <TableCell>{review.products.name}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">{renderStars(review.rating)}</div>
                   </TableCell>
                   <TableCell className="max-w-xs">
                     <p className="text-sm truncate">{review.comment}</p>
                   </TableCell>
-                  <TableCell>{review.date}</TableCell>
                   <TableCell>
-                    <Badge variant={review.status === "Published" ? "default" : "secondary"}>
-                      {review.status}
+                    {format(new Date(review.created_at), "MMM dd, yyyy")}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        review.status === "approved"
+                          ? "default"
+                          : review.status === "rejected"
+                          ? "destructive"
+                          : "secondary"
+                      }
+                    >
+                      {review.status.charAt(0).toUpperCase() + review.status.slice(1)}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      <ThumbsUp className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-sm">{review.helpful}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm">
-                        View
-                      </Button>
-                      {review.status === "Pending" && (
-                        <Button variant="outline" size="sm">
-                          Approve
-                        </Button>
+                      {review.status === "pending" && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              updateStatusMutation.mutate({
+                                id: review.id,
+                                status: "approved",
+                              })
+                            }
+                            disabled={updateStatusMutation.isPending}
+                          >
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              updateStatusMutation.mutate({
+                                id: review.id,
+                                status: "rejected",
+                              })
+                            }
+                            disabled={updateStatusMutation.isPending}
+                          >
+                            <XCircle className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeleteId(review.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -228,6 +322,27 @@ const Reviews = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Review</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this review? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteId && deleteMutation.mutate(deleteId)}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

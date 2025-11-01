@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { ReviewForm } from "@/components/ReviewForm";
+import { ReviewsList } from "@/components/ReviewsList";
 
 type ProductImage = {
   id: string;
@@ -142,6 +144,31 @@ const ProductDetail = () => {
       });
     },
     enabled: !!id && !!product,
+  });
+
+  // Fetch product reviews
+  const { data: reviews = [], refetch: refetchReviews } = useQuery({
+    queryKey: ["product-reviews", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_reviews")
+        .select(`
+          id,
+          rating,
+          comment,
+          created_at,
+          profiles:user_id (
+            full_name
+          )
+        `)
+        .eq("product_id", id)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
   });
 
   // Build color to image mapping
@@ -482,6 +509,31 @@ const ProductDetail = () => {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="max-w-5xl mx-auto mt-12 space-y-8">
+          <h2 className="text-2xl sm:text-3xl font-bold">Customer Reviews</h2>
+          
+          {user ? (
+            <ReviewForm productId={id!} onSuccess={refetchReviews} />
+          ) : (
+            <div className="bg-muted/50 p-6 rounded-lg text-center">
+              <p className="text-muted-foreground mb-4">
+                Please log in to write a review
+              </p>
+              <Button onClick={() => navigate("/login")} variant="outline">
+                Log In
+              </Button>
+            </div>
+          )}
+
+          <div>
+            <h3 className="text-xl font-semibold mb-4">
+              Reviews ({reviews.length})
+            </h3>
+            <ReviewsList reviews={reviews as any} />
           </div>
         </div>
       </div>
