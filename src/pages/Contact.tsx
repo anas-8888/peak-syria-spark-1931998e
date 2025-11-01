@@ -203,9 +203,6 @@ const Contact = () => {
                     >
                       Chat with us on WhatsApp
                     </a>
-                    {storeSettings.whatsapp_description && (
-                      <p className="text-xs sm:text-sm text-muted-foreground">{storeSettings.whatsapp_description}</p>
-                    )}
                   </div>
                 </div>
               )}
