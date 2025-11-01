@@ -27,6 +27,7 @@ export default function CartNew() {
   const [appliedDiscounts, setAppliedDiscounts] = useState<any[]>([]);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [validatingDiscount, setValidatingDiscount] = useState(false);
+  const [autoDiscountsDisabled, setAutoDiscountsDisabled] = useState(false);
   const lastAppliedDiscountIds = useRef<string>("");
   const isCheckingDiscounts = useRef<boolean>(false);
   const lastCartSnapshot = useRef<string>("");
@@ -111,8 +112,17 @@ export default function CartNew() {
     }
 
     setValidatingDiscount(true);
-    await validateDiscount(discountCode.trim());
+    const result = await validateDiscount(discountCode.trim());
     setValidatingDiscount(false);
+    
+    if (result?.is_valid) {
+      // Clear auto discounts and disable them
+      setAppliedDiscounts([]);
+      setAutoDiscountsDisabled(true);
+      localStorage.setItem("autoDiscountsDisabled", "true");
+      localStorage.removeItem("appliedCartDiscounts");
+      localStorage.removeItem("appliedCartDiscountAmount");
+    }
   };
 
   const handleRemoveDiscount = () => {
@@ -121,7 +131,23 @@ export default function CartNew() {
     setDiscountAmount(0);
     setDiscountCode("");
     lastAppliedDiscountIds.current = "";
+    setAutoDiscountsDisabled(false);
+    localStorage.removeItem("autoDiscountsDisabled");
+    localStorage.removeItem("appliedCartDiscount");
+    localStorage.removeItem("appliedCartDiscounts");
+    localStorage.removeItem("appliedCartDiscountAmount");
     toast.success("Discount removed");
+  };
+
+  const handleRemoveAutoDiscounts = () => {
+    setAppliedDiscounts([]);
+    setDiscountAmount(0);
+    lastAppliedDiscountIds.current = "";
+    setAutoDiscountsDisabled(true);
+    localStorage.setItem("autoDiscountsDisabled", "true");
+    localStorage.removeItem("appliedCartDiscounts");
+    localStorage.removeItem("appliedCartDiscountAmount");
+    toast.success("Automatic discounts removed. You can now apply a discount code.");
   };
 
   const checkAutoDiscounts = async () => {
@@ -296,6 +322,14 @@ export default function CartNew() {
     }
   };
 
+  // Load auto discounts disabled state on mount
+  useEffect(() => {
+    const disabled = localStorage.getItem("autoDiscountsDisabled");
+    if (disabled === "true") {
+      setAutoDiscountsDisabled(true);
+    }
+  }, []);
+
   // Automatically recalculate discounts on cart changes with optimization
   useEffect(() => {
     // Empty cart - clear all discounts
@@ -311,6 +345,9 @@ export default function CartNew() {
 
     // Skip if cart total is 0
     if (cartTotal <= 0) return;
+    
+    // Skip if auto discounts are disabled (user chose manual code)
+    if (autoDiscountsDisabled) return;
 
     // Create cart snapshot to detect meaningful changes
     const cartSnapshot = JSON.stringify(
@@ -526,32 +563,43 @@ export default function CartNew() {
                   </div>
                 </div>
               ) : (
-                <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-                  {appliedDiscount && (
-                    <div>
-                      <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                        {appliedDiscount.message}
-                      </p>
-                      <p className="text-xs text-green-600 dark:text-green-400">
-                        Code: {appliedDiscount.code}
-                      </p>
-                    </div>
-                  )}
-                  {appliedDiscounts.length > 0 && (
-                    <div>
-                      <p className="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">
-                        {appliedDiscounts.length > 1 ? "Multiple Discounts Applied" : "Automatic Discount Applied"}
-                      </p>
-                      {appliedDiscounts.map((discount, idx) => (
-                        <p key={idx} className="text-xs text-green-600 dark:text-green-400">
-                          • {discount.message}
+                <div className="mb-4 space-y-2">
+                  <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                    {appliedDiscount && (
+                      <div>
+                        <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                          {appliedDiscount.message}
                         </p>
-                      ))}
-                      <p className="text-sm font-bold text-green-700 dark:text-green-300 mt-2">
-                        Total Savings: {formatPrice(discountAmount)}
-                      </p>
-                    </div>
-                  )}
+                        <p className="text-xs text-green-600 dark:text-green-400">
+                          Code: {appliedDiscount.code}
+                        </p>
+                      </div>
+                    )}
+                    {appliedDiscounts.length > 0 && (
+                      <div>
+                        <p className="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">
+                          {appliedDiscounts.length > 1 ? "Multiple Discounts Applied" : "Automatic Discount Applied"}
+                        </p>
+                        {appliedDiscounts.map((discount, idx) => (
+                          <p key={idx} className="text-xs text-green-600 dark:text-green-400">
+                            • {discount.message}
+                          </p>
+                        ))}
+                        <p className="text-sm font-bold text-green-700 dark:text-green-300 mt-2">
+                          Total Savings: {formatPrice(discountAmount)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={appliedDiscount ? handleRemoveDiscount : handleRemoveAutoDiscounts}
+                    className="w-full"
+                  >
+                    Remove {appliedDiscount ? "Discount Code" : "Auto Discount"}
+                  </Button>
                 </div>
               )}
 
@@ -562,13 +610,22 @@ export default function CartNew() {
                   // Save discount info to localStorage for checkout
                   if (appliedDiscount) {
                     localStorage.setItem("appliedCartDiscount", JSON.stringify(appliedDiscount));
+                    localStorage.removeItem("appliedCartDiscounts");
+                    localStorage.removeItem("appliedCartDiscountAmount");
                   } else if (appliedDiscounts.length > 0) {
                     localStorage.setItem("appliedCartDiscounts", JSON.stringify(appliedDiscounts));
                     localStorage.setItem("appliedCartDiscountAmount", discountAmount.toString());
+                    localStorage.removeItem("appliedCartDiscount");
                   } else {
                     localStorage.removeItem("appliedCartDiscount");
                     localStorage.removeItem("appliedCartDiscounts");
                     localStorage.removeItem("appliedCartDiscountAmount");
+                  }
+                  // Persist auto discount preference
+                  if (autoDiscountsDisabled) {
+                    localStorage.setItem("autoDiscountsDisabled", "true");
+                  } else {
+                    localStorage.removeItem("autoDiscountsDisabled");
                   }
                 }}
               >

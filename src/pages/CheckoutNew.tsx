@@ -78,6 +78,7 @@ export default function CheckoutNew() {
   const [appliedDiscounts, setAppliedDiscounts] = useState<any[]>([]);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [validatingDiscount, setValidatingDiscount] = useState(false);
+  const [autoDiscountsDisabled, setAutoDiscountsDisabled] = useState(false);
 
   const {
     register,
@@ -354,6 +355,13 @@ export default function CheckoutNew() {
 
   const checkAutoDiscounts = async () => {
     try {
+      // Check if auto discounts are disabled
+      const disabled = localStorage.getItem("autoDiscountsDisabled");
+      if (disabled === "true") {
+        setAutoDiscountsDisabled(true);
+        return;
+      }
+
       // First check if there are multiple discounts from cart
       const savedCartDiscounts = localStorage.getItem("appliedCartDiscounts");
       const savedCartDiscountAmount = localStorage.getItem("appliedCartDiscountAmount");
@@ -377,6 +385,7 @@ export default function CheckoutNew() {
           const cartDiscount = JSON.parse(savedCartDiscount);
           setAppliedDiscount(cartDiscount);
           setDiscountAmount(cartDiscount.amount);
+          setAutoDiscountsDisabled(true);
           return;
         } catch (e) {
           console.error("Error parsing saved cart discount:", e);
@@ -597,8 +606,17 @@ export default function CheckoutNew() {
     }
 
     setValidatingDiscount(true);
-    await validateDiscount(discountCode.trim());
+    const result = await validateDiscount(discountCode.trim());
     setValidatingDiscount(false);
+    
+    if (result?.is_valid) {
+      // Clear auto discounts and disable them
+      setAppliedDiscounts([]);
+      setAutoDiscountsDisabled(true);
+      localStorage.setItem("autoDiscountsDisabled", "true");
+      localStorage.removeItem("appliedCartDiscounts");
+      localStorage.removeItem("appliedCartDiscountAmount");
+    }
   };
 
   const handleRemoveDiscount = () => {
@@ -606,10 +624,22 @@ export default function CheckoutNew() {
     setAppliedDiscounts([]);
     setDiscountAmount(0);
     setDiscountCode("");
+    setAutoDiscountsDisabled(false);
+    localStorage.removeItem("autoDiscountsDisabled");
     localStorage.removeItem("appliedCartDiscount");
     localStorage.removeItem("appliedCartDiscounts");
     localStorage.removeItem("appliedCartDiscountAmount");
     toast.success("Discount removed");
+  };
+
+  const handleRemoveAutoDiscounts = () => {
+    setAppliedDiscounts([]);
+    setDiscountAmount(0);
+    setAutoDiscountsDisabled(true);
+    localStorage.setItem("autoDiscountsDisabled", "true");
+    localStorage.removeItem("appliedCartDiscounts");
+    localStorage.removeItem("appliedCartDiscountAmount");
+    toast.success("Automatic discounts removed. You can now apply a discount code.");
   };
 
   const total = cartTotal + shippingCost - discountAmount;
@@ -1090,43 +1120,54 @@ export default function CheckoutNew() {
                   </div>
                 </div>
               ) : (
-                <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-                  {appliedDiscount && (
-                    <div className="flex items-center justify-between">
+                <div className="mb-4 space-y-2">
+                  <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                    {appliedDiscount && (
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                            {appliedDiscount.message}
+                          </p>
+                          <p className="text-xs text-green-600 dark:text-green-400">
+                            Code: {appliedDiscount.code}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRemoveDiscount}
+                          className="text-green-800 hover:text-green-900 dark:text-green-200"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    )}
+                    {appliedDiscounts.length > 0 && (
                       <div>
-                        <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                          {appliedDiscount.message}
+                        <p className="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">
+                          {appliedDiscounts.length > 1 ? "Multiple Discounts Applied" : "Automatic Discount Applied"}
                         </p>
-                        <p className="text-xs text-green-600 dark:text-green-400">
-                          Code: {appliedDiscount.code}
+                        {appliedDiscounts.map((discount, idx) => (
+                          <p key={idx} className="text-xs text-green-600 dark:text-green-400">
+                            • {discount.message}
+                          </p>
+                        ))}
+                        <p className="text-sm font-bold text-green-700 dark:text-green-300 mt-2">
+                          Total Savings: {formatPrice(discountAmount)}
                         </p>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleRemoveDiscount}
-                        className="text-green-800 hover:text-green-900 dark:text-green-200"
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  )}
-                  {appliedDiscounts.length > 0 && (
-                    <div>
-                      <p className="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">
-                        {appliedDiscounts.length > 1 ? "Multiple Discounts Applied" : "Automatic Discount Applied"}
-                      </p>
-                      {appliedDiscounts.map((discount, idx) => (
-                        <p key={idx} className="text-xs text-green-600 dark:text-green-400">
-                          • {discount.message}
-                        </p>
-                      ))}
-                      <p className="text-sm font-bold text-green-700 dark:text-green-300 mt-2">
-                        Total Savings: {formatPrice(discountAmount)}
-                      </p>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={appliedDiscount ? handleRemoveDiscount : handleRemoveAutoDiscounts}
+                    className="w-full"
+                  >
+                    Remove {appliedDiscount ? "Discount Code" : "Auto Discount"}
+                  </Button>
                 </div>
               )}
 
