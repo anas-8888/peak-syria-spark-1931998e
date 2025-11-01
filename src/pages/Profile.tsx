@@ -29,9 +29,11 @@ const Profile = () => {
   const [regions, setRegions] = useState<Array<{ id: string; name: string; country: string }>>([]);
   const [avatarKey, setAvatarKey] = useState(Date.now());
 
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/login");
+      navigate("/auth");
     }
   }, [user, authLoading, navigate]);
 
@@ -69,16 +71,44 @@ const Profile = () => {
       if (error) throw error;
 
       if (data) {
-        setFullName(data.full_name || "");
+        // Auto-populate from Google profile
+        const googleName = user?.user_metadata?.full_name || user?.user_metadata?.name || "";
+        const googleAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || "";
+        
+        setFullName(data.full_name || googleName);
         setEmail(data.email || user?.email || "");
         setPhone(data.phone || "");
         setAddress(data.address || "");
+        
+        // Check if this is a first-time user (no phone number)
+        if (!data.phone || data.phone.trim() === "") {
+          setIsFirstTimeUser(true);
+          toast.info("Welcome! 👋", {
+            description: "Please complete your profile to start shopping",
+            duration: 5000,
+          });
+        }
+        
         // Add cache-busting timestamp to avatar URL
-        const avatarWithTimestamp = data.avatar_url 
-          ? `${data.avatar_url}?t=${Date.now()}`
+        const avatarWithTimestamp = (data.avatar_url || googleAvatar)
+          ? `${data.avatar_url || googleAvatar}?t=${Date.now()}`
           : "";
         setAvatarUrl(avatarWithTimestamp);
         setRegionId(data.region_id || "");
+        
+        // Auto-update profile with Google data if empty
+        if (!data.full_name && googleName) {
+          await supabase
+            .from("profiles")
+            .update({ full_name: googleName })
+            .eq("id", user?.id);
+        }
+        if (!data.avatar_url && googleAvatar) {
+          await supabase
+            .from("profiles")
+            .update({ avatar_url: googleAvatar })
+            .eq("id", user?.id);
+        }
       }
     } catch (error: any) {
       console.error("Error loading profile:", error);
@@ -208,6 +238,14 @@ const Profile = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate phone number is required
+    if (!phone || phone.trim() === "") {
+      toast.error("Phone Required", {
+        description: "Please enter your phone number to continue",
+      });
+      return;
+    }
+    
     try {
       setLoading(true);
 
@@ -224,9 +262,17 @@ const Profile = () => {
 
       if (error) throw error;
 
-      toast.success("Profile Updated! ✨", {
-        description: "Your information has been saved successfully",
-      });
+      if (isFirstTimeUser) {
+        toast.success("Profile Completed! 🎉", {
+          description: "You can now start shopping",
+        });
+        setIsFirstTimeUser(false);
+        navigate("/");
+      } else {
+        toast.success("Profile Updated! ✨", {
+          description: "Your information has been saved successfully",
+        });
+      }
     } catch (error: any) {
       toast.error("Update Failed", {
         description: error.message,
@@ -253,9 +299,11 @@ const Profile = () => {
           {/* Header */}
           <div className="text-center mb-8 animate-fade-in">
             <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary via-red-500 to-primary bg-clip-text text-transparent">
-              My Profile
+              {isFirstTimeUser ? "Complete Your Profile" : "My Profile"}
             </h1>
-            <p className="text-muted-foreground">Manage your personal information</p>
+            <p className="text-muted-foreground">
+              {isFirstTimeUser ? "Please complete your profile to start shopping" : "Manage your personal information"}
+            </p>
           </div>
 
           {/* Avatar Section */}
@@ -328,7 +376,7 @@ const Profile = () => {
                     />
                   </div>
 
-                  {/* Email */}
+                  {/* Email - Read Only */}
                   <div className="space-y-2">
                     <Label htmlFor="email" className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
@@ -338,17 +386,18 @@ const Profile = () => {
                       id="email"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      disabled
                       placeholder="your.email@example.com"
-                      className="rounded-xl"
+                      className="rounded-xl bg-muted cursor-not-allowed"
                     />
+                    <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                   </div>
 
-                  {/* Phone */}
+                  {/* Phone - Required */}
                   <div className="space-y-2">
                     <Label htmlFor="phone" className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
-                      Phone Number
+                      Phone Number <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="phone"
@@ -357,7 +406,11 @@ const Profile = () => {
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+963 XXX XXX XXX"
                       className="rounded-xl"
+                      required
                     />
+                    {isFirstTimeUser && (
+                      <p className="text-xs text-orange-500">Phone number is required to place orders</p>
+                    )}
                   </div>
 
                   {/* Address */}
@@ -416,17 +469,19 @@ const Profile = () => {
 
                 {/* Submit Button */}
                 <div className="flex justify-end gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => navigate("/")}
-                    className="rounded-full px-6"
-                  >
-                    Cancel
-                  </Button>
+                  {!isFirstTimeUser && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => navigate("/")}
+                      className="rounded-full px-6"
+                    >
+                      Cancel
+                    </Button>
+                  )}
                   <Button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || !phone}
                     className="rounded-full px-8 bg-gradient-to-r from-primary via-red-500 to-primary bg-[length:200%_100%] hover:bg-[position:100%_0] transition-all duration-500 shadow-lg hover:shadow-xl"
                   >
                     {loading ? (
@@ -434,6 +489,8 @@ const Profile = () => {
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Saving...
                       </>
+                    ) : isFirstTimeUser ? (
+                      "Complete & Start Shopping"
                     ) : (
                       "Save Changes"
                     )}

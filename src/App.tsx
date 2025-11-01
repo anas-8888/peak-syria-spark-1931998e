@@ -20,9 +20,7 @@ import Checkout from "./pages/Checkout";
 import CheckoutNew from "./pages/CheckoutNew";
 import Payment from "./pages/Payment";
 import OrderTracking from "./pages/OrderTracking";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import AdminLogin from "./pages/AdminLogin";
+import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Wishlist from "./pages/Wishlist";
 import Search from "./pages/Search";
@@ -79,9 +77,10 @@ function App() {
                   <Route path="/checkout" element={<CheckoutNew />} />
                   <Route path="/payment" element={<Payment />} />
                   <Route path="/order-tracking" element={<OrderTracking />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/admin-login" element={<AdminLogin />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/login" element={<Auth />} />
+                  <Route path="/signup" element={<Auth />} />
+                  <Route path="/admin-login" element={<Auth />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="/search" element={<Search />} />
