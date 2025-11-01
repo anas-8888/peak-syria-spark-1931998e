@@ -192,9 +192,10 @@ const ProductsEnhanced = () => {
   // Initialize price range filter when data loads (only once)
   useEffect(() => {
     if (allProducts.length > 0 && !priceInitialized) {
+      const initialPriceRange: [number, number] = [minPrice, maxPrice];
       setFilters(prev => ({
         ...prev,
-        priceRange: [minPrice, maxPrice]
+        priceRange: initialPriceRange
       }));
       setPriceInitialized(true);
     }
@@ -439,14 +440,17 @@ const ProductsEnhanced = () => {
                   <p className="text-muted-foreground text-base sm:text-lg mb-4">
                     No products match your filters
                   </p>
-                  <Button 
+                   <Button 
                     variant="outline" 
-                    onClick={() => setFilters({
-                      categories: [],
-                      colors: [],
-                      sizes: [],
-                      priceRange: [minPrice, maxPrice],
-                    })}
+                    onClick={() => {
+                      setPriceInitialized(false);
+                      setFilters({
+                        categories: [],
+                        colors: [],
+                        sizes: [],
+                        priceRange: [minPrice, maxPrice],
+                      });
+                    }}
                     className="text-sm sm:text-base"
                   >
                     Clear All Filters

@@ -29,10 +29,19 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
   // Separate state for price slider - this is what the slider displays
   const [sliderValue, setSliderValue] = useState<[number, number]>(filters.priceRange);
 
-  // Update local state when parent filters change
+  // Update local state when parent filters change (but preserve price range during updates)
   useEffect(() => {
-    setLocalFilters(filters);
-    setSliderValue(filters.priceRange);
+    setLocalFilters(prevLocal => {
+      // Check if price range actually changed from parent
+      const priceChanged = filters.priceRange[0] !== prevLocal.priceRange[0] || 
+                          filters.priceRange[1] !== prevLocal.priceRange[1];
+      
+      if (priceChanged) {
+        setSliderValue(filters.priceRange);
+      }
+      
+      return filters;
+    });
   }, [filters]);
 
   const handleCategoryToggle = (category: string) => {
