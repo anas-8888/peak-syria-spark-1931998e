@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { ProductImageManager } from "@/components/ProductImageManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ColorImageSelector } from "@/components/ColorImageSelector";
+import ProductVariantManager from "@/components/ProductVariantManager";
 type Product = {
   id: string;
   name: string;
@@ -698,10 +699,13 @@ const Products = () => {
             <DialogTitle>Add New Product</DialogTitle>
           </DialogHeader>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="details">Product Details</TabsTrigger>
               <TabsTrigger value="images" disabled={!selectedProduct}>
                 Images
+              </TabsTrigger>
+              <TabsTrigger value="variants" disabled={!selectedProduct}>
+                Variants
               </TabsTrigger>
             </TabsList>
             
@@ -905,6 +909,18 @@ const Products = () => {
               )}
             </div>
           </TabsContent>
+
+          <TabsContent value="variants">
+            <div className="py-4">
+              {selectedProduct ? (
+                <ProductVariantManager productId={selectedProduct.id} />
+              ) : (
+                <p className="text-sm text-muted-foreground mb-4">
+                  Save the product first before managing variants
+                </p>
+              )}
+            </div>
+          </TabsContent>
           </Tabs>
 
           <DialogFooter>
@@ -942,10 +958,13 @@ const Products = () => {
             <DialogTitle>Copy Product</DialogTitle>
           </DialogHeader>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="details">Product Details</TabsTrigger>
               <TabsTrigger value="images" disabled={!selectedProduct}>
                 Images
+              </TabsTrigger>
+              <TabsTrigger value="variants" disabled={!selectedProduct}>
+                Variants
               </TabsTrigger>
             </TabsList>
             
@@ -1144,6 +1163,18 @@ const Products = () => {
               ) : (
                 <p className="text-sm text-muted-foreground mb-4">
                   Save the product first before adding images
+                </p>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="variants">
+            <div className="py-4">
+              {selectedProduct ? (
+                <ProductVariantManager productId={selectedProduct.id} />
+              ) : (
+                <p className="text-sm text-muted-foreground mb-4">
+                  Save the product first before managing variants
                 </p>
               )}
             </div>
@@ -1390,6 +1421,14 @@ const Products = () => {
                   colorImageMappings={colorImageMappings}
                   onColorImageMappingsChange={setColorImageMappings}
                 />
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="variants">
+            <div className="py-4">
+              {selectedProduct && (
+                <ProductVariantManager productId={selectedProduct.id} />
               )}
             </div>
           </TabsContent>
