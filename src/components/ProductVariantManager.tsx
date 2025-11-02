@@ -386,7 +386,9 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
             </p>
           )}
 
-          {variants.map((variant, index) => (
+          {variants.map((variant, index) => {
+            const selectedColor = colors?.find(c => c.id === variant.color_id);
+            return (
             <div key={index} className="flex gap-3 items-start p-4 border rounded-lg">
               <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-3">
                 {/* Color */}
@@ -397,7 +399,19 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
                     onValueChange={(value) => updateVariant(index, 'color_id', value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select color" />
+                      <SelectValue>
+                        {selectedColor ? (
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-4 h-4 rounded-full border"
+                              style={{ backgroundColor: selectedColor.hex_code }}
+                            />
+                            {selectedColor.name}
+                          </div>
+                        ) : (
+                          "Select color"
+                        )}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {colors?.filter(color => {
@@ -492,7 +506,8 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
 

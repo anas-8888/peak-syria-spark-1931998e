@@ -442,6 +442,30 @@ const Products = () => {
     },
     enabled: !!selectedProduct?.id && isPreviewDialogOpen
   });
+
+  // Fetch product colors with images for preview
+  const {
+    data: previewProductColors = []
+  } = useQuery({
+    queryKey: ["product-colors-preview", selectedProduct?.id],
+    queryFn: async () => {
+      if (!selectedProduct?.id) return [];
+      const {
+        data,
+        error
+      } = await supabase
+        .from("product_colors")
+        .select(`
+          *,
+          colors (name, hex_code),
+          product_images (image_url)
+        `)
+        .eq("product_id", selectedProduct.id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedProduct?.id && isPreviewDialogOpen
+  });
   const filteredProducts = products.filter(product => product.name.toLowerCase().includes(searchTerm.toLowerCase()));
   const resetForm = () => {
     setFormData({
@@ -1017,7 +1041,39 @@ const Products = () => {
               </Button>
             )}
             {activeTab === "images" && selectedProduct && (
-              <Button onClick={() => setActiveTab("variants")}>
+              <Button onClick={async () => {
+                // Save color-image mappings before going to next tab
+                if (selectedProduct?.id && colorImageMappings.length > 0) {
+                  try {
+                    // Delete existing associations
+                    await supabase
+                      .from("product_colors")
+                      .delete()
+                      .eq("product_id", selectedProduct.id);
+
+                    // Add new ones
+                    const colorInserts = colorImageMappings
+                      .filter(mapping => mapping.color_id)
+                      .map(mapping => ({
+                        product_id: selectedProduct.id,
+                        color_id: mapping.color_id,
+                        image_id: mapping.image_id || null
+                      }));
+                    
+                    if (colorInserts.length > 0) {
+                      const { error } = await supabase
+                        .from("product_colors")
+                        .insert(colorInserts);
+                      if (error) throw error;
+                    }
+                    toast.success("Color-image mappings saved!");
+                  } catch (error: any) {
+                    toast.error("Failed to save color-image mappings: " + error.message);
+                    return;
+                  }
+                }
+                setActiveTab("variants");
+              }}>
                 Save & Go to Next Tab
               </Button>
             )}
@@ -1270,7 +1326,39 @@ const Products = () => {
               </Button>
             )}
             {activeTab === "images" && selectedProduct && (
-              <Button onClick={() => setActiveTab("variants")}>
+              <Button onClick={async () => {
+                // Save color-image mappings before going to next tab
+                if (selectedProduct?.id && colorImageMappings.length > 0) {
+                  try {
+                    // Delete existing associations
+                    await supabase
+                      .from("product_colors")
+                      .delete()
+                      .eq("product_id", selectedProduct.id);
+
+                    // Add new ones
+                    const colorInserts = colorImageMappings
+                      .filter(mapping => mapping.color_id)
+                      .map(mapping => ({
+                        product_id: selectedProduct.id,
+                        color_id: mapping.color_id,
+                        image_id: mapping.image_id || null
+                      }));
+                    
+                    if (colorInserts.length > 0) {
+                      const { error } = await supabase
+                        .from("product_colors")
+                        .insert(colorInserts);
+                      if (error) throw error;
+                    }
+                    toast.success("Color-image mappings saved!");
+                  } catch (error: any) {
+                    toast.error("Failed to save color-image mappings: " + error.message);
+                    return;
+                  }
+                }
+                setActiveTab("variants");
+              }}>
                 Save & Go to Next Tab
               </Button>
             )}
@@ -1518,7 +1606,39 @@ const Products = () => {
               </Button>
             )}
             {activeTab === "images" && (
-              <Button onClick={() => setActiveTab("variants")}>
+              <Button onClick={async () => {
+                // Save color-image mappings before going to next tab
+                if (selectedProduct?.id && colorImageMappings.length > 0) {
+                  try {
+                    // Delete existing associations
+                    await supabase
+                      .from("product_colors")
+                      .delete()
+                      .eq("product_id", selectedProduct.id);
+
+                    // Add new ones
+                    const colorInserts = colorImageMappings
+                      .filter(mapping => mapping.color_id)
+                      .map(mapping => ({
+                        product_id: selectedProduct.id,
+                        color_id: mapping.color_id,
+                        image_id: mapping.image_id || null
+                      }));
+                    
+                    if (colorInserts.length > 0) {
+                      const { error } = await supabase
+                        .from("product_colors")
+                        .insert(colorInserts);
+                      if (error) throw error;
+                    }
+                    toast.success("Color-image mappings saved!");
+                  } catch (error: any) {
+                    toast.error("Failed to save color-image mappings: " + error.message);
+                    return;
+                  }
+                }
+                setActiveTab("variants");
+              }}>
                 Save & Go to Next Tab
               </Button>
             )}
@@ -1594,6 +1714,17 @@ const Products = () => {
                     <p className="font-medium">{selectedProduct.category}</p>
                   </div>
                   <div>
+                    <Label className="text-muted-foreground">Target Gender</Label>
+                    <Badge variant="outline">
+                      {(selectedProduct as any).target_gender === 'men' ? 'Men' : 
+                       (selectedProduct as any).target_gender === 'women' ? 'Women' : 
+                       'Both / Unisex'}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
                     <Label className="text-muted-foreground">Rating</Label>
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -1633,12 +1764,26 @@ const Products = () => {
                 {selectedProduct.colors && selectedProduct.colors.length > 0 && <div>
                     <Label className="text-muted-foreground">Available Colors</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {selectedProduct.colors.map((colorItem, idx) => <div key={idx} className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-card">
-                          <div className="w-6 h-6 rounded-full border-2 border-border" style={{
-                    backgroundColor: colorItem.color
-                  }} title={colorItem.color} />
-                          <span className="text-sm font-medium">{colorItem.color}</span>
-                        </div>)}
+                      {previewProductColors.length > 0 ? (
+                        previewProductColors.map((colorItem, idx) => (
+                          <div key={idx} className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-card">
+                            <div className="w-6 h-6 rounded-full border-2 border-border" style={{
+                              backgroundColor: colorItem.colors?.hex_code
+                            }} title={colorItem.colors?.name} />
+                            <span className="text-sm font-medium">{colorItem.colors?.name}</span>
+                            {colorItem.image_id && <Badge variant="secondary" className="text-xs">Has Image</Badge>}
+                          </div>
+                        ))
+                      ) : (
+                        selectedProduct.colors.map((colorItem, idx) => (
+                          <div key={idx} className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-card">
+                            <div className="w-6 h-6 rounded-full border-2 border-border" style={{
+                              backgroundColor: colorItem.color
+                            }} title={colorItem.color} />
+                            <span className="text-sm font-medium">{colorItem.color}</span>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>}
 
