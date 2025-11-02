@@ -1,4 +1,4 @@
-import { useState, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
@@ -88,27 +88,29 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
         .from('product_variants')
         .select(`
           *,
-          colors (name)
+          colors (name, hex_code)
         `)
         .eq('product_id', productId);
       if (error) throw error;
-      
-      // Only set variants if not using unified pricing
-      if (!unifiedPricing && data && data.length > 0) {
-        const formattedVariants = data.map(v => ({
-          id: v.id,
-          color_id: v.color_id,
-          color_name: v.colors?.name,
-          size: v.size,
-          price: v.price,
-          stock_quantity: v.stock_quantity,
-          is_active: v.is_active,
-        }));
-        setVariants(formattedVariants);
-      }
       return data;
     },
   });
+
+  // Set variants when data is loaded and colors are available
+  useEffect(() => {
+    if (!unifiedPricing && existingVariants && existingVariants.length > 0 && colors && colors.length > 0) {
+      const formattedVariants = existingVariants.map(v => ({
+        id: v.id,
+        color_id: v.color_id,
+        color_name: v.colors?.name,
+        size: v.size,
+        price: v.price,
+        stock_quantity: v.stock_quantity,
+        is_active: v.is_active,
+      }));
+      setVariants(formattedVariants);
+    }
+  }, [existingVariants, colors, unifiedPricing]);
 
   // Auto-generate variants when unified pricing changes or colors/sizes change
   const generateVariants = () => {
