@@ -171,12 +171,12 @@ const Products = () => {
         name: newProduct.name,
         description: newProduct.description || null,
         category: newProduct.category,
-        price: parseFloat(newProduct.price),
-        stock_quantity: parseInt(newProduct.stock_quantity),
+        price: 0, // Will be set by variants
+        stock_quantity: 0, // Will be calculated from variants
         image_url: newProduct.image_url || null,
         is_active: true,
-        offer_price: newProduct.offer_price ? parseFloat(newProduct.offer_price) : null,
-        rating: parseFloat(newProduct.rating),
+        offer_price: null,
+        rating: 0, // Will be calculated from reviews
         sizes: newProduct.sizes,
         features: newProduct.features,
         flag: newProduct.flag || null,
@@ -241,11 +241,11 @@ const Products = () => {
         name: updates.name,
         description: updates.description || null,
         category: updates.category,
-        price: parseFloat(updates.price),
-        stock_quantity: parseInt(updates.stock_quantity),
+        price: 0, // Set by variants
+        stock_quantity: 0, // Calculated from variants
         image_url: updates.image_url || null,
-        offer_price: updates.offer_price ? parseFloat(updates.offer_price) : null,
-        rating: parseFloat(updates.rating),
+        offer_price: null,
+        rating: 0, // Calculated from reviews
         sizes: updates.sizes,
         features: updates.features,
         flag: updates.flag || null,
@@ -401,7 +401,7 @@ const Products = () => {
     });
   };
   const handleAddProduct = async () => {
-    if (!formData.name || !formData.category || !formData.price || !formData.stock_quantity) {
+    if (!formData.name || !formData.category) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -413,17 +413,32 @@ const Products = () => {
         name: formData.name,
         description: formData.description || null,
         category: formData.category,
-        price: parseFloat(formData.price),
-        stock_quantity: parseInt(formData.stock_quantity),
+        price: 0, // Will be set by variants
+        stock_quantity: 0, // Will be calculated from variants
         image_url: formData.image_url || null,
-        offer_price: formData.offer_price ? parseFloat(formData.offer_price) : null,
-        rating: parseFloat(formData.rating),
+        is_active: true,
+        offer_price: null,
+        rating: 0, // Will be calculated from reviews
         sizes: formData.sizes,
         features: formData.features,
         flag: formData.flag || null,
+        target_gender: formData.target_gender,
         colors: formData.colors
       }).select().single();
       if (error) throw error;
+
+      // Add color associations with image mappings
+      if (colorImageMappings.length > 0) {
+        const colorInserts = colorImageMappings.map(mapping => ({
+          product_id: data.id,
+          color_id: mapping.color_id,
+          image_id: mapping.image_id
+        }));
+        const { error: colorError } = await supabase
+          .from("product_colors")
+          .insert(colorInserts);
+        if (colorError) throw colorError;
+      }
 
       // Set the selected product and switch to images tab
       setSelectedProduct({
@@ -445,7 +460,7 @@ const Products = () => {
     }
   };
   const handleEditProduct = () => {
-    if (!selectedProduct || !formData.name || !formData.category || !formData.price || !formData.stock_quantity) {
+    if (!selectedProduct || !formData.name || !formData.category) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -464,11 +479,11 @@ const Products = () => {
         name: product.name,
         description: product.description || "",
         category: product.category,
-        price: product.price.toString(),
-        stock_quantity: product.stock_quantity.toString(),
+        price: "0",
+        stock_quantity: "0",
         image_url: product.image_url || "",
-        offer_price: product.offer_price?.toString() || "",
-        rating: product.rating?.toString() || "0",
+        offer_price: "",
+        rating: "0",
         sizes: product.sizes || [],
         features: product.features || [],
         flag: product.flag || "",
@@ -542,11 +557,11 @@ const Products = () => {
       name: `Copy of ${product.name}`,
       description: product.description || "",
       category: product.category,
-      price: product.price.toString(),
-      stock_quantity: product.stock_quantity.toString(),
+      price: "0",
+      stock_quantity: "0",
       image_url: product.image_url || "",
-      offer_price: product.offer_price?.toString() || "",
-      rating: product.rating?.toString() || "0",
+      offer_price: "",
+      rating: "0",
       sizes: product.sizes || [],
       features: product.features || [],
       flag: product.flag || "",
@@ -742,16 +757,6 @@ const Products = () => {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="stock">Stock Quantity *</Label>
-                <Input id="stock" type="number" value={formData.stock_quantity} onChange={e => setFormData({
-                  ...formData,
-                  stock_quantity: e.target.value
-                })} placeholder="" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
                 <Label htmlFor="flag">Product Flag</Label>
                 <Select value={formData.flag || undefined} onValueChange={value => setFormData({
                   ...formData,
@@ -766,22 +771,6 @@ const Products = () => {
                         {flag}
                       </SelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="target_gender">Target Gender</Label>
-                <Select value={formData.target_gender} onValueChange={value => setFormData({
-                  ...formData,
-                  target_gender: value
-                })}>
-                  <SelectTrigger id="target_gender">
-                    <SelectValue placeholder="Select target gender" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background z-50">
-                    <SelectItem value="men">Men</SelectItem>
-                    <SelectItem value="women">Women</SelectItem>
-                    <SelectItem value="both">Both / Unisex</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -999,38 +988,6 @@ const Products = () => {
                       </SelectItem>)}
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="copy-price">Price (USD) *</Label>
-                <Input id="copy-price" type="number" step="0.01" value={formData.price} onChange={e => setFormData({
-                  ...formData,
-                  price: e.target.value
-                })} placeholder="" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="copy-stock">Stock Quantity *</Label>
-                <Input id="copy-stock" type="number" value={formData.stock_quantity} onChange={e => setFormData({
-                  ...formData,
-                  stock_quantity: e.target.value
-                })} placeholder="" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="copy-offer-price">Offer Price (USD)</Label>
-                <Input id="copy-offer-price" type="number" step="0.01" value={formData.offer_price} onChange={e => setFormData({
-                  ...formData,
-                  offer_price: e.target.value
-                })} placeholder="Leave empty if no offer" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="copy-rating">Rating (0-5)</Label>
-                <Input id="copy-rating" type="number" step="0.1" min="0" max="5" value={formData.rating} onChange={e => setFormData({
-                  ...formData,
-                  rating: e.target.value
-                })} />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="copy-flag">Product Flag</Label>
@@ -1278,45 +1235,6 @@ const Products = () => {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-price">Price (USD) *</Label>
-                <Input id="edit-price" type="number" step="0.01" value={formData.price} onChange={e => setFormData({
-                  ...formData,
-                  price: e.target.value
-                })} placeholder="" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-stock">Stock Quantity *</Label>
-                <Input id="edit-stock" type="number" value={formData.stock_quantity} onChange={e => setFormData({
-                  ...formData,
-                  stock_quantity: e.target.value
-                })} placeholder="" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-offer_price">Offer Price (USD)</Label>
-                <Input id="edit-offer_price" type="number" step="0.01" value={formData.offer_price} onChange={e => setFormData({
-                  ...formData,
-                  offer_price: e.target.value
-                })} placeholder="Leave empty if no offer" />
-              </div>
-            </div>
-
-            {/* Display SKU */}
-            {selectedProduct?.sku && <div className="grid gap-2">
-                <Label>SKU (Auto-generated)</Label>
-                <Input value={selectedProduct.sku} disabled className="bg-muted" />
-              </div>}
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-rating">Rating (0-5)</Label>
-                <Input id="edit-rating" type="number" step="0.1" min="0" max="5" value={formData.rating} onChange={e => setFormData({
-                  ...formData,
-                  rating: e.target.value
-                })} />
-              </div>
-              <div className="grid gap-2">
                 <Label htmlFor="edit-flag">Product Flag</Label>
                 <Select value={formData.flag || undefined} onValueChange={value => setFormData({
                   ...formData,
@@ -1334,6 +1252,12 @@ const Products = () => {
                 </Select>
               </div>
             </div>
+
+            {/* Display SKU */}
+            {selectedProduct?.sku && <div className="grid gap-2">
+                <Label>SKU (Auto-generated)</Label>
+                <Input value={selectedProduct.sku} disabled className="bg-muted" />
+              </div>}
 
             <div className="grid gap-2">
               <Label htmlFor="edit-target_gender">Target Gender</Label>

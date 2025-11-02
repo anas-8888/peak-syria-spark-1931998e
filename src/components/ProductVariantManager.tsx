@@ -36,6 +36,7 @@ export default function ProductVariantManager({
   const queryClient = useQueryClient();
   const [unifiedPricing, setUnifiedPricing] = useState(false);
   const [unifiedPrice, setUnifiedPrice] = useState<number>(0);
+  const [unifiedStock, setUnifiedStock] = useState<number>(0);
   const [variants, setVariants] = useState<Variant[]>([]);
 
   // Fetch product details
@@ -109,7 +110,7 @@ export default function ProductVariantManager({
           color_name: color.name,
           size: size,
           price: unifiedPrice,
-          stock_quantity: 0,
+          stock_quantity: unifiedStock,
           is_active: true,
         });
       });
@@ -120,6 +121,11 @@ export default function ProductVariantManager({
   // Save variants mutation
   const saveVariantsMutation = useMutation({
     mutationFn: async () => {
+      // Validate that we have data to save
+      if (unifiedPricing && (!unifiedPrice || unifiedPrice <= 0)) {
+        throw new Error('Please enter a valid price');
+      }
+
       // Auto-generate variants if using unified pricing
       let variantsToSave = variants;
       if (unifiedPricing && colors && colors.length > 0 && availableSizes.length > 0) {
@@ -130,7 +136,7 @@ export default function ProductVariantManager({
               color_id: color.id,
               size: size,
               price: unifiedPrice,
-              stock_quantity: 0,
+              stock_quantity: unifiedStock,
               is_active: true,
             });
           });
@@ -156,7 +162,7 @@ export default function ProductVariantManager({
           color_id: v.color_id,
           size: v.size,
           price: unifiedPricing ? unifiedPrice : v.price,
-          stock_quantity: v.stock_quantity,
+          stock_quantity: unifiedPricing ? unifiedStock : v.stock_quantity,
           is_active: v.is_active,
         }));
 
@@ -221,18 +227,30 @@ export default function ProductVariantManager({
 
       {/* Unified Price Input */}
       {unifiedPricing && (
-        <div className="space-y-2">
-          <Label htmlFor="unified-price">Unified Price (USD)</Label>
-          <Input
-            id="unified-price"
-            type="number"
-            step="0.01"
-            value={unifiedPrice}
-            onChange={(e) => setUnifiedPrice(parseFloat(e.target.value) || 0)}
-            placeholder="Enter price for all variants"
-          />
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="unified-price">Unified Price (USD) *</Label>
+            <Input
+              id="unified-price"
+              type="number"
+              step="0.01"
+              value={unifiedPrice}
+              onChange={(e) => setUnifiedPrice(parseFloat(e.target.value) || 0)}
+              placeholder="Enter price for all variants"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="unified-stock">Unified Stock Quantity *</Label>
+            <Input
+              id="unified-stock"
+              type="number"
+              value={unifiedStock}
+              onChange={(e) => setUnifiedStock(parseInt(e.target.value) || 0)}
+              placeholder="Enter stock for all variants"
+            />
+          </div>
           <p className="text-sm text-muted-foreground">
-            This price will be applied to all {(colors?.length || 0) * availableSizes.length} variant combinations when saved.
+            This price and stock will be applied to all {(colors?.length || 0) * availableSizes.length} variant combinations when saved.
           </p>
         </div>
       )}
@@ -361,7 +379,10 @@ export default function ProductVariantManager({
               Unified pricing enabled: {(colors?.length || 0) * availableSizes.length} variants will be created
             </p>
             <p className="text-sm text-muted-foreground">
-              Colors: {colors?.length || 0} | Sizes: {availableSizes.length} | Price: ${unifiedPrice || 0}
+              Colors: {colors?.length || 0} | Sizes: {availableSizes.length}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Price: ${unifiedPrice || 0} | Stock per variant: {unifiedStock || 0}
             </p>
           </>
         ) : (
