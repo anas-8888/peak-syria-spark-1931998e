@@ -8,6 +8,10 @@ interface CartItem {
   product_id: string;
   quantity: number;
   notes: string | null;
+  variant_id?: string | null;
+  selected_color?: string | null;
+  selected_size?: string | null;
+  variant_price?: number | null;
   product: {
     id: string;
     name: string;
@@ -17,9 +21,19 @@ interface CartItem {
   };
 }
 
+interface AddToCartOptions {
+  productId: string;
+  quantity?: number;
+  notes?: string;
+  variantId?: string;
+  selectedColor?: string;
+  selectedSize?: string;
+  variantPrice?: number;
+}
+
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (productId: string, quantity?: number, notes?: string) => Promise<void>;
+  addToCart: (options: AddToCartOptions) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   updateNotes: (itemId: string, notes: string) => Promise<void>;
   removeFromCart: (itemId: string) => Promise<void>;
@@ -51,6 +65,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           product_id,
           quantity,
           notes,
+          variant_id,
+          selected_color,
+          selected_size,
+          variant_price,
           product:products(
             id, 
             name, 
@@ -98,15 +116,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     fetchCart();
   }, [user]);
 
-  const addToCart = async (productId: string, quantity = 1, notes = "") => {
+  const addToCart = async (options: AddToCartOptions) => {
+    const { productId, quantity = 1, notes = "", variantId, selectedColor, selectedSize, variantPrice } = options;
+    
     if (!user) {
       toast.error("Please log in to add items to cart");
       return;
     }
 
     try {
-      // Check if item already exists in cart
-      const existingItem = cartItems.find(item => item.product_id === productId);
+      // Check if this exact variant already in cart
+      const existingItem = cartItems.find(item => 
+        item.product_id === productId && 
+        (variantId ? item.variant_id === variantId : !item.variant_id)
+      );
 
       if (existingItem) {
         // Update quantity
@@ -122,6 +145,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             product_id: productId,
             quantity,
             notes: notes || null,
+            variant_id: variantId || null,
+            selected_color: selectedColor || null,
+            selected_size: selectedSize || null,
+            variant_price: variantPrice || null,
           });
 
         if (error) throw error;
@@ -203,7 +230,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
   const cartTotal = cartItems.reduce((total, item) => {
-    const price = item.product.offer_price || item.product.price;
+    const price = item.variant_price || item.product.offer_price || item.product.price;
     return total + price * item.quantity;
   }, 0);
 

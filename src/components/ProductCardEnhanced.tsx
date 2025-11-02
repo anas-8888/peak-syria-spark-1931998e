@@ -24,6 +24,10 @@ interface ProductCardEnhancedProps {
   viewMode?: "grid" | "list";
   targetGender?: string;
   flag?: string;
+  offerPrice?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  unifiedPricing?: boolean;
 }
 
 const ProductCardEnhanced = ({
@@ -40,6 +44,10 @@ const ProductCardEnhanced = ({
   viewMode = "grid",
   targetGender,
   flag,
+  offerPrice,
+  minPrice,
+  maxPrice,
+  unifiedPricing,
 }: ProductCardEnhancedProps) => {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState(colors[0]);
@@ -101,7 +109,7 @@ const ProductCardEnhanced = ({
       navigate("/login");
       return;
     }
-    await addToCart(id, 1);
+    await addToCart({ productId: id, quantity: 1 });
   };
 
   const handleToggleFavorite = async () => {
@@ -276,7 +284,25 @@ const ProductCardEnhanced = ({
           )}
 
           <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 ${viewMode === "list" ? "justify-between mt-auto pt-2 sm:pt-4 border-t" : "justify-between pt-1.5 sm:pt-2 border-t"}`}>
-            <span className={`font-bold text-primary ${viewMode === "list" ? "text-base sm:text-xl md:text-2xl" : "text-sm sm:text-xl"}`}>{formatPrice(price)}</span>
+            {/* Price Display - Show range if variants exist and prices differ */}
+            {minPrice && maxPrice && minPrice !== maxPrice && !unifiedPricing ? (
+              <span className={`font-bold text-primary ${viewMode === "list" ? "text-base sm:text-xl md:text-2xl" : "text-sm sm:text-xl"}`}>
+                {formatPrice(minPrice)} - {formatPrice(maxPrice)}
+              </span>
+            ) : offerPrice ? (
+              <div className="flex items-center gap-2">
+                <span className={`font-bold text-primary ${viewMode === "list" ? "text-base sm:text-xl md:text-2xl" : "text-sm sm:text-xl"}`}>
+                  {formatPrice(offerPrice)}
+                </span>
+                <span className={`line-through text-muted-foreground ${viewMode === "list" ? "text-sm sm:text-base" : "text-xs sm:text-sm"}`}>
+                  {formatPrice(price)}
+                </span>
+              </div>
+            ) : (
+              <span className={`font-bold text-primary ${viewMode === "list" ? "text-base sm:text-xl md:text-2xl" : "text-sm sm:text-xl"}`}>
+                {formatPrice(minPrice || price)}
+              </span>
+            )}
             {viewMode === "list" ? (
               <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto">
                 <Button

@@ -185,8 +185,12 @@ export type Database = {
           notes: string | null
           product_id: string
           quantity: number
+          selected_color: string | null
+          selected_size: string | null
           updated_at: string
           user_id: string
+          variant_id: string | null
+          variant_price: number | null
         }
         Insert: {
           created_at?: string
@@ -194,8 +198,12 @@ export type Database = {
           notes?: string | null
           product_id: string
           quantity?: number
+          selected_color?: string | null
+          selected_size?: string | null
           updated_at?: string
           user_id: string
+          variant_id?: string | null
+          variant_price?: number | null
         }
         Update: {
           created_at?: string
@@ -203,8 +211,12 @@ export type Database = {
           notes?: string | null
           product_id?: string
           quantity?: number
+          selected_color?: string | null
+          selected_size?: string | null
           updated_at?: string
           user_id?: string
+          variant_id?: string | null
+          variant_price?: number | null
         }
         Relationships: [
           {
@@ -212,6 +224,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -835,6 +854,9 @@ export type Database = {
           price: number
           product_id: string
           quantity: number
+          selected_color: string | null
+          selected_size: string | null
+          variant_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -844,6 +866,9 @@ export type Database = {
           price: number
           product_id: string
           quantity: number
+          selected_color?: string | null
+          selected_size?: string | null
+          variant_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -853,6 +878,9 @@ export type Database = {
           price?: number
           product_id?: string
           quantity?: number
+          selected_color?: string | null
+          selected_size?: string | null
+          variant_id?: string | null
         }
         Relationships: [
           {
@@ -867,6 +895,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -1223,6 +1258,60 @@ export type Database = {
           },
         ]
       }
+      product_variants: {
+        Row: {
+          color_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          price: number
+          product_id: string
+          size: string
+          sku: string | null
+          stock_quantity: number
+          updated_at: string
+        }
+        Insert: {
+          color_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          price: number
+          product_id: string
+          size: string
+          sku?: string | null
+          stock_quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          color_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          price?: number
+          product_id?: string
+          size?: string
+          sku?: string | null
+          stock_quantity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_color_id_fkey"
+            columns: ["color_id"]
+            isOneToOne: false
+            referencedRelation: "colors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string
@@ -1234,6 +1323,8 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          max_price: number | null
+          min_price: number | null
           name: string
           offer_price: number | null
           price: number
@@ -1242,6 +1333,7 @@ export type Database = {
           sku: string | null
           stock_quantity: number | null
           target_gender: string | null
+          unified_pricing: boolean
           updated_at: string | null
         }
         Insert: {
@@ -1254,6 +1346,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          max_price?: number | null
+          min_price?: number | null
           name: string
           offer_price?: number | null
           price: number
@@ -1262,6 +1356,7 @@ export type Database = {
           sku?: string | null
           stock_quantity?: number | null
           target_gender?: string | null
+          unified_pricing?: boolean
           updated_at?: string | null
         }
         Update: {
@@ -1274,6 +1369,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          max_price?: number | null
+          min_price?: number | null
           name?: string
           offer_price?: number | null
           price?: number
@@ -1282,6 +1379,7 @@ export type Database = {
           sku?: string | null
           stock_quantity?: number | null
           target_gender?: string | null
+          unified_pricing?: boolean
           updated_at?: string | null
         }
         Relationships: []
@@ -1651,6 +1749,23 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      get_available_sizes_for_color: {
+        Args: { p_color_id: string; p_product_id: string }
+        Returns: {
+          price: number
+          size: string
+          stock_quantity: number
+          variant_id: string
+        }[]
+      }
+      get_product_price_range: {
+        Args: { p_product_id: string }
+        Returns: {
+          max_price: number
+          min_price: number
+          unified_pricing: boolean
+        }[]
       }
       has_role: {
         Args: { _role_name: string; _user_id: string }

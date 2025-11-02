@@ -46,9 +46,13 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
+  const [selectedColorId, setSelectedColorId] = useState("");
+  const [selectedVariantId, setSelectedVariantId] = useState("");
   const [selectedImageUrl, setSelectedImageUrl] = useState("");
   const [colorImageMap, setColorImageMap] = useState<Record<string, string>>({});
   const [imageZoomOrigin, setImageZoomOrigin] = useState({ x: 50, y: 50 });
+  const [availableSizes, setAvailableSizes] = useState<any[]>([]);
+  const [currentPrice, setCurrentPrice] = useState(0);
 
   const handleImageMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -108,6 +112,29 @@ const ProductDetail = () => {
           )
         `)
         .eq("product_id", id);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  // Fetch product variants
+  const { data: variants = [] } = useQuery({
+    queryKey: ["product-variants", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_variants")
+        .select(`
+          *,
+          colors (
+            id,
+            name,
+            hex_code
+          )
+        `)
+        .eq("product_id", id)
+        .eq("is_active", true);
 
       if (error) throw error;
       return data;
@@ -208,12 +235,36 @@ const ProductDetail = () => {
     }
   }, [images]);
 
-  // Set initial selected size
+  // Initialize with first variant or product price
   useEffect(() => {
-    if (product?.sizes && product.sizes.length > 0 && !selectedSize) {
-      setSelectedSize(product.sizes[0]);
+    if (variants.length > 0) {
+      // Set first color
+      const firstVariant = variants[0];
+      setSelectedColorId(firstVariant.color_id);
+      setSelectedColor(firstVariant.colors?.name?.toLowerCase() || '');
+      
+      // Find image for this color
+      if (colorImageMap[firstVariant.colors?.name?.toLowerCase()]) {
+        setSelectedImageUrl(colorImageMap[firstVariant.colors?.name?.toLowerCase()]);
+      }
+      
+      // Get available sizes for this color
+      const sizesForColor = variants
+        .filter((v: any) => v.color_id === firstVariant.color_id && v.stock_quantity > 0)
+        .sort((a: any, b: any) => a.size.localeCompare(b.size));
+      
+      setAvailableSizes(sizesForColor);
+      
+      if (sizesForColor.length > 0) {
+        setSelectedSize(sizesForColor[0].size);
+        setSelectedVariantId(sizesForColor[0].id);
+        setCurrentPrice(sizesForColor[0].price);
+      }
+    } else {
+      // Fallback to product base price
+      setCurrentPrice(product?.offer_price || product?.price || 0);
     }
-  }, [product?.sizes, selectedSize]);
+  }, [variants, product, colorImageMap]);
 
   if (isLoading) {
     return (
@@ -239,8 +290,46 @@ const ProductDetail = () => {
     );
   }
 
-  const displayPrice = product.offer_price || product.price;
-  const hasDiscount = !!product.offer_price;
+  // Handle color selection
+  const handleColorSelect = (colorId: string, colorName: string) => {
+    setSelectedColorId(colorId);
+    setSelectedColor(colorName.toLowerCase());
+    
+    // Update image
+    if (colorImageMap[colorName.toLowerCase()]) {
+      setSelectedImageUrl(colorImageMap[colorName.toLowerCase()]);
+    }
+    
+    // Get available sizes for selected color
+    const sizesForColor = variants
+      .filter((v: any) => v.color_id === colorId && v.stock_quantity > 0)
+      .sort((a: any, b: any) => a.size.localeCompare(b.size));
+    
+    setAvailableSizes(sizesForColor);
+    
+    // Reset size selection
+    if (sizesForColor.length > 0) {
+      setSelectedSize(sizesForColor[0].size);
+      setSelectedVariantId(sizesForColor[0].id);
+      setCurrentPrice(sizesForColor[0].price);
+    } else {
+      setSelectedSize('');
+      setSelectedVariantId('');
+    }
+  };
+
+  // Handle size selection
+  const handleSizeSelect = (size: string) => {
+    setSelectedSize(size);
+    const variant = availableSizes.find((v: any) => v.size === size);
+    if (variant) {
+      setSelectedVariantId(variant.id);
+      setCurrentPrice(variant.price);
+    }
+  };
+
+  const displayPrice = variants.length > 0 ? currentPrice : (product.offer_price || product.price);
+  const hasDiscount = !!product.offer_price && variants.length === 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -395,8 +484,73 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {/* Size Selection */}
-            {product.sizes && product.sizes.length > 0 && (
+            {/* Color Selection - Must select first */}
+            {variants.length > 0 && productColors.length > 0 && (
+              <div>
+                <label className="block text-sm font-semibold mb-3">
+                  Select Color <span className="text-destructive">*</span>
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {productColors.map((colorData, idx) => {
+                    const colorId = colorData.color_id;
+                    const colorName = (colorData.colors as any)?.name || '';
+                    const colorHex = (colorData.colors as any)?.hex_code || '#000000';
+                    const hasStock = variants.some((v: any) => v.color_id === colorId && v.stock_quantity > 0);
+                    
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => hasStock && handleColorSelect(colorId, colorName)}
+                        disabled={!hasStock}
+                        className={`w-12 h-12 rounded-full border-2 transition-all ${
+                          selectedColorId === colorId
+                            ? "border-primary scale-110 ring-2 ring-primary ring-offset-2"
+                            : "border-border hover:border-primary"
+                        } ${!hasStock ? 'opacity-30 cursor-not-allowed' : ''}`}
+                        style={{ backgroundColor: colorHex }}
+                        title={`${colorName}${!hasStock ? ' (Out of stock)' : ''}`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Size Selection - Filtered by color */}
+            {variants.length > 0 && availableSizes.length > 0 && (
+              <div>
+                <label className="block text-sm font-semibold mb-3">
+                  Select Size <span className="text-destructive">*</span>
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {availableSizes.map((sizeVariant: any) => (
+                    <button
+                      key={sizeVariant.id}
+                      onClick={() => handleSizeSelect(sizeVariant.size)}
+                      disabled={sizeVariant.stock_quantity === 0}
+                      className={`py-2 px-3 rounded-md border-2 transition-all text-sm sm:text-base ${
+                        selectedSize === sizeVariant.size
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border hover:border-primary"
+                      } ${sizeVariant.stock_quantity === 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    >
+                      {sizeVariant.size}
+                      {sizeVariant.stock_quantity === 0 && (
+                        <span className="block text-xs">Out</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                {selectedSize && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Stock available: {availableSizes.find((v: any) => v.size === selectedSize)?.stock_quantity || 0}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Legacy: No variants - show old size/color system */}
+            {variants.length === 0 && product.sizes && product.sizes.length > 0 && (
               <div>
                 <label className="block text-sm font-semibold mb-3">Select Size (EU)</label>
                 <div className="grid grid-cols-4 gap-2">
@@ -417,8 +571,7 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {/* Color Selection */}
-            {productColors.length > 0 && (
+            {variants.length === 0 && productColors.length > 0 && (
               <div>
                 <label className="block text-sm font-semibold mb-3">Select Color</label>
                 <div className="flex gap-2">
@@ -490,7 +643,7 @@ const ProductDetail = () => {
                     return;
                   }
                   if (id) {
-                    await addToCart(id, quantity);
+                    await addToCart({ productId: id, quantity });
                   }
                 }}
                 disabled={product.stock_quantity === 0}

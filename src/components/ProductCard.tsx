@@ -25,7 +25,7 @@ const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardPro
       navigate("/login");
       return;
     }
-    await addToCart(id.toString(), 1);
+    await addToCart({ productId: id.toString(), quantity: 1 });
   };
 
   return (
