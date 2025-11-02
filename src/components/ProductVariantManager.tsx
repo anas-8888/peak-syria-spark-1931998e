@@ -134,12 +134,12 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
   const saveVariantsMutation = useMutation({
     mutationFn: async () => {
       // Validate that we have data to save
-      if (unifiedPricing && (!unifiedPrice || unifiedPrice <= 0)) {
-        throw new Error('Please enter a valid price');
-      }
-      
       if (!mainPrice || mainPrice <= 0) {
         throw new Error('Please enter a valid main price');
+      }
+      
+      if (!totalStock || totalStock < 0) {
+        throw new Error('Please enter a valid total stock');
       }
 
       // Auto-generate variants if using unified pricing
