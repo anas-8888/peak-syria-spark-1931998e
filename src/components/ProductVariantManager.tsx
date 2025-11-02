@@ -12,6 +12,9 @@ import { toast } from 'sonner';
 
 interface ProductVariantManagerProps {
   productId: string;
+  availableColors: { color_id: string; image_id: string | null }[];
+  availableSizes: string[];
+  onSave?: () => void;
 }
 
 interface Variant {
@@ -24,7 +27,12 @@ interface Variant {
   is_active: boolean;
 }
 
-export default function ProductVariantManager({ productId }: ProductVariantManagerProps) {
+export default function ProductVariantManager({ 
+  productId, 
+  availableColors, 
+  availableSizes,
+  onSave 
+}: ProductVariantManagerProps) {
   const queryClient = useQueryClient();
   const [unifiedPricing, setUnifiedPricing] = useState(false);
   const [unifiedPrice, setUnifiedPrice] = useState<number>(0);
@@ -45,18 +53,22 @@ export default function ProductVariantManager({ productId }: ProductVariantManag
     },
   });
 
-  // Fetch colors
+  // Fetch color details for the available colors
   const { data: colors } = useQuery({
-    queryKey: ['colors'],
+    queryKey: ['colors', availableColors],
     queryFn: async () => {
+      if (availableColors.length === 0) return [];
+      const colorIds = availableColors.map(c => c.color_id);
       const { data, error } = await supabase
         .from('colors')
         .select('*')
+        .in('id', colorIds)
         .eq('is_active', true)
         .order('display_order');
       if (error) throw error;
       return data;
     },
+    enabled: availableColors.length > 0,
   });
 
   // Fetch existing variants
@@ -85,9 +97,46 @@ export default function ProductVariantManager({ productId }: ProductVariantManag
     },
   });
 
+  // Auto-generate variants when unified pricing changes or colors/sizes change
+  const generateVariants = () => {
+    if (!unifiedPricing || !colors || colors.length === 0 || availableSizes.length === 0) return;
+    
+    const newVariants: Variant[] = [];
+    colors.forEach(color => {
+      availableSizes.forEach(size => {
+        newVariants.push({
+          color_id: color.id,
+          color_name: color.name,
+          size: size,
+          price: unifiedPrice,
+          stock_quantity: 0,
+          is_active: true,
+        });
+      });
+    });
+    setVariants(newVariants);
+  };
+
   // Save variants mutation
   const saveVariantsMutation = useMutation({
     mutationFn: async () => {
+      // Auto-generate variants if using unified pricing
+      let variantsToSave = variants;
+      if (unifiedPricing && colors && colors.length > 0 && availableSizes.length > 0) {
+        variantsToSave = [];
+        colors.forEach(color => {
+          availableSizes.forEach(size => {
+            variantsToSave.push({
+              color_id: color.id,
+              size: size,
+              price: unifiedPrice,
+              stock_quantity: 0,
+              is_active: true,
+            });
+          });
+        });
+      }
+
       // Update product unified_pricing flag
       await supabase
         .from('products')
@@ -101,25 +150,28 @@ export default function ProductVariantManager({ productId }: ProductVariantManag
         .eq('product_id', productId);
 
       // Insert new variants
-      const variantsToInsert = variants.map(v => ({
-        product_id: productId,
-        color_id: v.color_id,
-        size: v.size,
-        price: unifiedPricing ? unifiedPrice : v.price,
-        stock_quantity: v.stock_quantity,
-        is_active: v.is_active,
-      }));
+      if (variantsToSave.length > 0) {
+        const variantsToInsert = variantsToSave.map(v => ({
+          product_id: productId,
+          color_id: v.color_id,
+          size: v.size,
+          price: unifiedPricing ? unifiedPrice : v.price,
+          stock_quantity: v.stock_quantity,
+          is_active: v.is_active,
+        }));
 
-      const { error } = await supabase
-        .from('product_variants')
-        .insert(variantsToInsert);
+        const { error } = await supabase
+          .from('product_variants')
+          .insert(variantsToInsert);
 
-      if (error) throw error;
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       toast.success('Variants saved successfully');
       queryClient.invalidateQueries({ queryKey: ['product-variants', productId] });
       queryClient.invalidateQueries({ queryKey: ['product', productId] });
+      if (onSave) onSave();
     },
     onError: (error) => {
       toast.error('Failed to save variants: ' + error.message);
@@ -149,47 +201,47 @@ export default function ProductVariantManager({ productId }: ProductVariantManag
   if (isLoading) return <div>Loading variants...</div>;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Product Variants (Color & Size)</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Unified Pricing Toggle */}
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div className="space-y-0.5">
-            <Label htmlFor="unified-pricing" className="text-base">
-              Use Single Price for All Variants
-            </Label>
-            <p className="text-sm text-muted-foreground">
-              Apply one price to all color and size combinations
-            </p>
-          </div>
-          <Switch
-            id="unified-pricing"
-            checked={unifiedPricing}
-            onCheckedChange={setUnifiedPricing}
-          />
+    <div className="space-y-6">
+      {/* Unified Pricing Toggle */}
+      <div className="flex items-center justify-between p-4 border rounded-lg">
+        <div className="space-y-0.5">
+          <Label htmlFor="unified-pricing" className="text-base">
+            Use Single Price for All Variants
+          </Label>
+          <p className="text-sm text-muted-foreground">
+            Apply one price to all {colors?.length || 0} colors × {availableSizes.length} sizes = {(colors?.length || 0) * availableSizes.length} variants
+          </p>
         </div>
+        <Switch
+          id="unified-pricing"
+          checked={unifiedPricing}
+          onCheckedChange={setUnifiedPricing}
+        />
+      </div>
 
-        {/* Unified Price Input */}
-        {unifiedPricing && (
-          <div className="space-y-2">
-            <Label htmlFor="unified-price">Unified Price</Label>
-            <Input
-              id="unified-price"
-              type="number"
-              step="0.01"
-              value={unifiedPrice}
-              onChange={(e) => setUnifiedPrice(parseFloat(e.target.value) || 0)}
-              placeholder="Enter price for all variants"
-            />
-          </div>
-        )}
+      {/* Unified Price Input */}
+      {unifiedPricing && (
+        <div className="space-y-2">
+          <Label htmlFor="unified-price">Unified Price (USD)</Label>
+          <Input
+            id="unified-price"
+            type="number"
+            step="0.01"
+            value={unifiedPrice}
+            onChange={(e) => setUnifiedPrice(parseFloat(e.target.value) || 0)}
+            placeholder="Enter price for all variants"
+          />
+          <p className="text-sm text-muted-foreground">
+            This price will be applied to all {(colors?.length || 0) * availableSizes.length} variant combinations when saved.
+          </p>
+        </div>
+      )}
 
-        {/* Variants List */}
+      {/* Manual Variants - Only shown when not using unified pricing */}
+      {!unifiedPricing && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label className="text-base">Variants</Label>
+            <Label className="text-base">Manual Variants</Label>
             <Button onClick={addVariant} size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Add Variant
@@ -198,7 +250,7 @@ export default function ProductVariantManager({ productId }: ProductVariantManag
 
           {variants.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-8">
-              No variants added yet. Click "Add Variant" to start.
+              No variants added yet. Click "Add Variant" to create custom price variants.
             </p>
           )}
 
@@ -234,11 +286,21 @@ export default function ProductVariantManager({ productId }: ProductVariantManag
                 {/* Size */}
                 <div className="space-y-2">
                   <Label>Size</Label>
-                  <Input
+                  <Select
                     value={variant.size}
-                    onChange={(e) => updateVariant(index, 'size', e.target.value)}
-                    placeholder="e.g., 40, M, XL"
-                  />
+                    onValueChange={(value) => updateVariant(index, 'size', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableSizes.map((size) => (
+                        <SelectItem key={size} value={size}>
+                          {size}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Price */}
@@ -288,32 +350,33 @@ export default function ProductVariantManager({ productId }: ProductVariantManag
             </div>
           ))}
         </div>
+      )}
 
-        {/* Summary */}
-        {variants.length > 0 && (
-          <div className="p-4 bg-muted rounded-lg space-y-2">
-            <h4 className="font-medium">Summary</h4>
+      {/* Summary */}
+      <div className="p-4 bg-muted rounded-lg space-y-2">
+        <h4 className="font-medium">Variants Summary</h4>
+        {unifiedPricing ? (
+          <>
             <p className="text-sm text-muted-foreground">
-              Total variants: {variants.length}
+              Unified pricing enabled: {(colors?.length || 0) * availableSizes.length} variants will be created
             </p>
-            {!unifiedPricing && product?.min_price && product?.max_price && (
+            <p className="text-sm text-muted-foreground">
+              Colors: {colors?.length || 0} | Sizes: {availableSizes.length} | Price: ${unifiedPrice || 0}
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Manual variants: {variants.length}
+            </p>
+            {variants.length > 0 && product?.min_price && product?.max_price && (
               <p className="text-sm text-muted-foreground">
                 Price range: ${product.min_price} - ${product.max_price}
               </p>
             )}
-          </div>
+          </>
         )}
-
-        {/* Save Button */}
-        <Button
-          onClick={() => saveVariantsMutation.mutate()}
-          disabled={saveVariantsMutation.isPending || variants.length === 0}
-          className="w-full"
-        >
-          <Save className="h-4 w-4 mr-2" />
-          {saveVariantsMutation.isPending ? 'Saving...' : 'Save All Variants'}
-        </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

@@ -702,7 +702,7 @@ const Products = () => {
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="details">Product Details</TabsTrigger>
               <TabsTrigger value="images" disabled={!selectedProduct}>
-                Images
+                Images and Color
               </TabsTrigger>
               <TabsTrigger value="variants" disabled={!selectedProduct}>
                 Variants
@@ -742,37 +742,15 @@ const Products = () => {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="price">Price (USD) *</Label>
-                <Input id="price" type="number" step="0.01" value={formData.price} onChange={e => setFormData({
-                  ...formData,
-                  price: e.target.value
-                })} placeholder="" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
                 <Label htmlFor="stock">Stock Quantity *</Label>
                 <Input id="stock" type="number" value={formData.stock_quantity} onChange={e => setFormData({
                   ...formData,
                   stock_quantity: e.target.value
                 })} placeholder="" />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="offer_price">Offer Price (USD)</Label>
-                <Input id="offer_price" type="number" step="0.01" value={formData.offer_price} onChange={e => setFormData({
-                  ...formData,
-                  offer_price: e.target.value
-                })} placeholder="Leave empty if no offer" />
-              </div>
             </div>
+
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="rating">Rating (0-5)</Label>
-                <Input id="rating" type="number" step="0.1" min="0" max="5" value={formData.rating} onChange={e => setFormData({
-                  ...formData,
-                  rating: e.target.value
-                })} />
-              </div>
               <div className="grid gap-2">
                 <Label htmlFor="flag">Product Flag</Label>
                 <Select value={formData.flag || undefined} onValueChange={value => setFormData({
@@ -791,23 +769,22 @@ const Products = () => {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="target_gender">Target Gender</Label>
-              <Select value={formData.target_gender} onValueChange={value => setFormData({
-                ...formData,
-                target_gender: value
-              })}>
-                <SelectTrigger id="target_gender">
-                  <SelectValue placeholder="Select target gender" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  <SelectItem value="men">Men</SelectItem>
-                  <SelectItem value="women">Women</SelectItem>
-                  <SelectItem value="both">Both / Unisex</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="grid gap-2">
+                <Label htmlFor="target_gender">Target Gender</Label>
+                <Select value={formData.target_gender} onValueChange={value => setFormData({
+                  ...formData,
+                  target_gender: value
+                })}>
+                  <SelectTrigger id="target_gender">
+                    <SelectValue placeholder="Select target gender" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="men">Men</SelectItem>
+                    <SelectItem value="women">Women</SelectItem>
+                    <SelectItem value="both">Both / Unisex</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Sizes Management */}
@@ -913,7 +890,17 @@ const Products = () => {
           <TabsContent value="variants">
             <div className="py-4">
               {selectedProduct ? (
-                <ProductVariantManager productId={selectedProduct.id} />
+                <ProductVariantManager 
+                  productId={selectedProduct.id}
+                  availableColors={colorImageMappings}
+                  availableSizes={formData.sizes}
+                  onSave={() => {
+                    setIsAddDialogOpen(false);
+                    resetForm();
+                    setSelectedProduct(null);
+                    toast.success("Product and variants created successfully!");
+                  }}
+                />
               ) : (
                 <p className="text-sm text-muted-foreground mb-4">
                   Save the product first before managing variants
@@ -931,16 +918,29 @@ const Products = () => {
           }}>
               Cancel
             </Button>
-            {activeTab === "details" ? <Button onClick={handleAddProduct}>
-                Add Product & Continue to Images
-              </Button> : <Button onClick={() => {
-            setIsAddDialogOpen(false);
-            resetForm();
-            setSelectedProduct(null);
-            toast.success("Product created successfully!");
-          }}>
-                Done
-              </Button>}
+            {activeTab === "details" && (
+              <Button onClick={async () => {
+                await handleAddProduct();
+                setActiveTab("images");
+              }}>
+                Save & Go to Next Tab
+              </Button>
+            )}
+            {activeTab === "images" && selectedProduct && (
+              <Button onClick={() => setActiveTab("variants")}>
+                Save & Go to Next Tab
+              </Button>
+            )}
+            {activeTab === "variants" && selectedProduct && (
+              <Button onClick={() => {
+                setIsAddDialogOpen(false);
+                resetForm();
+                setSelectedProduct(null);
+                toast.success("Product and variants created successfully!");
+              }}>
+                Done (Save All & Add Product)
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -961,7 +961,7 @@ const Products = () => {
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="details">Product Details</TabsTrigger>
               <TabsTrigger value="images" disabled={!selectedProduct}>
-                Images
+                Images and Color
               </TabsTrigger>
               <TabsTrigger value="variants" disabled={!selectedProduct}>
                 Variants
@@ -1171,7 +1171,17 @@ const Products = () => {
           <TabsContent value="variants">
             <div className="py-4">
               {selectedProduct ? (
-                <ProductVariantManager productId={selectedProduct.id} />
+                <ProductVariantManager 
+                  productId={selectedProduct.id}
+                  availableColors={colorImageMappings}
+                  availableSizes={formData.sizes}
+                  onSave={() => {
+                    setIsCopyDialogOpen(false);
+                    resetForm();
+                    setSelectedProduct(null);
+                    toast.success("Product and variants copied successfully!");
+                  }}
+                />
               ) : (
                 <p className="text-sm text-muted-foreground mb-4">
                   Save the product first before managing variants
@@ -1189,16 +1199,29 @@ const Products = () => {
           }}>
               Cancel
             </Button>
-            {activeTab === "details" ? <Button onClick={handleAddProduct} disabled={addProductMutation.isPending}>
-                {addProductMutation.isPending ? "Copying..." : "Copy Product & Continue to Images"}
-              </Button> : <Button onClick={() => {
-            setIsCopyDialogOpen(false);
-            resetForm();
-            setSelectedProduct(null);
-            toast.success("Product copied successfully!");
-          }}>
-                Done
-              </Button>}
+            {activeTab === "details" && (
+              <Button onClick={async () => {
+                await handleAddProduct();
+                setActiveTab("images");
+              }} disabled={addProductMutation.isPending}>
+                {addProductMutation.isPending ? "Copying..." : "Save & Go to Next Tab"}
+              </Button>
+            )}
+            {activeTab === "images" && selectedProduct && (
+              <Button onClick={() => setActiveTab("variants")}>
+                Save & Go to Next Tab
+              </Button>
+            )}
+            {activeTab === "variants" && selectedProduct && (
+              <Button onClick={() => {
+                setIsCopyDialogOpen(false);
+                resetForm();
+                setSelectedProduct(null);
+                toast.success("Product and variants copied successfully!");
+              }}>
+                Done (Save All & Copy Product)
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1428,7 +1451,11 @@ const Products = () => {
           <TabsContent value="variants">
             <div className="py-4">
               {selectedProduct && (
-                <ProductVariantManager productId={selectedProduct.id} />
+                <ProductVariantManager 
+                  productId={selectedProduct.id}
+                  availableColors={colorImageMappings}
+                  availableSizes={formData.sizes}
+                />
               )}
             </div>
           </TabsContent>

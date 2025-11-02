@@ -24,6 +24,20 @@ export default function ProductVariants() {
     enabled: !!productId,
   });
 
+  // Fetch product colors (color-image mappings)
+  const { data: productColors = [] } = useQuery({
+    queryKey: ['product-colors', productId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_colors')
+        .select('color_id, image_id')
+        .eq('product_id', productId);
+      if (error) throw error;
+      return data.map(pc => ({ color_id: pc.color_id, image_id: pc.image_id }));
+    },
+    enabled: !!productId,
+  });
+
   if (isLoading) {
     return (
       <div className="p-8">
@@ -81,7 +95,13 @@ export default function ProductVariants() {
         </CardContent>
       </Card>
 
-      {productId && <ProductVariantManager productId={productId} />}
+      {productId && product && (
+        <ProductVariantManager 
+          productId={productId}
+          availableColors={productColors}
+          availableSizes={product.sizes || []}
+        />
+      )}
     </div>
   );
 }
