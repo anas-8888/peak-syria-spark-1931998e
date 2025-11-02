@@ -14,7 +14,10 @@ interface WishlistProduct {
   id: string;
   name: string;
   price: number;
-  offer_price?: number | null;
+  offerPrice?: number | null;
+  minPrice?: number | null;
+  maxPrice?: number | null;
+  unifiedPricing?: boolean;
   image: string;
   category: string;
   isNew: boolean;
@@ -22,6 +25,8 @@ interface WishlistProduct {
   sizes: string[];
   rating: number;
   colorImages?: Record<string, string>;
+  targetGender?: string;
+  flag?: string | null;
 }
 
 const Wishlist = () => {
@@ -102,8 +107,11 @@ const Wishlist = () => {
         return {
           id: product.id,
           name: product.name,
-          price: product.offer_price || product.price,
-          offer_price: product.offer_price,
+          price: product.price,
+          offerPrice: product.offer_price,
+          minPrice: product.min_price,
+          maxPrice: product.max_price,
+          unifiedPricing: product.unified_pricing,
           image: primaryImage?.image_url || product.image_url || '',
           category: product.category,
           isNew: product.flag === 'New Arrival',
@@ -111,6 +119,8 @@ const Wishlist = () => {
           sizes: product.sizes || [],
           rating: product.rating || 0,
           colorImages: Object.keys(colorImages).length > 0 ? colorImages : undefined,
+          targetGender: product.target_gender,
+          flag: product.flag,
         };
       });
 
@@ -162,6 +172,10 @@ const Wishlist = () => {
                     id={product.id}
                     name={product.name}
                     price={product.price}
+                    offerPrice={product.offerPrice}
+                    minPrice={product.minPrice}
+                    maxPrice={product.maxPrice}
+                    unifiedPricing={product.unifiedPricing}
                     image={product.image}
                     category={product.category}
                     isNew={product.isNew}

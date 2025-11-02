@@ -19,6 +19,9 @@ interface Product {
   name: string;
   price: number;
   offer_price?: number | null;
+  minPrice?: number | null;
+  maxPrice?: number | null;
+  unifiedPricing?: boolean;
   image: string;
   category: string;
   isNew: boolean;
@@ -27,6 +30,7 @@ interface Product {
   rating: number;
   colorImages?: Record<string, string>;
   target_gender?: string;
+  flag?: string | null;
 }
 
 const ProductsEnhanced = () => {
@@ -97,8 +101,11 @@ const ProductsEnhanced = () => {
         return {
           id: product.id,
           name: product.name,
-          price: product.offer_price || product.price,
+          price: product.price,
           offer_price: product.offer_price,
+          minPrice: product.min_price,
+          maxPrice: product.max_price,
+          unifiedPricing: product.unified_pricing,
           image: primaryImage?.image_url || product.image_url || '',
           category: product.category,
           isNew: product.flag === 'New Arrival',
@@ -107,6 +114,7 @@ const ProductsEnhanced = () => {
           rating: product.rating || 0,
           colorImages: Object.keys(colorImages).length > 0 ? colorImages : undefined,
           target_gender: product.target_gender,
+          flag: product.flag,
         };
       });
 
@@ -384,6 +392,10 @@ const ProductsEnhanced = () => {
                           id={product.id}
                           name={product.name}
                           price={product.price}
+                          offerPrice={product.offer_price}
+                          minPrice={product.minPrice}
+                          maxPrice={product.maxPrice}
+                          unifiedPricing={product.unifiedPricing}
                           image={product.image}
                           category={product.category}
                           isNew={product.isNew}
@@ -393,6 +405,7 @@ const ProductsEnhanced = () => {
                           colorImages={product.colorImages}
                           viewMode={viewMode}
                           targetGender={product.target_gender}
+                          flag={product.flag}
                         />
                       </div>
                     ))}

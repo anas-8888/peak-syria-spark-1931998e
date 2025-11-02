@@ -101,7 +101,11 @@ const FlagProducts = () => {
         return {
           id: product.id,
           name: product.name,
-          price: product.offer_price || product.price,
+          price: product.price,
+          offerPrice: product.offer_price,
+          minPrice: product.min_price,
+          maxPrice: product.max_price,
+          unifiedPricing: product.unified_pricing,
           image: primaryImage?.image_url || product.image_url || '',
           category: product.category,
           isNew: product.flag === 'New Arrival',
