@@ -713,7 +713,7 @@ const Products = () => {
                       </TableCell>
                       <TableCell>
                         <span className={`font-medium ${product.stock_quantity === 0 ? "text-destructive" : product.stock_quantity < 10 ? "text-yellow-600" : "text-green-600"}`}>
-                          {product.stock_quantity} units
+                          {product.stock_quantity || 0} units
                         </span>
                       </TableCell>
                       <TableCell>
@@ -1553,39 +1553,12 @@ const Products = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Main Price (for unlisted variants)</Label>
+                    <Label className="text-muted-foreground">Main Price</Label>
                     <p className="text-lg font-bold">${(selectedProduct.price || 0).toFixed(2)}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Total Stock</Label>
                     <p className="font-medium">{selectedProduct.stock_quantity || 0} units</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-muted-foreground">Variant Price Range</Label>
-                    <div className="flex items-center gap-2">
-                      {previewVariants.length > 0 ? (
-                        <>
-                          {previewVariants[0].price === previewVariants[previewVariants.length - 1].price ? (
-                            <p className="text-lg font-bold">${previewVariants[0].price.toFixed(2)}</p>
-                          ) : (
-                            <p className="text-lg font-bold">
-                              ${previewVariants[0].price.toFixed(2)} - ${previewVariants[previewVariants.length - 1].price.toFixed(2)}
-                            </p>
-                          )}
-                        </>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">No variants</p>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Variants Stock</Label>
-                    <p className="font-medium">
-                      {previewVariants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0)} units
-                    </p>
                   </div>
                 </div>
 
@@ -1619,7 +1592,7 @@ const Products = () => {
                   </div>}
 
                 {/* Product Variants Table */}
-                {previewVariants.length > 0 && (
+                {(previewVariants.length > 0 || (selectedProduct.colors && selectedProduct.sizes?.length)) && (
                   <div>
                     <Label className="text-muted-foreground mb-3 block">Product Variants</Label>
                     <div className="border rounded-lg overflow-hidden">
@@ -1649,6 +1622,44 @@ const Products = () => {
                               <TableCell>{variant.stock_quantity} units</TableCell>
                             </TableRow>
                           ))}
+                          {(() => {
+                            const productColors = selectedProduct.colors ? JSON.parse(JSON.stringify(selectedProduct.colors)) : [];
+                            const productSizes = selectedProduct.sizes || [];
+                            const variantCombos = new Set(previewVariants.map(v => `${v.color_id}-${v.size}`));
+                            
+                            const unlistedCombos: any[] = [];
+                            productColors.forEach((colorObj: any) => {
+                              productSizes.forEach((size: string) => {
+                                if (!variantCombos.has(`${colorObj.color_id}-${size}`)) {
+                                  unlistedCombos.push({ color_id: colorObj.color_id, size });
+                                }
+                              });
+                            });
+
+                            if (unlistedCombos.length > 0) {
+                              const unlistedColorIds = [...new Set(unlistedCombos.map(c => c.color_id))];
+                              const unlistedSizes = [...new Set(unlistedCombos.map(c => c.size))];
+                              const unlistedStock = (selectedProduct.stock_quantity || 0) - previewVariants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0);
+                              
+                              return (
+                                <TableRow className="bg-muted/50">
+                                  <TableCell>
+                                    <div className="text-sm text-muted-foreground">
+                                      Unlisted: {unlistedColorIds.length} color(s)
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="text-sm text-muted-foreground">
+                                      {unlistedSizes.join(', ')}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="font-semibold">${(selectedProduct.price || 0).toFixed(2)}</TableCell>
+                                  <TableCell>{unlistedStock} units</TableCell>
+                                </TableRow>
+                              );
+                            }
+                            return null;
+                          })()}
                         </TableBody>
                       </Table>
                     </div>

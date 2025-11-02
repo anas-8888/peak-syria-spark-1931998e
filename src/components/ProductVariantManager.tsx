@@ -117,8 +117,8 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
           color_id: color.id,
           color_name: color.name,
           size: size,
-          price: unifiedPrice,
-          stock_quantity: unifiedStock,
+          price: mainPrice,
+          stock_quantity: Math.floor(totalStock / (colors.length * availableSizes.length)),
           is_active: true,
         });
       });
@@ -146,13 +146,14 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
       let variantsToSave = variants;
       if (unifiedPricing && colors && colors.length > 0 && availableSizes.length > 0) {
         variantsToSave = [];
+        const stockPerVariant = Math.floor(totalStock / (colors.length * availableSizes.length));
         colors.forEach(color => {
           availableSizes.forEach(size => {
             variantsToSave.push({
               color_id: color.id,
               size: size,
-              price: unifiedPrice,
-              stock_quantity: unifiedStock,
+              price: mainPrice,
+              stock_quantity: stockPerVariant,
               is_active: true,
             });
           });
@@ -181,8 +182,8 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
           product_id: productId,
           color_id: v.color_id,
           size: v.size,
-          price: unifiedPricing ? unifiedPrice : v.price,
-          stock_quantity: unifiedPricing ? unifiedStock : v.stock_quantity,
+          price: unifiedPricing ? mainPrice : v.price,
+          stock_quantity: unifiedPricing ? Math.floor(totalStock / variantsToSave.length) : v.stock_quantity,
           is_active: v.is_active,
         }));
 
@@ -205,10 +206,16 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
   });
 
   const addVariant = () => {
+    // Find the first available color that doesn't have all sizes used
+    const availableColor = colors?.find(color => {
+      const usedSizesForColor = variants.filter(v => v.color_id === color.id).map(v => v.size);
+      return usedSizesForColor.length < availableSizes.length;
+    });
+
     setVariants([...variants, {
-      color_id: colors?.[0]?.id || '',
+      color_id: availableColor?.id || colors?.[0]?.id || '',
       size: '',
-      price: unifiedPrice,
+      price: mainPrice,
       stock_quantity: 0,
       is_active: true,
     }]);
@@ -290,32 +297,11 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
         />
       </div>
 
-      {/* Unified Price Input */}
+      {/* Info about unified pricing */}
       {unifiedPricing && (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="unified-price">Unified Price (USD) *</Label>
-            <Input
-              id="unified-price"
-              type="number"
-              step="0.01"
-              value={unifiedPrice}
-              onChange={(e) => setUnifiedPrice(parseFloat(e.target.value) || 0)}
-              placeholder="Enter price for all variants"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="unified-stock">Unified Stock Quantity *</Label>
-            <Input
-              id="unified-stock"
-              type="number"
-              value={unifiedStock}
-              onChange={(e) => setUnifiedStock(parseInt(e.target.value) || 0)}
-              placeholder="Enter stock for all variants"
-            />
-          </div>
+        <div className="p-4 bg-muted rounded-lg">
           <p className="text-sm text-muted-foreground">
-            This price and stock will be applied to all {(colors?.length || 0) * availableSizes.length} variant combinations when saved.
+            Main Price (${mainPrice}) and Total Stock ({totalStock}) will be applied to all {(colors?.length || 0) * availableSizes.length} variant combinations.
           </p>
         </div>
       )}
@@ -351,7 +337,12 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
                       <SelectValue placeholder="Select color" />
                     </SelectTrigger>
                     <SelectContent>
-                      {colors?.map((color) => (
+                      {colors?.filter(color => {
+                        // Hide colors that have all sizes selected (excluding current variant)
+                        const otherVariants = variants.filter((_, i) => i !== index);
+                        const usedSizesForColor = otherVariants.filter(v => v.color_id === color.id).map(v => v.size);
+                        return usedSizesForColor.length < availableSizes.length;
+                      }).map((color) => (
                         <SelectItem key={color.id} value={color.id}>
                           <div className="flex items-center gap-2">
                             <div
@@ -377,7 +368,14 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
                       <SelectValue placeholder="Select size" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableSizes.map((size) => (
+                      {availableSizes.filter(size => {
+                        // Hide sizes already selected for this color (excluding current variant)
+                        const otherVariants = variants.filter((_, i) => i !== index);
+                        const usedSizesForColor = otherVariants
+                          .filter(v => v.color_id === variant.color_id)
+                          .map(v => v.size);
+                        return !usedSizesForColor.includes(size);
+                      }).map((size) => (
                         <SelectItem key={size} value={size}>
                           {size}
                         </SelectItem>
@@ -447,7 +445,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
               Colors: {colors?.length || 0} | Sizes: {availableSizes.length}
             </p>
             <p className="text-sm text-muted-foreground">
-              Price: ${unifiedPrice || 0} | Stock per variant: {unifiedStock || 0}
+              Price: ${mainPrice || 0} | Stock per variant: {Math.floor(totalStock / ((colors?.length || 0) * availableSizes.length)) || 0}
             </p>
           </>
         ) : (
