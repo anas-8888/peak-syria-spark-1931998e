@@ -125,7 +125,7 @@ const Products = () => {
     }
   });
 
-  // Fetch products with their primary images
+  // Fetch products with their primary images and variant data
   const {
     data: products = [],
     isLoading
@@ -145,12 +145,28 @@ const Products = () => {
         data: imagesData
       } = await supabase.from("product_images").select("product_id, image_url").eq("is_primary", true);
 
-      // Map primary images to products
+      // Fetch variants for all products to calculate price range and total stock
+      const {
+        data: variantsData
+      } = await supabase.from("product_variants").select("product_id, price, stock_quantity, is_active");
+
+      // Map primary images and variant data to products
       const productsWithImages = productsData.map(product => {
         const primaryImage = imagesData?.find(img => img.product_id === product.id);
+        const productVariants = variantsData?.filter(v => v.product_id === product.id && v.is_active) || [];
+        
+        // Calculate price range and total stock from active variants
+        const prices = productVariants.map(v => v.price).filter(p => p > 0);
+        const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+        const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+        const totalStock = productVariants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0);
+        
         return {
           ...product,
           image_url: primaryImage?.image_url || product.image_url,
+          price: minPrice, // Use min price for display
+          offer_price: minPrice !== maxPrice ? maxPrice : null, // Show range if prices differ
+          stock_quantity: totalStock,
           colors: product.colors as any as {
             color: string;
             image_id: string;
@@ -370,6 +386,31 @@ const Products = () => {
       });
       if (error) throw error;
       return data as ProductImage[];
+    },
+    enabled: !!selectedProduct?.id && isPreviewDialogOpen
+  });
+
+  // Fetch variants for preview
+  const {
+    data: previewVariants = []
+  } = useQuery({
+    queryKey: ["product-variants-preview", selectedProduct?.id],
+    queryFn: async () => {
+      if (!selectedProduct?.id) return [];
+      const {
+        data,
+        error
+      } = await supabase
+        .from("product_variants")
+        .select(`
+          *,
+          colors (name, hex_code)
+        `)
+        .eq("product_id", selectedProduct.id)
+        .eq("is_active", true)
+        .order("price", { ascending: true });
+      if (error) throw error;
+      return data;
     },
     enabled: !!selectedProduct?.id && isPreviewDialogOpen
   });
@@ -654,10 +695,15 @@ const Products = () => {
                         )}
                       </TableCell>
                       <TableCell className="font-semibold">
-                        {product.offer_price ? <div className="flex items-center gap-2">
-                            <span className="text-primary">${product.offer_price?.toFixed(2) || '0.00'}</span>
-                            <span className="text-sm line-through text-muted-foreground">${product.price?.toFixed(2) || '0.00'}</span>
-                          </div> : <span>${product.price?.toFixed(2) || '0.00'}</span>}
+                        {product.offer_price && product.offer_price !== product.price ? (
+                          <div className="flex flex-col">
+                            <span className="text-sm text-muted-foreground">
+                              ${product.price?.toFixed(2)} - ${product.offer_price?.toFixed(2)}
+                            </span>
+                          </div>
+                        ) : (
+                          <span>${product.price?.toFixed(2) || '0.00'}</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <span className={`font-medium ${product.stock_quantity === 0 ? "text-destructive" : product.stock_quantity < 10 ? "text-yellow-600" : "text-green-600"}`}>
@@ -1197,9 +1243,10 @@ const Products = () => {
             <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="details">Product Details</TabsTrigger>
-              <TabsTrigger value="images">Images</TabsTrigger>
+              <TabsTrigger value="images">Images and Color</TabsTrigger>
+              <TabsTrigger value="variants">Variants</TabsTrigger>
             </TabsList>
             
             <TabsContent value="details" className="space-y-4 py-4">
@@ -1379,6 +1426,12 @@ const Products = () => {
                   productId={selectedProduct.id}
                   availableColors={colorImageMappings}
                   availableSizes={formData.sizes}
+                  onSave={() => {
+                    setIsEditDialogOpen(false);
+                    resetForm();
+                    setSelectedProduct(null);
+                    toast.success("Product updated successfully!");
+                  }}
                 />
               )}
             </div>
@@ -1393,9 +1446,29 @@ const Products = () => {
           }}>
               Cancel
             </Button>
-            <Button onClick={handleEditProduct} disabled={updateProductMutation.isPending}>
-              {updateProductMutation.isPending ? "Updating..." : "Update Product"}
-            </Button>
+            {activeTab === "details" && (
+              <Button onClick={async () => {
+                await handleEditProduct();
+                setActiveTab("images");
+              }} disabled={updateProductMutation.isPending}>
+                {updateProductMutation.isPending ? "Updating..." : "Save & Go to Next Tab"}
+              </Button>
+            )}
+            {activeTab === "images" && (
+              <Button onClick={() => setActiveTab("variants")}>
+                Save & Go to Next Tab
+              </Button>
+            )}
+            {activeTab === "variants" && (
+              <Button onClick={() => {
+                setIsEditDialogOpen(false);
+                resetForm();
+                setSelectedProduct(null);
+                toast.success("Product updated successfully!");
+              }}>
+                Done (Save All & Update Product)
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1462,17 +1535,28 @@ const Products = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Price</Label>
+                    <Label className="text-muted-foreground">Price Range</Label>
                     <div className="flex items-center gap-2">
-                      {selectedProduct.offer_price ? <>
-                          <p className="text-lg font-bold text-primary">${selectedProduct.offer_price?.toFixed(2) || '0.00'}</p>
-                          <p className="text-sm line-through text-muted-foreground">${selectedProduct.price?.toFixed(2) || '0.00'}</p>
-                        </> : <p className="text-lg font-bold">${selectedProduct.price?.toFixed(2) || '0.00'}</p>}
+                      {previewVariants.length > 0 ? (
+                        <>
+                          {previewVariants[0].price === previewVariants[previewVariants.length - 1].price ? (
+                            <p className="text-lg font-bold">${previewVariants[0].price.toFixed(2)}</p>
+                          ) : (
+                            <p className="text-lg font-bold">
+                              ${previewVariants[0].price.toFixed(2)} - ${previewVariants[previewVariants.length - 1].price.toFixed(2)}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No variants</p>
+                      )}
                     </div>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Stock</Label>
-                    <p className="font-medium">{selectedProduct.stock_quantity} units</p>
+                    <Label className="text-muted-foreground">Total Stock</Label>
+                    <p className="font-medium">
+                      {previewVariants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0)} units
+                    </p>
                   </div>
                 </div>
 
@@ -1504,6 +1588,43 @@ const Products = () => {
                         </div>)}
                     </div>
                   </div>}
+
+                {/* Product Variants Table */}
+                {previewVariants.length > 0 && (
+                  <div>
+                    <Label className="text-muted-foreground mb-3 block">Product Variants</Label>
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Color</TableHead>
+                            <TableHead>Size</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Stock</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {previewVariants.map((variant) => (
+                            <TableRow key={variant.id}>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <div 
+                                    className="w-4 h-4 rounded-full border" 
+                                    style={{ backgroundColor: variant.colors?.hex_code }}
+                                  />
+                                  {variant.colors?.name}
+                                </div>
+                              </TableCell>
+                              <TableCell>{variant.size}</TableCell>
+                              <TableCell className="font-semibold">${variant.price.toFixed(2)}</TableCell>
+                              <TableCell>{variant.stock_quantity} units</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
