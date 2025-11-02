@@ -1535,7 +1535,18 @@ const Products = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Price Range</Label>
+                    <Label className="text-muted-foreground">Main Price (for unlisted variants)</Label>
+                    <p className="text-lg font-bold">${(selectedProduct.price || 0).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Total Stock</Label>
+                    <p className="font-medium">{selectedProduct.stock_quantity || 0} units</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Variant Price Range</Label>
                     <div className="flex items-center gap-2">
                       {previewVariants.length > 0 ? (
                         <>
@@ -1553,7 +1564,7 @@ const Products = () => {
                     </div>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Total Stock</Label>
+                    <Label className="text-muted-foreground">Variants Stock</Label>
                     <p className="font-medium">
                       {previewVariants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0)} units
                     </p>

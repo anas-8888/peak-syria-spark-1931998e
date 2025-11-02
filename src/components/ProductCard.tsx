@@ -20,12 +20,8 @@ const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardPro
   const navigate = useNavigate();
 
   const handleAddToCart = async () => {
-    if (!user) {
-      toast.error("Please log in to add items to cart");
-      navigate("/login");
-      return;
-    }
-    await addToCart({ productId: id.toString(), quantity: 1 });
+    // Always navigate to product detail page for variant selection
+    navigate(`/product/${id}`);
   };
 
   return (

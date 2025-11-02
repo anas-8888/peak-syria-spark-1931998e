@@ -642,8 +642,34 @@ const ProductDetail = () => {
                     navigate("/login");
                     return;
                   }
+                  
+                  // Require variant selection if variants exist
+                  if (variants.length > 0) {
+                    if (!selectedColorId || !selectedSize) {
+                      toast.error("Please select both color and size before adding to cart");
+                      return;
+                    }
+                    if (!selectedVariantId) {
+                      toast.error("Selected variant is out of stock");
+                      return;
+                    }
+                  }
+                  
                   if (id) {
-                    await addToCart({ productId: id, quantity });
+                    try {
+                      await addToCart({ 
+                        productId: id, 
+                        quantity,
+                        selectedColor: selectedColor,
+                        selectedSize: selectedSize,
+                        variantId: selectedVariantId || undefined,
+                        variantPrice: variants.length > 0 ? currentPrice : undefined,
+                      });
+                      toast.success(`Added ${quantity} ${product.name} to cart`);
+                    } catch (error) {
+                      console.error('Error adding to cart:', error);
+                      toast.error("Failed to add to cart");
+                    }
                   }
                 }}
                 disabled={product.stock_quantity === 0}

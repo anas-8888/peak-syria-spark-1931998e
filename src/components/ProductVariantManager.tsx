@@ -38,6 +38,8 @@ export default function ProductVariantManager({
   const [unifiedPrice, setUnifiedPrice] = useState<number>(0);
   const [unifiedStock, setUnifiedStock] = useState<number>(0);
   const [variants, setVariants] = useState<Variant[]>([]);
+  const [mainPrice, setMainPrice] = useState<number>(0);
+  const [totalStock, setTotalStock] = useState<number>(0);
 
   // Fetch product details
   const { data: product } = useQuery({
@@ -50,6 +52,8 @@ export default function ProductVariantManager({
         .single();
       if (error) throw error;
       setUnifiedPricing(data.unified_pricing || false);
+      setMainPrice(data.price || 0);
+      setTotalStock(data.stock_quantity || 0);
       return data;
     },
   });
@@ -118,12 +122,20 @@ export default function ProductVariantManager({
     setVariants(newVariants);
   };
 
+  // Calculate remaining stock from total stock
+  const usedStock = variants.reduce((sum, v) => sum + v.stock_quantity, 0);
+  const remainingStock = totalStock - usedStock;
+
   // Save variants mutation
   const saveVariantsMutation = useMutation({
     mutationFn: async () => {
       // Validate that we have data to save
       if (unifiedPricing && (!unifiedPrice || unifiedPrice <= 0)) {
         throw new Error('Please enter a valid price');
+      }
+      
+      if (!mainPrice || mainPrice <= 0) {
+        throw new Error('Please enter a valid main price');
       }
 
       // Auto-generate variants if using unified pricing
@@ -143,10 +155,14 @@ export default function ProductVariantManager({
         });
       }
 
-      // Update product unified_pricing flag
+      // Update product with main price, total stock, and unified_pricing flag
       await supabase
         .from('products')
-        .update({ unified_pricing: unifiedPricing })
+        .update({ 
+          unified_pricing: unifiedPricing,
+          price: mainPrice,
+          stock_quantity: totalStock
+        })
         .eq('id', productId);
 
       // Delete existing variants
@@ -208,6 +224,44 @@ export default function ProductVariantManager({
 
   return (
     <div className="space-y-6">
+      {/* Main Price and Total Stock - Always shown */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Base Product Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="main-price">Main Price (USD) *</Label>
+              <Input
+                id="main-price"
+                type="number"
+                step="0.01"
+                value={mainPrice}
+                onChange={(e) => setMainPrice(parseFloat(e.target.value) || 0)}
+                placeholder="Enter main price"
+              />
+              <p className="text-xs text-muted-foreground">
+                Used for variants not explicitly added below
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="total-stock">Total Stock *</Label>
+              <Input
+                id="total-stock"
+                type="number"
+                value={totalStock}
+                onChange={(e) => setTotalStock(parseInt(e.target.value) || 0)}
+                placeholder="Enter total stock"
+              />
+              <p className="text-xs text-muted-foreground">
+                Used: {usedStock} | Remaining: {remainingStock}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Unified Pricing Toggle */}
       <div className="flex items-center justify-between p-4 border rounded-lg">
         <div className="space-y-0.5">

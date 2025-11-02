@@ -104,12 +104,8 @@ const ProductCardEnhanced = ({
   };
 
   const handleAddToCart = async () => {
-    if (!user) {
-      toast.error("Please log in to add items to cart");
-      navigate("/login");
-      return;
-    }
-    await addToCart({ productId: id, quantity: 1 });
+    // Always navigate to product detail page for variant selection
+    navigate(`/product/${id}`);
   };
 
   const handleToggleFavorite = async () => {
