@@ -150,17 +150,77 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
       if (unifiedPricing && colors && colors.length > 0 && availableSizes.length > 0) {
         variantsToSave = [];
         const stockPerVariant = Math.floor(totalStock / (colors.length * availableSizes.length));
+        const extraStock = totalStock % (colors.length * availableSizes.length);
+        let extraStockDistributed = 0;
+        
         colors.forEach(color => {
           availableSizes.forEach(size => {
+            const stock = stockPerVariant + (extraStockDistributed < extraStock ? 1 : 0);
+            extraStockDistributed++;
             variantsToSave.push({
               color_id: color.id,
               size: size,
               price: mainPrice,
-              stock_quantity: stockPerVariant,
+              stock_quantity: stock,
               is_active: true,
             });
           });
         });
+      } else if (!unifiedPricing && colors && colors.length > 0 && availableSizes.length > 0) {
+        // Manual variant mode - check for remaining stock
+        const manualStock = variants.reduce((sum, v) => sum + v.stock_quantity, 0);
+        const remainingStock = totalStock - manualStock;
+
+        if (remainingStock < 0) {
+          throw new Error(`Manual variants total stock (${manualStock}) exceeds product total stock (${totalStock}). Please adjust variant stocks.`);
+        }
+
+        // Get all possible color-size combinations
+        const allCombinations: Array<{ color_id: string; size: string }> = [];
+        colors.forEach(color => {
+          availableSizes.forEach(size => {
+            allCombinations.push({ color_id: color.id, size });
+          });
+        });
+
+        // Find used combinations
+        const usedCombinations = new Set(
+          variants.map(v => `${v.color_id}-${v.size}`)
+        );
+
+        // Get available combinations (not used yet)
+        const availableCombinations = allCombinations.filter(
+          combo => !usedCombinations.has(`${combo.color_id}-${combo.size}`)
+        );
+
+        // If there's remaining stock, we need available combinations to distribute it
+        if (remainingStock > 0 && availableCombinations.length === 0) {
+          throw new Error(
+            `You have ${remainingStock} units of remaining stock but no available color-size combinations left. ` +
+            `Total possible combinations: ${allCombinations.length}, Already used: ${variants.length}. ` +
+            `Please either increase manual variant stocks to match total stock (${totalStock}), ` +
+            `reduce total stock to ${manualStock}, or add more color/size options to the product.`
+          );
+        }
+
+        // Add manual variants to the list
+        variantsToSave = [...variants];
+
+        // Distribute remaining stock across available combinations
+        if (remainingStock > 0 && availableCombinations.length > 0) {
+          const stockPerVariant = Math.floor(remainingStock / availableCombinations.length);
+          const extraStock = remainingStock % availableCombinations.length;
+
+          availableCombinations.forEach((combo, index) => {
+            variantsToSave.push({
+              color_id: combo.color_id,
+              size: combo.size,
+              price: mainPrice,
+              stock_quantity: stockPerVariant + (index < extraStock ? 1 : 0),
+              is_active: true,
+            });
+          });
+        }
       }
 
       // Update product with main price, total stock, and unified_pricing flag
@@ -185,8 +245,8 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
           product_id: productId,
           color_id: v.color_id,
           size: v.size,
-          price: unifiedPricing ? mainPrice : v.price,
-          stock_quantity: unifiedPricing ? Math.floor(totalStock / variantsToSave.length) : v.stock_quantity,
+          price: v.price,
+          stock_quantity: v.stock_quantity,
           is_active: v.is_active,
         }));
 
