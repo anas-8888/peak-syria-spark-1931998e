@@ -92,16 +92,20 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
         `)
         .eq('product_id', productId);
       if (error) throw error;
-      const formattedVariants = data.map(v => ({
-        id: v.id,
-        color_id: v.color_id,
-        color_name: v.colors?.name,
-        size: v.size,
-        price: v.price,
-        stock_quantity: v.stock_quantity,
-        is_active: v.is_active,
-      }));
-      setVariants(formattedVariants);
+      
+      // Only set variants if not using unified pricing
+      if (!unifiedPricing && data && data.length > 0) {
+        const formattedVariants = data.map(v => ({
+          id: v.id,
+          color_id: v.color_id,
+          color_name: v.colors?.name,
+          size: v.size,
+          price: v.price,
+          stock_quantity: v.stock_quantity,
+          is_active: v.is_active,
+        }));
+        setVariants(formattedVariants);
+      }
       return data;
     },
   });
@@ -126,9 +130,8 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
     setVariants(newVariants);
   };
 
-  // Calculate remaining stock from total stock
-  const usedStock = variants.reduce((sum, v) => sum + v.stock_quantity, 0);
-  const remainingStock = totalStock - usedStock;
+  // Note: Total stock is managed independently from variants
+  // Each variant has its own stock, and the total stock is the sum of all variant stocks
 
   // Save variants mutation
   const saveVariantsMutation = useMutation({
@@ -273,7 +276,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
                 placeholder="Enter total stock"
               />
               <p className="text-xs text-muted-foreground">
-                Used: {usedStock} | Remaining: {remainingStock}
+                Total available stock across all variants
               </p>
             </div>
           </div>

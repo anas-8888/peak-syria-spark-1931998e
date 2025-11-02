@@ -186,6 +186,11 @@ const Products = () => {
   // Add product mutation
   const addProductMutation = useMutation({
     mutationFn: async (newProduct: typeof formData) => {
+      // Generate SKU
+      const timestamp = Date.now().toString(36);
+      const random = Math.random().toString(36).substring(2, 7).toUpperCase();
+      const sku = `PEAK-${timestamp}-${random}`;
+
       const {
         data,
         error
@@ -203,21 +208,30 @@ const Products = () => {
         features: newProduct.features,
         flag: newProduct.flag || null,
         target_gender: newProduct.target_gender,
-        colors: newProduct.colors
+        colors: newProduct.colors,
+        sku: sku
       }).select().single();
       if (error) throw error;
 
       // Add color associations with image mappings
       if (colorImageMappings.length > 0) {
-        const colorInserts = colorImageMappings.map(mapping => ({
-          product_id: data.id,
-          color_id: mapping.color_id,
-          image_id: mapping.image_id
-        }));
-        const { error: colorError } = await supabase
-          .from("product_colors")
-          .insert(colorInserts);
-        if (colorError) throw colorError;
+        const colorInserts = colorImageMappings
+          .filter(mapping => mapping.color_id) // Only include valid color IDs
+          .map(mapping => ({
+            product_id: data.id,
+            color_id: mapping.color_id,
+            image_id: mapping.image_id || null
+          }));
+        
+        if (colorInserts.length > 0) {
+          const { error: colorError } = await supabase
+            .from("product_colors")
+            .insert(colorInserts);
+          if (colorError) {
+            console.error("Error inserting product colors:", colorError);
+            throw colorError;
+          }
+        }
       }
 
       return data;
@@ -286,15 +300,23 @@ const Products = () => {
 
       // Then add new ones with image mappings
       if (colorImageMappings.length > 0) {
-        const colorInserts = colorImageMappings.map(mapping => ({
-          product_id: id,
-          color_id: mapping.color_id,
-          image_id: mapping.image_id
-        }));
-        const { error: colorError } = await supabase
-          .from("product_colors")
-          .insert(colorInserts);
-        if (colorError) throw colorError;
+        const colorInserts = colorImageMappings
+          .filter(mapping => mapping.color_id) // Only include valid color IDs
+          .map(mapping => ({
+            product_id: id,
+            color_id: mapping.color_id,
+            image_id: mapping.image_id || null
+          }));
+        
+        if (colorInserts.length > 0) {
+          const { error: colorError } = await supabase
+            .from("product_colors")
+            .insert(colorInserts);
+          if (colorError) {
+            console.error("Error inserting product colors:", colorError);
+            throw colorError;
+          }
+        }
       }
     },
     onSuccess: () => {
@@ -825,6 +847,36 @@ const Products = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="target-gender">Target Gender *</Label>
+                <Select value={formData.target_gender} onValueChange={value => setFormData({
+                  ...formData,
+                  target_gender: value
+                })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select target gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="unisex">Unisex</SelectItem>
+                    <SelectItem value="both">Both</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="sku">SKU (Auto-generated)</Label>
+                <Input 
+                  id="sku" 
+                  value={selectedProduct?.sku || "Will be generated on save"} 
+                  disabled
+                  className="bg-muted"
+                  placeholder="Auto-generated SKU"
+                />
               </div>
             </div>
 
