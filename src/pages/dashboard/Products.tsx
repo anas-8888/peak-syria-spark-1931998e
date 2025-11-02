@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Plus, Edit, Trash2, Eye, Star, Image as ImageIcon, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { ProductImageManager } from "@/components/ProductImageManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ColorImageSelector } from "@/components/ColorImageSelector";
-import ProductVariantManager from "@/components/ProductVariantManager";
+import ProductVariantManager, { ProductVariantManagerHandle } from "@/components/ProductVariantManager";
 type Product = {
   id: string;
   name: string;
@@ -90,6 +90,12 @@ const Products = () => {
     color: "",
     image_id: ""
   });
+  
+  // Refs for variant managers
+  const addVariantManagerRef = useRef<ProductVariantManagerHandle>(null);
+  const editVariantManagerRef = useRef<ProductVariantManagerHandle>(null);
+  const copyVariantManagerRef = useRef<ProductVariantManagerHandle>(null);
+  
   const queryClient = useQueryClient();
 
   // Fetch categories
@@ -926,14 +932,12 @@ const Products = () => {
             <div className="py-4">
               {selectedProduct ? (
                 <ProductVariantManager 
+                  ref={addVariantManagerRef}
                   productId={selectedProduct.id}
                   availableColors={colorImageMappings}
                   availableSizes={formData.sizes}
                   onSave={() => {
-                    setIsAddDialogOpen(false);
-                    resetForm();
-                    setSelectedProduct(null);
-                    toast.success("Product and variants created successfully!");
+                    // This will be called after successful save
                   }}
                 />
               ) : (
@@ -967,11 +971,17 @@ const Products = () => {
               </Button>
             )}
             {activeTab === "variants" && selectedProduct && (
-              <Button onClick={() => {
-                setIsAddDialogOpen(false);
-                resetForm();
-                setSelectedProduct(null);
-                toast.success("Product and variants created successfully!");
+              <Button onClick={async () => {
+                try {
+                  await addVariantManagerRef.current?.saveVariants();
+                  setIsAddDialogOpen(false);
+                  resetForm();
+                  setSelectedProduct(null);
+                  queryClient.invalidateQueries({ queryKey: ["products"] });
+                  toast.success("Product and variants created successfully!");
+                } catch (error) {
+                  console.error("Failed to save variants:", error);
+                }
               }}>
                 Done (Save All & Add Product)
               </Button>
@@ -1175,14 +1185,12 @@ const Products = () => {
             <div className="py-4">
               {selectedProduct ? (
                 <ProductVariantManager 
+                  ref={copyVariantManagerRef}
                   productId={selectedProduct.id}
                   availableColors={colorImageMappings}
                   availableSizes={formData.sizes}
                   onSave={() => {
-                    setIsCopyDialogOpen(false);
-                    resetForm();
-                    setSelectedProduct(null);
-                    toast.success("Product and variants copied successfully!");
+                    // This will be called after successful save
                   }}
                 />
               ) : (
@@ -1216,11 +1224,17 @@ const Products = () => {
               </Button>
             )}
             {activeTab === "variants" && selectedProduct && (
-              <Button onClick={() => {
-                setIsCopyDialogOpen(false);
-                resetForm();
-                setSelectedProduct(null);
-                toast.success("Product and variants copied successfully!");
+              <Button onClick={async () => {
+                try {
+                  await copyVariantManagerRef.current?.saveVariants();
+                  setIsCopyDialogOpen(false);
+                  resetForm();
+                  setSelectedProduct(null);
+                  queryClient.invalidateQueries({ queryKey: ["products"] });
+                  toast.success("Product copied successfully!");
+                } catch (error) {
+                  console.error("Failed to save variants:", error);
+                }
               }}>
                 Done (Save All & Copy Product)
               </Button>
@@ -1423,14 +1437,12 @@ const Products = () => {
             <div className="py-4">
               {selectedProduct && (
                 <ProductVariantManager 
+                  ref={editVariantManagerRef}
                   productId={selectedProduct.id}
                   availableColors={colorImageMappings}
                   availableSizes={formData.sizes}
                   onSave={() => {
-                    setIsEditDialogOpen(false);
-                    resetForm();
-                    setSelectedProduct(null);
-                    toast.success("Product updated successfully!");
+                    // This will be called after successful save
                   }}
                 />
               )}
@@ -1460,11 +1472,17 @@ const Products = () => {
               </Button>
             )}
             {activeTab === "variants" && (
-              <Button onClick={() => {
-                setIsEditDialogOpen(false);
-                resetForm();
-                setSelectedProduct(null);
-                toast.success("Product updated successfully!");
+              <Button onClick={async () => {
+                try {
+                  await editVariantManagerRef.current?.saveVariants();
+                  setIsEditDialogOpen(false);
+                  resetForm();
+                  setSelectedProduct(null);
+                  queryClient.invalidateQueries({ queryKey: ["products"] });
+                  toast.success("Product updated successfully!");
+                } catch (error) {
+                  console.error("Failed to save variants:", error);
+                }
               }}>
                 Done (Save All & Update Product)
               </Button>

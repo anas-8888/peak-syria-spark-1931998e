@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef, useImperativeHandle } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
@@ -17,6 +17,10 @@ interface ProductVariantManagerProps {
   onSave?: () => void;
 }
 
+export interface ProductVariantManagerHandle {
+  saveVariants: () => Promise<void>;
+}
+
 interface Variant {
   id?: string;
   color_id: string;
@@ -27,12 +31,12 @@ interface Variant {
   is_active: boolean;
 }
 
-export default function ProductVariantManager({ 
+const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVariantManagerProps>(({ 
   productId, 
   availableColors, 
   availableSizes,
   onSave 
-}: ProductVariantManagerProps) {
+}, ref) => {
   const queryClient = useQueryClient();
   const [unifiedPricing, setUnifiedPricing] = useState(false);
   const [unifiedPrice, setUnifiedPrice] = useState<number>(0);
@@ -219,6 +223,13 @@ export default function ProductVariantManager({
     updated[index] = { ...updated[index], [field]: value };
     setVariants(updated);
   };
+
+  // Expose save function to parent component
+  useImperativeHandle(ref, () => ({
+    saveVariants: async () => {
+      await saveVariantsMutation.mutateAsync();
+    }
+  }));
 
   if (isLoading) return <div>Loading variants...</div>;
 
@@ -454,4 +465,8 @@ export default function ProductVariantManager({
       </div>
     </div>
   );
-}
+});
+
+ProductVariantManager.displayName = 'ProductVariantManager';
+
+export default ProductVariantManager;
