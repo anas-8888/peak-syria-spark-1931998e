@@ -1673,13 +1673,28 @@ const Products = () => {
               <div className="space-y-4">
                 <h3 className="font-semibold">Product Images</h3>
                 {previewImages.length > 0 ? <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {previewImages.map(image => <div key={image.id} className="relative group">
-                        <img src={image.image_url} alt="Product" className={`w-full aspect-square object-cover rounded-lg ${image.is_primary ? "ring-2 ring-primary" : ""}`} />
-                        {image.is_primary && <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-current" />
-                            Primary
-                          </div>}
-                      </div>)}
+                    {previewImages.map(image => {
+                      // Find the color associated with this image
+                      const colorAssociation = previewProductColors.find(pc => pc.image_id === image.id);
+                      return (
+                        <div key={image.id} className="relative group">
+                          <img src={image.image_url} alt="Product" className={`w-full aspect-square object-cover rounded-lg ${image.is_primary ? "ring-2 ring-primary" : ""}`} />
+                          {image.is_primary && <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                              <Star className="h-3 w-3 fill-current" />
+                              Primary
+                            </div>}
+                          {colorAssociation && colorAssociation.colors && (
+                            <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur-sm text-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1 border">
+                              <div 
+                                className="w-3 h-3 rounded-full border" 
+                                style={{ backgroundColor: colorAssociation.colors.hex_code }}
+                              />
+                              {colorAssociation.colors.name}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div> : <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
                     <ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
                     <p>No images available</p>
