@@ -618,14 +618,28 @@ const ProductDetail = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={() => {
+                    const maxStock = variants.length > 0 && selectedVariantId
+                      ? availableSizes.find((v: any) => v.id === selectedVariantId)?.stock_quantity || product.stock_quantity
+                      : product.stock_quantity;
+                    if (quantity < maxStock) {
+                      setQuantity(quantity + 1);
+                    }
+                  }}
                   className="h-8 w-8 sm:h-10 sm:w-10"
-                  disabled={quantity >= product.stock_quantity}
+                  disabled={(() => {
+                    const maxStock = variants.length > 0 && selectedVariantId
+                      ? availableSizes.find((v: any) => v.id === selectedVariantId)?.stock_quantity || product.stock_quantity
+                      : product.stock_quantity;
+                    return quantity >= maxStock;
+                  })()}
                 >
                   <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  {product.stock_quantity} available
+                  {variants.length > 0 && selectedVariantId
+                    ? `${availableSizes.find((v: any) => v.id === selectedVariantId)?.stock_quantity || 0} available`
+                    : `${product.stock_quantity} available`}
                 </span>
               </div>
             </div>
@@ -653,6 +667,19 @@ const ProductDetail = () => {
                       toast.error("Selected variant is out of stock");
                       return;
                     }
+                    
+                    // Validate quantity against variant stock
+                    const selectedVariant = availableSizes.find((v: any) => v.id === selectedVariantId);
+                    if (selectedVariant && quantity > selectedVariant.stock_quantity) {
+                      toast.error(`Only ${selectedVariant.stock_quantity} items available for this variant`);
+                      return;
+                    }
+                  } else {
+                    // Validate quantity against product stock for non-variant products
+                    if (quantity > product.stock_quantity) {
+                      toast.error(`Only ${product.stock_quantity} items available`);
+                      return;
+                    }
                   }
                   
                   if (id) {
@@ -672,10 +699,21 @@ const ProductDetail = () => {
                     }
                   }
                 }}
-                disabled={product.stock_quantity === 0}
+                disabled={(() => {
+                  if (variants.length > 0) {
+                    return !selectedVariantId || availableSizes.find((v: any) => v.id === selectedVariantId)?.stock_quantity === 0;
+                  }
+                  return product.stock_quantity === 0;
+                })()}
               >
                 <ShoppingCart className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                {product.stock_quantity > 0 ? "Add to Cart" : "Out of Stock"}
+                {(() => {
+                  if (variants.length > 0 && selectedVariantId) {
+                    const variantStock = availableSizes.find((v: any) => v.id === selectedVariantId)?.stock_quantity || 0;
+                    return variantStock > 0 ? "Add to Cart" : "Out of Stock";
+                  }
+                  return product.stock_quantity > 0 ? "Add to Cart" : "Out of Stock";
+                })()}
               </Button>
               <div className="flex gap-2 sm:gap-3">
                 <Button variant="outline" size="lg" className="flex-1 h-10 sm:h-12 text-sm sm:text-base">

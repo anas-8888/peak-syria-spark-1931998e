@@ -351,7 +351,25 @@ const ProductCardEnhanced = ({
                 <p className="text-sm text-muted-foreground uppercase">{category}</p>
                 <h2 className="text-2xl font-bold">{name}</h2>
               </div>
-              <div className="text-3xl font-bold text-primary">{formatPrice(price)}</div>
+              {/* Price Display - Show range if variants exist and prices differ */}
+              {minPrice && maxPrice && minPrice !== maxPrice && !unifiedPricing ? (
+                <div className="text-3xl font-bold text-primary">
+                  {formatPrice(minPrice)} - {formatPrice(maxPrice)}
+                </div>
+              ) : offerPrice ? (
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl font-bold text-primary">
+                    {formatPrice(offerPrice)}
+                  </span>
+                  <span className="text-xl line-through text-muted-foreground">
+                    {formatPrice(price)}
+                  </span>
+                </div>
+              ) : (
+                <div className="text-3xl font-bold text-primary">
+                  {formatPrice(minPrice || price)}
+                </div>
+              )}
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
                   <span key={i} className={`text-lg ${i < Math.floor(rating) ? "text-primary" : "text-muted-foreground"}`}>
