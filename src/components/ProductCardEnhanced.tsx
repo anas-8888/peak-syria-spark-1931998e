@@ -238,11 +238,6 @@ const ProductCardEnhanced = ({
                 {t("product.new")}
               </div>
             )}
-            {targetGender && targetGender !== 'both' && (
-              <div className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold uppercase shadow-lg">
-                {targetGender === 'men' ? "MEN" : "WOMEN"}
-              </div>
-            )}
           </div>
 
           {/* Flag Watermark */}
@@ -264,6 +259,11 @@ const ProductCardEnhanced = ({
                 {name}
               </h3>
             </Link>
+            {targetGender && targetGender !== "both" && (
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                {targetGender === "men" ? "Men's" : "Women's"}
+              </p>
+            )}
           </div>
 
           {/* Colors */}
