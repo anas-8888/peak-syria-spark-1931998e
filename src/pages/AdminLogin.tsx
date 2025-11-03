@@ -52,24 +52,24 @@ const AdminLogin = () => {
 
         const roleName = (profile as any)?.roles?.name;
 
-        // Block customer role
+        // Block customer role - use generic error message to prevent user enumeration
         if (roleName === "customer") {
           await supabase.auth.signOut();
-          toast.error("Access Denied", {
-            description: "This login is for administrators only",
+          toast.error("Authentication Failed", {
+            description: "Invalid credentials or insufficient permissions",
           });
           return;
         }
 
         toast.success("Login Successful!", {
-          description: `Welcome back, ${data.email}`,
+          description: `Welcome back`,
         });
         navigate("/dashboard");
       }
     } catch (error: any) {
-      console.error("Login error:", error);
-      toast.error("Login Failed", {
-        description: error.message || "Invalid email or password",
+      // Use generic error message to prevent user enumeration
+      toast.error("Authentication Failed", {
+        description: "Invalid credentials or insufficient permissions",
       });
     } finally {
       setIsLoading(false);

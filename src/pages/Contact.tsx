@@ -1,5 +1,6 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -8,15 +9,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { MessageCircle, Phone, Mail, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ContactSchema, type ContactFormData } from "@/lib/validationSchemas";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 const Contact = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    message: ""
+  const form = useForm<ContactFormData>({
+    resolver: zodResolver(ContactSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      message: ""
+    }
   });
-  const [submitting, setSubmitting] = useState(false);
 
   const { data: storeSettings } = useQuery({
     queryKey: ["store-settings"],
@@ -31,23 +36,15 @@ const Contact = () => {
     },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name || !formData.email || !formData.message) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    setSubmitting(true);
+  const onSubmit = async (data: ContactFormData) => {
     try {
       const { error } = await supabase
         .from("contact_messages")
         .insert({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone || null,
-          message: formData.message
+          name: data.name,
+          email: data.email,
+          phone: data.phone || null,
+          message: data.message
         });
 
       if (error) throw error;
@@ -56,14 +53,11 @@ const Contact = () => {
         description: "We'll get back to you as soon as possible!"
       });
       
-      setFormData({ name: "", email: "", phone: "", message: "" });
+      form.reset();
     } catch (error) {
-      console.error("Error submitting message:", error);
       toast.error("Failed to send message", {
         description: "Please try again later."
       });
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -86,75 +80,75 @@ const Contact = () => {
           {/* Contact Form */}
           <div className="bg-card p-6 sm:p-8 rounded-lg shadow-sm">
             <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Send us a Message</h2>
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-              <div>
-                <label htmlFor="name" className="block text-sm font-semibold mb-2">
-                  Name <span className="text-destructive">*</span>
-                </label>
-                <Input 
-                  id="name" 
-                  placeholder="Your full name" 
-                  className="w-full"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input placeholder="Your full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <div>
-                <label htmlFor="email" className="block text-sm font-semibold mb-2">
-                  Email <span className="text-destructive">*</span>
-                </label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="your.email@example.com" 
-                  className="w-full"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="your.email@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <div>
-                <label htmlFor="phone" className="block text-sm font-semibold mb-2">
-                  Phone Number
-                </label>
-                <Input 
-                  id="phone" 
-                  type="tel" 
-                  placeholder="+963 XXX XXX XXX" 
-                  className="w-full"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input type="tel" placeholder="+963 XXX XXX XXX" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <div>
-                <label htmlFor="message" className="block text-sm font-semibold mb-2">
-                  Message <span className="text-destructive">*</span>
-                </label>
-                <Textarea 
-                  id="message" 
-                  placeholder="How can we help you?" 
-                  rows={5} 
-                  className="w-full"
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  required
+                <FormField
+                  control={form.control}
+                  name="message"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Message <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="How can we help you?" rows={5} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <Button 
-                type="submit"
-                variant="hero" 
-                size="lg" 
-                className="w-full"
-                disabled={submitting}
-              >
-                {submitting ? "Sending..." : "Send Message"}
-              </Button>
-            </form>
+                <Button 
+                  type="submit"
+                  variant="hero" 
+                  size="lg" 
+                  className="w-full"
+                  disabled={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? "Sending..." : "Send Message"}
+                </Button>
+              </form>
+            </Form>
           </div>
 
           {/* Contact Info */}

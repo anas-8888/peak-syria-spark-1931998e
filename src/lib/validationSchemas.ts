@@ -50,5 +50,32 @@ export const PaymentSchema = z.object({
     .regex(/^[0-9]{3,4}$/, { message: "رمز CVV غير صالح" })
 });
 
+export const ContactSchema = z.object({
+  name: z.string()
+    .trim()
+    .min(2, { message: "Name must be at least 2 characters" })
+    .max(100, { message: "Name must be less than 100 characters" })
+    .regex(/^[a-zA-Z\s\u0600-\u06FF]+$/, { message: "Name can only contain letters and spaces" }),
+  
+  email: z.string()
+    .trim()
+    .email({ message: "Invalid email address" })
+    .max(255, { message: "Email must be less than 255 characters" }),
+  
+  phone: z.string()
+    .trim()
+    .regex(/^[\+]?[0-9]{10,15}$/, { message: "Invalid phone number format" })
+    .max(20, { message: "Phone number must be less than 20 characters" })
+    .optional()
+    .or(z.literal("")),
+  
+  message: z.string()
+    .trim()
+    .min(10, { message: "Message must be at least 10 characters" })
+    .max(2000, { message: "Message must be less than 2000 characters" })
+    .regex(/^[^<>]*$/, { message: "Message cannot contain HTML tags" })
+});
+
 export type CheckoutFormData = z.infer<typeof CheckoutSchema>;
 export type PaymentFormData = z.infer<typeof PaymentSchema>;
+export type ContactFormData = z.infer<typeof ContactSchema>;

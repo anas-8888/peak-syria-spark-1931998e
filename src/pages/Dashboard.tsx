@@ -27,18 +27,8 @@ const Dashboard = () => {
     }
   }, [user, isAdmin, authLoading, adminLoading, navigate]);
 
-  if (authLoading || adminLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Verifying access...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user || !isAdmin) {
+  // Return null until verification completes - don't render anything
+  if (authLoading || adminLoading || !user || !isAdmin) {
     return null;
   }
   return (
