@@ -326,25 +326,25 @@ const ProductCardEnhanced = ({
               </span>
             )}
             {viewMode === "list" ? (
-              <div className="flex gap-1 sm:gap-1.5 md:gap-2 w-full sm:w-auto">
+              <div className="flex gap-0.5 sm:gap-1 md:gap-1.5 lg:gap-2 w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => setQuickViewOpen(true)}
-                  className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10"
+                  className="flex-shrink-0 h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 p-0"
                 >
-                  <Eye className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4 lg:h-5 lg:w-5" />
+                  <Eye className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 lg:h-4 lg:w-4" />
                 </Button>
                 <Button
                   variant={isFavorite ? "hero" : "outline"}
                   size="icon"
                   onClick={handleToggleFavorite}
                   disabled={isLoading}
-                  className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10"
+                  className="flex-shrink-0 h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 p-0"
                 >
-                  <Heart className={`h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4 lg:h-5 lg:w-5 ${isFavorite ? "fill-current" : ""}`} />
+                  <Heart className={`h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 lg:h-4 lg:w-4 ${isFavorite ? "fill-current" : ""}`} />
                 </Button>
-                <Button variant="hero" size="sm" className="flex-1 sm:flex-initial text-[10px] sm:text-xs md:text-sm h-6 sm:h-8 md:h-10 px-2 sm:px-3" asChild>
+                <Button variant="hero" size="sm" className="flex-1 sm:flex-initial text-[8px] sm:text-[10px] md:text-xs lg:text-sm h-5 sm:h-6 md:h-8 lg:h-10 px-1 sm:px-2 md:px-3" asChild>
                   <Link to={`/product/${id}`}>
                     <span className="hidden sm:inline">View Details</span>
                     <span className="sm:hidden">View</span>
