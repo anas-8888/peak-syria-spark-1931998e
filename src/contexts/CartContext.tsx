@@ -82,54 +82,80 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
 
-      // Fetch images for each product - use color-specific image if available
+      // Fetch images for each product - prefer variant color image, then selected color, then primary
       const itemsWithImages = await Promise.all(
         (data || []).map(async (item: any) => {
-          let imageUrl = item.product.image_url;
+          let imageUrl = item.product.image_url as string | null;
 
-          // If item has a selected color, try to get the color-specific image
-          if (item.selected_color) {
-            // First, get the color_id from colors table
+          // 1) If item has a variant, derive color_id from variant first (most reliable)
+          if (item.variant_id) {
+            const { data: variant } = await supabase
+              .from("product_variants")
+              .select("color_id")
+              .eq("id", item.variant_id)
+              .single();
+
+            const colorId = variant?.color_id as string | null;
+            if (colorId) {
+              const { data: productColor } = await supabase
+                .from("product_colors")
+                .select("image_id")
+                .eq("product_id", item.product_id)
+                .eq("color_id", colorId)
+                .single();
+
+              if (productColor?.image_id) {
+                const { data: colorImage } = await supabase
+                  .from("product_images")
+                  .select("image_url")
+                  .eq("id", productColor.image_id)
+                  .single();
+                if (colorImage?.image_url) {
+                  imageUrl = colorImage.image_url;
+                }
+              }
+            }
+          }
+
+          // 2) If still no image from variant, try selected_color by name
+          if ((!imageUrl || imageUrl === item.product.image_url) && item.selected_color) {
             const { data: colorData } = await supabase
               .from("colors")
               .select("id")
               .eq("name", item.selected_color)
-              .single();
+              .maybeSingle();
 
-            if (colorData) {
-              // Then get the image_id from product_colors
+            if (colorData?.id) {
               const { data: productColorData } = await supabase
                 .from("product_colors")
                 .select("image_id")
                 .eq("product_id", item.product_id)
                 .eq("color_id", colorData.id)
-                .single();
+                .maybeSingle();
 
               if (productColorData?.image_id) {
-                // Finally get the actual image URL
                 const { data: imageData } = await supabase
                   .from("product_images")
                   .select("image_url")
                   .eq("id", productColorData.image_id)
-                  .single();
-
-                if (imageData) {
+                  .maybeSingle();
+                if (imageData?.image_url) {
                   imageUrl = imageData.image_url;
                 }
               }
             }
           }
 
-          // If no color-specific image found, try to get primary image
+          // 3) Fallback to primary product image
           if (!imageUrl || imageUrl === item.product.image_url) {
             const { data: primaryImageData } = await supabase
               .from("product_images")
               .select("image_url")
               .eq("product_id", item.product_id)
               .eq("is_primary", true)
-              .single();
+              .maybeSingle();
 
-            if (primaryImageData) {
+            if (primaryImageData?.image_url) {
               imageUrl = primaryImageData.image_url;
             }
           }
