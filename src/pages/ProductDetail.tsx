@@ -210,6 +210,11 @@ const ProductDetail = () => {
     refetchInterval: 5000, // Auto-refresh every 5 seconds
   });
 
+  // Calculate average rating from approved reviews
+  const averageRating = reviews.length > 0 
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
+    : 0;
+
   // Build color to image mapping
   useEffect(() => {
     if (productColors.length > 0 && images.length > 0) {
@@ -402,21 +407,23 @@ const ProductDetail = () => {
                   </Badge>
                 </div>
               )}
-              {product.rating !== undefined && product.rating > 0 && (
+              {averageRating > 0 && (
                 <div className="flex items-center gap-2 mt-2">
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
                         className={`h-4 w-4 ${
-                          i < Math.floor(product.rating!)
+                          i < Math.floor(averageRating)
                             ? "fill-yellow-400 text-yellow-400"
                             : "text-muted-foreground"
                         }`}
                       />
                     ))}
                   </div>
-                  <span className="text-sm text-muted-foreground">({product.rating}/5)</span>
+                  <span className="text-sm text-muted-foreground">
+                    {averageRating.toFixed(1)}/5 ({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})
+                  </span>
                 </div>
               )}
             </div>
