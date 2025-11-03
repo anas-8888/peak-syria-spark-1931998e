@@ -38,6 +38,8 @@ type Product = {
   sku?: string;
   features?: string[];
   flag?: string | null;
+  min_price?: number | null;
+  max_price?: number | null;
 };
 type ProductImage = {
   id: string;
@@ -758,6 +760,10 @@ const Products = () => {
                               ${product.price.toFixed(2)}
                             </span>
                           </div>
+                        ) : product.min_price && product.max_price && product.min_price !== product.max_price ? (
+                          <span className="text-muted-foreground">
+                            ${product.min_price.toFixed(2)} - ${product.max_price.toFixed(2)}
+                          </span>
                         ) : (
                           <span>${product.price?.toFixed(2) || '0.00'}</span>
                         )}
