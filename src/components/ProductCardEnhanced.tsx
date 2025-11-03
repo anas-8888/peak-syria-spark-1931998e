@@ -329,7 +329,7 @@ const ProductCardEnhanced = ({
               <div className="flex gap-0.5 sm:gap-1 md:gap-1.5 lg:gap-2 w-full sm:w-auto">
                 <Button
                   variant="outline"
-                  size="icon"
+                  size="iconXs"
                   onClick={() => setQuickViewOpen(true)}
                   className="flex-shrink-0 h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 p-0"
                 >
@@ -337,14 +337,14 @@ const ProductCardEnhanced = ({
                 </Button>
                 <Button
                   variant={isFavorite ? "hero" : "outline"}
-                  size="icon"
+                  size="iconXs"
                   onClick={handleToggleFavorite}
                   disabled={isLoading}
                   className="flex-shrink-0 h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 p-0"
                 >
                   <Heart className={`h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 lg:h-4 lg:w-4 ${isFavorite ? "fill-current" : ""}`} />
                 </Button>
-                <Button variant="hero" size="sm" className="flex-1 sm:flex-initial text-[8px] sm:text-[10px] md:text-xs lg:text-sm h-5 sm:h-6 md:h-8 lg:h-10 px-1 sm:px-2 md:px-3" asChild>
+                <Button variant="hero" size="xs" className="flex-1 sm:flex-initial text-[8px] sm:text-[10px] md:text-xs lg:text-sm h-5 sm:h-6 md:h-8 lg:h-10 px-1 sm:px-2 md:px-3" asChild>
                   <Link to={`/product/${id}`}>
                     <span className="hidden sm:inline">View Details</span>
                     <span className="sm:hidden">View</span>
@@ -352,7 +352,7 @@ const ProductCardEnhanced = ({
                 </Button>
               </div>
             ) : (
-              <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10 text-[8px] sm:text-[9px] md:text-sm h-5 sm:h-6 md:h-9 px-1.5 sm:px-2 md:px-4" asChild>
+              <Button size="xs" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10 text-[8px] sm:text-[9px] md:text-sm h-5 sm:h-6 md:h-9 px-1.5 sm:px-2 md:px-4" asChild>
                 <Link to={`/product/${id}`}>
                   View Details
                 </Link>
