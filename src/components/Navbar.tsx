@@ -9,7 +9,7 @@ import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import GoogleSignInButton from "./GoogleSignInButton";
-import peakLogo from "@/assets/peak-logo.png";
+import peakLogo from "@/assets/peak-logo-new.png";
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();

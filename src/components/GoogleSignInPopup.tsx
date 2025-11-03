@@ -2,7 +2,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import peakLogo from "@/assets/peak-logo.png";
+import peakLogo from "@/assets/peak-logo-new.png";
 
 interface GoogleSignInPopupProps {
   open: boolean;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import peakLogo from "@/assets/peak-logo.png";
+import peakLogo from "@/assets/peak-logo-new.png";
 
 interface PercentageLoaderProps {
   message?: string;
