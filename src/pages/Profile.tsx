@@ -111,7 +111,9 @@ const Profile = () => {
         }
       }
     } catch (error: any) {
-      console.error("Error loading profile:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error loading profile:", error);
+      }
       toast.error("Failed to load profile", {
         description: error.message,
       });

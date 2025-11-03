@@ -113,12 +113,12 @@ export default function CheckoutNew() {
   // Restore saved region when regions data and profile are loaded
   useEffect(() => {
     if (regions && regions.length > 0 && !selectedRegion && profile) {
-      // Priority 1: Check localStorage for previously selected region
-      const savedData = localStorage.getItem("checkoutFormData");
+      // Priority 1: Check sessionStorage for previously selected region
+      const savedData = sessionStorage.getItem("checkoutFormData");
       if (savedData) {
         try {
           const parsed = JSON.parse(savedData);
-          if (parsed.selectedRegion) {
+          if (parsed.expiresAt && parsed.expiresAt > Date.now() && parsed.selectedRegion) {
             // Verify the saved region still exists in the database
             const regionExists = regions.find(r => r.id === parsed.selectedRegion);
             if (regionExists) {
@@ -126,9 +126,14 @@ export default function CheckoutNew() {
               setValue("regionId", parsed.selectedRegion);
               return;
             }
+          } else if (parsed.expiresAt && parsed.expiresAt <= Date.now()) {
+            // Clear expired data
+            sessionStorage.removeItem("checkoutFormData");
           }
         } catch (e) {
-          console.error("Error restoring saved region:", e);
+          if (import.meta.env.DEV) {
+            console.error("Error restoring saved region:", e);
+          }
         }
       }
 
@@ -214,51 +219,64 @@ export default function CheckoutNew() {
         }
         
         // Load saved checkout data after profile loads
-        const savedData = localStorage.getItem("checkoutFormData");
+        const savedData = sessionStorage.getItem("checkoutFormData");
         if (savedData) {
           try {
             const parsed = JSON.parse(savedData);
             
-            // Region will be restored by the regions effect above when regions data loads
-            
-            // Restore carrier
-            if (parsed.selectedCarrier) {
-              setSelectedCarrier(parsed.selectedCarrier);
-            }
-            
-            // Restore payment method
-            if (parsed.selectedPaymentMethod) {
-              setSelectedPaymentMethod(parsed.selectedPaymentMethod);
-            }
-            
-            // Restore discount code
-            if (parsed.discountCode) {
-              setDiscountCode(parsed.discountCode);
-              if (cartItems.length > 0) {
-                validateDiscount(parsed.discountCode, true).then((result) => {
-                  if (result.is_valid) {
-                    toast.success("Previously applied discount restored");
-                  }
-                });
+            // Check if data hasn't expired (30 minutes)
+            if (parsed.expiresAt && parsed.expiresAt > Date.now()) {
+              // Region will be restored by the regions effect above when regions data loads
+              
+              // Restore carrier
+              if (parsed.selectedCarrier) {
+                setSelectedCarrier(parsed.selectedCarrier);
+              }
+              
+              // Restore payment method
+              if (parsed.selectedPaymentMethod) {
+                setSelectedPaymentMethod(parsed.selectedPaymentMethod);
+              }
+              
+              // Restore discount code
+              if (parsed.discountCode) {
+                setDiscountCode(parsed.discountCode);
+                if (cartItems.length > 0) {
+                  validateDiscount(parsed.discountCode, true).then((result) => {
+                    if (result.is_valid) {
+                      toast.success("Previously applied discount restored");
+                    }
+                  });
+                }
+              }
+              
+              // Restore address (takes priority over profile address)
+              if (parsed.address) {
+                setValue("address", parsed.address);
+              } else if (data.address) {
+                // Fall back to profile address if no saved address
+                setValue("address", data.address);
+              }
+            } else {
+              // Data expired, clear it
+              sessionStorage.removeItem("checkoutFormData");
+              if (data.address) {
+                setValue("address", data.address);
               }
             }
-            
-            // Restore address (takes priority over profile address)
-            if (parsed.address) {
-              setValue("address", parsed.address);
-            } else if (data.address) {
-              // Fall back to profile address if no saved address
-              setValue("address", data.address);
-            }
           } catch (e) {
-            console.error("Error loading saved checkout data:", e);
+            if (import.meta.env.DEV) {
+              console.error("Error loading saved checkout data:", e);
+            }
           }
         } else if (data.address) {
           // No saved checkout data, use profile address
           setValue("address", data.address);
         }
       } catch (error) {
-        console.error("Error fetching profile:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error fetching profile:", error);
+        }
         toast.error("Failed to load profile information");
       } finally {
         setProfileLoading(false);
@@ -535,29 +553,37 @@ export default function CheckoutNew() {
     }
   }, [cartItems, appliedDiscount, appliedDiscounts]);
 
-  // Save form data to localStorage whenever key selections change
+  // Save form data to sessionStorage with expiration (30 minutes)
   useEffect(() => {
     const formData = {
       selectedRegion,
       selectedCarrier,
       selectedPaymentMethod,
       discountCode: appliedDiscount?.code || "",
+      expiresAt: Date.now() + 30 * 60 * 1000,
     };
-    localStorage.setItem("checkoutFormData", JSON.stringify(formData));
+    sessionStorage.setItem("checkoutFormData", JSON.stringify(formData));
   }, [selectedRegion, selectedCarrier, selectedPaymentMethod, appliedDiscount]);
 
   // Save address field separately when it changes
   useEffect(() => {
     const subscription = watch((value) => {
       if (value.address !== undefined) {
-        const savedData = localStorage.getItem("checkoutFormData");
+        const savedData = sessionStorage.getItem("checkoutFormData");
         if (savedData) {
           try {
             const parsed = JSON.parse(savedData);
-            parsed.address = value.address || "";
-            localStorage.setItem("checkoutFormData", JSON.stringify(parsed));
+            // Check if data hasn't expired
+            if (parsed.expiresAt && parsed.expiresAt > Date.now()) {
+              parsed.address = value.address || "";
+              sessionStorage.setItem("checkoutFormData", JSON.stringify(parsed));
+            } else {
+              sessionStorage.removeItem("checkoutFormData");
+            }
           } catch (e) {
-            console.error("Error updating saved address:", e);
+            if (import.meta.env.DEV) {
+              console.error("Error updating saved address:", e);
+            }
           }
         } else {
           // Create initial save with address
@@ -567,8 +593,9 @@ export default function CheckoutNew() {
             selectedPaymentMethod,
             discountCode: appliedDiscount?.code || "",
             address: value.address || "",
+            expiresAt: Date.now() + 30 * 60 * 1000, // 30 minutes
           };
-          localStorage.setItem("checkoutFormData", JSON.stringify(formData));
+          sessionStorage.setItem("checkoutFormData", JSON.stringify(formData));
         }
       }
     });
@@ -576,9 +603,11 @@ export default function CheckoutNew() {
   }, [watch, selectedRegion, selectedCarrier, selectedPaymentMethod, appliedDiscount]);
 
   // Load saved form data is now handled in the profile fetch effect above
-  // This empty effect is kept for clarity
+  // Cleanup sessionStorage on component unmount
   useEffect(() => {
-    // Saved data loading moved to profile fetch to ensure correct order
+    return () => {
+      sessionStorage.removeItem("checkoutFormData");
+    };
   }, []);
 
   const validateDiscount = async (code: string, silent = false) => {
@@ -832,7 +861,7 @@ export default function CheckoutNew() {
       await clearCart();
 
       // Clear saved checkout form data and discounts
-      localStorage.removeItem("checkoutFormData");
+      sessionStorage.removeItem("checkoutFormData");
       localStorage.removeItem("appliedCartDiscount");
       localStorage.removeItem("appliedCartDiscounts");
       localStorage.removeItem("appliedCartDiscountAmount");
@@ -846,7 +875,9 @@ export default function CheckoutNew() {
         navigate(`/payment?orderId=${orderId}&amount=${total}`);
       }
     } catch (error: any) {
-      console.error("Error creating order:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error creating order:", error);
+      }
       toast.error(error.message || "Failed to place order");
     } finally {
       setSubmitting(false);

@@ -111,13 +111,18 @@ const Orders = () => {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 50;
   const queryClient = useQueryClient();
   const { formatPrice } = useCurrency();
 
-  const { data: ordersData, isLoading } = useQuery({
-    queryKey: ["orders"],
+  const { data: paginatedData, isLoading } = useQuery({
+    queryKey: ["orders", currentPage],
     queryFn: async () => {
-      const { data: orders, error } = await supabase
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
+      const { data: orders, error, count } = await supabase
         .from("orders")
         .select(`
           id,
@@ -163,8 +168,9 @@ const Orders = () => {
             name,
             image_url
           )
-        `)
-        .order("created_at", { ascending: false });
+        `, { count: 'exact' })
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
 
@@ -264,9 +270,16 @@ const Orders = () => {
         })
       );
 
-      return ordersWithImages as OrderWithDetails[];
+      return {
+        orders: ordersWithImages as OrderWithDetails[],
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE)
+      };
     },
   });
+
+  const ordersData = paginatedData?.orders || [];
+  const totalPages = paginatedData?.totalPages || 1;
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
@@ -481,10 +494,37 @@ const Orders = () => {
                   );
                 })
               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableBody>
+            </Table>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages} ({paginatedData?.total || 0} total orders)
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
       {/* Order Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>

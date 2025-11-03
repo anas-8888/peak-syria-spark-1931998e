@@ -84,6 +84,8 @@ const Users = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 50;
 
   const [formData, setFormData] = useState({
     email: "",
@@ -100,18 +102,22 @@ const Users = () => {
     role_id: "",
   });
 
-  // Fetch users with order stats and roles
-  const { data: customers = [], isLoading } = useQuery({
-    queryKey: ["users"],
+  // Fetch users with order stats and roles (with pagination)
+  const { data: paginatedData, isLoading } = useQuery({
+    queryKey: ["users", currentPage],
     queryFn: async () => {
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
       // Get profiles with role information
-      const { data: profiles, error: profilesError } = await supabase
+      const { data: profiles, error: profilesError, count } = await supabase
         .from("profiles")
         .select(`
           *,
           role:roles(name)
-        `)
-        .order("created_at", { ascending: false });
+        `, { count: 'exact' })
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
       if (profilesError) throw profilesError;
 
@@ -134,9 +140,16 @@ const Users = () => {
         })
       );
 
-      return customersWithStats as Customer[];
+      return {
+        customers: customersWithStats as Customer[],
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE)
+      };
     },
   });
+
+  const customers = paginatedData?.customers || [];
+  const totalPages = paginatedData?.totalPages || 1;
 
   // Update profile mutation
   const updateMutation = useMutation({
@@ -417,10 +430,13 @@ const Users = () => {
         </CardContent>
       </Card>
 
-      {/* Users Table */}
+          {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Users ({filteredCustomers.length})</CardTitle>
+          <CardTitle>
+            Users ({paginatedData?.total || 0})
+            {totalPages > 1 && <span className="text-sm text-muted-foreground ml-2">(Page {currentPage} of {totalPages})</span>}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -432,7 +448,8 @@ const Users = () => {
               No users found
             </div>
           ) : (
-            <Table>
+            <>
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
@@ -526,6 +543,34 @@ const Users = () => {
                 ))}
               </TableBody>
             </Table>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, paginatedData?.total || 0)} of {paginatedData?.total || 0} users
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
           )}
         </CardContent>
       </Card>
