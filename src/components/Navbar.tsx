@@ -128,7 +128,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16 sm:h-18 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group flex-shrink-0 mx-[15px]">
-            <img src={peakLogo} alt="PEAK Official Logo" width="110" height="96" className="h-10 sm:h-12 md:h-14 lg:h-16 w-auto transition-transform duration-300 group-hover:scale-110" />
+            <img src={peakLogo} alt="PEAK Official Logo" width="110" height="96" className="h-12 sm:h-12 md:h-14 lg:h-16 w-auto transition-transform duration-300 group-hover:scale-110" />
             <div className="flex items-center">
               
             </div>

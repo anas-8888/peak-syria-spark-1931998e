@@ -1,13 +1,24 @@
 import { useState, useEffect } from "react";
 import { X, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const PromoBanner = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Fetch active automatic discounts that should show in banner
   const { data: bannerDiscount } = useQuery({
@@ -60,10 +71,20 @@ const PromoBanner = () => {
     return `🔥 ${bannerDiscount.name}: Automatic ${typeText} discount${minText}`;
   };
 
+  const handleBannerClick = (e: React.MouseEvent) => {
+    // Only navigate on mobile, and don't navigate if clicking close button
+    if (isMobile && !(e.target as HTMLElement).closest('button[aria-label="Close banner"]')) {
+      navigate('/products');
+    }
+  };
+
   return (
-    <div className={`relative bg-gradient-to-r from-primary/90 via-primary/85 to-primary/80 text-primary-foreground py-2 sm:py-3 px-3 sm:px-4 text-center text-xs sm:text-sm font-medium overflow-hidden w-full transition-all duration-300 backdrop-blur-sm ${
-      isAnimating ? 'opacity-0 -translate-y-full' : 'opacity-100 translate-y-0'
-    }`}>
+    <div 
+      onClick={handleBannerClick}
+      className={`relative bg-gradient-to-r from-primary/90 via-primary/85 to-primary/80 text-primary-foreground py-3 sm:py-3 px-3 sm:px-4 text-center text-xs sm:text-sm font-medium overflow-hidden w-full transition-all duration-300 backdrop-blur-sm ${
+        isAnimating ? 'opacity-0 -translate-y-full' : 'opacity-100 translate-y-0'
+      } ${isMobile ? 'cursor-pointer' : ''}`}
+    >
       <div className="max-w-4xl mx-auto relative">
       {/* Animated background pattern */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse"></div>
@@ -87,10 +108,10 @@ const PromoBanner = () => {
         <Button
           variant="ghost"
           size="sm"
-          className="text-white hover:bg-white/20 h-5 sm:h-6 px-1 sm:px-2 text-xs flex-shrink-0 transition-all duration-200 hover:scale-105 border border-white/20"
+          className="hidden sm:inline-flex absolute right-4 sm:right-8 text-white hover:bg-white/20 h-5 sm:h-6 px-1 sm:px-2 text-xs flex-shrink-0 transition-all duration-200 hover:scale-105 border border-white/20"
           asChild
         >
-          <Link to="/products">
+          <Link to="/products" onClick={(e) => e.stopPropagation()}>
             Shop Now
             <ArrowRight className="ml-1 h-2 w-2 sm:h-3 sm:w-3" />
           </Link>
@@ -98,8 +119,12 @@ const PromoBanner = () => {
       </div>
 
       <button
-        onClick={handleClose}
-        className="absolute right-6 top-1/2 -translate-y-1/2 hover:opacity-70 transition-all duration-200 p-1 rounded-full hover:bg-white/20 hover:scale-110 z-10"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleClose();
+        }}
+        className="absolute right-6 top-1/2 -translate-y-1/2 hover:opacity-70 transition-all duration-200 p-1 rounded-full hover:bg-white/20 hover:scale-110 z-20"
         aria-label="Close banner"
       >
         <X className="h-3 w-3" />
