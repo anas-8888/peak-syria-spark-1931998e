@@ -1121,10 +1121,17 @@ export default function CheckoutNew() {
                     </div>
                     <div className="flex-1">
                       <p className="font-medium">{item.product.name}</p>
+                      {(item.selected_color || item.selected_size) && (
+                        <p className="text-xs text-muted-foreground">
+                          {item.selected_color && <span>Color: {item.selected_color}</span>}
+                          {item.selected_color && item.selected_size && <span> • </span>}
+                          {item.selected_size && <span>Size: {item.selected_size}</span>}
+                        </p>
+                      )}
                       <p className="text-muted-foreground">Qty: {item.quantity}</p>
                     </div>
                     <p className="font-medium">
-                      {formatPrice((item.product.offer_price || item.product.price) * item.quantity)}
+                      {formatPrice((item.variant_price || item.product.offer_price || item.product.price) * item.quantity)}
                     </p>
                   </div>
                 ))}
