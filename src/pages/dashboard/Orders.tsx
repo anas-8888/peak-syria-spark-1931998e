@@ -436,6 +436,9 @@ const Orders = () => {
                         <div>
                           <p className="font-medium">{order.customer_name}</p>
                           <p className="text-sm text-muted-foreground">{order.customer_email}</p>
+                          {order.customer_phone && (
+                            <p className="text-sm text-muted-foreground">{order.customer_phone}</p>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>{order.itemCount} items</TableCell>
