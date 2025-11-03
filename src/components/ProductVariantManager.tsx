@@ -44,6 +44,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
   const [variants, setVariants] = useState<Variant[]>([]);
   const [mainPrice, setMainPrice] = useState<number>(0);
   const [totalStock, setTotalStock] = useState<number>(0);
+  const [offerPrice, setOfferPrice] = useState<number | null>(null);
 
   // Fetch product details
   const { data: product } = useQuery({
@@ -58,6 +59,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
       setUnifiedPricing(data.unified_pricing || false);
       setMainPrice(data.price || 0);
       setTotalStock(data.stock_quantity || 0);
+      setOfferPrice(data.offer_price || null);
       return data;
     },
   });
@@ -225,13 +227,14 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
         }
       }
 
-      // Update product with main price, total stock, and unified_pricing flag
+      // Update product with main price, total stock, unified_pricing flag, and offer_price
       await supabase
         .from('products')
         .update({ 
           unified_pricing: unifiedPricing,
           price: mainPrice,
-          stock_quantity: totalStock
+          stock_quantity: totalStock,
+          offer_price: unifiedPricing && offerPrice && offerPrice < mainPrice ? offerPrice : null
         })
         .eq('id', productId);
 
@@ -362,11 +365,41 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
         />
       </div>
 
+      {/* Offer Price - Only shown for unified pricing */}
+      {unifiedPricing && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Offer Price (Optional)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="offer-price">Offer Price (USD)</Label>
+              <Input
+                id="offer-price"
+                type="number"
+                step="0.01"
+                value={offerPrice || ''}
+                onChange={(e) => setOfferPrice(e.target.value ? parseFloat(e.target.value) : null)}
+                placeholder="Enter offer price (must be less than main price)"
+              />
+              <p className="text-xs text-muted-foreground">
+                If set, customers will see the main price with a strikethrough and this offer price will be used
+              </p>
+              {offerPrice && offerPrice >= mainPrice && (
+                <p className="text-xs text-destructive">
+                  Offer price must be less than main price (${mainPrice})
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Info about unified pricing */}
       {unifiedPricing && (
         <div className="p-4 bg-muted rounded-lg">
           <p className="text-sm text-muted-foreground">
-            Main Price (${mainPrice}) and Total Stock ({totalStock}) will be applied to all {(colors?.length || 0) * availableSizes.length} variant combinations.
+            Main Price (${mainPrice}){offerPrice && offerPrice < mainPrice ? ` → Offer Price ($${offerPrice})` : ''} and Total Stock ({totalStock}) will be applied to all {(colors?.length || 0) * availableSizes.length} variant combinations.
           </p>
         </div>
       )}

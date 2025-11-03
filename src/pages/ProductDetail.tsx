@@ -260,9 +260,9 @@ const ProductDetail = () => {
         setSelectedVariantId(sizesForColor[0].id);
         setCurrentPrice(sizesForColor[0].price);
       }
-    } else {
-      // Fallback to product base price
-      setCurrentPrice(product?.offer_price || product?.price || 0);
+    } else if (product) {
+      // Fallback to product base price (use offer_price if available)
+      setCurrentPrice(product.offer_price || product.price || 0);
     }
   }, [variants, product, colorImageMap]);
 
@@ -329,7 +329,7 @@ const ProductDetail = () => {
   };
 
   const displayPrice = variants.length > 0 ? currentPrice : (product.offer_price || product.price);
-  const hasDiscount = !!product.offer_price && variants.length === 0;
+  const hasDiscount = !!product.offer_price;
 
   return (
     <div className="min-h-screen bg-background">
@@ -425,7 +425,7 @@ const ProductDetail = () => {
               <div className="text-2xl sm:text-3xl font-bold text-primary">
                 ${displayPrice.toFixed(2)}
               </div>
-              {hasDiscount && (
+              {hasDiscount && product.offer_price && (
                 <div className="text-lg sm:text-xl line-through text-muted-foreground">
                   ${product.price.toFixed(2)}
                 </div>
