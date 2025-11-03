@@ -35,9 +35,48 @@ export default function CartNew() {
   const lastAppliedDiscountIds = useRef<string>("");
   const isCheckingDiscounts = useRef<boolean>(false);
   const lastCartSnapshot = useRef<string>("");
+  const [variantStocks, setVariantStocks] = useState<Record<string, number>>({});
 
   const shippingCost = 0; // Will be calculated at checkout
   const total = cartTotal - discountAmount;
+
+  // Fetch variant stocks for cart items
+  useEffect(() => {
+    const fetchVariantStocks = async () => {
+      const stocks: Record<string, number> = {};
+      
+      for (const item of cartItems) {
+        if (item.variant_id) {
+          const { data, error } = await supabase
+            .from("product_variants")
+            .select("stock_quantity")
+            .eq("id", item.variant_id)
+            .single();
+          
+          if (!error && data) {
+            stocks[item.id] = data.stock_quantity;
+          }
+        } else {
+          // For non-variant items, use product stock
+          const { data, error } = await supabase
+            .from("products")
+            .select("stock_quantity")
+            .eq("id", item.product_id)
+            .single();
+          
+          if (!error && data) {
+            stocks[item.id] = data.stock_quantity;
+          }
+        }
+      }
+      
+      setVariantStocks(stocks);
+    };
+
+    if (cartItems.length > 0) {
+      fetchVariantStocks();
+    }
+  }, [cartItems]);
 
   // Initialize note texts from cart items
   useEffect(() => {
@@ -842,9 +881,21 @@ export default function CartNew() {
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <h3 className="font-semibold text-lg truncate">{item.product.name}</h3>
+                        {(item.selected_color || item.selected_size) && (
+                          <p className="text-xs text-muted-foreground mb-1">
+                            {item.selected_color && <span>Color: {item.selected_color}</span>}
+                            {item.selected_color && item.selected_size && <span> | </span>}
+                            {item.selected_size && <span>Size: {item.selected_size}</span>}
+                          </p>
+                        )}
                         <p className="text-sm text-muted-foreground">
-                          {formatPrice(item.product.offer_price || item.product.price)} each
+                          {formatPrice(item.variant_price || item.product.offer_price || item.product.price)} each
                         </p>
+                        {variantStocks[item.id] !== undefined && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {variantStocks[item.id]} available
+                          </p>
+                        )}
                       </div>
                       <Button
                         variant="ghost"
@@ -872,21 +923,25 @@ export default function CartNew() {
                         value={item.quantity}
                         onChange={(e) => {
                           const val = parseInt(e.target.value);
-                          if (val > 0) updateQuantity(item.id, val);
+                          if (val > 0 && val <= (variantStocks[item.id] || Number.MAX_SAFE_INTEGER)) {
+                            updateQuantity(item.id, val);
+                          }
                         }}
                         className="w-16 h-8 text-center"
                         min="1"
+                        max={variantStocks[item.id] || undefined}
                       />
                       <Button
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        disabled={variantStocks[item.id] !== undefined && item.quantity >= variantStocks[item.id]}
                       >
                         <Plus className="h-3 w-3" />
                       </Button>
                       <span className="ml-auto font-semibold">
-                        {formatPrice((item.product.offer_price || item.product.price) * item.quantity)}
+                        {formatPrice((item.variant_price || item.product.offer_price || item.product.price) * item.quantity)}
                       </span>
                     </div>
 

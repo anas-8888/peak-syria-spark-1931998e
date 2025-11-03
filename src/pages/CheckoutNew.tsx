@@ -701,20 +701,41 @@ export default function CheckoutNew() {
     try {
       // Check stock availability for all items
       for (const item of cartItems) {
-        const { data: product, error: stockError } = await supabase
-          .from("products")
-          .select("stock_quantity, name")
-          .eq("id", item.product_id)
-          .single();
+        if (item.variant_id) {
+          // Check variant stock for items with variants
+          const { data: variant, error: variantError } = await supabase
+            .from("product_variants")
+            .select("stock_quantity, size, colors(name)")
+            .eq("id", item.variant_id)
+            .single();
 
-        if (stockError) throw stockError;
+          if (variantError) throw variantError;
 
-        if (product.stock_quantity < item.quantity) {
-          toast.error(
-            `Insufficient stock for ${product.name}. Available: ${product.stock_quantity}, Requested: ${item.quantity}`
-          );
-          setSubmitting(false);
-          return;
+          if (variant.stock_quantity < item.quantity) {
+            const colorName = (variant.colors as any)?.name || '';
+            toast.error(
+              `Insufficient stock for ${item.product.name} (${colorName} - ${variant.size}). Available: ${variant.stock_quantity}, Requested: ${item.quantity}`
+            );
+            setSubmitting(false);
+            return;
+          }
+        } else {
+          // Check product stock for non-variant items
+          const { data: product, error: stockError } = await supabase
+            .from("products")
+            .select("stock_quantity, name")
+            .eq("id", item.product_id)
+            .single();
+
+          if (stockError) throw stockError;
+
+          if (product.stock_quantity < item.quantity) {
+            toast.error(
+              `Insufficient stock for ${product.name}. Available: ${product.stock_quantity}, Requested: ${item.quantity}`
+            );
+            setSubmitting(false);
+            return;
+          }
         }
       }
 
@@ -744,8 +765,11 @@ export default function CheckoutNew() {
           p_items: cartItems.map((item) => ({
             product_id: item.product_id,
             quantity: item.quantity,
-            price: item.product.offer_price || item.product.price,
+            price: item.variant_price || item.product.offer_price || item.product.price,
             notes: item.notes || "",
+            variant_id: item.variant_id || null,
+            selected_color: item.selected_color || null,
+            selected_size: item.selected_size || null,
           })),
         }
       );

@@ -165,6 +165,43 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     if (quantity < 1) return;
 
     try {
+      // Get the cart item to check variant stock
+      const cartItem = cartItems.find(item => item.id === itemId);
+      if (!cartItem) {
+        toast.error("Cart item not found");
+        return;
+      }
+
+      // If item has a variant, check variant stock
+      if (cartItem.variant_id) {
+        const { data: variant, error: variantError } = await supabase
+          .from("product_variants")
+          .select("stock_quantity")
+          .eq("id", cartItem.variant_id)
+          .single();
+
+        if (variantError) throw variantError;
+
+        if (quantity > variant.stock_quantity) {
+          toast.error(`Only ${variant.stock_quantity} items available for this variant`);
+          return;
+        }
+      } else {
+        // Check product stock for non-variant items
+        const { data: product, error: productError } = await supabase
+          .from("products")
+          .select("stock_quantity")
+          .eq("id", cartItem.product_id)
+          .single();
+
+        if (productError) throw productError;
+
+        if (quantity > product.stock_quantity) {
+          toast.error(`Only ${product.stock_quantity} items available`);
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from("cart_items")
         .update({ quantity })
