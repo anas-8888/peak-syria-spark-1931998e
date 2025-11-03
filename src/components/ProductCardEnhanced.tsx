@@ -376,6 +376,16 @@ const ProductCardEnhanced = ({
               <div>
                 <p className="text-sm text-muted-foreground uppercase">{category}</p>
                 <h2 className="text-2xl font-bold">{name}</h2>
+                {targetGender && targetGender !== "both" && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {targetGender === "men" ? "Men's" : "Women's"}
+                  </p>
+                )}
+                {flag && (
+                  <div className="inline-block bg-secondary/80 text-secondary-foreground px-2 py-1 rounded text-xs font-semibold uppercase mt-2">
+                    {flag}
+                  </div>
+                )}
               </div>
               {/* Price Display - Show range if variants exist and prices differ */}
               {minPrice && maxPrice && minPrice !== maxPrice && !unifiedPricing ? (
@@ -398,11 +408,13 @@ const ProductCardEnhanced = ({
               )}
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
-                  <span key={i} className={`text-lg ${i < Math.floor(rating) ? "text-primary" : "text-muted-foreground"}`}>
+                  <span key={i} className={`text-lg ${i < Math.floor(displayRating) ? "text-primary" : "text-muted-foreground"}`}>
                     ★
                   </span>
                 ))}
-                <span className="text-sm text-muted-foreground ml-2">({rating} / 5)</span>
+                <span className="text-sm text-muted-foreground ml-2">
+                  {reviews.length > 0 ? `${displayRating.toFixed(1)} (${reviews.length} reviews)` : 'No reviews yet'}
+                </span>
               </div>
               <div>
                 <h4 className="font-semibold mb-2">{t("product.colors")}:</h4>
