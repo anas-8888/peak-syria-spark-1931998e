@@ -1767,6 +1767,10 @@ const Products = () => {
                         <p className="text-lg font-bold text-primary">${selectedProduct.offer_price.toFixed(2)}</p>
                         <p className="text-sm text-muted-foreground line-through">${selectedProduct.price.toFixed(2)}</p>
                       </div>
+                    ) : selectedProduct.min_price && selectedProduct.max_price && selectedProduct.min_price !== selectedProduct.max_price ? (
+                      <p className="text-lg font-bold text-muted-foreground">
+                        ${selectedProduct.min_price.toFixed(2)} - ${selectedProduct.max_price.toFixed(2)}
+                      </p>
                     ) : (
                       <p className="text-lg font-bold">${(selectedProduct.price || 0).toFixed(2)}</p>
                     )}
