@@ -163,16 +163,20 @@ const Products = () => {
         
         // Calculate price range and total stock from active variants
         const prices = productVariants.map(v => v.price).filter(p => p > 0);
-        const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
-        const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+        const minPrice = prices.length > 0 ? Math.min(...prices) : product.price;
+        const maxPrice = prices.length > 0 ? Math.max(...prices) : product.price;
         const totalStock = productVariants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0);
+        
+        // Preserve the actual offer_price from database if it exists
+        // Only show variant price range if no unified pricing with offer price
+        const hasOfferPrice = product.offer_price && product.offer_price < product.price;
         
         return {
           ...product,
           image_url: primaryImage?.image_url || product.image_url,
-          price: minPrice, // Use min price for display
-          offer_price: minPrice !== maxPrice ? maxPrice : null, // Show range if prices differ
-          stock_quantity: totalStock,
+          price: hasOfferPrice ? product.price : minPrice, // Keep original price if has offer, otherwise use min variant price
+          offer_price: hasOfferPrice ? product.offer_price : (minPrice !== maxPrice ? maxPrice : null), // Keep offer_price if exists, otherwise show variant range
+          stock_quantity: totalStock || product.stock_quantity,
           colors: product.colors as any as {
             color: string;
             image_id: string;
