@@ -472,6 +472,32 @@ const Products = () => {
     },
     enabled: !!selectedProduct?.id && isPreviewDialogOpen
   });
+
+  // Fetch product reviews for rating calculation in preview
+  const {
+    data: previewReviews = []
+  } = useQuery({
+    queryKey: ["product-reviews-preview", selectedProduct?.id],
+    queryFn: async () => {
+      if (!selectedProduct?.id) return [];
+      const {
+        data,
+        error
+      } = await supabase
+        .from("product_reviews")
+        .select("rating")
+        .eq("product_id", selectedProduct.id)
+        .eq("status", "approved");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedProduct?.id && isPreviewDialogOpen
+  });
+
+  // Calculate average rating for preview
+  const previewRating = previewReviews.length > 0
+    ? previewReviews.reduce((sum, review) => sum + review.rating, 0) / previewReviews.length
+    : 0;
   const filteredProducts = products.filter(product => product.name.toLowerCase().includes(searchTerm.toLowerCase()));
   const resetForm = () => {
     setFormData({
@@ -1754,7 +1780,14 @@ const Products = () => {
                     <Label className="text-muted-foreground">Rating</Label>
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">{selectedProduct.rating || 0}/5</span>
+                      <span className="font-medium">
+                        {previewRating > 0 ? previewRating.toFixed(1) : '0'}/5
+                        {previewReviews.length > 0 && (
+                          <span className="text-xs text-muted-foreground ml-1">
+                            ({previewReviews.length} {previewReviews.length === 1 ? 'review' : 'reviews'})
+                          </span>
+                        )}
+                      </span>
                     </div>
                   </div>
                 </div>
