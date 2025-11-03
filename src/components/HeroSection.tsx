@@ -166,17 +166,18 @@ const HeroSection = () => {
       </button>
 
       {/* Dots Indicator */}
-      <div className="flex absolute bottom-3 left-1/2 -translate-x-1/2 gap-1.5 z-30">
+      <div className="flex absolute bottom-8 left-1/2 -translate-x-1/2 gap-2.5 z-30">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`transition-all duration-300 hover:scale-110 shadow-sm ${
+            className={`transition-all duration-300 hover:scale-110 shadow-sm !min-h-0 !min-w-0 ${
               index === currentSlide
-                ? "h-1.5 w-4 bg-red-500 rounded-full"
-                : "h-1.5 w-2 bg-gray-400 hover:bg-gray-300 rounded-full"
+                ? "h-2.5 w-10 bg-red-500 rounded-full"
+                : "h-2.5 w-2.5 bg-gray-400 hover:bg-gray-300 rounded-full"
             }`}
             aria-label={`Go to slide ${index + 1}`}
+            style={{ minHeight: 0, minWidth: 0 }}
           />
         ))}
       </div>
