@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
 interface ProductCardEnhancedProps {
   id: string;
@@ -59,6 +60,29 @@ const ProductCardEnhanced = ({
   const { user } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
+
+  // Fetch approved reviews for this product to calculate real rating
+  const { data: reviews = [] } = useQuery({
+    queryKey: ['product-reviews-card', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_reviews')
+        .select('rating')
+        .eq('product_id', id)
+        .eq('status', 'approved');
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Calculate average rating from approved reviews
+  const averageRating = reviews.length > 0 
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
+    : 0;
+
+  // Use calculated rating or fall back to prop rating
+  const displayRating = reviews.length > 0 ? averageRating : rating;
 
   // Update current image when image prop changes
   useEffect(() => {
@@ -265,11 +289,13 @@ const ProductCardEnhanced = ({
           {/* Rating */}
           <div className="flex items-center gap-0.5 sm:gap-1">
             {[...Array(5)].map((_, i) => (
-              <span key={i} className={`${viewMode === "list" ? "text-[10px] sm:text-xs md:text-sm" : "text-xs sm:text-sm"} ${i < Math.floor(rating) ? "text-primary" : "text-muted-foreground"}`}>
+              <span key={i} className={`${viewMode === "list" ? "text-[10px] sm:text-xs md:text-sm" : "text-xs sm:text-sm"} ${i < Math.floor(displayRating) ? "text-primary" : "text-muted-foreground"}`}>
                 ★
               </span>
             ))}
-            <span className={`${viewMode === "list" ? "text-[10px] sm:text-xs" : "text-xs"} text-muted-foreground ml-0.5 sm:ml-1`}>({rating})</span>
+            <span className={`${viewMode === "list" ? "text-[10px] sm:text-xs" : "text-xs"} text-muted-foreground ml-0.5 sm:ml-1`}>
+              {reviews.length > 0 ? `${displayRating.toFixed(1)} (${reviews.length})` : '(0)'}
+            </span>
           </div>
 
           {/* Sizes - Hide on small mobile in list view */}
