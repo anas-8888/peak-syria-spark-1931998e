@@ -231,4 +231,10 @@ All colors MUST be HSL.
   .carousel-container:hover .opacity-0 {
     opacity: 1;
   }
+
+  /* Performance optimization - content-visibility for off-screen content */
+  section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
+  }
 }

@@ -95,7 +95,7 @@ const ProductShowcase = () => {
   return <div className="w-full space-y-24">
       {showcases.map(showcase => {
       const products = showcaseProductsMap?.[showcase.id] || [];
-      return <section key={showcase.id} className="py-16 overflow-hidden">
+      return <section key={showcase.id} className="py-16 overflow-hidden min-h-[900px]">
             <div className="w-full px-4 sm:px-6 lg:px-8">
               {/* Hero Section - Split Layout */}
               <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
