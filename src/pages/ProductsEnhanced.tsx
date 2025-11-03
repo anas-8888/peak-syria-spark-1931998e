@@ -420,10 +420,11 @@ const ProductsEnhanced = () => {
                   {/* Pagination */}
                   {totalPages > 1 && (
                     <Pagination className="mt-8">
-                      <PaginationContent className="flex-wrap gap-1">
+                      <PaginationContent className="flex-wrap gap-2">
                         <PaginationItem>
                           <PaginationPrevious
-                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            href="#"
+                            onClick={(e) => { e.preventDefault(); setCurrentPage(prev => Math.max(1, prev - 1)); }}
                             className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                           />
                         </PaginationItem>
@@ -434,9 +435,12 @@ const ProductsEnhanced = () => {
                               <PaginationEllipsis />
                             ) : (
                               <PaginationLink
-                                onClick={() => setCurrentPage(pageNum as number)}
+                                href="#"
+                                size="default"
+                                onClick={(e) => { e.preventDefault(); setCurrentPage(pageNum as number); }}
                                 isActive={currentPage === pageNum}
                                 className="cursor-pointer"
+                                aria-label={`Go to page ${pageNum}`}
                               >
                                 {pageNum}
                               </PaginationLink>
@@ -446,7 +450,8 @@ const ProductsEnhanced = () => {
 
                         <PaginationItem>
                           <PaginationNext
-                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            href="#"
+                            onClick={(e) => { e.preventDefault(); setCurrentPage(prev => Math.min(totalPages, prev + 1)); }}
                             className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                           />
                         </PaginationItem>
