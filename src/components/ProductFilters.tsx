@@ -116,13 +116,14 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
         <h3 className="font-bold text-lg">Categories</h3>
         {categories.length > 0 ? (
           categories.map((category) => (
-            <div key={category} className="flex items-center space-x-2">
+            <div key={category} className="flex items-center space-x-1.5">
               <Checkbox
                 id={`cat-${category}`}
                 checked={localFilters.categories.includes(category)}
                 onCheckedChange={() => handleCategoryToggle(category)}
+                className="h-3.5 w-3.5"
               />
-              <Label htmlFor={`cat-${category}`} className="cursor-pointer">
+              <Label htmlFor={`cat-${category}`} className="cursor-pointer text-xs">
                 {category}
               </Label>
             </div>
