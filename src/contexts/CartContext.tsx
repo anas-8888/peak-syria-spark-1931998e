@@ -125,11 +125,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
+      // Normalize values to match database behavior
+      const normalizedColor = selectedColor || null;
+      const normalizedSize = selectedSize || null;
+      
       // Check if this exact variant already in cart (match by product + color + size)
       const existingItem = cartItems.find(item => 
         item.product_id === productId && 
-        item.selected_color === (selectedColor || null) &&
-        item.selected_size === (selectedSize || null)
+        item.selected_color === normalizedColor &&
+        item.selected_size === normalizedSize
       );
 
       if (existingItem) {
@@ -154,11 +158,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       } else {
         // Verify stock before adding new item
         if (variantId) {
-          const { data: variant } = await supabase
+          const { data: variant, error: stockError } = await supabase
             .from("product_variants")
             .select("stock_quantity")
             .eq("id", variantId)
             .single();
+          
+          if (stockError) {
+            toast.error("Failed to check stock availability");
+            return;
+          }
           
           if (variant && quantity > variant.stock_quantity) {
             toast.error(`Only ${variant.stock_quantity} items available`);
@@ -175,18 +184,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             quantity,
             notes: notes || null,
             variant_id: variantId || null,
-            selected_color: selectedColor || null,
-            selected_size: selectedSize || null,
+            selected_color: normalizedColor,
+            selected_size: normalizedSize,
             variant_price: variantPrice || null,
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error adding to cart:", error);
+          throw error;
+        }
         await fetchCart();
         toast.success("Added to cart");
       }
     } catch (error: any) {
       console.error("Error adding to cart:", error);
-      toast.error("Failed to add to cart");
+      toast.error(error.message || "Failed to add to cart");
     }
   };
 
