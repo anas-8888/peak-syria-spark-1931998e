@@ -17,47 +17,46 @@ const Navbar = () => {
     user,
     signOut
   } = useAuth();
-  const { cartCount } = useCart();
+  const {
+    cartCount
+  } = useCart();
   const [avatarUrl, setAvatarUrl] = useState("");
   const [fullName, setFullName] = useState("");
   const [userRole, setUserRole] = useState("");
 
   // Fetch hero slides that should show in navbar
-  const { data: navbarFlags = [] } = useQuery({
+  const {
+    data: navbarFlags = []
+  } = useQuery({
     queryKey: ["navbar-flags"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("hero_slides")
-        .select("flag_name, button_url")
-        .eq("is_active", true)
-        .eq("show_in_navbar", true)
-        .order("display_order");
-
+      const {
+        data,
+        error
+      } = await supabase.from("hero_slides").select("flag_name, button_url").eq("is_active", true).eq("show_in_navbar", true).order("display_order");
       if (error) throw error;
       // Transform button_url to use /flag-products route with query param
       return (data || []).map(flag => ({
         ...flag,
         button_url: `/flag-products?flag=${encodeURIComponent(flag.flag_name)}`
       }));
-    },
+    }
   });
 
   // Fetch categories that should show in navbar
-  const { data: navbarCategories = [] } = useQuery({
+  const {
+    data: navbarCategories = []
+  } = useQuery({
     queryKey: ["navbar-categories"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("id, name")
-        .eq("is_active", true)
-        .eq("show_in_navbar", true)
-        .order("display_order");
-
+      const {
+        data,
+        error
+      } = await supabase.from("categories").select("id, name").eq("is_active", true).eq("show_in_navbar", true).order("display_order");
       if (error) throw error;
       return data || [];
-    },
+    }
   });
-
   useEffect(() => {
     if (user) {
       loadProfile();
@@ -78,7 +77,6 @@ const Navbar = () => {
         loadProfile();
       }
     };
-
     window.addEventListener('avatarUpdated', handleAvatarUpdate);
     return () => window.removeEventListener('avatarUpdated', handleAvatarUpdate);
   }, [user]);
@@ -89,9 +87,7 @@ const Navbar = () => {
       } = await supabase.from("profiles").select("avatar_url, full_name, role_id").eq("id", user?.id).single();
       if (profileData) {
         // Add cache-busting timestamp to avatar URL to prevent caching issues
-        const avatarWithTimestamp = profileData.avatar_url 
-          ? `${profileData.avatar_url}?t=${Date.now()}`
-          : "";
+        const avatarWithTimestamp = profileData.avatar_url ? `${profileData.avatar_url}?t=${Date.now()}` : "";
         setAvatarUrl(avatarWithTimestamp);
         setFullName(profileData.full_name || "");
 
@@ -122,8 +118,7 @@ const Navbar = () => {
   ...navbarCategories.map(category => ({
     name: category.name,
     path: `/products?category=${encodeURIComponent(category.name.toLowerCase())}`
-  })),
-  {
+  })), {
     name: "About",
     path: "/about"
   }];
@@ -132,14 +127,8 @@ const Navbar = () => {
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-18 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 group flex-shrink-0">
-            <img 
-              src={peakLogo} 
-              alt="PEAK Official Logo" 
-              width="110" 
-              height="96"
-              className="h-10 sm:h-12 md:h-14 lg:h-16 w-auto transition-transform duration-300 group-hover:scale-110" 
-            />
+          <Link to="/" className="flex items-center space-x-2 group flex-shrink-0 mx-[15px]">
+            <img src={peakLogo} alt="PEAK Official Logo" width="110" height="96" className="h-10 sm:h-12 md:h-14 lg:h-16 w-auto transition-transform duration-300 group-hover:scale-110" />
             <div className="flex items-center">
               
             </div>
@@ -168,11 +157,9 @@ const Navbar = () => {
             <Link to="/cart">
               <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full hover:bg-accent/50 transition-all duration-300 hover:scale-110">
                 <ShoppingCart className="h-5 w-5" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-primary to-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
+                {cartCount > 0 && <span className="absolute -top-1 -right-1 bg-gradient-to-r from-primary to-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
                     {cartCount}
-                  </span>
-                )}
+                  </span>}
               </Button>
             </Link>
             {user ? <DropdownMenu>
@@ -180,11 +167,9 @@ const Navbar = () => {
                   <Button variant="ghost" className="gap-2 rounded-full px-3 py-2 h-auto hover:bg-accent/50 transition-all duration-300 hover:scale-105">
                     <Avatar className="h-8 w-8 border-2 border-primary/20">
                       <AvatarImage src={avatarUrl} alt={fullName} />
-                      {!avatarUrl && (
-                        <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold text-sm">
+                      {!avatarUrl && <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold text-sm">
                           {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      )}
+                        </AvatarFallback>}
                     </Avatar>
                     <span className="font-semibold hidden xl:inline-block">
                       {fullName || user.email?.split('@')[0]}
@@ -245,11 +230,9 @@ const Navbar = () => {
                 <Link to="/cart">
                   <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-8 sm:w-8 rounded-full hover:bg-accent/50 transition-all">
                     <ShoppingCart className="h-4 w-4" />
-                    {cartCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-primary to-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold shadow-lg">
+                    {cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-primary to-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold shadow-lg">
                         {cartCount}
-                      </span>
-                    )}
+                      </span>}
                   </Button>
                 </Link>
               </div>
@@ -257,11 +240,9 @@ const Navbar = () => {
                   <div className="flex items-center justify-center gap-1.5 p-1.5 bg-accent/50 rounded-full">
                     <Avatar className="h-6 w-6 sm:h-7 sm:w-7 border border-primary/20">
                       <AvatarImage src={avatarUrl} alt={fullName} />
-                      {!avatarUrl && (
-                        <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold text-[10px] sm:text-xs">
+                      {!avatarUrl && <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold text-[10px] sm:text-xs">
                           {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      )}
+                        </AvatarFallback>}
                     </Avatar>
                     <span className="font-semibold text-[10px] sm:text-xs">
                       {fullName || user.email?.split('@')[0]}
