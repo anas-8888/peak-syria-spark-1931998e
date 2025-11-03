@@ -42,8 +42,8 @@ const ProductShowcase = () => {
     queryKey: ["showcase-products-map"],
     queryFn: async () => {
       const {
-        data,
-        error
+        data: showcaseData,
+        error: showcaseError
       } = await supabase.from("showcase_products").select(`
           showcase_id,
           product_id,
@@ -51,19 +51,42 @@ const ProductShowcase = () => {
           products:product_id (
             id,
             name,
-            image_url,
             price
           )
         `).order("display_order");
-      if (error) throw error;
+      if (showcaseError) throw showcaseError;
 
-      // Group by showcase_id
+      // Get all product IDs
+      const productIds = showcaseData.map((item: any) => item.product_id);
+      
+      // Fetch primary images for all products
+      const { data: imagesData, error: imagesError } = await supabase
+        .from("product_images")
+        .select("product_id, image_url")
+        .in("product_id", productIds)
+        .eq("is_primary", true);
+      
+      if (imagesError) throw imagesError;
+
+      // Create image map
+      const imageMap: Record<string, string> = {};
+      imagesData?.forEach((img: any) => {
+        imageMap[img.product_id] = img.image_url;
+      });
+
+      // Group by showcase_id and add image_url
       const map: Record<string, ShowcaseProduct[]> = {};
-      data.forEach((item: any) => {
+      showcaseData.forEach((item: any) => {
         if (!map[item.showcase_id]) {
           map[item.showcase_id] = [];
         }
-        map[item.showcase_id].push(item);
+        map[item.showcase_id].push({
+          ...item,
+          products: {
+            ...item.products,
+            image_url: imageMap[item.product_id] || ""
+          }
+        });
       });
       return map;
     }
