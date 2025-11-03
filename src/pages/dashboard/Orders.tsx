@@ -55,6 +55,8 @@ type OrderWithDetails = {
     quantity: number;
     price: number;
     notes: string | null;
+    selected_color: string | null;
+    selected_size: string | null;
     products: {
       name: string;
       image_url: string;
@@ -124,6 +126,8 @@ const Orders = () => {
             quantity,
             price,
             notes,
+            selected_color,
+            selected_size,
             products (
               name,
               image_url
@@ -432,12 +436,19 @@ const Orders = () => {
                   {selectedOrder.order_items.map((item) => (
                     <div key={item.id} className="flex items-start gap-3 p-3 border rounded-lg">
                       <img
-                        src={item.products.image_url}
+                        src={item.products.image_url || "/placeholder.svg"}
                         alt={item.products.name}
-                        className="h-16 w-16 object-cover rounded"
+                        className="h-16 w-16 object-cover rounded bg-muted"
                       />
                       <div className="flex-1">
                         <p className="font-medium">{item.products.name}</p>
+                        {(item.selected_color || item.selected_size) && (
+                          <p className="text-sm text-muted-foreground">
+                            {item.selected_color && <span>Color: {item.selected_color}</span>}
+                            {item.selected_color && item.selected_size && <span> • </span>}
+                            {item.selected_size && <span>Size: {item.selected_size}</span>}
+                          </p>
+                        )}
                         <p className="text-sm text-muted-foreground">
                           Quantity: {item.quantity} × {formatPrice(item.price)}
                         </p>

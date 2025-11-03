@@ -125,18 +125,47 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      // Check if this exact variant already in cart
+      // Check if this exact variant already in cart (match by product + color + size)
       const existingItem = cartItems.find(item => 
         item.product_id === productId && 
-        (variantId ? item.variant_id === variantId : !item.variant_id)
+        item.selected_color === (selectedColor || null) &&
+        item.selected_size === (selectedSize || null)
       );
 
       if (existingItem) {
-        // Update quantity
+        // Verify stock before updating quantity
         const newQuantity = existingItem.quantity + quantity;
+        
+        if (variantId || existingItem.variant_id) {
+          const { data: variant } = await supabase
+            .from("product_variants")
+            .select("stock_quantity")
+            .eq("id", variantId || existingItem.variant_id)
+            .single();
+          
+          if (variant && newQuantity > variant.stock_quantity) {
+            toast.error(`Only ${variant.stock_quantity} items available`);
+            return;
+          }
+        }
+        
         await updateQuantity(existingItem.id, newQuantity);
         toast.success("Cart updated");
       } else {
+        // Verify stock before adding new item
+        if (variantId) {
+          const { data: variant } = await supabase
+            .from("product_variants")
+            .select("stock_quantity")
+            .eq("id", variantId)
+            .single();
+          
+          if (variant && quantity > variant.stock_quantity) {
+            toast.error(`Only ${variant.stock_quantity} items available`);
+            return;
+          }
+        }
+        
         // Insert new item
         const { error } = await supabase
           .from("cart_items")
