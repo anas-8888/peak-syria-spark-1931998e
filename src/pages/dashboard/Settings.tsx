@@ -64,7 +64,9 @@ const Settings = () => {
           setPhone(data.phone || "");
         }
       } catch (error) {
-        console.error("Error loading profile:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error loading profile:", error);
+        }
         toast.error("Failed to load profile");
       } finally {
         setLoadingProfile(false);
@@ -99,7 +101,9 @@ const Settings = () => {
           setLocationDescription(data.location_description || "");
         }
       } catch (error) {
-        console.error("Error loading store settings:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error loading store settings:", error);
+        }
       }
     };
 
@@ -124,7 +128,9 @@ const Settings = () => {
 
       toast.success("Profile updated successfully");
     } catch (error) {
-      console.error("Error updating profile:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error updating profile:", error);
+      }
       toast.error("Failed to update profile");
     } finally {
       setLoading(false);
@@ -132,30 +138,74 @@ const Settings = () => {
   };
 
   const handleUpdatePassword = async () => {
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+    if (!currentPassword) {
+      toast.error("Please enter your current password");
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+
+    if (newPassword.length < 12) {
+      toast.error("Password must be at least 12 characters");
+      return;
+    }
+
+    if (!/[A-Z]/.test(newPassword)) {
+      toast.error("Password must contain at least one uppercase letter");
+      return;
+    }
+
+    if (!/[a-z]/.test(newPassword)) {
+      toast.error("Password must contain at least one lowercase letter");
+      return;
+    }
+
+    if (!/[0-9]/.test(newPassword)) {
+      toast.error("Password must contain at least one number");
+      return;
+    }
+
+    if (!/[^A-Za-z0-9]/.test(newPassword)) {
+      toast.error("Password must contain at least one special character");
       return;
     }
 
     setLoading(true);
     try {
+      // Verify current password first
+      if (!user?.email) {
+        throw new Error("User email not found");
+      }
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        toast.error("Current password is incorrect");
+        setLoading(false);
+        return;
+      }
+
+      // Update to new password
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
       if (error) throw error;
 
-      toast.success("Password updated successfully");
+      toast.success("Password updated successfully. Please sign in again with your new password.");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (error) {
-      console.error("Error updating password:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error updating password:", error);
+      }
       toast.error("Failed to update password");
     } finally {
       setLoading(false);
@@ -189,7 +239,9 @@ const Settings = () => {
 
       toast.success("Store settings updated successfully");
     } catch (error) {
-      console.error("Error updating store settings:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error updating store settings:", error);
+      }
       toast.error("Failed to update store settings");
     } finally {
       setLoading(false);

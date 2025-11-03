@@ -246,6 +246,23 @@ const Users = () => {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (data: typeof newUserData) => {
+      // Validate password strength
+      if (data.password.length < 12) {
+        throw new Error("Password must be at least 12 characters long");
+      }
+      if (!/[A-Z]/.test(data.password)) {
+        throw new Error("Password must contain at least one uppercase letter");
+      }
+      if (!/[a-z]/.test(data.password)) {
+        throw new Error("Password must contain at least one lowercase letter");
+      }
+      if (!/[0-9]/.test(data.password)) {
+        throw new Error("Password must contain at least one number");
+      }
+      if (!/[^A-Za-z0-9]/.test(data.password)) {
+        throw new Error("Password must contain at least one special character");
+      }
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
