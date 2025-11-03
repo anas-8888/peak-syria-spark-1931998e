@@ -657,7 +657,7 @@ const Orders = () => {
                         <Button 
                           variant="default" 
                           size="sm"
-                          onClick={() => updateStatusMutation.mutate({ orderId: selectedOrder.id, status: 'pending' })}
+                          onClick={() => updateStatusMutation.mutate({ orderId: selectedOrder.id, status: 'processing' })}
                           disabled={updateStatusMutation.isPending}
                           className="gap-2"
                         >
