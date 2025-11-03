@@ -189,7 +189,7 @@ const ProductCardEnhanced = ({
       }`}>
         {/* Product Image */}
         <div className={`relative overflow-hidden bg-muted ${
-          viewMode === "list" ? "w-24 sm:w-32 md:w-48 h-24 sm:h-32 md:h-48 flex-shrink-0" : "aspect-square"
+          viewMode === "list" ? "w-36 sm:w-32 md:w-48 h-36 sm:h-32 md:h-48 flex-shrink-0" : "aspect-square"
         }`}>
           <img
             src={currentImage}
@@ -199,7 +199,7 @@ const ProductCardEnhanced = ({
 
           {/* Overlay on Hover - Only in grid mode */}
           {viewMode === "grid" && (
-            <div className="absolute inset-0 bg-gradient-to-t from-secondary/90 via-secondary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col items-center justify-end gap-3 pb-6">
+            <div className="absolute inset-0 bg-gradient-to-t from-secondary/90 via-secondary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 hidden sm:flex flex-col items-center justify-end gap-3 pb-6">
               <div className="flex gap-2">
                 <Button
                   variant="outlineWhite"
@@ -267,15 +267,15 @@ const ProductCardEnhanced = ({
           </div>
 
           {/* Colors */}
-          <div className="flex gap-1 sm:gap-2">
+          <div className="flex gap-2 sm:gap-3">
             {colors.slice(0, viewMode === "list" ? 3 : colors.length).map((color) => (
               <button
                 key={color}
                 onClick={() => handleColorChange(color)}
                 className={`rounded-full border transition-all ${
                   viewMode === "list" 
-                    ? `w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 ${selectedColor === color ? "border-primary scale-110 ring-1 ring-primary ring-offset-0.5" : "border-border"}`
-                    : `w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 ${selectedColor === color ? "border-primary scale-110 ring-1 ring-primary ring-offset-0.5" : "border-border"}`
+                    ? `w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-4 md:h-4 ${selectedColor === color ? "border-primary scale-110 ring-1 ring-primary ring-offset-0.5" : "border-border"}`
+                    : `w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-5 md:h-5 ${selectedColor === color ? "border-primary scale-110 ring-1 ring-primary ring-offset-0.5" : "border-border"}`
                 }`}
                 style={{ backgroundColor: colorMap[color] || color }}
                 title={color}
@@ -305,23 +305,23 @@ const ProductCardEnhanced = ({
             </div>
           )}
 
-          <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 md:gap-3 ${viewMode === "list" ? "justify-between mt-auto pt-1.5 sm:pt-2 md:pt-4 border-t" : "justify-between pt-1 sm:pt-1.5 md:pt-2 border-t"}`}>
+          <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 md:gap-3 ${viewMode === "list" ? "justify-between mt-auto pt-1.5 sm:pt-2 md:pt-4 border-t" : "justify-center sm:justify-between pt-0.5 sm:pt-1.5 md:pt-2 border-t"}`}>
             {/* Price Display - Show range if variants exist and prices differ */}
             {minPrice && maxPrice && minPrice !== maxPrice && !unifiedPricing ? (
-              <span className={`font-bold text-primary ${viewMode === "list" ? "text-xs sm:text-base md:text-xl lg:text-2xl" : "text-[10px] sm:text-sm md:text-xl"}`}>
+              <span className={`font-bold text-primary w-full text-center sm:text-left sm:w-auto ${viewMode === "list" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-base sm:text-sm md:text-xl"}`}>
                 {formatPrice(minPrice)} - {formatPrice(maxPrice)}
               </span>
             ) : offerPrice ? (
-              <div className="flex items-center gap-1 sm:gap-2">
-                <span className={`font-bold text-primary ${viewMode === "list" ? "text-xs sm:text-base md:text-xl lg:text-2xl" : "text-[10px] sm:text-sm md:text-xl"}`}>
+              <div className="flex items-center justify-center sm:justify-start gap-1 sm:gap-2 w-full sm:w-auto">
+                <span className={`font-bold text-primary ${viewMode === "list" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-base sm:text-sm md:text-xl"}`}>
                   {formatPrice(offerPrice)}
                 </span>
-                <span className={`line-through text-muted-foreground ${viewMode === "list" ? "text-[10px] sm:text-sm md:text-base" : "text-[8px] sm:text-xs md:text-sm"}`}>
+                <span className={`line-through text-muted-foreground ${viewMode === "list" ? "text-xs sm:text-sm md:text-base" : "text-[8px] sm:text-xs md:text-sm"}`}>
                   {formatPrice(price)}
                 </span>
               </div>
             ) : (
-              <span className={`font-bold text-primary ${viewMode === "list" ? "text-xs sm:text-base md:text-xl lg:text-2xl" : "text-[10px] sm:text-sm md:text-xl"}`}>
+              <span className={`font-bold text-primary w-full text-center sm:text-left sm:w-auto ${viewMode === "list" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-base sm:text-sm md:text-xl"}`}>
                 {formatPrice(minPrice || price)}
               </span>
             )}
@@ -331,7 +331,7 @@ const ProductCardEnhanced = ({
                   variant="outline"
                   size="iconXs"
                   onClick={() => setQuickViewOpen(true)}
-                  className="flex-shrink-0 h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 p-0"
+                  className="hidden sm:flex flex-shrink-0 h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 p-0"
                 >
                   <Eye className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 lg:h-4 lg:w-4" />
                 </Button>
@@ -344,7 +344,7 @@ const ProductCardEnhanced = ({
                 >
                   <Heart className={`h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 lg:h-4 lg:w-4 ${isFavorite ? "fill-current" : ""}`} />
                 </Button>
-                <Button variant="hero" size="xs" className="flex-1 sm:flex-initial text-[8px] sm:text-[10px] md:text-xs lg:text-sm h-5 sm:h-6 md:h-8 lg:h-10 px-1 sm:px-2 md:px-3" asChild>
+                <Button variant="hero" size="xs" className="flex-1 sm:flex-initial text-[10px] sm:text-xs md:text-sm lg:text-base h-6 sm:h-7 md:h-8 lg:h-10 px-2 sm:px-3 md:px-4" asChild>
                   <Link to={`/product/${id}`}>
                     <span className="hidden sm:inline">View Details</span>
                     <span className="sm:hidden">View</span>
@@ -352,7 +352,7 @@ const ProductCardEnhanced = ({
                 </Button>
               </div>
             ) : (
-              <Button size="xs" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10 text-[8px] sm:text-[9px] md:text-sm h-5 sm:h-6 md:h-9 px-1.5 sm:px-2 md:px-4" asChild>
+              <Button size="xs" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10 text-sm sm:text-xs md:text-sm h-8 sm:h-7 md:h-9 px-4 sm:px-3 md:px-4 w-full sm:w-auto" asChild>
                 <Link to={`/product/${id}`}>
                   View Details
                 </Link>

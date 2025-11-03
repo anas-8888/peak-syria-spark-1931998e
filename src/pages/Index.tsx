@@ -169,7 +169,7 @@ const Index = () => {
                 const container = document.getElementById('featured-scroll');
                 if (container) container.scrollBy({ left: -320, behavior: 'smooth' });
               }}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 carousel-container:hover:opacity-100 transition-opacity pointer-events-auto"
+              className="hidden sm:block absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 carousel-container:hover:opacity-100 transition-opacity pointer-events-auto"
               aria-label="Scroll left"
             >
               <ArrowRight className="h-6 w-6 rotate-180" />
@@ -183,7 +183,7 @@ const Index = () => {
                 const container = document.getElementById('featured-scroll');
                 if (container) container.scrollBy({ left: 320, behavior: 'smooth' });
               }}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 carousel-container:hover:opacity-100 transition-opacity pointer-events-auto"
+              className="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 carousel-container:hover:opacity-100 transition-opacity pointer-events-auto"
               aria-label="Scroll right"
             >
               <ArrowRight className="h-6 w-6" />
@@ -195,7 +195,7 @@ const Index = () => {
                   <div 
                     key={product.id}
                     style={{ animationDelay: `${index * 100}ms` }}
-                    className="animate-fade-in w-[165px] sm:w-[280px] flex-shrink-0 isolate"
+                    className="animate-fade-in w-[230px] sm:w-[280px] flex-shrink-0 isolate"
                   >
                     <ProductCardEnhanced {...product} />
                   </div>

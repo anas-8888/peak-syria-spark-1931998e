@@ -35,7 +35,13 @@ interface Product {
 
 const ProductsEnhanced = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  // Set default view mode to list on mobile, grid on desktop
+  const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth < 640 ? "list" : "grid";
+    }
+    return "grid";
+  });
   const [sortBy, setSortBy] = useState("featured");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
