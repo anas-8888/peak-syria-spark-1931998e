@@ -747,10 +747,11 @@ const Products = () => {
                         )}
                       </TableCell>
                       <TableCell className="font-semibold">
-                        {product.offer_price && product.offer_price !== product.price ? (
-                          <div className="flex flex-col">
-                            <span className="text-sm text-muted-foreground">
-                              ${product.price?.toFixed(2)} - ${product.offer_price?.toFixed(2)}
+                        {product.offer_price && product.offer_price < product.price ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-primary">${product.offer_price.toFixed(2)}</span>
+                            <span className="text-sm text-muted-foreground line-through">
+                              ${product.price.toFixed(2)}
                             </span>
                           </div>
                         ) : (
@@ -1750,8 +1751,15 @@ const Products = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Main Price</Label>
-                    <p className="text-lg font-bold">${(selectedProduct.price || 0).toFixed(2)}</p>
+                    <Label className="text-muted-foreground">Price</Label>
+                    {selectedProduct.offer_price && selectedProduct.offer_price < selectedProduct.price ? (
+                      <div className="flex items-center gap-2">
+                        <p className="text-lg font-bold text-primary">${selectedProduct.offer_price.toFixed(2)}</p>
+                        <p className="text-sm text-muted-foreground line-through">${selectedProduct.price.toFixed(2)}</p>
+                      </div>
+                    ) : (
+                      <p className="text-lg font-bold">${(selectedProduct.price || 0).toFixed(2)}</p>
+                    )}
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Total Stock</Label>
