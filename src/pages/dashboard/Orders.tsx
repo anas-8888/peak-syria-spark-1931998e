@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Eye, Package, Truck, CheckCircle, XCircle, Edit } from "lucide-react";
+import { Search, Eye, Package, Truck, CheckCircle, XCircle, Edit, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,6 +77,7 @@ const statusIcons = {
   delivered: CheckCircle,
   shipped: Truck,
   pending: Package,
+  processing: Settings,
   cancelled: XCircle,
 };
 
@@ -84,13 +85,15 @@ const statusVariants = {
   delivered: "default",
   shipped: "secondary",
   pending: "secondary",
+  processing: "secondary",
   cancelled: "destructive",
 };
 
 const statusLabels = {
   delivered: "Delivered",
   shipped: "In Transit",
-  pending: "Processing",
+  pending: "Pending",
+  processing: "Processing",
   cancelled: "Cancelled",
 };
 
@@ -676,7 +679,7 @@ const Orders = () => {
                         </Button>
                       </>
                     )}
-                    {selectedOrder.status === 'pending' && (
+                    {(selectedOrder.status === 'pending' || selectedOrder.status === 'processing') && (
                       <Button 
                         variant="outline" 
                         size="sm"
