@@ -195,7 +195,7 @@ const Index = () => {
                   <div 
                     key={product.id}
                     style={{ animationDelay: `${index * 100}ms` }}
-                    className="animate-fade-in w-[165px] sm:w-[280px] flex-shrink-0"
+                    className="animate-fade-in w-[165px] sm:w-[280px] flex-shrink-0 isolate"
                   >
                     <ProductCardEnhanced {...product} />
                   </div>
