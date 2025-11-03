@@ -37,7 +37,14 @@ const HomeBanners = () => {
       {fullWidthBanners.map(banner => <div key={banner.id} className="relative h-[400px] rounded-2xl overflow-hidden group" style={{
       backgroundColor: banner.background_color
     }}>
-          <img src={banner.image_url} alt={banner.title} className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-80" />
+          <img 
+            src={banner.image_url} 
+            alt={banner.title}
+            width="1276"
+            height="400"
+            loading="lazy"
+            className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-80" 
+          />
           <div className="relative h-full flex items-center justify-center text-center px-8">
             <div className="max-w-3xl space-y-6" style={{
           color: banner.text_color
@@ -66,7 +73,14 @@ const HomeBanners = () => {
           {halfWidthBanners.map(banner => <div key={banner.id} className="relative h-[300px] rounded-2xl overflow-hidden group" style={{
         backgroundColor: banner.background_color
       }}>
-              <img src={banner.image_url} alt={banner.title} className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-70" />
+              <img 
+                src={banner.image_url} 
+                alt={banner.title}
+                width="638"
+                height="300"
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-70" 
+              />
               <div className="relative h-full flex items-center justify-center text-center px-6">
                 <div className="space-y-4" style={{
             color: banner.text_color
@@ -92,7 +106,14 @@ const HomeBanners = () => {
       {cardBanners.length > 0 && <div className="grid md:grid-cols-3 gap-6">
           {cardBanners.map(banner => <Link key={banner.id} to={banner.link_url || "#"} className="group">
               <div className="relative h-[320px] rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-                <img src={banner.image_url} alt={banner.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <img 
+                  src={banner.image_url} 
+                  alt={banner.title}
+                  width="409"
+                  height="320"
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-6 space-y-2" style={{
             color: banner.text_color

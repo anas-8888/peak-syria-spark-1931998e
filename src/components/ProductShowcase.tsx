@@ -107,7 +107,14 @@ const ProductShowcase = () => {
                   
                   {/* Main Image */}
                   <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-                    <img src={showcase.hero_image_url} alt={showcase.hero_title} className="w-full h-[500px] object-cover transform group-hover:scale-105 transition-transform duration-700" />
+                    <img 
+                      src={showcase.hero_image_url} 
+                      alt={showcase.hero_title}
+                      width="614"
+                      height="500"
+                      loading="lazy"
+                      className="w-full h-[500px] object-cover transform group-hover:scale-105 transition-transform duration-700" 
+                    />
                   {/* Floating Badge */}
                   <div className="absolute top-6 left-6 bg-primary text-primary-foreground px-6 py-3 rounded-full font-bold text-sm shadow-lg animate-bounce-slow">
                     Featured
@@ -156,7 +163,14 @@ const ProductShowcase = () => {
                         <div className="relative overflow-hidden rounded-xl bg-muted shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 animate-fade-in">
                           {/* Product Image */}
                           <div className="aspect-square overflow-hidden bg-background">
-                            <img src={product.image_url || ""} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            <img 
+                              src={product.image_url || ""} 
+                              alt={product.name}
+                              width="280"
+                              height="280"
+                              loading="lazy"
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                            />
                           </div>
 
                           {/* Hover Overlay */}

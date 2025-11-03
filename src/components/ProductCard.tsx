@@ -31,6 +31,9 @@ const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardPro
         <img
           src={image}
           alt={name}
+          width="280"
+          height="280"
+          loading="lazy"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
         

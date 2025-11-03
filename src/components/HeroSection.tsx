@@ -93,14 +93,15 @@ const HeroSection = () => {
             index === currentSlide ? "opacity-100 z-10" : "opacity-0 pointer-events-none"
           }`}
         >
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url(${slide.image_url})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center center",
-            }}
-          >
+          <div className="absolute inset-0">
+            <img
+              src={slide.image_url}
+              alt={slide.title}
+              loading={index === 0 ? "eager" : "lazy"}
+              fetchPriority={index === 0 ? "high" : "auto"}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ objectPosition: "center center" }}
+            />
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
           </div>
 
