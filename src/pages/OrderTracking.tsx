@@ -138,13 +138,21 @@ const OrderTracking = () => {
           shipped_at,
           delivered_at,
           cancelled_at,
+          cancel_reason,
+          cancel_date,
+          cancel_status,
           order_items (
             id,
             quantity,
             price,
             products (
               name,
-              image_url
+              image_url,
+              product_images (
+                image_url,
+                is_primary,
+                display_order
+              )
             )
           ),
           regions (
@@ -497,27 +505,41 @@ const OrderTracking = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {orderDetails.order_items.map((item) => (
-                        <div key={item.id} className="flex items-center gap-4">
-                          <img
-                            src={item.products.image_url || "/placeholder.svg"}
-                            alt={item.products.name}
-                            className="h-20 w-20 object-cover rounded-lg bg-muted"
-                          />
-                          <div className="flex-1">
-                            <h4 className="font-semibold">{item.products.name}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              Quantity: {item.quantity}
-                            </p>
+                      {orderDetails.order_items.map((item) => {
+                        const productImages = (item as any).products?.product_images ?? [];
+                        const primary = productImages.find((img: any) => img.is_primary);
+                        const derivedImage = item.products?.image_url || primary?.image_url || productImages[0]?.image_url || "/placeholder.svg";
+                        return (
+                          <div key={item.id} className="flex items-center gap-4">
+                            <img
+                              src={derivedImage}
+                              alt={item.products.name}
+                              className="h-20 w-20 object-cover rounded-lg bg-muted"
+                              loading="lazy"
+                              width={80}
+                              height={80}
+                              onError={(e) => {
+                                const target = e.currentTarget as HTMLImageElement;
+                                if (!target.src.endsWith("/placeholder.svg")) {
+                                  target.src = "/placeholder.svg";
+                                }
+                              }}
+                            />
+                            <div className="flex-1">
+                              <h4 className="font-semibold">{item.products.name}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                Quantity: {item.quantity}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold">{formatPrice(item.price * item.quantity)}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {formatPrice(item.price)} each
+                              </p>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-semibold">{formatPrice(item.price * item.quantity)}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {formatPrice(item.price)} each
-                            </p>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     <Separator className="my-6" />
