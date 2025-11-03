@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Package, CheckCircle, Truck, XCircle, Clock, Home } from "lucide-react";
+import { ArrowLeft, Package, CheckCircle, Truck, XCircle, Clock, Home, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,6 +65,7 @@ const statusIcons = {
   delivered: CheckCircle,
   shipped: Truck,
   pending: Clock,
+  processing: Settings,
   cancelled: XCircle,
 };
 
@@ -72,6 +73,7 @@ const statusColors = {
   delivered: "bg-green-500",
   shipped: "bg-blue-500",
   pending: "bg-yellow-500",
+  processing: "bg-blue-400",
   cancelled: "bg-red-500",
 };
 
@@ -79,13 +81,15 @@ const statusVariants = {
   delivered: "default",
   shipped: "secondary",
   pending: "secondary",
+  processing: "secondary",
   cancelled: "destructive",
 };
 
 const statusLabels = {
   delivered: "Delivered",
   shipped: "In Transit",
-  pending: "Processing",
+  pending: "Pending",
+  processing: "Processing",
   cancelled: "Cancelled",
 };
 
