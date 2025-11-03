@@ -64,6 +64,14 @@ type OrderWithDetails = {
       image_url: string;
     };
   }>;
+  discount_usages: Array<{
+    id: string;
+    discount_amount: number;
+    discounts: {
+      name: string;
+      code: string | null;
+    };
+  }>;
   regions: {
     name: string;
   } | null;
@@ -138,6 +146,14 @@ const Orders = () => {
             products (
               name,
               image_url
+            )
+          ),
+          discount_usages (
+            id,
+            discount_amount,
+            discounts (
+              name,
+              code
             )
           ),
           regions (
@@ -573,9 +589,22 @@ const Orders = () => {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal:</span>
                     <span className="font-medium">
-                      {formatPrice(selectedOrder.total_amount - selectedOrder.shipping_cost)}
+                      {formatPrice(selectedOrder.total_amount - selectedOrder.shipping_cost + (selectedOrder.discount_usages?.reduce((sum, du) => sum + Number(du.discount_amount), 0) || 0))}
                     </span>
                   </div>
+                  {selectedOrder.discount_usages && selectedOrder.discount_usages.length > 0 && (
+                    <div className="space-y-1">
+                      {selectedOrder.discount_usages.map((usage) => (
+                        <div key={usage.id} className="flex justify-between text-green-600">
+                          <span>
+                            Discount: {usage.discounts.name}
+                            {usage.discounts.code && ` (${usage.discounts.code})`}
+                          </span>
+                          <span className="font-medium">-{formatPrice(usage.discount_amount)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Shipping:</span>
                     <span className="font-medium">{formatPrice(selectedOrder.shipping_cost)}</span>
