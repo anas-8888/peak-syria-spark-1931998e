@@ -81,8 +81,8 @@ const ProductCardEnhanced = ({
     ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
     : 0;
 
-  // Use calculated rating or fall back to prop rating
-  const displayRating = reviews.length > 0 ? averageRating : rating;
+  // Use calculated rating (0 if no reviews)
+  const displayRating = averageRating;
 
   // Update current image when image prop changes
   useEffect(() => {
