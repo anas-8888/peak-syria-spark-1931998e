@@ -79,7 +79,7 @@ const HeroSection = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative h-[350px] sm:h-[450px] md:h-[600px] lg:h-[700px] overflow-hidden bg-secondary w-full"
+      className="relative h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] xl:h-[800px] overflow-hidden bg-secondary w-full"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -101,44 +101,44 @@ const HeroSection = () => {
               backgroundPosition: "center center",
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/30 md:from-black/80 md:via-black/50 md:to-black/20" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
           </div>
 
-          <div className="relative h-full w-full px-4 sm:px-6 md:px-10 lg:px-16 flex items-center sm:items-center md:items-start">
-            <div className="w-full max-w-[90%] sm:max-w-[70%] md:max-w-[50%] space-y-2 sm:space-y-3 md:space-y-5 lg:space-y-7 text-center sm:text-center md:text-left mx-auto md:mx-0">
-              <div className="inline-flex items-center gap-1 sm:gap-1.5 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-2 py-0.5 text-primary text-[10px] sm:text-xs font-semibold animate-slide-in-left">
-                <span className="text-[10px] sm:text-xs">✨</span>
-                <span className="text-[10px] sm:text-xs">{slide.flag_name}</span>
+          <div className="relative h-full w-full px-3 sm:px-6 md:px-8 lg:px-12 flex items-center">
+            <div className="w-full max-w-3xl lg:max-w-4xl space-y-1.5 sm:space-y-3 md:space-y-5 lg:space-y-7">
+              <div className="inline-flex items-center gap-1 sm:gap-1.5 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-2 py-0.5 text-primary text-[9px] sm:text-xs font-semibold animate-slide-in-left">
+                <span className="text-[9px] sm:text-xs">✨</span>
+                <span className="text-[9px] sm:text-xs">{slide.flag_name}</span>
               </div>
-              <h1 className="text-lg sm:text-xl md:text-3xl lg:text-5xl font-bold text-white leading-tight animate-slide-up">
+              <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white leading-tight animate-slide-up">
                 {slide.title}
               </h1>
               <p
-                className="text-xs sm:text-sm md:text-lg lg:text-xl text-white/90 font-medium animate-fade-in"
+                className="text-xs sm:text-base md:text-lg lg:text-xl text-white/90 font-medium animate-fade-in"
                 style={{ animationDelay: "200ms" }}
               >
                 {slide.subtitle}
               </p>
               <div
-                className="flex flex-col sm:flex-row gap-2 sm:gap-2.5 md:gap-4 animate-fade-in justify-center md:justify-start"
+                className="flex flex-col sm:flex-row gap-1 sm:gap-2.5 md:gap-4 animate-fade-in"
                 style={{ animationDelay: "400ms" }}
               >
                 <Button
                   asChild
                   variant="hero"
                   size="sm"
-                  className="group w-full sm:w-auto text-xs sm:text-sm md:text-base h-6 sm:h-8 md:h-10 px-2 sm:px-4 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  className="group w-full sm:w-auto text-[8px] sm:text-xs md:text-sm h-5 sm:h-8 md:h-10 px-1.5 sm:px-4 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 >
                   <Link to={slide.button_url}>
                     {slide.button_text}
-                    <ArrowRight className="ml-1 sm:ml-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-0.5 sm:ml-1.5 h-2 w-2 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>
                 <Button
                   asChild
                   variant="outlineWhite"
                   size="sm"
-                  className="w-full sm:w-auto text-xs sm:text-sm md:text-base h-6 sm:h-8 md:h-10 px-2 sm:px-4 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                  className="w-full sm:w-auto text-[8px] sm:text-xs md:text-sm h-5 sm:h-8 md:h-10 px-1.5 sm:px-4 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
                 >
                   <Link to="/products">View All</Link>
                 </Button>
