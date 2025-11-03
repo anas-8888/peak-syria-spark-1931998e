@@ -500,9 +500,9 @@ const OrderTracking = () => {
                       {orderDetails.order_items.map((item) => (
                         <div key={item.id} className="flex items-center gap-4">
                           <img
-                            src={item.products.image_url}
+                            src={item.products.image_url || "/placeholder.svg"}
                             alt={item.products.name}
-                            className="h-20 w-20 object-cover rounded-lg"
+                            className="h-20 w-20 object-cover rounded-lg bg-muted"
                           />
                           <div className="flex-1">
                             <h4 className="font-semibold">{item.products.name}</h4>
