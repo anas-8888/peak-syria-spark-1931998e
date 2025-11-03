@@ -274,8 +274,8 @@ const ProductCardEnhanced = ({
                 onClick={() => handleColorChange(color)}
                 className={`rounded-full border transition-all ${
                   viewMode === "list" 
-                    ? `w-3 h-3 sm:w-4 sm:h-4 md:w-6 md:h-6 ${selectedColor === color ? "border-primary scale-110 ring-1 ring-primary ring-offset-1" : "border-border"}`
-                    : `w-4 h-4 sm:w-6 sm:h-6 ${selectedColor === color ? "border-primary scale-110 ring-1 sm:ring-2 ring-primary ring-offset-1 sm:ring-offset-2" : "border-border"}`
+                    ? `w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 ${selectedColor === color ? "border-primary scale-110 ring-1 ring-primary ring-offset-1" : "border-border"}`
+                    : `w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 ${selectedColor === color ? "border-primary scale-110 ring-1 ring-primary ring-offset-1" : "border-border"}`
                 }`}
                 style={{ backgroundColor: colorMap[color] || color }}
                 title={color}
