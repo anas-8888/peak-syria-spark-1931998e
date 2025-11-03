@@ -133,7 +133,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16 sm:h-18 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group flex-shrink-0">
-            <img src={peakLogo} alt="PEAK Official Logo" className="h-12 sm:h-14 md:h-16 lg:h-20 w-auto transition-transform duration-300 group-hover:scale-110" />
+            <img src={peakLogo} alt="PEAK Official Logo" className="h-10 sm:h-12 md:h-14 lg:h-16 w-auto transition-transform duration-300 group-hover:scale-110" />
             <div className="flex items-center">
               
             </div>
