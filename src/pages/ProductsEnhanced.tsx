@@ -180,8 +180,8 @@ const ProductsEnhanced = () => {
 
   // Calculate price range from products
   const prices = allProducts
-    .map(p => p.offer_price || p.price)
-    .filter(p => p > 0);
+    .map(p => Number(p.offer_price ?? p.price))
+    .filter(p => !Number.isNaN(p));
   const minPrice = prices.length > 0 ? Math.floor(Math.min(...prices)) : 0;
   const maxPrice = prices.length > 0 ? Math.ceil(Math.max(...prices)) : 1000;
 
