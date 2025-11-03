@@ -74,37 +74,37 @@ const Footer = () => {
 
               {/* Shop */}
               <div>
-                <h4 className="font-bold text-sm sm:text-base uppercase mb-2 sm:mb-4 relative inline-block tracking-wider">
+                <h4 className="font-bold text-lg sm:text-base uppercase mb-4 sm:mb-4 relative inline-block tracking-wider">
                   Shop
                   <span className="absolute -bottom-1.5 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-0.5 sm:space-y-1">
+                <ul className="space-y-0 sm:space-y-1 [&>li]:!my-0 sm:[&>li]:!my-0">
                   <li>
-                    <Link to="/products" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <Link to="/products" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       All Products
                     </Link>
                   </li>
                   <li>
-                    <Link to="/products?flag=new-arrival" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <Link to="/products?flag=new-arrival" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       New Arrivals
                     </Link>
                   </li>
                   <li>
-                    <Link to="/products?flag=best-seller" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <Link to="/products?flag=best-seller" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Best Sellers
                     </Link>
                   </li>
                   <li>
-                    <Link to="/products?flag=limited-edition" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <Link to="/products?flag=limited-edition" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Limited Edition
                     </Link>
                   </li>
                   <li>
-                    <Link to="/products?flag=offer" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <Link to="/products?flag=offer" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Special Offers
                     </Link>
@@ -114,31 +114,31 @@ const Footer = () => {
 
               {/* Categories */}
               <div>
-                <h4 className="font-bold text-sm sm:text-base uppercase mb-2 sm:mb-4 relative inline-block tracking-wider">
+                <h4 className="font-bold text-lg sm:text-base uppercase mb-4 sm:mb-4 relative inline-block tracking-wider">
                   Categories
                   <span className="absolute -bottom-1.5 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-0.5 sm:space-y-1">
+                <ul className="space-y-0 sm:space-y-1 [&>li]:!my-0 sm:[&>li]:!my-0">
                   {categories && categories.length > 0 ? categories.slice(0, 5).map(category => <li key={category.id}>
-                        <Link to={`/category/${category.id}`} className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                        <Link to={`/category/${category.id}`} className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                           <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                           {category.name}
                         </Link>
                       </li>) : <>
                       <li>
-                        <Link to="/products?category=basketball" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                        <Link to="/products?category=basketball" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                           <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                           Basketball
                         </Link>
                       </li>
                       <li>
-                        <Link to="/products?category=running" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                        <Link to="/products?category=running" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                           <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                           Running
                         </Link>
                       </li>
                       <li>
-                        <Link to="/products?category=apparel" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                        <Link to="/products?category=apparel" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                           <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                           Apparel
                         </Link>
@@ -149,37 +149,37 @@ const Footer = () => {
 
               {/* Support */}
               <div>
-                <h4 className="font-bold text-sm sm:text-base uppercase mb-2 sm:mb-4 relative inline-block tracking-wider">
+                <h4 className="font-bold text-lg sm:text-base uppercase mb-4 sm:mb-4 relative inline-block tracking-wider">
                   Support
                   <span className="absolute -bottom-1.5 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-0.5 sm:space-y-1">
+                <ul className="space-y-0 sm:space-y-1 [&>li]:!my-0 sm:[&>li]:!my-0">
                   <li>
-                    <Link to="/contact" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <Link to="/contact" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Contact Us
                     </Link>
                   </li>
                   <li>
-                    <Link to="/about" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <Link to="/about" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       About Us
                     </Link>
                   </li>
                   <li>
-                    <Link to="/order-tracking" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <Link to="/order-tracking" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Track Order
                     </Link>
                   </li>
                   <li>
-                    <Link to="/cart" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <Link to="/cart" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Shopping Cart
                     </Link>
                   </li>
                   <li>
-                    <Link to="/wishlist" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <Link to="/wishlist" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
                       Wishlist
                     </Link>
@@ -189,22 +189,22 @@ const Footer = () => {
 
               {/* Get In Touch */}
               <div>
-                <h4 className="font-bold text-sm sm:text-base uppercase mb-2 sm:mb-4 relative inline-block tracking-wider">
+                <h4 className="font-bold text-lg sm:text-base uppercase mb-4 sm:mb-4 relative inline-block tracking-wider">
                   Get In Touch
                   <span className="absolute -bottom-1.5 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
-                <ul className="space-y-0.5 sm:space-y-1.5">
-                  <li className="flex items-start gap-2 text-secondary-foreground/80 text-xs sm:text-sm">
+                <ul className="space-y-0 sm:space-y-1.5 [&>li]:!my-0 sm:[&>li]:!my-0">
+                  <li className="flex items-start gap-2 text-secondary-foreground/80 text-sm sm:text-sm">
                     <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-primary mt-0.5 flex-shrink-0" />
                     <span>{settings?.store_phone || '+963 XXX XXX XXX'}</span>
                   </li>
-                  <li className="flex items-start gap-2 text-secondary-foreground/80 text-xs sm:text-sm">
+                  <li className="flex items-start gap-2 text-secondary-foreground/80 text-sm sm:text-sm">
                     <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-primary mt-0.5 flex-shrink-0" />
                     <span className="break-all">{settings?.store_email || 'info@peaksyria.com'}</span>
                   </li>
-                  {settings?.whatsapp_number && <li className="flex items-start gap-2 text-secondary-foreground/80 text-xs sm:text-sm">
+                  {settings?.whatsapp_number && <li className="flex items-start gap-2 text-secondary-foreground/80 text-sm sm:text-sm">
                       <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <a href={`https://wa.me/${settings.whatsapp_number}`} className="hover:text-primary transition-colors">
+                      <a href={`https://wa.me/${settings.whatsapp_number}`} className="hover:text-primary transition-colors inline-block">
                         WhatsApp Support
                       </a>
                     </li>}
@@ -217,17 +217,17 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-primary/30 px-4 sm:px-6 py-3 sm:py-5">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-1.5 md:gap-4 text-secondary-foreground/70">
-              <div className="flex flex-col items-center md:items-start gap-1.5 w-full md:w-auto">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-3 md:gap-4 text-secondary-foreground/70">
+              <div className="flex flex-col items-center md:items-start gap-3 w-full md:w-auto">
                 <p className="font-semibold text-center md:text-left text-xs sm:text-sm">
                   &copy; {new Date().getFullYear()} PEAK Syria. All rights reserved.
                 </p>
-                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs">
-                  <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>
-                  <span>•</span>
-                  <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
-                  <span>•</span>
-                  <Link to="/refund" className="hover:text-primary transition-colors">Refund Policy</Link>
+                <div className="text-[11px] sm:text-xs">
+                  <Link to="/terms" className="hover:text-primary transition-colors inline">Terms</Link>
+                  <span className=" sm:inline mx-1">•</span>
+                  <Link to="/privacy" className="hover:text-primary transition-colors inline mx-1 sm:mx-0">Privacy</Link>
+                  <span className=" sm:inline mx-1">•</span>
+                  <Link to="/refund" className="hover:text-primary transition-colors inline mx-1 sm:mx-0">Refund Policy</Link>
                 </div>
               </div>
               <p className="text-[11px] sm:text-xs text-center md:text-right">
