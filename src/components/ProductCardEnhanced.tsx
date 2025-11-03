@@ -249,7 +249,7 @@ const ProductCardEnhanced = ({
         </div>
 
         {/* Product Info */}
-        <div className={`space-y-1 sm:space-y-2 md:space-y-3 ${viewMode === "list" ? "flex-1 p-2 sm:p-4 md:p-6 flex flex-col" : "p-3 sm:p-4"}`}>
+        <div className={`space-y-1 sm:space-y-1.5 md:space-y-2 ${viewMode === "list" ? "flex-1 p-1.5 sm:p-2 md:p-4 lg:p-6 flex flex-col" : "p-2 sm:p-3 md:p-4"}`}>
           <div className={viewMode === "list" ? "flex-1" : ""}>
             <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">{category}</p>
             <Link to={`/product/${id}`}>
