@@ -226,7 +226,7 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && <div className="lg:hidden py-1.5 space-y-0.5 animate-fade-in border-t bg-background/95 backdrop-blur-md">
-            {navLinks.map(link => <Link key={link.path} to={link.path} className={`block text-xs font-medium py-1 px-3 rounded-lg transition-colors ${isActive(link.path) ? "text-primary bg-primary/10" : "text-foreground/70 hover:text-primary hover:bg-accent/50"}`} onClick={() => setMobileMenuOpen(false)}>
+            {navLinks.map(link => <Link key={link.path} to={link.path} className={`flex items-center text-xs font-medium py-1 px-3 rounded-lg transition-colors ${isActive(link.path) ? "text-primary bg-primary/10" : "text-foreground/70 hover:text-primary hover:bg-accent/50"}`} onClick={() => setMobileMenuOpen(false)}>
                 {link.name}
               </Link>)}
             <div className="flex flex-col items-center justify-center gap-2 pt-2 border-t mt-1.5">
