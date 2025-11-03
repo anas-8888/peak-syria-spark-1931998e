@@ -121,7 +121,7 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
                 id={`cat-${category}`}
                 checked={localFilters.categories.includes(category)}
                 onCheckedChange={() => handleCategoryToggle(category)}
-                className="h-3.5 w-3.5"
+                className="h-3 w-3"
               />
               <Label htmlFor={`cat-${category}`} className="cursor-pointer text-xs">
                 {category}
