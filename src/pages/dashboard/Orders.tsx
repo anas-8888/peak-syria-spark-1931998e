@@ -57,6 +57,8 @@ type OrderWithDetails = {
     notes: string | null;
     selected_color: string | null;
     selected_size: string | null;
+    variant_id: string | null;
+    product_id: string;
     products: {
       name: string;
       image_url: string;
@@ -128,6 +130,8 @@ const Orders = () => {
             notes,
             selected_color,
             selected_size,
+            variant_id,
+            product_id,
             products (
               name,
               image_url
@@ -145,10 +149,103 @@ const Orders = () => {
 
       if (error) throw error;
 
-      return orders.map((order) => ({
-        ...order,
-        itemCount: order.order_items?.length || 0,
-      })) as OrderWithDetails[];
+      // Fetch color-specific images for each order item
+      const ordersWithImages = await Promise.all(
+        orders.map(async (order) => {
+          const itemsWithImages = await Promise.all(
+            (order.order_items || []).map(async (item: any) => {
+              let imageUrl = item.products.image_url;
+
+              // 1) If item has a variant, get color from variant
+              if (item.variant_id) {
+                const { data: variant } = await supabase
+                  .from("product_variants")
+                  .select("color_id")
+                  .eq("id", item.variant_id)
+                  .maybeSingle();
+
+                if (variant?.color_id) {
+                  const { data: productColor } = await supabase
+                    .from("product_colors")
+                    .select("image_id")
+                    .eq("product_id", item.product_id)
+                    .eq("color_id", variant.color_id)
+                    .maybeSingle();
+
+                  if (productColor?.image_id) {
+                    const { data: colorImage } = await supabase
+                      .from("product_images")
+                      .select("image_url")
+                      .eq("id", productColor.image_id)
+                      .maybeSingle();
+                    if (colorImage?.image_url) {
+                      imageUrl = colorImage.image_url;
+                    }
+                  }
+                }
+              }
+
+              // 2) If still no image, try selected_color by name
+              if ((!imageUrl || imageUrl === item.products.image_url) && item.selected_color) {
+                const { data: colorData } = await supabase
+                  .from("colors")
+                  .select("id")
+                  .eq("name", item.selected_color)
+                  .maybeSingle();
+
+                if (colorData?.id) {
+                  const { data: productColor } = await supabase
+                    .from("product_colors")
+                    .select("image_id")
+                    .eq("product_id", item.product_id)
+                    .eq("color_id", colorData.id)
+                    .maybeSingle();
+
+                  if (productColor?.image_id) {
+                    const { data: colorImage } = await supabase
+                      .from("product_images")
+                      .select("image_url")
+                      .eq("id", productColor.image_id)
+                      .maybeSingle();
+                    if (colorImage?.image_url) {
+                      imageUrl = colorImage.image_url;
+                    }
+                  }
+                }
+              }
+
+              // 3) Fallback to primary image
+              if (!imageUrl) {
+                const { data: primaryImage } = await supabase
+                  .from("product_images")
+                  .select("image_url")
+                  .eq("product_id", item.product_id)
+                  .eq("is_primary", true)
+                  .maybeSingle();
+                if (primaryImage?.image_url) {
+                  imageUrl = primaryImage.image_url;
+                }
+              }
+
+              return {
+                ...item,
+                products: {
+                  ...item.products,
+                  image_url: imageUrl
+                }
+              };
+            })
+          );
+
+          return {
+            ...order,
+            order_items: itemsWithImages,
+            itemCount: order.order_items?.length || 0,
+          };
+        })
+      );
+
+      return ordersWithImages as OrderWithDetails[];
     },
   });
 
