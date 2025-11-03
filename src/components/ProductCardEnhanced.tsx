@@ -305,46 +305,46 @@ const ProductCardEnhanced = ({
             </div>
           )}
 
-          <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 ${viewMode === "list" ? "justify-between mt-auto pt-2 sm:pt-4 border-t" : "justify-between pt-1.5 sm:pt-2 border-t"}`}>
+          <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 md:gap-3 ${viewMode === "list" ? "justify-between mt-auto pt-1.5 sm:pt-2 md:pt-4 border-t" : "justify-between pt-1 sm:pt-1.5 md:pt-2 border-t"}`}>
             {/* Price Display - Show range if variants exist and prices differ */}
             {minPrice && maxPrice && minPrice !== maxPrice && !unifiedPricing ? (
-              <span className={`font-bold text-primary ${viewMode === "list" ? "text-base sm:text-xl md:text-2xl" : "text-sm sm:text-xl"}`}>
+              <span className={`font-bold text-primary ${viewMode === "list" ? "text-xs sm:text-base md:text-xl lg:text-2xl" : "text-[10px] sm:text-sm md:text-xl"}`}>
                 {formatPrice(minPrice)} - {formatPrice(maxPrice)}
               </span>
             ) : offerPrice ? (
-              <div className="flex items-center gap-2">
-                <span className={`font-bold text-primary ${viewMode === "list" ? "text-base sm:text-xl md:text-2xl" : "text-sm sm:text-xl"}`}>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className={`font-bold text-primary ${viewMode === "list" ? "text-xs sm:text-base md:text-xl lg:text-2xl" : "text-[10px] sm:text-sm md:text-xl"}`}>
                   {formatPrice(offerPrice)}
                 </span>
-                <span className={`line-through text-muted-foreground ${viewMode === "list" ? "text-sm sm:text-base" : "text-xs sm:text-sm"}`}>
+                <span className={`line-through text-muted-foreground ${viewMode === "list" ? "text-[10px] sm:text-sm md:text-base" : "text-[8px] sm:text-xs md:text-sm"}`}>
                   {formatPrice(price)}
                 </span>
               </div>
             ) : (
-              <span className={`font-bold text-primary ${viewMode === "list" ? "text-base sm:text-xl md:text-2xl" : "text-sm sm:text-xl"}`}>
+              <span className={`font-bold text-primary ${viewMode === "list" ? "text-xs sm:text-base md:text-xl lg:text-2xl" : "text-[10px] sm:text-sm md:text-xl"}`}>
                 {formatPrice(minPrice || price)}
               </span>
             )}
             {viewMode === "list" ? (
-              <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto">
+              <div className="flex gap-1 sm:gap-1.5 md:gap-2 w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => setQuickViewOpen(true)}
-                  className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10"
+                  className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10"
                 >
-                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+                  <Eye className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4 lg:h-5 lg:w-5" />
                 </Button>
                 <Button
                   variant={isFavorite ? "hero" : "outline"}
                   size="icon"
                   onClick={handleToggleFavorite}
                   disabled={isLoading}
-                  className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10"
+                  className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10"
                 >
-                  <Heart className={`h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 ${isFavorite ? "fill-current" : ""}`} />
+                  <Heart className={`h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4 lg:h-5 lg:w-5 ${isFavorite ? "fill-current" : ""}`} />
                 </Button>
-                <Button variant="hero" size="sm" className="flex-1 sm:flex-initial text-xs sm:text-sm h-8 sm:h-10" asChild>
+                <Button variant="hero" size="sm" className="flex-1 sm:flex-initial text-[10px] sm:text-xs md:text-sm h-6 sm:h-8 md:h-10 px-2 sm:px-3" asChild>
                   <Link to={`/product/${id}`}>
                     <span className="hidden sm:inline">View Details</span>
                     <span className="sm:hidden">View</span>
@@ -352,7 +352,7 @@ const ProductCardEnhanced = ({
                 </Button>
               </div>
             ) : (
-              <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10 text-[9px] sm:text-sm h-6 sm:h-9 px-2 sm:px-4" asChild>
+              <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10 text-[8px] sm:text-[9px] md:text-sm h-5 sm:h-6 md:h-9 px-1.5 sm:px-2 md:px-4" asChild>
                 <Link to={`/product/${id}`}>
                   View Details
                 </Link>
