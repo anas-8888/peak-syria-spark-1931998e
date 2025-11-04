@@ -12,6 +12,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ReviewForm } from "@/components/ReviewForm";
 import { ReviewsList } from "@/components/ReviewsList";
+import GoogleSignInPopup from "@/components/GoogleSignInPopup";
 
 type ProductImage = {
   id: string;
@@ -53,6 +54,8 @@ const ProductDetail = () => {
   const [imageZoomOrigin, setImageZoomOrigin] = useState({ x: 50, y: 50 });
   const [availableSizes, setAvailableSizes] = useState<any[]>([]);
   const [currentPrice, setCurrentPrice] = useState(0);
+  const [showSignInPopup, setShowSignInPopup] = useState(false);
+  const [isInWishlist, setIsInWishlist] = useState(false);
 
   const handleImageMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -214,6 +217,24 @@ const ProductDetail = () => {
   const averageRating = reviews.length > 0 
     ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
     : 0;
+
+  // Check if product is in wishlist
+  useEffect(() => {
+    const checkWishlist = async () => {
+      if (!user || !id) return;
+      
+      const { data } = await supabase
+        .from("wishlist")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("product_id", id)
+        .maybeSingle();
+      
+      setIsInWishlist(!!data);
+    };
+    
+    checkWishlist();
+  }, [user, id]);
 
   // Build color to image mapping
   useEffect(() => {
@@ -659,8 +680,7 @@ const ProductDetail = () => {
                 className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold"
                 onClick={async () => {
                   if (!user) {
-                    toast.error("Please log in to add items to cart");
-                    navigate("/login");
+                    setShowSignInPopup(true);
                     return;
                   }
                   
@@ -723,11 +743,64 @@ const ProductDetail = () => {
                 })()}
               </Button>
               <div className="flex gap-2 sm:gap-3">
-                <Button variant="outline" size="lg" className="flex-1 h-10 sm:h-12 text-sm sm:text-base">
-                  <Heart className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                  Wishlist
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="flex-1 h-10 sm:h-12 text-sm sm:text-base"
+                  onClick={async () => {
+                    if (!user) {
+                      setShowSignInPopup(true);
+                      return;
+                    }
+                    
+                    if (!id) return;
+                    
+                    try {
+                      if (isInWishlist) {
+                        // Remove from wishlist
+                        const { error } = await supabase
+                          .from("wishlist")
+                          .delete()
+                          .eq("user_id", user.id)
+                          .eq("product_id", id);
+                        
+                        if (error) throw error;
+                        
+                        setIsInWishlist(false);
+                        toast.success("Removed from wishlist");
+                      } else {
+                        // Add to wishlist
+                        const { error } = await supabase
+                          .from("wishlist")
+                          .insert({
+                            user_id: user.id,
+                            product_id: id,
+                          });
+                        
+                        if (error) throw error;
+                        
+                        setIsInWishlist(true);
+                        toast.success("Added to wishlist");
+                      }
+                    } catch (error) {
+                      console.error("Wishlist error:", error);
+                      toast.error("Failed to update wishlist");
+                    }
+                  }}
+                >
+                  <Heart className={`mr-2 h-4 w-4 sm:h-5 sm:w-5 ${isInWishlist ? "fill-current text-primary" : ""}`} />
+                  {isInWishlist ? "In Wishlist" : "Wishlist"}
                 </Button>
-                <Button variant="outline" size="lg" className="flex-1 h-10 sm:h-12 text-sm sm:text-base">
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="flex-1 h-10 sm:h-12 text-sm sm:text-base"
+                  onClick={() => {
+                    const url = window.location.href;
+                    navigator.clipboard.writeText(url);
+                    toast.success("Product link copied to clipboard!");
+                  }}
+                >
                   <Share2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                   Share
                 </Button>
@@ -775,6 +848,8 @@ const ProductDetail = () => {
       </div>
 
       <Footer />
+      
+      <GoogleSignInPopup open={showSignInPopup} onOpenChange={setShowSignInPopup} />
     </div>
   );
 };
