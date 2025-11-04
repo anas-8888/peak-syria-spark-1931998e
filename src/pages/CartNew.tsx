@@ -37,6 +37,7 @@ export default function CartNew() {
   const lastCartSnapshot = useRef<string>("");
   const [variantStocks, setVariantStocks] = useState<Record<string, number>>({});
   const [discountFeedback, setDiscountFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [pendingQuantities, setPendingQuantities] = useState<Record<string, number>>({});
 
   const shippingCost = 0; // Will be calculated at checkout
   const total = cartTotal - discountAmount;
@@ -1051,18 +1052,21 @@ export default function CartNew() {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
+                        onClick={() => setPendingQuantities(prev => ({ 
+                          ...prev, 
+                          [item.id]: Math.max((prev[item.id] ?? item.quantity) - 1, 1)
+                        }))}
+                        disabled={(pendingQuantities[item.id] ?? item.quantity) <= 1}
                       >
-                        <Minus className="h-3 w-3" />
+                      <Minus className="h-3 w-3" />
                       </Button>
                       <Input
                         type="number"
-                        value={item.quantity}
+                        value={pendingQuantities[item.id] ?? item.quantity}
                         onChange={(e) => {
                           const val = parseInt(e.target.value);
                           if (val > 0 && val <= (variantStocks[item.id] || Number.MAX_SAFE_INTEGER)) {
-                            updateQuantity(item.id, val);
+                            setPendingQuantities(prev => ({ ...prev, [item.id]: val }));
                           }
                         }}
                         className="w-16 h-8 text-center"
@@ -1073,13 +1077,33 @@ export default function CartNew() {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        disabled={variantStocks[item.id] !== undefined && item.quantity >= variantStocks[item.id]}
+                        onClick={() => setPendingQuantities(prev => ({ 
+                          ...prev, 
+                          [item.id]: Math.min((prev[item.id] ?? item.quantity) + 1, variantStocks[item.id] || Number.MAX_SAFE_INTEGER)
+                        }))}
+                        disabled={variantStocks[item.id] !== undefined && (pendingQuantities[item.id] ?? item.quantity) >= variantStocks[item.id]}
                       >
                         <Plus className="h-3 w-3" />
                       </Button>
+                      {pendingQuantities[item.id] !== undefined && pendingQuantities[item.id] !== item.quantity && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="ml-2 h-8"
+                          onClick={() => {
+                            updateQuantity(item.id, pendingQuantities[item.id]);
+                            setPendingQuantities(prev => {
+                              const updated = { ...prev };
+                              delete updated[item.id];
+                              return updated;
+                            });
+                          }}
+                        >
+                          Apply
+                        </Button>
+                      )}
                       <span className="ml-auto font-semibold">
-                        {formatPrice((item.variant_price || item.product.offer_price || item.product.price) * item.quantity)}
+                        {formatPrice((item.variant_price || item.product.offer_price || item.product.price) * (pendingQuantities[item.id] ?? item.quantity))}
                       </span>
                     </div>
 

@@ -163,6 +163,15 @@ const OrderTracking = () => {
               )
             )
           ),
+          discount_usages (
+            id,
+            discount_amount,
+            discounts (
+              name,
+              code,
+              type
+            )
+          ),
           regions (
             name
           ),
@@ -686,8 +695,22 @@ const OrderTracking = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Subtotal</span>
-                        <span>{formatPrice(orderDetails.total_amount - orderDetails.shipping_cost)}</span>
+                        <span>{formatPrice(orderDetails.total_amount - orderDetails.shipping_cost + ((orderDetails as any).discount_usages?.reduce((sum: number, du: any) => sum + Number(du.discount_amount), 0) || 0))}</span>
                       </div>
+                      {(orderDetails as any).discount_usages && (orderDetails as any).discount_usages.length > 0 && (
+                        <div className="space-y-1">
+                          {(orderDetails as any).discount_usages.map((usage: any) => (
+                            <div key={usage.id} className="flex justify-between text-sm text-green-600">
+                              <span>
+                                Discount: {usage.discounts.name}
+                                {usage.discounts.code && ` (${usage.discounts.code})`}
+                                {usage.discounts.type === 'free_shipping' && ' - Free Shipping'}
+                              </span>
+                              <span className="font-medium">-{formatPrice(usage.discount_amount)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Shipping</span>
                         <span>{formatPrice(orderDetails.shipping_cost)}</span>
