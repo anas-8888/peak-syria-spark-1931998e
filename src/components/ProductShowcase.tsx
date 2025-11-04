@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 interface HeroShowcase {
   id: string;
   hero_title: string;
@@ -23,6 +24,7 @@ interface ShowcaseProduct {
   };
 }
 const ProductShowcase = () => {
+  const { t } = useLanguage();
   const {
     data: showcases
   } = useQuery({
@@ -117,7 +119,7 @@ const ProductShowcase = () => {
                     />
                   {/* Floating Badge */}
                   <div className="absolute top-6 left-6 bg-primary text-primary-foreground px-6 py-3 rounded-full font-bold text-sm shadow-lg animate-bounce-slow">
-                    Featured
+                    {t("Featured")}
                   </div>
                   </div>
 
@@ -132,21 +134,21 @@ const ProductShowcase = () => {
                 <div className="space-y-6 animate-fade-in">
                   {showcase.hero_subtitle && <div className="inline-block">
                       <span className="px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold">
-                        {showcase.hero_subtitle}
+                        {t(showcase.hero_subtitle)}
                       </span>
                     </div>}
                   
                   <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                    {showcase.hero_title}
+                    {t(showcase.hero_title)}
                   </h2>
                   
                   <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-                    {showcase.hero_description}
+                    {t(showcase.hero_description)}
                   </p>
 
                   <Link to={showcase.cta_url || "/products"}>
                     <Button size="lg" className="group text-lg py-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 mx-0 px-[33px] my-[14px]">
-                      {showcase.cta_text}
+                      {t(showcase.cta_text)}
                       <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform" />
                     </Button>
                   </Link>

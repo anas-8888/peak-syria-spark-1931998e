@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ReviewForm } from "@/components/ReviewForm";
 import { ReviewsList } from "@/components/ReviewsList";
 import GoogleSignInPopup from "@/components/GoogleSignInPopup";
@@ -50,6 +51,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
@@ -303,7 +305,7 @@ const ProductDetail = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">Loading...</div>
+          <div className="text-center">{t("Loading...")}</div>
         </div>
         <Footer />
       </div>
@@ -315,7 +317,7 @@ const ProductDetail = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">Product not found</div>
+          <div className="text-center">{t("Product not found")}</div>
         </div>
         <Footer />
       </div>
@@ -370,7 +372,7 @@ const ProductDetail = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <Link to="/products" className="inline-flex items-center text-primary hover:text-primary/80 mb-4 sm:mb-6 text-sm sm:text-base">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Products
+          {t("Back to Products")}
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
@@ -430,7 +432,7 @@ const ProductDetail = () => {
               {product.target_gender && product.target_gender !== 'both' && (
                 <div className="inline-block">
                   <Badge variant="outline" className="text-xs sm:text-sm">
-                    {product.target_gender === 'men' ? "Men's" : "Women's"}
+                    {product.target_gender === 'men' ? t("Men's") : t("Women's")}
                   </Badge>
                 </div>
               )}
@@ -449,7 +451,7 @@ const ProductDetail = () => {
                     ))}
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    {averageRating.toFixed(1)}/5 ({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})
+                    {averageRating.toFixed(1)}/5 ({reviews.length} {reviews.length === 1 ? t("review") : t("Reviews").toLowerCase()})
                   </span>
                 </div>
               )}
@@ -522,7 +524,7 @@ const ProductDetail = () => {
             {variants.length > 0 && productColors.length > 0 && (
               <div>
                 <label className="block text-sm font-semibold mb-3">
-                  Select Color <span className="text-destructive">*</span>
+                  {t("Select Color")} <span className="text-destructive">*</span>
                 </label>
                 <div className="flex gap-2 flex-wrap">
                   {productColors.map((colorData, idx) => {
@@ -542,7 +544,7 @@ const ProductDetail = () => {
                             : "border-border hover:border-primary"
                         } ${!hasStock ? 'opacity-30 cursor-not-allowed' : ''}`}
                         style={{ backgroundColor: colorHex }}
-                        title={`${colorName}${!hasStock ? ' (Out of stock)' : ''}`}
+                        title={`${colorName}${!hasStock ? ` (${t("Out of Stock")})` : ''}`}
                       />
                     );
                   })}
@@ -554,7 +556,7 @@ const ProductDetail = () => {
             {variants.length > 0 && availableSizes.length > 0 && (
               <div>
                 <label className="block text-sm font-semibold mb-3">
-                  Select Size <span className="text-destructive">*</span>
+                  {t("Select Size")} <span className="text-destructive">*</span>
                 </label>
                 <div className="grid grid-cols-4 gap-2">
                   {availableSizes.map((sizeVariant: any) => (
@@ -570,14 +572,14 @@ const ProductDetail = () => {
                     >
                       {sizeVariant.size}
                       {sizeVariant.stock_quantity === 0 && (
-                        <span className="block text-xs">Out</span>
+                        <span className="block text-xs">{t("Out of Stock")}</span>
                       )}
                     </button>
                   ))}
                 </div>
                 {selectedSize && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    Stock available: {availableSizes.find((v: any) => v.size === selectedSize)?.stock_quantity || 0}
+                    {t("Stock available")}: {availableSizes.find((v: any) => v.size === selectedSize)?.stock_quantity || 0}
                   </p>
                 )}
               </div>
@@ -586,7 +588,7 @@ const ProductDetail = () => {
             {/* Legacy: No variants - show old size/color system */}
             {variants.length === 0 && product.sizes && product.sizes.length > 0 && (
               <div>
-                <label className="block text-sm font-semibold mb-3">Select Size (EU)</label>
+                <label className="block text-sm font-semibold mb-3">{t("Select Size")} (EU)</label>
                 <div className="grid grid-cols-4 gap-2">
                   {product.sizes.map((size) => (
                     <button
@@ -607,7 +609,7 @@ const ProductDetail = () => {
 
             {variants.length === 0 && productColors.length > 0 && (
               <div>
-                <label className="block text-sm font-semibold mb-3">Select Color</label>
+                <label className="block text-sm font-semibold mb-3">{t("Select Color")}</label>
                 <div className="flex gap-2">
                   {productColors.map((colorData, idx) => {
                     const colorName = (colorData.colors as any)?.name || '';
@@ -638,7 +640,7 @@ const ProductDetail = () => {
 
             {/* Quantity */}
             <div>
-              <label className="block text-sm font-semibold mb-3">Quantity</label>
+              <label className="block text-sm font-semibold mb-3">{t("Quantity")}</label>
               <div className="flex items-center gap-3 sm:gap-4">
                 <Button
                   variant="outline"
@@ -672,8 +674,8 @@ const ProductDetail = () => {
                 </Button>
                 <span className="text-sm text-muted-foreground">
                   {variants.length > 0 && selectedVariantId
-                    ? `${availableSizes.find((v: any) => v.id === selectedVariantId)?.stock_quantity || 0} available`
-                    : `${product.stock_quantity} available`}
+                    ? `${availableSizes.find((v: any) => v.id === selectedVariantId)?.stock_quantity || 0} ${t("available")}`
+                    : `${product.stock_quantity} ${t("available")}`}
                 </span>
               </div>
             </div>
@@ -693,24 +695,24 @@ const ProductDetail = () => {
                   // Require variant selection if variants exist
                   if (variants.length > 0) {
                     if (!selectedColorId || !selectedSize) {
-                      toast.error("Please select both color and size before adding to cart");
+                      toast.error(t("Please select both color and size before adding to cart"));
                       return;
                     }
                     if (!selectedVariantId) {
-                      toast.error("Selected variant is out of stock");
+                      toast.error(t("Selected variant is out of stock"));
                       return;
                     }
                     
                     // Validate quantity against variant stock
                     const selectedVariant = availableSizes.find((v: any) => v.id === selectedVariantId);
                     if (selectedVariant && quantity > selectedVariant.stock_quantity) {
-                      toast.error(`Only ${selectedVariant.stock_quantity} items available for this variant`);
+                      toast.error(t("Only") + ` ${selectedVariant.stock_quantity} ` + t("items available for this variant"));
                       return;
                     }
                   } else {
                     // Validate quantity against product stock for non-variant products
                     if (quantity > product.stock_quantity) {
-                      toast.error(`Only ${product.stock_quantity} items available`);
+                      toast.error(t("Only") + ` ${product.stock_quantity} ` + t("items available"));
                       return;
                     }
                   }
@@ -725,10 +727,10 @@ const ProductDetail = () => {
                         variantId: selectedVariantId || undefined,
                         variantPrice: variants.length > 0 ? currentPrice : undefined,
                       });
-                      toast.success(`Added ${quantity} ${product.name} to cart`);
+                      toast.success(t("Added") + ` ${quantity} ${product.name} ` + t("to cart"));
                     } catch (error) {
                       console.error('Error adding to cart:', error);
-                      toast.error("Failed to add to cart");
+                      toast.error(t("Failed to add to cart"));
                     }
                   }
                 }}
@@ -743,9 +745,9 @@ const ProductDetail = () => {
                 {(() => {
                   if (variants.length > 0 && selectedVariantId) {
                     const variantStock = availableSizes.find((v: any) => v.id === selectedVariantId)?.stock_quantity || 0;
-                    return variantStock > 0 ? "Add to Cart" : "Out of Stock";
+                    return variantStock > 0 ? t("Add to Cart") : t("Out of Stock");
                   }
-                  return product.stock_quantity > 0 ? "Add to Cart" : "Out of Stock";
+                  return product.stock_quantity > 0 ? t("Add to Cart") : t("Out of Stock");
                 })()}
               </Button>
               <div className="flex gap-2 sm:gap-3">
@@ -805,7 +807,7 @@ const ProductDetail = () => {
                       className="flex-1 h-10 sm:h-12 text-sm sm:text-base"
                     >
                       <Share2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                      Share
+                      {t("Share")}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
@@ -813,22 +815,22 @@ const ProductDetail = () => {
                       onClick={() => {
                         const url = window.location.href;
                         navigator.clipboard.writeText(url);
-                        toast.success("Link copied to clipboard!");
+                        toast.success(t("Link copied to clipboard!"));
                       }}
                     >
                       <Copy className="mr-2 h-4 w-4" />
-                      Copy Link
+                      {t("Copy Link")}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
                         const url = window.location.href;
-                        const text = `Check out ${product.name} on PEAK Syria`;
+                        const text = `${t("Check out")} ${product.name} ${t("on PEAK Syria")}`;
                         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}`;
                         window.open(whatsappUrl, '_blank');
                       }}
                     >
                       <MessageCircle className="mr-2 h-4 w-4" />
-                      Share on WhatsApp
+                      {t("Share on WhatsApp")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -851,24 +853,24 @@ const ProductDetail = () => {
 
         {/* Reviews Section */}
         <div className="max-w-5xl mx-auto mt-12 space-y-8">
-          <h2 className="text-2xl sm:text-3xl font-bold">Customer Reviews</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold">{t("Customer Reviews")}</h2>
           
           {user ? (
             <ReviewForm productId={id!} onSuccess={refetchReviews} />
           ) : (
             <div className="bg-muted/50 p-6 rounded-lg text-center">
               <p className="text-muted-foreground mb-4">
-                Please log in to write a review
+                {t("Please log in to write a review")}
               </p>
               <Button onClick={() => setShowSignInPopup(true)} variant="outline">
-                Log In
+                {t("Log In")}
               </Button>
             </div>
           )}
 
           <div>
             <h3 className="text-xl font-semibold mb-4">
-              Reviews ({reviews.length})
+              {t("Reviews")} ({reviews.length})
             </h3>
             <ReviewsList reviews={reviews as any} />
           </div>

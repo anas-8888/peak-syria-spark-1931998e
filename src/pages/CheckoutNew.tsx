@@ -15,6 +15,7 @@ import { ArrowLeft, CreditCard, MapPin } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -60,6 +61,7 @@ interface CarrierRegion {
 }
 
 export default function CheckoutNew() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { cartItems, cartTotal, clearCart, loading: cartLoading } = useCart();
@@ -244,7 +246,7 @@ export default function CheckoutNew() {
                 if (cartItems.length > 0) {
                   validateDiscount(parsed.discountCode, true).then((result) => {
                     if (result.is_valid) {
-                      toast.success("Previously applied discount restored");
+                      toast.success(t("Previously applied discount restored"));
                     }
                   });
                 }
@@ -302,7 +304,7 @@ export default function CheckoutNew() {
         if (import.meta.env.DEV) {
           console.error("Error fetching profile:", error);
         }
-        toast.error("Failed to load profile information");
+        toast.error(t("Failed to load profile information"));
       } finally {
         setProfileLoading(false);
       }
@@ -591,7 +593,7 @@ export default function CheckoutNew() {
         setDiscountCode("");
         localStorage.removeItem("appliedCartDiscount");
         localStorage.removeItem("manualDiscountCode");
-        toast.error("Your discount code is no longer valid for this cart");
+        toast.error(t("Your discount code is no longer valid for this cart"));
       } else if (result && 'discount_amount' in result && result.discount_amount !== appliedDiscount.amount) {
         // Update discount amount if it changed
         setAppliedDiscount({
@@ -695,7 +697,7 @@ export default function CheckoutNew() {
             id: result.discount_id,
             code: code,
             amount: result.discount_amount,
-            message: isFreeShipping ? "Free shipping applied" : (result.message || "Discount applied successfully"),
+            message: isFreeShipping ? t("Free shipping applied") : (t(result.message || "Discount applied successfully")),
             free_shipping: isFreeShipping,
             stack_with_shipping: !!discountMeta?.stack_with_shipping,
           } as any;
@@ -705,15 +707,15 @@ export default function CheckoutNew() {
           return { ...result, free_shipping: isFreeShipping, applied: appliedObj } as any;
         } else {
           if (!silent) {
-            toast.error(result.message || "Invalid discount code");
+            toast.error(t(result.message || "Invalid discount code"));
           }
           return result;
         }
       } else {
         // No data returned from RPC — treat as invalid
         if (!silent) {
-          toast.error("Invalid discount code", {
-            description: "The code you entered is not valid or has expired.",
+            toast.error(t("Invalid discount code"), {
+            description: t("The code you entered is not valid or has expired."),
             duration: 4000,
           });
         }
@@ -721,7 +723,7 @@ export default function CheckoutNew() {
       }
     } catch (error: any) {
       if (!silent) {
-        toast.error(error.message || "Error validating discount");
+        toast.error(error.message || t("Error validating discount"));
       }
       return { is_valid: false };
     }
@@ -729,7 +731,7 @@ export default function CheckoutNew() {
 
   const handleApplyDiscount = async () => {
     if (!discountCode.trim()) {
-      toast.error("Please enter a discount code");
+      toast.error(t("Please enter a discount code"));
       return;
     }
 
@@ -761,7 +763,7 @@ export default function CheckoutNew() {
     localStorage.removeItem("appliedCartDiscounts");
     localStorage.removeItem("appliedCartDiscountAmount");
     localStorage.removeItem("selectedAutoDiscountId");
-    toast.success("Discount removed");
+    toast.success(t("Discount removed"));
   };
 
   const handleRemoveAutoDiscounts = () => {
@@ -773,7 +775,7 @@ export default function CheckoutNew() {
     localStorage.removeItem("appliedCartDiscounts");
     localStorage.removeItem("appliedCartDiscountAmount");
     localStorage.removeItem("selectedAutoDiscountId");
-    toast.success("Automatic discounts removed. You can now apply a discount code.");
+    toast.success(t("Automatic discounts removed. You can now apply a discount code."));
   };
 
   const shippingDiscount = appliedDiscount?.free_shipping ? shippingCost : 0;
@@ -781,27 +783,27 @@ export default function CheckoutNew() {
 
   const onSubmit = async (data: CheckoutFormData) => {
     if (!user || !profile) {
-      toast.error("User information not found");
+      toast.error(t("User information not found"));
       return;
     }
 
     if (!selectedPaymentMethod) {
-      toast.error("Please select a payment method");
+      toast.error(t("Please select a payment method"));
       return;
     }
 
     if (!selectedRegion) {
-      toast.error("Please select a region");
+      toast.error(t("Please select a region"));
       return;
     }
 
     if (!selectedCarrier) {
-      toast.error("Please select a shipping method");
+      toast.error(t("Please select a shipping method"));
       return;
     }
 
     if (cartItems.length === 0) {
-      toast.error("Your cart is empty");
+      toast.error(t("Your cart is empty"));
       return;
     }
 
@@ -812,8 +814,8 @@ export default function CheckoutNew() {
       if (appliedDiscount && appliedDiscount.code) {
         const revalidation = await validateDiscount(appliedDiscount.code, true);
         if (!revalidation?.is_valid) {
-          toast.error("Your discount code is no longer valid", {
-            description: "The discount has expired or no longer applies to your cart",
+          toast.error(t("Your discount code is no longer valid"), {
+            description: t("The discount has expired or no longer applies to your cart"),
             duration: 5000,
           });
           setAppliedDiscount(null);
@@ -838,7 +840,7 @@ export default function CheckoutNew() {
           if (variant.stock_quantity < item.quantity) {
             const colorName = (variant.colors as any)?.name || '';
             toast.error(
-              `Insufficient stock for ${item.product.name} (${colorName} - ${variant.size}). Available: ${variant.stock_quantity}, Requested: ${item.quantity}`
+              `${t("Insufficient stock for")} ${item.product.name} (${colorName} - ${variant.size}). ${t("Available")}: ${variant.stock_quantity}, ${t("Requested")}: ${item.quantity}`
             );
             setSubmitting(false);
             return;
@@ -855,7 +857,7 @@ export default function CheckoutNew() {
 
           if (product.stock_quantity < item.quantity) {
             toast.error(
-              `Insufficient stock for ${product.name}. Available: ${product.stock_quantity}, Requested: ${item.quantity}`
+              `${t("Insufficient stock for")} ${product.name}. ${t("Available")}: ${product.stock_quantity}, ${t("Requested")}: ${item.quantity}`
             );
             setSubmitting(false);
             return;
@@ -865,7 +867,7 @@ export default function CheckoutNew() {
 
       // Check phone number requirement
       if (!profile?.phone || profile.phone.trim() === "") {
-        toast.error("Please add your phone number in your profile to complete the order");
+        toast.error(t("Please add your phone number in your profile to complete the order"));
         navigate("/profile");
         setSubmitting(false);
         return;
@@ -961,7 +963,7 @@ export default function CheckoutNew() {
       localStorage.removeItem("appliedCartDiscounts");
       localStorage.removeItem("appliedCartDiscountAmount");
 
-      toast.success("Order placed successfully!");
+      toast.success(t("Order placed successfully!"));
 
       // Navigate based on payment method
       if (paymentMethod?.name.toLowerCase().includes("cash")) {
@@ -973,7 +975,7 @@ export default function CheckoutNew() {
       if (import.meta.env.DEV) {
         console.error("Error creating order:", error);
       }
-      toast.error(error.message || "Failed to place order");
+      toast.error(error.message || t("Failed to place order"));
     } finally {
       setSubmitting(false);
     }
@@ -1001,12 +1003,12 @@ export default function CheckoutNew() {
         <Navbar />
         <main className="flex-1 container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto text-center py-16">
-            <h1 className="text-3xl font-bold mb-4">Your cart is empty</h1>
+            <h1 className="text-3xl font-bold mb-4">{t("Your cart is empty")}</h1>
             <p className="text-muted-foreground mb-8">
-              Add items to your cart before checking out
+              {t("Add items to your cart before checking out")}
             </p>
             <Button asChild>
-              <Link to="/products">Continue Shopping</Link>
+              <Link to="/products">{t("Continue Shopping")}</Link>
             </Button>
           </div>
         </main>
@@ -1030,7 +1032,7 @@ export default function CheckoutNew() {
           className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Cart
+          {t("Back to Cart")}
         </Link>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -1039,28 +1041,28 @@ export default function CheckoutNew() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Contact Information */}
               <Card className="p-6">
-                <h2 className="text-xl font-bold mb-4">Contact Information</h2>
+                <h2 className="text-xl font-bold mb-4">{t("Contact Information")}</h2>
                 <div className="space-y-4">
                   <div>
-                    <Label>Email</Label>
+                    <Label>{t("Email")}</Label>
                     <div className="mt-1 p-3 bg-muted rounded-md text-sm">
                       {profile?.email || user.email}
                     </div>
                   </div>
                   <div>
-                    <Label>Phone</Label>
+                    <Label>{t("Phone")}</Label>
                     <div className="mt-1 p-3 bg-muted rounded-md text-sm">
-                      {profile?.phone || "Not provided"}
+                      {profile?.phone || t("Not provided")}
                     </div>
                   </div>
                   <div>
-                    <Label>Full Name</Label>
+                    <Label>{t("Full Name")}</Label>
                     <div className="mt-1 p-3 bg-muted rounded-md text-sm">
-                      {profile?.full_name || "Not provided"}
+                      {profile?.full_name || t("Not provided")}
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    To update your contact information, please visit your profile page.
+                    {t("To update your contact information, please visit your profile page.")}
                   </p>
                 </div>
               </Card>
@@ -1068,7 +1070,7 @@ export default function CheckoutNew() {
               {/* Region Selection */}
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold">Delivery Region</h2>
+                  <h2 className="text-xl font-bold">{t("Delivery Region")}</h2>
                   <Button
                     type="button"
                     variant="outline"
@@ -1078,11 +1080,11 @@ export default function CheckoutNew() {
                     className="gap-2"
                   >
                     <MapPin className="h-4 w-4" />
-                    {loadingLocation ? "Getting Location..." : "Use GPS"}
+                    {loadingLocation ? t("Getting Location...") : t("Use GPS")}
                   </Button>
                 </div>
                 <div>
-                  <Label htmlFor="regionId">Select Region *</Label>
+                  <Label htmlFor="regionId">{t("Select Region")} *</Label>
                   <Select
                     value={selectedRegion}
                     onValueChange={(value) => {
@@ -1093,12 +1095,12 @@ export default function CheckoutNew() {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Choose your region" />
+                      <SelectValue placeholder={t("Choose your region")} />
                     </SelectTrigger>
                     <SelectContent>
                       {regions?.map((region) => (
                         <SelectItem key={region.id} value={region.id}>
-                          {region.name} {region.country && `- ${region.country}`}
+                          {t(region.name)} {region.country && `- ${t(region.country)}`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1111,13 +1113,13 @@ export default function CheckoutNew() {
 
               {/* Shipping Address */}
               <Card className="p-6">
-                <h2 className="text-xl font-bold mb-4">Shipping Address</h2>
+                <h2 className="text-xl font-bold mb-4">{t("Shipping Address")}</h2>
                 <div>
-                  <Label htmlFor="address">Detailed Address *</Label>
+                  <Label htmlFor="address">{t("Detailed Address")} *</Label>
                   <Input
                     id="address"
                     {...register("address")}
-                    placeholder="Street, building number, floor, etc."
+                    placeholder={t("Street, building number, floor, etc.")}
                   />
                   {errors.address && (
                     <p className="text-sm text-destructive mt-1">{errors.address.message}</p>
@@ -1128,7 +1130,7 @@ export default function CheckoutNew() {
               {/* Shipping Method */}
               {selectedRegion && (
                 <Card className="p-6">
-                  <h2 className="text-xl font-bold mb-4">Shipping Method</h2>
+                  <h2 className="text-xl font-bold mb-4">{t("Shipping Method")}</h2>
                   {availableCarriers && availableCarriers.length > 0 ? (
                     <RadioGroup
                       value={selectedCarrier}
@@ -1155,20 +1157,20 @@ export default function CheckoutNew() {
                                 {carrier.image_url && (
                                   <img
                                     src={carrier.image_url}
-                                    alt={carrier.name}
+                                    alt={t(carrier.name)}
                                     className="w-12 h-12 object-contain rounded"
                                   />
                                 )}
                                 <div>
-                                  <div className="font-medium">{carrier.name}</div>
+                                  <div className="font-medium">{t(carrier.name)}</div>
                                   {carrier.description && (
                                     <div className="text-sm text-muted-foreground">
-                                      {carrier.description}
+                                      {t(carrier.description)}
                                     </div>
                                   )}
                                   {carrier.estimated_days && (
                                     <div className="text-sm text-muted-foreground">
-                                      Delivery: {carrier.estimated_days}
+                                      {t("Delivery")}: {carrier.estimated_days}
                                     </div>
                                   )}
                                 </div>
@@ -1183,7 +1185,7 @@ export default function CheckoutNew() {
                     </RadioGroup>
                   ) : (
                     <p className="text-muted-foreground">
-                      No shipping methods available for this region
+                      {t("No shipping methods available for this region")}
                     </p>
                   )}
                   {errors.carrierId && (
@@ -1194,7 +1196,7 @@ export default function CheckoutNew() {
 
               {/* Payment Method */}
               <Card className="p-6">
-                <h2 className="text-xl font-bold mb-4">Payment Method</h2>
+                <h2 className="text-xl font-bold mb-4">{t("Payment Method")}</h2>
                 {paymentMethods && paymentMethods.length > 0 ? (
                   <RadioGroup value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod}>
                     {paymentMethods.map((method) => (
@@ -1206,10 +1208,10 @@ export default function CheckoutNew() {
                         >
                           {IconComponent(method.icon)}
                           <div>
-                            <div className="font-medium">{method.name}</div>
+                            <div className="font-medium">{t(method.name)}</div>
                             {method.description && (
                               <div className="text-sm text-muted-foreground">
-                                {method.description}
+                                {t(method.description)}
                               </div>
                             )}
                           </div>
@@ -1218,12 +1220,12 @@ export default function CheckoutNew() {
                     ))}
                   </RadioGroup>
                 ) : (
-                  <p className="text-muted-foreground">No payment methods available</p>
+                  <p className="text-muted-foreground">{t("No payment methods available")}</p>
                 )}
               </Card>
 
               <Button type="submit" size="lg" className="w-full" disabled={submitting || !selectedCarrier}>
-                {submitting ? "Processing..." : `Place Order - ${formatPrice(total)}`}
+                {submitting ? t("Processing...") : `${t("Place Order")} - ${formatPrice(total)}`}
               </Button>
             </form>
           </div>
@@ -1231,7 +1233,7 @@ export default function CheckoutNew() {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <Card className="p-6 sticky top-4">
-              <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+              <h2 className="text-xl font-bold mb-4">{t("Order Summary")}</h2>
 
               <div className="space-y-3 mb-4">
                 {cartItems.map((item) => (
@@ -1267,18 +1269,18 @@ export default function CheckoutNew() {
 
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-muted-foreground">{t("Subtotal")}</span>
                   <span className="font-medium">{formatPrice(cartTotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Shipping</span>
+                  <span className="text-muted-foreground">{t("Shipping")}</span>
                   <span className="font-medium">
-                    {shippingCost > 0 ? formatPrice(shippingCost) : "Select shipping method"}
+                    {shippingCost > 0 ? formatPrice(shippingCost) : t("Select shipping method")}
                   </span>
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-sm text-green-600">
-                    <span>Discount</span>
+                    <span>{t("Discount")}</span>
                     <span className="font-medium">-{formatPrice(discountAmount)}</span>
                   </div>
                 )}
@@ -1287,13 +1289,13 @@ export default function CheckoutNew() {
               {/* Discount Code Section */}
               {!appliedDiscount && appliedDiscounts.length === 0 ? (
                 <div className="mb-4">
-                  <Label htmlFor="discount">Discount Code</Label>
+                  <Label htmlFor="discount">{t("Discount Code")}</Label>
                   <div className="flex gap-2 mt-1">
                     <Input
                       id="discount"
                       value={discountCode}
                       onChange={(e) => setDiscountCode(e.target.value)}
-                      placeholder="Enter code"
+                      placeholder={t("Enter code")}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
@@ -1307,7 +1309,7 @@ export default function CheckoutNew() {
                       onClick={handleApplyDiscount}
                       disabled={validatingDiscount}
                     >
-                      {validatingDiscount ? "..." : "Apply"}
+                      {validatingDiscount ? "..." : t("Apply")}
                     </Button>
                   </div>
                 </div>
@@ -1318,10 +1320,10 @@ export default function CheckoutNew() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                            {appliedDiscount.message}
+                            {t(appliedDiscount.message)}
                           </p>
                           <p className="text-xs text-green-600 dark:text-green-400">
-                            Code: {appliedDiscount.code}
+                            {t("Code")}: {appliedDiscount.code}
                           </p>
                         </div>
                         <Button
@@ -1331,22 +1333,22 @@ export default function CheckoutNew() {
                           onClick={handleRemoveDiscount}
                           className="text-green-800 hover:text-green-900 dark:text-green-200"
                         >
-                          Remove
+                          {t("Remove")}
                         </Button>
                       </div>
                     )}
                     {appliedDiscounts.length > 0 && (
                       <div>
                         <p className="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">
-                          {appliedDiscounts.length > 1 ? "Multiple Discounts Applied" : "Automatic Discount Applied"}
+                          {appliedDiscounts.length > 1 ? t("Multiple Discounts Applied") : t("Automatic Discount Applied")}
                         </p>
                         {appliedDiscounts.map((discount, idx) => (
                           <p key={idx} className="text-xs text-green-600 dark:text-green-400">
-                            • {discount.message}
+                            • {t(discount.message)}
                           </p>
                         ))}
                         <p className="text-sm font-bold text-green-700 dark:text-green-300 mt-2">
-                          Total Savings: {formatPrice(discountAmount)}
+                          {t("Total Savings")}: {formatPrice(discountAmount)}
                         </p>
                       </div>
                     )}
@@ -1358,7 +1360,7 @@ export default function CheckoutNew() {
                     onClick={appliedDiscount ? handleRemoveDiscount : handleRemoveAutoDiscounts}
                     className="w-full"
                   >
-                    Remove {appliedDiscount ? "Discount Code" : "Auto Discount"}
+                    {t("Remove")} {appliedDiscount ? t("Discount Code") : t("Auto Discount")}
                   </Button>
                 </div>
               )}
@@ -1366,7 +1368,7 @@ export default function CheckoutNew() {
               <Separator className="my-4" />
 
               <div className="flex justify-between text-lg font-bold">
-                <span>Total</span>
+                <span>{t("Total")}</span>
                 <span>{formatPrice(total)}</span>
               </div>
             </Card>

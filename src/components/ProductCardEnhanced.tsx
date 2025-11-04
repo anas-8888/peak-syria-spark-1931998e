@@ -235,7 +235,7 @@ const ProductCardEnhanced = ({
           <div className="absolute top-3 left-3 flex flex-col gap-2">
             {isNew && (
               <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold uppercase shadow-lg animate-scale-in">
-                {t("product.new")}
+                {t("New")}
               </div>
             )}
           </div>
@@ -261,7 +261,7 @@ const ProductCardEnhanced = ({
             </Link>
             {targetGender && targetGender !== "both" && (
               <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-                {targetGender === "men" ? "Men's" : "Women's"}
+                {targetGender === "men" ? t("Men's") : t("Women's")}
               </p>
             )}
           </div>
@@ -301,7 +301,7 @@ const ProductCardEnhanced = ({
           {/* Sizes - Hide on small mobile in list view */}
           {sizes.length > 0 && (
             <div className={`${viewMode === "list" ? "hidden sm:block text-[10px] sm:text-xs" : "text-xs sm:text-xs"} text-muted-foreground`}>
-              Sizes: {sizes.slice(0, 4).join(", ")}{sizes.length > 4 && "..."}
+              {t("Sizes")}: {sizes.slice(0, 4).join(", ")}{sizes.length > 4 && "..."}
             </div>
           )}
 
@@ -346,15 +346,15 @@ const ProductCardEnhanced = ({
                 </Button>
                 <Button variant="hero" size="xs" className="flex-1 sm:flex-initial text-[10px] sm:text-xs md:text-sm lg:text-base h-6 sm:h-7 md:h-8 lg:h-10 px-2 sm:px-3 md:px-4" asChild>
                   <Link to={`/product/${id}`}>
-                    <span className="hidden sm:inline">View Details</span>
-                    <span className="sm:hidden">View</span>
+                    <span className="hidden sm:inline">{t("View Details")}</span>
+                    <span className="sm:hidden">{t("View")}</span>
                   </Link>
                 </Button>
               </div>
             ) : (
               <Button size="xs" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10 text-sm sm:text-xs md:text-sm h-8 sm:h-7 md:h-9 px-4 sm:px-3 md:px-4 w-full sm:w-auto" asChild>
                 <Link to={`/product/${id}`}>
-                  View Details
+                  {t("View Details")}
                 </Link>
               </Button>
             )}
@@ -366,7 +366,7 @@ const ProductCardEnhanced = ({
       <Dialog open={quickViewOpen} onOpenChange={setQuickViewOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Quick View</DialogTitle>
+            <DialogTitle>{t("Quick View")}</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="aspect-square bg-muted rounded-lg overflow-hidden">
@@ -378,7 +378,7 @@ const ProductCardEnhanced = ({
                 <h2 className="text-2xl font-bold">{name}</h2>
                 {targetGender && targetGender !== "both" && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    {targetGender === "men" ? "Men's" : "Women's"}
+                    {targetGender === "men" ? t("Men's") : t("Women's")}
                   </p>
                 )}
                 {flag && (
@@ -413,11 +413,11 @@ const ProductCardEnhanced = ({
                   </span>
                 ))}
                 <span className="text-sm text-muted-foreground ml-2">
-                  {reviews.length > 0 ? `${displayRating.toFixed(1)} (${reviews.length} reviews)` : 'No reviews yet'}
+                  {reviews.length > 0 ? `${displayRating.toFixed(1)} (${reviews.length} ${t("Reviews").toLowerCase()})` : t("No reviews yet")}
                 </span>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">{t("product.colors")}:</h4>
+                <h4 className="font-semibold mb-2">{t("Colors")}:</h4>
                 <div className="flex gap-2">
                   {colors.map((color) => (
                     <button
@@ -433,7 +433,7 @@ const ProductCardEnhanced = ({
                 </div>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">{t("product.sizes")}:</h4>
+                <h4 className="font-semibold mb-2">{t("Sizes")}:</h4>
                 <div className="flex flex-wrap gap-2">
                   {sizes.map((size) => (
                     <div key={size} className="border-2 border-border px-3 py-1 rounded-md">
@@ -444,7 +444,7 @@ const ProductCardEnhanced = ({
               </div>
               <Link to={`/product/${id}`}>
                 <Button variant="hero" size="lg" className="w-full mt-6">
-                  View Full Details
+                  {t("View Full Details")}
                 </Button>
               </Link>
             </div>

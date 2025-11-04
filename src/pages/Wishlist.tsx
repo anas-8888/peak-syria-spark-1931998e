@@ -9,6 +9,7 @@ import ProductCardEnhanced from "@/components/ProductCardEnhanced";
 import PromoBanner from "@/components/PromoBanner";
 import PercentageLoader from "@/components/PercentageLoader";
 import { Heart } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface WishlistProduct {
   id: string;
@@ -30,6 +31,7 @@ interface WishlistProduct {
 }
 
 const Wishlist = () => {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -130,7 +132,7 @@ const Wishlist = () => {
   });
 
   if (isLoading) {
-    return <PercentageLoader message="Loading your wishlist..." />;
+    return <PercentageLoader message={t("Loading...")} />;
   }
 
   return (
@@ -148,11 +150,11 @@ const Wishlist = () => {
           <div className="flex items-center gap-3 mb-4">
             <Heart className="h-8 w-8 sm:h-10 sm:w-10 fill-current" />
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold animate-fade-in">
-              My Wishlist
+              {t("My Wishlist")}
             </h1>
           </div>
           <p className="text-base sm:text-lg md:text-xl text-secondary-foreground/80 animate-slide-in-left">
-            {wishlistProducts.length} {wishlistProducts.length === 1 ? 'item' : 'items'} saved for later
+            {wishlistProducts.length} {wishlistProducts.length === 1 ? t("item") : t("items")} {t("saved for later")}
           </p>
         </div>
       </section>
@@ -190,15 +192,15 @@ const Wishlist = () => {
           ) : (
             <div className="text-center py-12 sm:py-16 bg-card rounded-lg">
               <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h2 className="text-xl sm:text-2xl font-bold mb-2">Your wishlist is empty</h2>
+              <h2 className="text-xl sm:text-2xl font-bold mb-2">{t("Your wishlist is empty")}</h2>
               <p className="text-muted-foreground mb-6">
-                Start adding products you love to your wishlist!
+                {t("Start adding products you love to your wishlist!")}
               </p>
               <a
                 href="/products"
                 className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6"
               >
-                Browse Products
+                {t("View All Products")}
               </a>
             </div>
           )}

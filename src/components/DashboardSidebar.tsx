@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Package, ShoppingBag, CreditCard, Settings, ChevronLeft, ChevronRight, Users, BarChart3, Star, Tag, Truck, Megaphone, Menu, X, FolderTree, Shield, ExternalLink, LogOut, MapPin, Image, Palette, FileText, LayoutGrid, Presentation, Mail } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, CreditCard, Settings, ChevronLeft, ChevronRight, Users, BarChart3, Star, Tag, Truck, Megaphone, Menu, X, FolderTree, Shield, ExternalLink, LogOut, MapPin, Image, Palette, FileText, LayoutGrid, Presentation, Mail, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import peakLogo from "@/assets/peak-logo-new.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 const menuItems = [{
   title: "Overview",
   path: "/dashboard",
@@ -95,17 +96,22 @@ const menuItems = [{
   path: "/dashboard/about",
   icon: FileText,
   end: false
-}, {
-  title: "Legal Pages",
-  path: "/dashboard/legal-pages",
-  icon: FileText,
-  end: false
-}, {
-  title: "Roles",
-  path: "/dashboard/roles",
-  icon: Shield,
-  end: false
-}, {
+},   {
+    title: "Legal Pages",
+    path: "/dashboard/legal-pages",
+    icon: FileText,
+    end: false
+  }, {
+    title: "Translations",
+    path: "/dashboard/translations",
+    icon: Languages,
+    end: false
+  }, {
+    title: "Roles",
+    path: "/dashboard/roles",
+    icon: Shield,
+    end: false
+  }, {
   title: "Users",
   path: "/dashboard/users",
   icon: Users,
@@ -117,6 +123,7 @@ const menuItems = [{
   end: false
 }];
 const DashboardSidebar = () => {
+  const { t } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
@@ -126,10 +133,10 @@ const DashboardSidebar = () => {
   const handleLogout = async () => {
     try {
       await signOut();
-      toast.success("Logged out successfully");
+      toast.success(t("Logged out successfully"));
       navigate("/");
     } catch (error) {
-      toast.error("Failed to logout");
+      toast.error(t("Failed to logout"));
     }
   };
   return <>
@@ -168,7 +175,7 @@ const DashboardSidebar = () => {
         <div className="p-4 pb-2">
           <NavLink to="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-muted-foreground hover:bg-accent hover:text-accent-foreground">
             <ExternalLink className="h-5 w-5 flex-shrink-0" />
-            {!collapsed && <span className="font-medium whitespace-nowrap">Browse Website</span>}
+            {!collapsed && <span className="font-medium whitespace-nowrap">{t("Browse Website")}</span>}
           </NavLink>
         </div>
 
@@ -181,7 +188,7 @@ const DashboardSidebar = () => {
             isActive
           }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}>
                 <Icon className="h-5 w-5 flex-shrink-0" />
-                {!collapsed && <span className="font-medium whitespace-nowrap">{item.title}</span>}
+                {!collapsed && <span className="font-medium whitespace-nowrap">{t(item.title)}</span>}
               </NavLink>;
         })}
         </nav>
@@ -191,7 +198,7 @@ const DashboardSidebar = () => {
           {/* Logout Button */}
           <Button onClick={handleLogout} variant="outline" className={`w-full gap-3 ${collapsed ? 'px-0 justify-center' : 'justify-start'}`}>
             <LogOut className="h-5 w-5 flex-shrink-0" />
-            {!collapsed && <span className="font-medium">Log Out</span>}
+            {!collapsed && <span className="font-medium">{t("Sign Out")}</span>}
           </Button>
 
           {!collapsed}

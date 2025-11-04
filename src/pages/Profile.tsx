@@ -10,11 +10,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Camera, Loader2, Mail, Phone, MapPin, User, Navigation } from "lucide-react";
 
 const Profile = () => {
+  const { t } = useLanguage();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -83,8 +85,8 @@ const Profile = () => {
         // Check if this is a first-time user (no phone number)
         if (!data.phone || data.phone.trim() === "") {
           setIsFirstTimeUser(true);
-          toast.info("Welcome! 👋", {
-            description: "Please complete your profile to start shopping",
+          toast.info(t("Welcome! 👋"), {
+            description: t("Please complete your profile to start shopping"),
             duration: 5000,
           });
         }
@@ -114,7 +116,7 @@ const Profile = () => {
       if (import.meta.env.DEV) {
         console.error("Error loading profile:", error);
       }
-      toast.error("Failed to load profile", {
+      toast.error(t("Failed to load profile"), {
         description: error.message,
       });
     } finally {
@@ -169,11 +171,11 @@ const Profile = () => {
       // Trigger a custom event to notify Navbar to refresh
       window.dispatchEvent(new CustomEvent('avatarUpdated'));
       
-      toast.success("Avatar Updated! 📸", {
-        description: "Your profile picture has been updated successfully",
+      toast.success(t("Avatar Updated! 📸"), {
+        description: t("Your profile picture has been updated successfully"),
       });
     } catch (error: any) {
-      toast.error("Upload Failed", {
+      toast.error(t("Upload Failed"), {
         description: error.message,
       });
     } finally {
@@ -213,26 +215,26 @@ const Profile = () => {
               
               if (matchedRegion) {
                 setRegionId(matchedRegion.id);
-                toast.success("Location and region detected successfully!");
+                toast.success(t("Location and region detected successfully!"));
               } else {
-                toast.success("Location detected! Please select your region manually.");
+                toast.success(t("Location detected! Please select your region manually."));
               }
             }
           } catch (error) {
             console.error("Error getting location details:", error);
-            toast.error("Could not get location details");
+            toast.error(t("Could not get location details"));
           } finally {
             setLoadingLocation(false);
           }
         },
         (error) => {
           console.error("Error getting location:", error);
-          toast.error("Could not access your location");
+          toast.error(t("Could not access your location"));
           setLoadingLocation(false);
         }
       );
     } else {
-      toast.error("Geolocation is not supported by your browser");
+      toast.error(t("Geolocation is not supported by your browser"));
       setLoadingLocation(false);
     }
   };
@@ -242,8 +244,8 @@ const Profile = () => {
     
     // Validate phone number is required
     if (!phone || phone.trim() === "") {
-      toast.error("Phone Required", {
-        description: "Please enter your phone number to continue",
+      toast.error(t("Phone Required"), {
+        description: t("Please enter your phone number to continue"),
       });
       return;
     }
@@ -265,18 +267,18 @@ const Profile = () => {
       if (error) throw error;
 
       if (isFirstTimeUser) {
-        toast.success("Profile Completed! 🎉", {
-          description: "You can now start shopping",
+        toast.success(t("Profile Completed! 🎉"), {
+          description: t("You can now start shopping"),
         });
         setIsFirstTimeUser(false);
         navigate("/");
       } else {
-        toast.success("Profile Updated! ✨", {
-          description: "Your information has been saved successfully",
+        toast.success(t("Profile Updated! ✨"), {
+          description: t("Your information has been saved successfully"),
         });
       }
     } catch (error: any) {
-      toast.error("Update Failed", {
+      toast.error(t("Update Failed"), {
         description: error.message,
       });
     } finally {
@@ -301,10 +303,10 @@ const Profile = () => {
           {/* Header */}
           <div className="text-center mb-8 animate-fade-in">
             <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary via-red-500 to-primary bg-clip-text text-transparent">
-              {isFirstTimeUser ? "Complete Your Profile" : "My Profile"}
+              {isFirstTimeUser ? t("Complete Your Profile") : t("My Profile")}
             </h1>
             <p className="text-muted-foreground">
-              {isFirstTimeUser ? "Please complete your profile to start shopping" : "Manage your personal information"}
+              {isFirstTimeUser ? t("Please complete your profile to start shopping") : t("Manage your personal information")}
             </p>
           </div>
 
@@ -341,7 +343,7 @@ const Profile = () => {
                   />
                 </div>
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold">{fullName || "User"}</h2>
+                  <h2 className="text-2xl font-bold">{fullName || t("User")}</h2>
                   <p className="text-sm text-muted-foreground">{email}</p>
                 </div>
               </div>
@@ -353,10 +355,10 @@ const Profile = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                Personal Information
+                {t("Personal Information")}
               </CardTitle>
               <CardDescription>
-                Update your personal details and contact information
+                {t("Update your personal details and contact information")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -366,14 +368,14 @@ const Profile = () => {
                   <div className="space-y-2">
                     <Label htmlFor="fullName" className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      Full Name
+                      {t("Full Name")}
                     </Label>
                     <Input
                       id="fullName"
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Enter your full name"
+                      placeholder={t("Enter your full name")}
                       className="rounded-xl"
                     />
                   </div>
@@ -382,7 +384,7 @@ const Profile = () => {
                   <div className="space-y-2">
                     <Label htmlFor="email" className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
-                      Email
+                      {t("Email")}
                     </Label>
                     <Input
                       id="email"
@@ -392,14 +394,14 @@ const Profile = () => {
                       placeholder="your.email@example.com"
                       className="rounded-xl bg-muted cursor-not-allowed"
                     />
-                    <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                    <p className="text-xs text-muted-foreground">{t("Email cannot be changed")}</p>
                   </div>
 
                   {/* Phone - Required */}
                   <div className="space-y-2">
                     <Label htmlFor="phone" className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
-                      Phone Number <span className="text-red-500">*</span>
+                      {t("Phone Number")} <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="phone"
@@ -411,7 +413,7 @@ const Profile = () => {
                       required
                     />
                     {isFirstTimeUser && (
-                      <p className="text-xs text-orange-500">Phone number is required to place orders</p>
+                      <p className="text-xs text-orange-500">{t("Phone number is required to place orders")}</p>
                     )}
                   </div>
 
@@ -419,7 +421,7 @@ const Profile = () => {
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="address" className="flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
-                      Address
+                      {t("Address")}
                     </Label>
                     <div className="flex gap-2">
                       <Input
@@ -427,7 +429,7 @@ const Profile = () => {
                         type="text"
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
-                        placeholder="Your address"
+                        placeholder={t("Your address")}
                         className="rounded-xl flex-1"
                       />
                       <Button
@@ -450,16 +452,16 @@ const Profile = () => {
                   <div className="space-y-2">
                     <Label htmlFor="region" className="flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
-                      Region
+                      {t("Region")}
                     </Label>
                     <Select value={regionId} onValueChange={setRegionId}>
                       <SelectTrigger className="rounded-xl">
-                        <SelectValue placeholder="Select your region" />
+                        <SelectValue placeholder={t("Select your region")} />
                       </SelectTrigger>
                       <SelectContent>
                         {regions.map((region) => (
                           <SelectItem key={region.id} value={region.id}>
-                            {region.name} {region.country && `(${region.country})`}
+                            {t(region.name)} {region.country && `(${t(region.country)})`}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -478,7 +480,7 @@ const Profile = () => {
                       onClick={() => navigate("/")}
                       className="rounded-full px-6"
                     >
-                      Cancel
+                      {t("Cancel")}
                     </Button>
                   )}
                   <Button
@@ -489,12 +491,12 @@ const Profile = () => {
                     {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
+                        {t("Saving...")}
                       </>
                     ) : isFirstTimeUser ? (
-                      "Complete & Start Shopping"
+                      t("Complete & Start Shopping")
                     ) : (
-                      "Save Changes"
+                      t("Save Changes")
                     )}
                   </Button>
                 </div>

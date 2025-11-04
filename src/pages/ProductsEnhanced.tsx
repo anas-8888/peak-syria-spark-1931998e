@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 import { LayoutGrid, List } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Product {
   id: string;
@@ -34,6 +35,7 @@ interface Product {
 }
 
 const ProductsEnhanced = () => {
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   // Set default view mode to list on mobile, grid on desktop
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
@@ -289,7 +291,7 @@ const ProductsEnhanced = () => {
   };
 
   if (isLoading) {
-    return <PercentageLoader message="Loading products..." />;
+    return <PercentageLoader message={t("Loading...")} />;
   }
 
   return (
@@ -305,11 +307,11 @@ const ProductsEnhanced = () => {
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 animate-fade-in">
-            {searchParams.get('category') ? `${searchParams.get('category')} Collection` : 'Our Collection'}
+            {searchParams.get('category') ? `${searchParams.get('category')} ${t("Collection")}` : t("Our Collection")}
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-secondary-foreground/80 animate-slide-in-left">
-            {sortedProducts.length} Premium PEAK Products
-            {searchParams.get('category') && ` in ${searchParams.get('category')}`}
+            {sortedProducts.length} {t("Premium PEAK Products")}
+            {searchParams.get('category') && ` ${t("in")} ${searchParams.get('category')}`}
           </p>
         </div>
       </section>
@@ -337,7 +339,7 @@ const ProductsEnhanced = () => {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between bg-card p-3 sm:p-4 rounded-lg shadow-sm">
                 <div className="flex items-center gap-2">
                   <span className="text-xs sm:text-sm text-muted-foreground">
-                    Showing {sortedProducts.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, sortedProducts.length)} of {sortedProducts.length} products
+                    {t("Showing")} {sortedProducts.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, sortedProducts.length)} {t("of")} {sortedProducts.length} {t("products").toLowerCase()}
                   </span>
                 </div>
 
@@ -365,14 +367,14 @@ const ProductsEnhanced = () => {
                   {/* Sort Dropdown */}
                   <Select value={sortBy} onValueChange={setSortBy}>
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Sort by" />
+                      <SelectValue placeholder={t("Sort by")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="featured">Featured</SelectItem>
-                      <SelectItem value="rating">Top Rated</SelectItem>
-                      <SelectItem value="price-low">Price: Low to High</SelectItem>
-                      <SelectItem value="price-high">Price: High to Low</SelectItem>
-                      <SelectItem value="name">Name</SelectItem>
+                      <SelectItem value="featured">{t("Featured")}</SelectItem>
+                      <SelectItem value="rating">{t("Top Rated")}</SelectItem>
+                      <SelectItem value="price-low">{t("Price: Low to High")}</SelectItem>
+                      <SelectItem value="price-high">{t("Price: High to Low")}</SelectItem>
+                      <SelectItem value="name">{t("Name")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -462,7 +464,7 @@ const ProductsEnhanced = () => {
               ) : (
                 <div className="text-center py-12 sm:py-16 bg-card rounded-lg">
                   <p className="text-muted-foreground text-base sm:text-lg mb-4">
-                    No products match your filters
+                    {t("No products match your filters")}
                   </p>
                    <Button 
                     variant="outline" 
@@ -477,7 +479,7 @@ const ProductsEnhanced = () => {
                     }}
                     className="text-sm sm:text-base"
                   >
-                    Clear All Filters
+                    {t("Clear All Filters")}
                   </Button>
                 </div>
               )}

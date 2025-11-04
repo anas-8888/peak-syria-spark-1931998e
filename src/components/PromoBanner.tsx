@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const PromoBanner = () => {
+  const { t } = useLanguage();
   const [isVisible, setIsVisible] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -63,12 +65,12 @@ const PromoBanner = () => {
   // Format the discount message
   const getDiscountMessage = () => {
     if (bannerDiscount.marketing_label) {
-      return bannerDiscount.marketing_label;
+      return t(bannerDiscount.marketing_label);
     }
     
     const typeText = bannerDiscount.type === 'percentage' ? `${bannerDiscount.value}%` : `$${bannerDiscount.value}`;
-    const minText = bannerDiscount.min_cart_subtotal > 0 ? ` for orders above $${bannerDiscount.min_cart_subtotal}` : '';
-    return `🔥 ${bannerDiscount.name}: Automatic ${typeText} discount${minText}`;
+    const minText = bannerDiscount.min_cart_subtotal > 0 ? ` ${t("for orders above")} $${bannerDiscount.min_cart_subtotal}` : '';
+    return `🔥 ${t(bannerDiscount.name)}: ${t("Automatic")} ${typeText} ${t("discount")}${minText}`;
   };
 
   const handleBannerClick = (e: React.MouseEvent) => {
@@ -112,7 +114,7 @@ const PromoBanner = () => {
           asChild
         >
           <Link to="/products" onClick={(e) => e.stopPropagation()}>
-            Shop Now
+            {t("Shop Now")}
             <ArrowRight className="ml-1 h-2 w-2 sm:h-3 sm:w-3" />
           </Link>
         </Button>
@@ -125,7 +127,7 @@ const PromoBanner = () => {
           handleClose();
         }}
         className="absolute right-6 top-1/2 -translate-y-1/2 hover:opacity-70 transition-all duration-200 p-1 rounded-full hover:bg-white/20 hover:scale-110 z-20"
-        aria-label="Close banner"
+        aria-label={t("Close banner")}
       >
         <X className="h-3 w-3" />
       </button>

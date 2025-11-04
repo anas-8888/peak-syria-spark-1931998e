@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search as SearchIcon, X, TrendingUp } from "lucide-react";
 import { debounce } from "lodash-es";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Product {
   id: string;
@@ -35,6 +36,7 @@ interface Product {
 }
 
 const Search = () => {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
@@ -234,7 +236,7 @@ const Search = () => {
   };
 
   if (productsLoading) {
-    return <PercentageLoader message="Loading search..." />;
+    return <PercentageLoader message={t("Loading...")} />;
   }
 
   return (
@@ -251,7 +253,7 @@ const Search = () => {
         
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-center animate-fade-in">
-            Search Products
+            {t("Search Products")}
           </h1>
 
           {/* Search Input */}
@@ -260,7 +262,7 @@ const Search = () => {
               <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Search by name, category, color, size, flag..."
+                placeholder={t("Search by name, category, color, size, flag...")}
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onFocus={() => setShowSuggestions(true)}
@@ -285,7 +287,7 @@ const Search = () => {
                   {/* Recent Searches */}
                   {!searchQuery && recentSearches.length > 0 && (
                     <div className="p-2 border-b bg-card/100 backdrop-blur-xl">
-                      <p className="text-xs text-muted-foreground px-3 py-2 font-semibold">Recent Searches</p>
+                      <p className="text-xs text-muted-foreground px-3 py-2 font-semibold">{t("Recent Searches")}</p>
                       {recentSearches.map((search, index) => (
                         <button
                           key={index}
@@ -315,7 +317,7 @@ const Search = () => {
                   {/* Suggestions */}
                   {suggestions.length > 0 ? (
                     <div className="p-2 bg-card/100 backdrop-blur-xl">
-                      <p className="text-xs text-muted-foreground px-3 py-2 font-semibold">Suggestions</p>
+                      <p className="text-xs text-muted-foreground px-3 py-2 font-semibold">{t("Suggestions")}</p>
                       {suggestions.map((suggestion, index) => (
                         <button
                           key={index}
@@ -331,7 +333,7 @@ const Search = () => {
                     </div>
                   ) : (
                     <div className="p-4 bg-card/100 text-muted-foreground">
-                      <p className="text-sm">No suggestions. Try different keywords.</p>
+                      <p className="text-sm">{t("No suggestions. Try different keywords.")}</p>
                     </div>
                   )}
                 </div>,
@@ -351,10 +353,10 @@ const Search = () => {
             <>
               <div className="mb-6">
                 <h2 className="text-2xl font-bold mb-2">
-                  Search Results for "{searchQuery}"
+                  {t("Search Results for")} "{searchQuery}"
                 </h2>
                 <p className="text-muted-foreground">
-                  Found {results.length} {results.length === 1 ? 'product' : 'products'}
+                  {t("Found")} {results.length} {results.length === 1 ? t("product") : t("products")}
                 </p>
               </div>
 
@@ -388,15 +390,15 @@ const Search = () => {
               ) : (
                 <div className="text-center py-12 sm:py-16 bg-card rounded-lg">
                   <SearchIcon className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                  <h2 className="text-xl sm:text-2xl font-bold mb-2">No results found</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-2">{t("No results found")}</h2>
                   <p className="text-muted-foreground mb-6">
-                    Try adjusting your search terms or browse all products
+                    {t("Try adjusting your search terms or browse all products")}
                   </p>
                   <a
                     href="/products"
                     className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6"
                   >
-                    Browse All Products
+                    {t("View All Products")}
                   </a>
                 </div>
               )}
@@ -404,9 +406,9 @@ const Search = () => {
           ) : (
             <div className="text-center py-12 sm:py-16">
               <SearchIcon className="h-20 w-20 mx-auto mb-4 text-muted-foreground" />
-              <h2 className="text-2xl font-bold mb-2">Start Your Search</h2>
+              <h2 className="text-2xl font-bold mb-2">{t("Start Your Search")}</h2>
               <p className="text-muted-foreground">
-                Search for products by name, category, color, size, or any keyword
+                {t("Search for products by name, category, color, size, or any keyword")}
               </p>
             </div>
           )}

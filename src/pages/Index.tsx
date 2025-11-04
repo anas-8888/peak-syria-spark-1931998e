@@ -8,6 +8,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import PromoBanner from "@/components/PromoBanner";
 import PercentageLoader from "@/components/PercentageLoader";
 import { OrderStatusBanner } from "@/components/OrderStatusBanner";
+import LanguageToggle from "@/components/LanguageToggle";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, TrendingUp, Zap, Shield } from "lucide-react";
@@ -141,6 +142,10 @@ const Index = () => {
       <PromoBanner />
       <Navbar />
       <OrderStatusBanner />
+      {/* Language Toggle Button */}
+      <div className="fixed bottom-20 right-4 z-50">
+        <LanguageToggle />
+      </div>
       <HeroSection />
       <WhatsAppButton />
 
@@ -153,9 +158,9 @@ const Index = () => {
       <section className="pt-12 sm:pt-16 md:pt-20 pb-6 sm:pb-8 w-full">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12 animate-fade-in">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">{t("home.featuredTitle")}</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">{t("Featured Collection")}</h2>
             <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
-              {t("home.featuredDesc")}
+              {t("Discover our handpicked selection of premium sportswear")}
             </p>
           </div>
 
@@ -207,7 +212,7 @@ const Index = () => {
           <div className="text-center">
             <Link to="/products">
               <Button variant="default" size="sm" className="group w-full sm:w-auto text-xs sm:text-base h-8 sm:h-10 px-4 sm:px-6">
-                {t("home.viewAll")}
+                {t("View All Products")}
                 <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
@@ -219,8 +224,8 @@ const Index = () => {
       <section className="pt-6 sm:pt-8 pb-6 sm:pb-16 bg-muted/50 w-full">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12 animate-fade-in">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">{t("home.categoryTitle")}</h2>
-            <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">{t("home.categoryDesc")}</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">{t("Shop by Category")}</h2>
+            <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">{t("Find your perfect sport")}</p>
           </div>
 
           {/* Categories Carousel */}
@@ -291,7 +296,7 @@ const Index = () => {
                         </div>
                         <p className="text-muted-foreground mb-2 sm:mb-4 text-xs sm:text-sm md:text-base text-center line-clamp-2">{category.description}</p>
                         <div className="flex items-center justify-center text-primary font-semibold group-hover:gap-3 transition-all text-xs sm:text-sm md:text-base">
-                          {t("home.explore")}
+                          {t("Explore Collection")}
                           <ArrowRight className="ml-0.5 sm:ml-1 h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 group-hover:translate-x-2 transition-transform duration-300" />
                         </div>
                       </div>
@@ -321,22 +326,22 @@ const Index = () => {
               <div className="bg-primary/20 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
                 <Shield className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3">{t("trust.authentic")}</h3>
-              <p className="text-secondary-foreground/80 text-sm sm:text-base lg:text-lg">{t("trust.authenticDesc")}</p>
+              <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3">{t("100% Authentic")}</h3>
+              <p className="text-secondary-foreground/80 text-sm sm:text-base lg:text-lg">{t("Official PEAK distributor in Syria")}</p>
             </div>
             <div className="animate-fade-in" style={{ animationDelay: "150ms" }}>
               <div className="bg-primary/20 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
                 <Zap className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3">{t("trust.delivery")}</h3>
-              <p className="text-secondary-foreground/80 text-sm sm:text-base lg:text-lg">{t("trust.deliveryDesc")}</p>
+              <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3">{t("Fast Delivery")}</h3>
+              <p className="text-secondary-foreground/80 text-sm sm:text-base lg:text-lg">{t("Quick shipping across Syria")}</p>
             </div>
             <div className="animate-fade-in sm:col-span-2 lg:col-span-1" style={{ animationDelay: "300ms" }}>
               <div className="bg-primary/20 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
                 <TrendingUp className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3">{t("trust.quality")}</h3>
-              <p className="text-secondary-foreground/80 text-sm sm:text-base lg:text-lg">{t("trust.qualityDesc")}</p>
+              <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3">{t("Premium Quality")}</h3>
+              <p className="text-secondary-foreground/80 text-sm sm:text-base lg:text-lg">{t("World-class sportswear")}</p>
             </div>
           </div>
         </div>

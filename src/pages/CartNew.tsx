@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +20,7 @@ import { Label } from "@/components/ui/label";
 export default function CartNew() {
   const { cartItems, updateQuantity, updateNotes, removeFromCart, loading, cartTotal } = useCart();
   const { formatPrice } = useCurrency();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const [noteTexts, setNoteTexts] = useState<Record<string, string>>({});
   const saveTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
@@ -974,12 +976,12 @@ export default function CartNew() {
         <main className="flex-1 container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto text-center py-16">
             <ShoppingBag className="h-24 w-24 mx-auto mb-6 text-muted-foreground" />
-            <h1 className="text-3xl font-bold mb-4">Your cart is empty</h1>
+            <h1 className="text-3xl font-bold mb-4">{t("Your cart is empty")}</h1>
             <p className="text-muted-foreground mb-8">
-              Start shopping to add items to your cart
+              {t("Add some products to get started")}
             </p>
             <Button asChild>
-              <Link to="/products">Continue Shopping</Link>
+              <Link to="/products">{t("Continue Shopping")}</Link>
             </Button>
           </div>
         </main>
@@ -993,8 +995,8 @@ export default function CartNew() {
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Shopping Cart</h1>
-          <p className="text-muted-foreground">{cartItems.length} items in your cart</p>
+          <h1 className="text-3xl font-bold mb-2">{t("Shopping Cart")}</h1>
+          <p className="text-muted-foreground">{cartItems.length} {t("items in your cart")}</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -1022,17 +1024,17 @@ export default function CartNew() {
                         <h3 className="font-semibold text-lg truncate">{item.product.name}</h3>
                         {(item.selected_color || item.selected_size) && (
                           <p className="text-xs text-muted-foreground mb-1">
-                            {item.selected_color && <span>Color: {item.selected_color}</span>}
+                            {item.selected_color && <span>{t("Color")}: {item.selected_color}</span>}
                             {item.selected_color && item.selected_size && <span> | </span>}
-                            {item.selected_size && <span>Size: {item.selected_size}</span>}
+                            {item.selected_size && <span>{t("Size")}: {item.selected_size}</span>}
                           </p>
                         )}
                         <p className="text-sm text-muted-foreground">
-                          {formatPrice(item.variant_price || item.product.offer_price || item.product.price)} each
+                          {formatPrice(item.variant_price || item.product.offer_price || item.product.price)} {t("each")}
                         </p>
                         {variantStocks[item.id] !== undefined && (
                           <p className="text-xs text-muted-foreground mt-1">
-                            {variantStocks[item.id]} available
+                            {variantStocks[item.id]} {t("available")}
                           </p>
                         )}
                       </div>
@@ -1099,7 +1101,7 @@ export default function CartNew() {
                             });
                           }}
                         >
-                          Apply
+                          {t("Apply")}
                         </Button>
                       )}
                       <span className="ml-auto font-semibold">
@@ -1110,14 +1112,14 @@ export default function CartNew() {
                     {/* Notes - Auto-save */}
                     <div className="space-y-2">
                       <Textarea
-                        placeholder="Add notes for this item (saves automatically)..."
+                        placeholder={t("Add notes for this item (saves automatically)...")}
                         value={noteTexts[item.id] || ""}
                         onChange={(e) => handleNoteChange(item.id, e.target.value)}
                         className="min-h-[60px]"
                       />
                       {noteTexts[item.id] && (
                         <p className="text-xs text-muted-foreground">
-                          ✓ Notes saved automatically
+                          ✓ {t("Notes saved automatically")}
                         </p>
                       )}
                     </div>
@@ -1130,26 +1132,26 @@ export default function CartNew() {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <Card className="p-6 sticky top-4">
-              <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+              <h2 className="text-xl font-bold mb-4">{t("Order Summary")}</h2>
               
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-muted-foreground">{t("Subtotal")}</span>
                   <span className="font-medium">{formatPrice(cartTotal)}</span>
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-sm text-green-600">
-                    <span>Discount</span>
+                    <span>{t("Discount")}</span>
                     <span className="font-medium">-{formatPrice(discountAmount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Shipping</span>
-                  <span className="font-medium text-xs">Calculated at checkout</span>
+                  <span className="text-muted-foreground">{t("Shipping")}</span>
+                  <span className="font-medium text-xs">{t("Calculated at checkout")}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
-                  <span>Total</span>
+                  <span>{t("Total")}</span>
                   <span>{formatPrice(total)}</span>
                 </div>
               </div>
@@ -1157,13 +1159,13 @@ export default function CartNew() {
               {/* Discount Code Section */}
               {!appliedDiscount && appliedDiscounts.length === 0 ? (
                 <div className="mb-4 space-y-2">
-                  <Label htmlFor="discount">Discount Code</Label>
+                  <Label htmlFor="discount">{t("Discount Code")}</Label>
                   <div className="flex gap-2 mt-1">
                     <Input
                       id="discount"
                       value={discountCode}
                       onChange={(e) => setDiscountCode(e.target.value)}
-                      placeholder="Enter code"
+                      placeholder={t("Enter code")}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
@@ -1177,7 +1179,7 @@ export default function CartNew() {
                       onClick={handleApplyDiscount}
                       disabled={validatingDiscount}
                     >
-                      {validatingDiscount ? "Applying..." : "Apply"}
+                      {validatingDiscount ? t("Applying...") : t("Apply")}
                     </Button>
                   </div>
                   {discountFeedback && (
@@ -1193,7 +1195,7 @@ export default function CartNew() {
                     disabled={checkingAutoDiscounts}
                     className="w-full"
                   >
-                    {checkingAutoDiscounts ? "Checking..." : "Check Auto Discounts"}
+                    {checkingAutoDiscounts ? t("Checking...") : t("Check Auto Discounts")}
                   </Button>
                 </div>
               ) : (
@@ -1212,7 +1214,7 @@ export default function CartNew() {
                     {appliedDiscounts.length > 0 && (
                       <div>
                         <p className="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">
-                          {appliedDiscounts.length > 1 ? "Multiple Discounts Applied" : "Automatic Discount Applied"}
+                          {appliedDiscounts.length > 1 ? t("Multiple Discounts Applied") : t("Automatic Discount Applied")}
                         </p>
                         {appliedDiscounts.map((discount, idx) => (
                           <p key={idx} className="text-xs text-green-600 dark:text-green-400">
@@ -1220,7 +1222,7 @@ export default function CartNew() {
                           </p>
                         ))}
                         <p className="text-sm font-bold text-green-700 dark:text-green-300 mt-2">
-                          Total Savings: {formatPrice(discountAmount)}
+                          {t("Total Savings")}: {formatPrice(discountAmount)}
                         </p>
                       </div>
                     )}
@@ -1232,7 +1234,7 @@ export default function CartNew() {
                     onClick={appliedDiscount ? handleRemoveDiscount : handleRemoveAutoDiscounts}
                     className="w-full"
                   >
-                    Remove {appliedDiscount ? "Discount Code" : "Auto Discount"}
+                    {t("Remove")} {appliedDiscount ? t("Discount Code") : t("Auto Discount")}
                   </Button>
                 </div>
               )}
@@ -1241,7 +1243,7 @@ export default function CartNew() {
               {showingAvailableDiscounts && availableAutoDiscounts.length > 0 && (
                 <div className="mb-4 space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold">Available Auto Discounts</Label>
+                    <Label className="text-sm font-semibold">{t("Available Auto Discounts")}</Label>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -1287,13 +1289,13 @@ export default function CartNew() {
                           {!discount.isQualified && (
                             <div className="text-xs space-y-0.5 text-muted-foreground">
                               {!discount.meetsMinimum && (
-                                <p>• Add {formatPrice(discount.missingAmount)} more to qualify</p>
+                                <p>• {t("Add")} {formatPrice(discount.missingAmount)} {t("more to qualify")}</p>
                               )}
                               {!discount.meetsQuantity && (
-                                <p>• Minimum {discount.min_quantity} items required</p>
+                                <p>• {t("Minimum")} {discount.min_quantity} {t("items required")}</p>
                               )}
                               {!discount.meetsScope && (
-                                <p>• Only applies to specific products</p>
+                                <p>• {t("Only applies to specific products")}</p>
                               )}
                             </div>
                           )}
@@ -1301,10 +1303,10 @@ export default function CartNew() {
                           {discount.isQualified && (
                             <div className="flex items-center justify-between mt-1">
                               <p className="text-xs text-green-600 dark:text-green-400">
-                                ✓ You qualify! {discount.is_stackable ? '(Stackable)' : '(Not stackable)'}
+                                ✓ {t("You qualify!")} {discount.is_stackable ? `(${t("Stackable")})` : `(${t("Not stackable")})`}
                               </p>
                               <span className="text-xs text-green-700 dark:text-green-300 font-medium">
-                                Click to apply
+                                {t("Click to apply")}
                               </span>
                             </div>
                           )}
@@ -1346,10 +1348,10 @@ export default function CartNew() {
                   }
                 }}
               >
-                <Link to="/checkout">Proceed to Checkout</Link>
+                <Link to="/checkout">{t("Proceed to Checkout")}</Link>
               </Button>
               <Button asChild variant="outline" className="w-full">
-                <Link to="/products">Continue Shopping</Link>
+                <Link to="/products">{t("Continue Shopping")}</Link>
               </Button>
             </Card>
           </div>

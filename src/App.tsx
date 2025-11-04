@@ -55,6 +55,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Refund from "./pages/Refund";
 import LegalPages from "./pages/dashboard/LegalPages";
+import Translations from "./pages/dashboard/Translations";
 import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -63,7 +64,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
-        <BrowserRouter>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           <ScrollToTop />
           <AuthProvider>
             <LanguageProvider>
@@ -116,6 +122,7 @@ function App() {
                     <Route path="marketing" element={<Marketing />} />
                   <Route path="about" element={<AboutManagement />} />
                   <Route path="legal-pages" element={<LegalPages />} />
+                  <Route path="translations" element={<Translations />} />
                     <Route path="settings" element={<DashboardSettings />} />
                   </Route>
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

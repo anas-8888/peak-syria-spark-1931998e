@@ -3,8 +3,10 @@ import { useEffect } from "react";
 import { ServerCrash, Home, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ServerError = () => {
+  const { t } = useLanguage();
   useEffect(() => {
     console.error("500 Error: Internal Server Error occurred");
   }, []);
@@ -27,9 +29,9 @@ const ServerError = () => {
           {/* Error Code */}
           <div>
             <h1 className="text-8xl font-bold text-destructive mb-4">500</h1>
-            <h2 className="text-3xl font-bold mb-2">Internal Server Error</h2>
+            <h2 className="text-3xl font-bold mb-2">{t("Internal Server Error")}</h2>
             <p className="text-muted-foreground text-lg max-w-md mx-auto">
-              Something went wrong on our end. We're working to fix the issue. Please try again later.
+              {t("Something went wrong on our end. We're working to fix the issue. Please try again later.")}
             </p>
           </div>
 
@@ -42,12 +44,12 @@ const ServerError = () => {
               className="gap-2"
             >
               <RefreshCcw className="h-4 w-4" />
-              Try Again
+              {t("Try Again")}
             </Button>
             <Link to="/">
               <Button size="lg" className="gap-2 w-full sm:w-auto">
                 <Home className="h-4 w-4" />
-                Return to Home
+                {t("Return to Home")}
               </Button>
             </Link>
           </div>
@@ -55,10 +57,10 @@ const ServerError = () => {
           {/* Support Info */}
           <div className="pt-8 border-t">
             <p className="text-sm text-muted-foreground mb-3">
-              If this problem persists, please contact our support team:
+              {t("If this problem persists, please contact our support team:")}
             </p>
             <Link to="/contact" className="text-primary hover:underline font-medium">
-              Contact Support
+              {t("Contact Us")}
             </Link>
           </div>
         </CardContent>

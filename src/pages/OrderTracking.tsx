@@ -23,6 +23,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { OrderCancellationDialog } from "@/components/OrderCancellationDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type OrderWithDetails = {
   id: string;
@@ -97,6 +98,7 @@ const statusLabels = {
 };
 
 const OrderTracking = () => {
+  const { t } = useLanguage();
   const { formatPrice } = useCurrency();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -228,13 +230,13 @@ const OrderTracking = () => {
       queryClient.invalidateQueries({ queryKey: ["order-details"] });
       queryClient.invalidateQueries({ queryKey: ["user-orders"] });
       queryClient.invalidateQueries({ queryKey: ["latest-order"] });
-      toast.success("Thank you for confirming receipt!", {
-        description: "We hope you enjoy your purchase!",
+      toast.success(t("Thank you for confirming receipt!"), {
+        description: t("We hope you enjoy your purchase!"),
       });
     },
     onError: () => {
-      toast.error("Failed to confirm receipt", {
-        description: "Please try again later.",
+      toast.error(t("Failed to confirm receipt"), {
+        description: t("Please try again later."),
       });
     },
   });
@@ -261,13 +263,13 @@ const OrderTracking = () => {
       queryClient.invalidateQueries({ queryKey: ["order-review"] });
       setReviewRating(0);
       setReviewComment("");
-      toast.success("Thank you for your review!", {
-        description: "Your feedback helps us improve.",
+      toast.success(t("Thank you for your review!"), {
+        description: t("Your feedback helps us improve."),
       });
     },
     onError: (error: any) => {
-      toast.error("Failed to submit review", {
-        description: error.message || "Please try again later.",
+      toast.error(t("Failed to submit review"), {
+        description: error.message || t("Please try again later."),
       });
     },
   });
@@ -290,25 +292,25 @@ const OrderTracking = () => {
     const stages = [
       { 
         status: "pending", 
-        label: "Order Placed", 
+        label: t("Order Placed"), 
         icon: Package,
         date: order.pending_at || order.created_at
       },
       { 
         status: "processing", 
-        label: "Order Confirmed", 
+        label: t("Order Confirmed"), 
         icon: CheckCircle,
         date: order.processing_at
       },
       { 
         status: "shipped", 
-        label: "Shipped", 
+        label: t("Shipped"), 
         icon: Truck,
         date: order.shipped_at
       },
       { 
         status: "delivered", 
-        label: "Delivered", 
+        label: t("Delivered"), 
         icon: Home,
         date: order.delivered_at
       },
@@ -340,12 +342,12 @@ const OrderTracking = () => {
           <Card className="max-w-md mx-4">
             <CardContent className="pt-6 text-center">
               <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h2 className="text-2xl font-bold mb-2">Track Your Order</h2>
+              <h2 className="text-2xl font-bold mb-2">{t("Track Your Order")}</h2>
               <p className="text-muted-foreground mb-4">
-                Please log in to view your order history and track your orders.
+                {t("Please log in to view your order history and track your orders.")}
               </p>
               <Link to="/login">
-                <Button>Log In</Button>
+                <Button>{t("Log In")}</Button>
               </Link>
             </CardContent>
           </Card>
@@ -374,22 +376,22 @@ const OrderTracking = () => {
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <Link to="/" className="inline-flex items-center text-primary hover:text-primary/80 mb-6">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
+          {t("Back to Home")}
         </Link>
 
-        <h1 className="text-3xl md:text-4xl font-bold mb-8">Track Your Order</h1>
+        <h1 className="text-3xl md:text-4xl font-bold mb-8">{t("Track Your Order")}</h1>
 
         {/* Order Selection */}
         {userOrders && userOrders.length > 0 ? (
           <>
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle>Select Order</CardTitle>
+                <CardTitle>{t("Select Order")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Select value={selectedOrderId} onValueChange={handleOrderChange}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Choose an order" />
+                    <SelectValue placeholder={t("Choose an order")} />
                   </SelectTrigger>
                   <SelectContent>
                     {userOrders.map((order) => (
@@ -413,9 +415,9 @@ const OrderTracking = () => {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle>Order Status</CardTitle>
+                        <CardTitle>{t("Order Status")}</CardTitle>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Order ID: #{orderDetails.id.slice(0, 8)}
+                          {t("Order ID")}: #{orderDetails.id.slice(0, 8)}
                         </p>
                       </div>
                       <Badge

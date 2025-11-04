@@ -3,8 +3,10 @@ import { useEffect } from "react";
 import { AlertCircle, Home, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const NotFound = () => {
+  const { t } = useLanguage();
   const location = window.location;
 
   useEffect(() => {
@@ -25,9 +27,9 @@ const NotFound = () => {
           {/* Error Code */}
           <div>
             <h1 className="text-8xl font-bold text-primary mb-4">404</h1>
-            <h2 className="text-3xl font-bold mb-2">Page Not Found</h2>
+            <h2 className="text-3xl font-bold mb-2">{t("Page Not Found")}</h2>
             <p className="text-muted-foreground text-lg max-w-md mx-auto">
-              The page you're looking for doesn't exist or has been moved.
+              {t("The page you're looking for doesn't exist or has been moved.")}
             </p>
           </div>
 
@@ -40,12 +42,12 @@ const NotFound = () => {
               className="gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              Go Back
+              {t("Go Back")}
             </Button>
             <Link to="/">
               <Button size="lg" className="gap-2 w-full sm:w-auto">
                 <Home className="h-4 w-4" />
-                Return to Home
+                {t("Return to Home")}
               </Button>
             </Link>
           </div>
@@ -53,19 +55,19 @@ const NotFound = () => {
           {/* Additional Help */}
           <div className="pt-8 border-t">
             <p className="text-sm text-muted-foreground mb-3">
-              Need help? Check out these pages:
+              {t("Need help? Check out these pages:")}
             </p>
             <div className="flex flex-wrap gap-3 justify-center text-sm">
               <Link to="/products" className="text-primary hover:underline">
-                Products
+                {t("All Products")}
               </Link>
               <span className="text-muted-foreground">•</span>
               <Link to="/about" className="text-primary hover:underline">
-                About Us
+                {t("About")}
               </Link>
               <span className="text-muted-foreground">•</span>
               <Link to="/contact" className="text-primary hover:underline">
-                Contact Support
+                {t("Contact Us")}
               </Link>
             </div>
           </div>

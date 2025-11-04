@@ -8,6 +8,7 @@ import ProductCardEnhanced from "@/components/ProductCardEnhanced";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 import { Loader2 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Product = {
   id: string;
@@ -25,6 +26,7 @@ type Product = {
 };
 
 const FlagProducts = () => {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const flagFromUrl = searchParams.get("flag") || "";
   const [currentPage, setCurrentPage] = useState(1);
@@ -195,13 +197,13 @@ const FlagProducts = () => {
               <div className="max-w-2xl space-y-4">
                 <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-4 py-2 text-primary text-sm font-semibold">
                   <span className="text-xs">✨</span>
-                  {flagFromUrl}
+                  {t(flagFromUrl)}
                 </div>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
-                  {heroSlide.title}
+                  {t(heroSlide.title)}
                 </h1>
                 <p className="text-lg md:text-xl text-white/90">
-                  {heroSlide.subtitle}
+                  {t(heroSlide.subtitle)}
                 </p>
               </div>
             </div>
@@ -212,10 +214,10 @@ const FlagProducts = () => {
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="mb-8">
             <h2 className="text-2xl md:text-3xl font-bold mb-2">
-              {flagFromUrl} Collection
+              {t(flagFromUrl)} {t("Collection")}
             </h2>
             <p className="text-muted-foreground">
-              {products.length} {products.length === 1 ? 'product' : 'products'} found
+              {products.length} {products.length === 1 ? t("product") : t("products")} {t("found")}
             </p>
           </div>
 
@@ -228,9 +230,9 @@ const FlagProducts = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
                 <span className="text-2xl">📦</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2">No products found</h3>
+              <h3 className="text-xl font-semibold mb-2">{t("No products found")}</h3>
               <p className="text-muted-foreground">
-                Check back soon for {flagFromUrl} products!
+                {t("Check back soon for")} {t(flagFromUrl)} {t("products")}!
               </p>
             </div>
           ) : (

@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Shield, Award, Users, TrendingUp } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const iconMap: Record<string, any> = {
   Shield,
@@ -13,6 +14,7 @@ const iconMap: Record<string, any> = {
 };
 
 const About = () => {
+  const { t } = useLanguage();
   const { data: aboutData, isLoading } = useQuery({
     queryKey: ["about-us"],
     queryFn: async () => {
@@ -74,7 +76,7 @@ const About = () => {
       {values.length > 0 && (
         <section className="py-12 sm:py-16 md:py-20 bg-muted">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-8 sm:mb-12 text-center">Why Choose Us</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-8 sm:mb-12 text-center">{t("Why Choose Us")}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
               {values.map((value: any, index: number) => {
                 const IconComponent = iconMap[value.icon] || Shield;

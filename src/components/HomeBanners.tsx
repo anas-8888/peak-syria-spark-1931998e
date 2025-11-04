@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 interface Banner {
   id: string;
   title: string;
@@ -15,6 +16,7 @@ interface Banner {
   display_type: string;
 }
 const HomeBanners = () => {
+  const { t } = useLanguage();
   const {
     data: banners
   } = useQuery({
@@ -50,17 +52,17 @@ const HomeBanners = () => {
           color: banner.text_color
         }}>
               <h2 className="text-5xl md:text-6xl font-bold tracking-tight animate-fade-in">
-                {banner.title}
+                {t(banner.title)}
               </h2>
               {banner.subtitle && <p className="text-xl md:text-2xl opacity-90">
-                  {banner.subtitle}
+                  {t(banner.subtitle)}
                 </p>}
               {banner.link_url && <Link to={banner.link_url}>
                   <Button size="lg" style={{
               backgroundColor: banner.text_color,
               color: banner.background_color
             }} className="group-hover:scale-105 transition-transform my-[15px]">
-                    {banner.link_text}
+                    {t(banner.link_text)}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>}
@@ -86,15 +88,15 @@ const HomeBanners = () => {
             color: banner.text_color
           }}>
                   <h3 className="text-3xl md:text-4xl font-bold">
-                    {banner.title}
+                    {t(banner.title)}
                   </h3>
-                  {banner.subtitle && <p className="text-lg opacity-90">{banner.subtitle}</p>}
+                  {banner.subtitle && <p className="text-lg opacity-90">{t(banner.subtitle)}</p>}
                   {banner.link_url && <Link to={banner.link_url}>
                       <Button size="lg" variant="outline" className="group-hover:scale-105 transition-transform border-2" style={{
                 borderColor: banner.text_color,
                 color: banner.text_color
               }}>
-                        {banner.link_text}
+                        {t(banner.link_text)}
                       </Button>
                     </Link>}
                 </div>
@@ -118,10 +120,10 @@ const HomeBanners = () => {
                 <div className="absolute bottom-0 left-0 right-0 p-6 space-y-2" style={{
             color: banner.text_color
           }}>
-                  <h4 className="text-2xl font-bold">{banner.title}</h4>
-                  {banner.subtitle && <p className="text-sm opacity-90">{banner.subtitle}</p>}
+                  <h4 className="text-2xl font-bold">{t(banner.title)}</h4>
+                  {banner.subtitle && <p className="text-sm opacity-90">{t(banner.subtitle)}</p>}
                   <div className="flex items-center gap-2 text-sm font-medium">
-                    {banner.link_text}
+                    {t(banner.link_text)}
                     <ArrowRight className="h-4 w-4 group-hover:translate-x-2 transition-transform" />
                   </div>
                 </div>

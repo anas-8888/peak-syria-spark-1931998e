@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const HeroSection = () => {
+  const { t } = useLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
@@ -165,16 +167,16 @@ const HeroSection = () => {
             <div className="w-full max-w-3xl lg:max-w-4xl space-y-1.5 sm:space-y-12 md:space-y-5 lg:space-y-7 text-center md:text-left md:ml-8 lg:ml-12">
               <div className="inline-flex items-center gap-1 sm:gap-1.5 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-2 py-0.5 text-primary text-[10px] sm:text-sm font-semibold animate-slide-in-left mx-auto md:mx-0">
                 <span className="text-[10px] sm:text-sm">✨</span>
-                <span className="text-[10px] sm:text-sm">{slide.flag_name}</span>
+                <span className="text-[10px] sm:text-sm">{t(slide.flag_name)}</span>
               </div>
               <h1 className="text-3xl sm:text-5xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white leading-tight animate-slide-up">
-                {slide.title}
+                {t(slide.title)}
               </h1>
               <p
                 className="text-base sm:text-xl md:text-lg lg:text-xl text-white/90 font-medium animate-fade-in"
                 style={{ animationDelay: "200ms" }}
               >
-                {slide.subtitle}
+                {t(slide.subtitle)}
               </p>
               <div
                 className="flex flex-row sm:flex-row gap-1 sm:gap-2 md:gap-4 animate-fade-in justify-center md:justify-start mt-8 sm:mt-10 md:mt-0"
@@ -187,7 +189,7 @@ const HeroSection = () => {
                   className="group w-auto max-w-[230px] sm:max-w-[240px] md:max-w-none sm:w-auto text-[10px] sm:text-sm md:text-sm !h-3 sm:!h-6 md:!h-10 !px-3 sm:!px-5 md:!px-4 !py-0 sm:!py-1 md:!py-2 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 >
                   <Link to={slide.button_url}>
-                    {slide.button_text}
+                    {t(slide.button_text)}
                     <ArrowRight className="ml-0.5 sm:ml-1.5 h-2 w-2 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>
@@ -197,7 +199,7 @@ const HeroSection = () => {
                   size="sm"
                   className="w-auto max-w-[175px] sm:max-w-[195px] md:max-w-none sm:w-auto text-[10px] sm:text-sm md:text-sm !h-3 sm:!h-6 md:!h-10 !px-3 sm:!px-5 md:!px-4 !py-0 sm:!py-1 md:!py-2 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
                 >
-                  <Link to="/products">View All</Link>
+                  <Link to="/products">{t("View All Products")}</Link>
                 </Button>
               </div>
             </div>
@@ -210,7 +212,7 @@ const HeroSection = () => {
         onClick={(e) => prevSlide(e)}
         type="button"
         className="absolute left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/30 backdrop-blur text-white p-0.5 sm:p-1.5 md:p-2 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20 flex items-center justify-center"
-        aria-label="Previous slide"
+        aria-label={t("Previous slide")}
       >
         <ChevronLeft className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />
       </button>
@@ -218,7 +220,7 @@ const HeroSection = () => {
         onClick={(e) => nextSlide(e)}
         type="button"
         className="absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/30 backdrop-blur text-white p-0.5 sm:p-1.5 md:p-2 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20 flex items-center justify-center"
-        aria-label="Next slide"
+        aria-label={t("Next slide")}
       >
         <ChevronRight className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />
       </button>
@@ -234,7 +236,7 @@ const HeroSection = () => {
                 ? "h-2.5 w-10 bg-red-500 rounded-full"
                 : "h-2.5 w-2.5 bg-gray-400 hover:bg-gray-300 rounded-full"
             }`}
-            aria-label={`Go to slide ${index + 1}`}
+            aria-label={`${t("Go to slide")} ${index + 1}`}
             style={{ minHeight: 0, minWidth: 0 }}
           />
         ))}

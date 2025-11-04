@@ -11,8 +11,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ContactSchema, type ContactFormData } from "@/lib/validationSchemas";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Contact = () => {
+  const { t } = useLanguage();
   const form = useForm<ContactFormData>({
     resolver: zodResolver(ContactSchema),
     defaultValues: {
@@ -49,14 +51,14 @@ const Contact = () => {
 
       if (error) throw error;
 
-      toast.success("✅ Your message has been sent.", {
-        description: "We'll get back to you as soon as possible!"
+      toast.success(t("✅ Your message has been sent."), {
+        description: t("We'll get back to you as soon as possible!")
       });
       
       form.reset();
     } catch (error) {
-      toast.error("Failed to send message", {
-        description: "Please try again later."
+      toast.error(t("Failed to send message"), {
+        description: t("Please try again later.")
       });
     }
   };
@@ -68,9 +70,9 @@ const Contact = () => {
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-secondary via-secondary/90 to-secondary/80 py-16 sm:py-20 text-secondary-foreground">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">Contact Us</h1>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">{t("Contact Us")}</h1>
           <p className="text-base sm:text-lg md:text-xl text-secondary-foreground/70 max-w-2xl mx-auto leading-relaxed">
-            Have questions? We're here to help you find your perfect sportswear
+            {t("Have questions? We're here to help you find your perfect sportswear")}
           </p>
         </div>
       </section>
@@ -79,7 +81,7 @@ const Contact = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
           {/* Contact Form */}
           <div className="bg-card p-6 sm:p-8 rounded-lg shadow-sm">
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Send us a Message</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">{t("Send us a Message")}</h2>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
                 <FormField
@@ -87,9 +89,9 @@ const Contact = () => {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel>{t("Name")} <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
-                        <Input placeholder="Your full name" {...field} />
+                        <Input placeholder={t("Your full name")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -101,7 +103,7 @@ const Contact = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel>{t("Email")} <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="your.email@example.com" {...field} />
                       </FormControl>
@@ -115,7 +117,7 @@ const Contact = () => {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel>{t("Phone Number")}</FormLabel>
                       <FormControl>
                         <Input type="tel" placeholder="+963 XXX XXX XXX" {...field} />
                       </FormControl>
@@ -129,9 +131,9 @@ const Contact = () => {
                   name="message"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Message <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel>{t("Message")} <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
-                        <Textarea placeholder="How can we help you?" rows={5} {...field} />
+                        <Textarea placeholder={t("How can we help you?")} rows={5} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -145,7 +147,7 @@ const Contact = () => {
                   className="w-full"
                   disabled={form.formState.isSubmitting}
                 >
-                  {form.formState.isSubmitting ? "Sending..." : "Send Message"}
+                  {form.formState.isSubmitting ? t("Sending...") : t("Send Message")}
                 </Button>
               </form>
             </Form>
@@ -154,10 +156,9 @@ const Contact = () => {
           {/* Contact Info */}
           <div className="space-y-6 sm:space-y-8">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Get in Touch</h2>
+              <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">{t("Get in Touch")}</h2>
               <p className="text-muted-foreground text-sm sm:text-base mb-4 sm:mb-6">
-                Reach out to us through any of the following channels. Our team is ready to assist you with product
-                inquiries, orders, or any questions you might have.
+                {t("Reach out to us through any of the following channels. Our team is ready to assist you with product inquiries, orders, or any questions you might have.")}
               </p>
             </div>
 
@@ -168,7 +169,7 @@ const Contact = () => {
                     <Phone className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1 text-sm sm:text-base">Phone</h3>
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">{t("Phone")}</h3>
                     <a
                       href={`tel:${storeSettings.store_phone}`}
                       className="text-muted-foreground hover:text-primary transition-colors text-sm sm:text-base"
@@ -188,14 +189,14 @@ const Contact = () => {
                     <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1 text-sm sm:text-base">WhatsApp</h3>
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">{t("WhatsApp")}</h3>
                     <a
                       href={`https://wa.me/${storeSettings.whatsapp_number.replace(/\D/g, '')}`}
                       className="text-primary hover:text-primary/80 transition-colors text-sm sm:text-base"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Chat with us on WhatsApp
+                      {t("Chat with us on WhatsApp")}
                     </a>
                   </div>
                 </div>
@@ -207,7 +208,7 @@ const Contact = () => {
                     <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1 text-sm sm:text-base">Email</h3>
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">{t("Email")}</h3>
                     <a
                       href={`mailto:${storeSettings.store_email}`}
                       className="text-primary hover:text-primary/80 transition-colors text-sm sm:text-base"
@@ -227,7 +228,7 @@ const Contact = () => {
                     <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1 text-sm sm:text-base">Location</h3>
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">{t("Location")}</h3>
                     <p className="text-muted-foreground text-sm sm:text-base">{storeSettings.physical_address}</p>
                     {storeSettings.location_description && (
                       <p className="text-xs sm:text-sm text-muted-foreground">{storeSettings.location_description}</p>

@@ -6,11 +6,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import GoogleSignInButton from "./GoogleSignInButton";
 import peakLogo from "@/assets/peak-logo-new.png";
 const Navbar = () => {
+  const { t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const {
@@ -106,20 +108,20 @@ const Navbar = () => {
     }
   };
   const navLinks = [{
-    name: "All Products",
+    name: t("All Products"),
     path: "/products"
   },
   // Add flag navigation items from hero slides
   ...navbarFlags.map(flag => ({
-    name: flag.flag_name,
+    name: t(flag.flag_name), // Translate flag names from database
     path: flag.button_url
   })),
-  // Add category navigation items
+  // Add category navigation items - translate category names from database
   ...navbarCategories.map(category => ({
-    name: category.name,
+    name: t(category.name), // Translate category names from database
     path: `/products?category=${encodeURIComponent(category.name.toLowerCase())}`
   })), {
-    name: "About",
+    name: t("About"),
     path: "/about"
   }];
   const isActive = (path: string) => location.pathname === path;
@@ -135,8 +137,8 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
-            {navLinks.map(link => <Link key={link.path} to={link.path} className={`text-xs font-medium transition-colors hover:text-primary relative whitespace-nowrap ${isActive(link.path) ? "text-primary" : "text-foreground/70"}`}>
+          <div className="hidden lg:flex items-center gap-6 xl:gap-8">
+            {navLinks.map(link => <Link key={link.path} to={link.path} className={`text-xs font-medium transition-colors hover:text-primary relative whitespace-nowrap px-2 ${isActive(link.path) ? "text-primary" : "text-foreground/70"}`}>
                 {link.name}
                 {isActive(link.path) && <span className="absolute -bottom-6 left-0 w-full h-0.5 bg-primary" />}
               </Link>)}
@@ -145,7 +147,7 @@ const Navbar = () => {
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-2 xl:gap-3">
             {user && userRole && userRole !== "customer" && <Link to="/dashboard">
-                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-accent/50 transition-all duration-300 hover:scale-110" title="Dashboard">
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-accent/50 transition-all duration-300 hover:scale-110" title={t("Dashboard")}>
                   <LayoutDashboard className="h-5 w-5" />
                 </Button>
               </Link>}
@@ -180,7 +182,7 @@ const Navbar = () => {
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-semibold leading-none">
-                        {fullName || "User"}
+                        {fullName || t("User")}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {user.email}
@@ -191,19 +193,19 @@ const Navbar = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/profile" className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
-                      My Profile
+                      {t("My Profile")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/wishlist" className="cursor-pointer">
                       <Heart className="mr-2 h-4 w-4" />
-                      My Wishlist
+                      {t("My Wishlist")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer text-red-600 focus:text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
+                    {t("Sign Out")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu> : <GoogleSignInButton />}
@@ -224,7 +226,7 @@ const Navbar = () => {
                   </span>}
               </Button>
             </Link>
-            <button className="p-1.5 rounded-md hover:bg-accent transition-colors text-xs flex items-center justify-center" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
+            <button className="p-1.5 rounded-md hover:bg-accent transition-colors text-xs flex items-center justify-center" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label={t("Toggle menu")}>
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
@@ -251,24 +253,24 @@ const Navbar = () => {
                   {userRole && userRole !== "customer" && <Link to="/dashboard" className="w-full">
                       <Button variant="outline" size="sm" className="gap-1.5 w-full rounded-full border hover:bg-accent/50 font-semibold h-7 sm:h-7 text-[10px] sm:text-xs transition-all">
                         <LayoutDashboard className="h-3 w-3" />
-                        Dashboard
+                        {t("Dashboard")}
                       </Button>
                     </Link>}
                   <Link to="/profile" className="w-full">
                     <Button variant="outline" size="sm" className="gap-1.5 w-full rounded-full border hover:bg-accent/50 font-semibold h-7 sm:h-7 text-[10px] sm:text-xs transition-all">
                       <User className="h-3 w-3" />
-                      My Profile
+                      {t("My Profile")}
                     </Button>
                   </Link>
                   <Link to="/wishlist" className="w-full">
                     <Button variant="outline" size="sm" className="gap-1.5 w-full rounded-full border hover:bg-accent/50 font-semibold h-7 sm:h-7 text-[10px] sm:text-xs transition-all">
                       <Heart className="h-3 w-3" />
-                      My Wishlist
+                      {t("My Wishlist")}
                     </Button>
                   </Link>
                   <Button variant="outline" size="sm" onClick={() => signOut()} className="gap-1.5 w-full rounded-full border hover:bg-accent/50 font-semibold text-red-600 hover:text-red-600 h-7 sm:h-7 text-[10px] sm:text-xs transition-all">
                     <LogOut className="h-3 w-3" />
-                    Sign Out
+                    {t("Sign Out")}
                   </Button>
                 </div> : <div className="w-full px-3 pt-1">
                     <GoogleSignInButton />

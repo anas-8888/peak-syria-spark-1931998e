@@ -113,13 +113,13 @@ const CategoryBrowse = () => {
             <div key={crumb.id} className="flex items-center gap-2">
               <ChevronRight className="h-4 w-4" />
               {index === breadcrumbs.length - 1 ? (
-                <span className="text-foreground font-medium">{crumb.name}</span>
+                <span className="text-foreground font-medium">{t(crumb.name)}</span>
               ) : (
                 <Link
                   to={`/categories/${crumb.id}`}
                   className="hover:text-primary transition-colors"
                 >
-                  {crumb.name}
+                  {t(crumb.name)}
                 </Link>
               )}
             </div>
@@ -129,11 +129,11 @@ const CategoryBrowse = () => {
         {/* Header */}
         <div className="text-center mb-12 animate-fade-in">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
-            {currentCategory?.name}
+            {currentCategory ? t(currentCategory.name) : ""}
           </h1>
           {currentCategory?.description && (
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              {currentCategory.description}
+              {t(currentCategory.description)}
             </p>
           )}
         </div>
@@ -166,23 +166,23 @@ const CategoryBrowse = () => {
               <div className="p-6">
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
-                    {category.name}
+                    {t(category.name)}
                   </h3>
                   {category.hasChildren && (
                     <div className="flex-shrink-0 bg-primary/10 text-primary text-xs px-2 py-1 rounded">
-                      Subcategories
+                      {t("Subcategories")}
                     </div>
                   )}
                 </div>
 
                 {category.description && (
                   <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                    {category.description}
+                    {t(category.description)}
                   </p>
                 )}
 
                 <div className="flex items-center text-primary font-semibold group-hover:gap-3 transition-all">
-                  {category.hasChildren ? "Browse" : "Shop Now"}
+                  {category.hasChildren ? t("Browse") : t("Shop Now")}
                   <ArrowRight className="ml-1 h-5 w-5 group-hover:translate-x-2 transition-transform duration-300" />
                 </div>
               </div>
@@ -197,7 +197,7 @@ const CategoryBrowse = () => {
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowRight className="h-4 w-4 rotate-180" />
-            Back to {breadcrumbs.length > 1 ? breadcrumbs[breadcrumbs.length - 2].name : "Home"}
+            {t("Back to")} {breadcrumbs.length > 1 ? t(breadcrumbs[breadcrumbs.length - 2].name) : t("Home")}
           </Link>
         </div>
       </main>

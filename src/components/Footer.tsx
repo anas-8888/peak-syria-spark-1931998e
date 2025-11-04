@@ -2,7 +2,10 @@ import { MessageCircle, Facebook, Instagram, Phone, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
+
 const Footer = () => {
+  const { t } = useLanguage();
   // Fetch root categories
   const {
     data: categories
@@ -57,7 +60,7 @@ const Footer = () => {
                   {settings?.brand_description || 'Official distributor of PEAK sportswear in Syria. Premium quality, authentic products.'}
                 </p>
                 <div>
-                  <h4 className="font-semibold text-xs sm:text-sm mb-1.5 sm:mb-3 text-secondary-foreground/90">CONNECT WITH US</h4>
+                  <h4 className="font-semibold text-xs sm:text-sm mb-1.5 sm:mb-3 text-secondary-foreground/90">{t("CONNECT WITH US")}</h4>
                   <div className="flex gap-1 sm:gap-2">
                     {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="group relative p-1.5 sm:p-2 bg-primary/10 rounded-lg hover:bg-primary transition-all duration-300 hover:scale-110 flex items-center justify-center">
                         <Facebook className="h-4 w-4 sm:h-5 sm:w-5 text-primary group-hover:text-primary-foreground transition-colors" />
@@ -75,38 +78,38 @@ const Footer = () => {
               {/* Shop */}
               <div>
                 <h4 className="font-bold text-lg sm:text-base uppercase mb-4 sm:mb-4 relative inline-block tracking-wider">
-                  Shop
+                  {t("Shop")}
                   <span className="absolute -bottom-1.5 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
                 <ul className="space-y-0 sm:space-y-1 [&>li]:!my-0 sm:[&>li]:!my-0">
                   <li>
                     <Link to="/products" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                      All Products
+                      {t("All Products")}
                     </Link>
                   </li>
                   <li>
                     <Link to="/products?flag=new-arrival" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                      New Arrivals
+                      {t("New Arrivals")}
                     </Link>
                   </li>
                   <li>
                     <Link to="/products?flag=best-seller" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                      Best Sellers
+                      {t("Best Sellers")}
                     </Link>
                   </li>
                   <li>
                     <Link to="/products?flag=limited-edition" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                      Limited Edition
+                      {t("Limited Edition")}
                     </Link>
                   </li>
                   <li>
                     <Link to="/products?flag=offer" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                      Special Offers
+                      {t("Special Offers")}
                     </Link>
                   </li>
                 </ul>
@@ -115,7 +118,7 @@ const Footer = () => {
               {/* Categories */}
               <div>
                 <h4 className="font-bold text-lg sm:text-base uppercase mb-4 sm:mb-4 relative inline-block tracking-wider">
-                  Categories
+                  {t("Categories")}
                   <span className="absolute -bottom-1.5 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
                 <ul className="space-y-0 sm:space-y-1 [&>li]:!my-0 sm:[&>li]:!my-0">
@@ -150,38 +153,38 @@ const Footer = () => {
               {/* Support */}
               <div>
                 <h4 className="font-bold text-lg sm:text-base uppercase mb-4 sm:mb-4 relative inline-block tracking-wider">
-                  Support
+                  {t("Support")}
                   <span className="absolute -bottom-1.5 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
                 <ul className="space-y-0 sm:space-y-1 [&>li]:!my-0 sm:[&>li]:!my-0">
                   <li>
                     <Link to="/contact" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                      Contact Us
+                      {t("Contact Us")}
                     </Link>
                   </li>
                   <li>
                     <Link to="/about" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                      About Us
+                      {t("About Us")}
                     </Link>
                   </li>
                   <li>
                     <Link to="/order-tracking" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                      Track Order
+                      {t("Track Your Order")}
                     </Link>
                   </li>
                   <li>
                     <Link to="/cart" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                      Shopping Cart
+                      {t("Shopping Cart")}
                     </Link>
                   </li>
                   <li>
                     <Link to="/wishlist" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                       <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                      Wishlist
+                      {t("My Wishlist")}
                     </Link>
                   </li>
                 </ul>
@@ -190,7 +193,7 @@ const Footer = () => {
               {/* Get In Touch */}
               <div>
                 <h4 className="font-bold text-lg sm:text-base uppercase mb-4 sm:mb-4 relative inline-block tracking-wider">
-                  Get In Touch
+                  {t("Get In Touch")}
                   <span className="absolute -bottom-1.5 left-0 w-8 h-0.5 bg-primary"></span>
                 </h4>
                 <ul className="space-y-0 sm:space-y-1.5 [&>li]:!my-0 sm:[&>li]:!my-0">
@@ -205,7 +208,7 @@ const Footer = () => {
                   {settings?.whatsapp_number && <li className="flex items-start gap-2 text-secondary-foreground/80 text-sm sm:text-sm">
                       <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary mt-0.5 flex-shrink-0" />
                       <a href={`https://wa.me/${settings.whatsapp_number}`} className="hover:text-primary transition-colors inline-block">
-                        WhatsApp Support
+                        {t("WhatsApp Support")}
                       </a>
                     </li>}
                 </ul>
@@ -223,11 +226,11 @@ const Footer = () => {
                   &copy; {new Date().getFullYear()} PEAK Syria. All rights reserved.
                 </p>
                 <div className="text-[11px] sm:text-xs">
-                  <Link to="/terms" className="hover:text-primary transition-colors inline">Terms</Link>
+                  <Link to="/terms" className="hover:text-primary transition-colors inline">{t("Terms")}</Link>
                   <span className=" sm:inline mx-1">•</span>
-                  <Link to="/privacy" className="hover:text-primary transition-colors inline mx-1 sm:mx-0">Privacy</Link>
+                  <Link to="/privacy" className="hover:text-primary transition-colors inline mx-1 sm:mx-0">{t("Privacy")}</Link>
                   <span className=" sm:inline mx-1">•</span>
-                  <Link to="/refund" className="hover:text-primary transition-colors inline mx-1 sm:mx-0">Refund Policy</Link>
+                  <Link to="/refund" className="hover:text-primary transition-colors inline mx-1 sm:mx-0">{t("Refund Policy")}</Link>
                 </div>
               </div>
               <p className="text-[11px] sm:text-xs text-center md:text-right">
