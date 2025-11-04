@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -39,6 +40,29 @@ const Search = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  // Anchor for dropdown positioning
+  const inputWrapperRef = useRef<HTMLDivElement | null>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<any>({});
+
+  useLayoutEffect(() => {
+    if (!showSuggestions) return;
+    const el = inputWrapperRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      setDropdownStyle({ position: 'fixed', left: rect.left, top: rect.bottom + 8, width: rect.width, zIndex: 9999 });
+    };
+
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [showSuggestions]);
 
   useEffect(() => {
     // Load recent searches from localStorage
@@ -231,7 +255,7 @@ const Search = () => {
           </h1>
 
           {/* Search Input */}
-          <div className="relative z-[200]">
+          <div className="relative z-[200]" ref={inputWrapperRef}>
             <div className="relative">
               <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
@@ -255,58 +279,67 @@ const Search = () => {
             </div>
 
             {/* Suggestions Dropdown */}
-            {showSuggestions && (suggestions.length > 0 || recentSearches.length > 0) && (
-              <div className="absolute top-full left-0 right-0 mt-2 w-full bg-card/100 backdrop-blur-xl border-2 border-border rounded-2xl shadow-2xl overflow-visible z-[9999] animate-fade-in max-h-96 overflow-y-auto">
-                {/* Recent Searches */}
-                {!searchQuery && recentSearches.length > 0 && (
-                  <div className="p-2 border-b bg-card/100 backdrop-blur-xl">
-                    <p className="text-xs text-muted-foreground px-3 py-2 font-semibold">Recent Searches</p>
-                    {recentSearches.map((search, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleSuggestionClick(search)}
-                        className="w-full flex items-center justify-between px-3 py-2 hover:bg-accent rounded-lg transition-colors group"
-                      >
-                        <span className="flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{search}</span>
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeRecentSearch(search);
-                          }}
-                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+            {showSuggestions &&
+              createPortal(
+                <div style={dropdownStyle} className="bg-card/100 backdrop-blur-xl border-2 border-border rounded-2xl shadow-2xl animate-fade-in max-h-96 overflow-y-auto">
+                  {/* Recent Searches */}
+                  {!searchQuery && recentSearches.length > 0 && (
+                    <div className="p-2 border-b bg-card/100 backdrop-blur-xl">
+                      <p className="text-xs text-muted-foreground px-3 py-2 font-semibold">Recent Searches</p>
+                      {recentSearches.map((search, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSuggestionClick(search)}
+                          className="w-full flex items-center justify-between px-3 py-2 hover:bg-accent rounded-lg transition-colors group"
                         >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                          <span className="flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{search}</span>
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeRecentSearch(search);
+                            }}
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
-                {/* Suggestions */}
-                {suggestions.length > 0 && (
-                  <div className="p-2 bg-card/100 backdrop-blur-xl">
-                    <p className="text-xs text-muted-foreground px-3 py-2 font-semibold">Suggestions</p>
-                    {suggestions.map((suggestion, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="w-full text-left px-3 py-2 hover:bg-accent rounded-lg transition-colors"
-                      >
-                        <span className="text-sm flex items-center gap-2">
-                          <SearchIcon className="h-4 w-4 text-muted-foreground" />
-                          {suggestion}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                  {/* Suggestions */}
+                  {suggestions.length > 0 ? (
+                    <div className="p-2 bg-card/100 backdrop-blur-xl">
+                      <p className="text-xs text-muted-foreground px-3 py-2 font-semibold">Suggestions</p>
+                      {suggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="w-full text-left px-3 py-2 hover:bg-accent rounded-lg transition-colors"
+                        >
+                          <span className="text-sm flex items-center gap-2">
+                            <SearchIcon className="h-4 w-4 text-muted-foreground" />
+                            {suggestion}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-card/100 text-muted-foreground">
+                      <p className="text-sm">No suggestions. Try different keywords.</p>
+                    </div>
+                  )}
+                </div>,
+                document.body
+              )
+            }
+
+
           </div>
         </div>
       </section>
