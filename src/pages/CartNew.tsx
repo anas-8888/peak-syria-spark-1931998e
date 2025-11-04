@@ -36,6 +36,7 @@ export default function CartNew() {
   const isCheckingDiscounts = useRef<boolean>(false);
   const lastCartSnapshot = useRef<string>("");
   const [variantStocks, setVariantStocks] = useState<Record<string, number>>({});
+  const [discountFeedback, setDiscountFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const shippingCost = 0; // Will be calculated at checkout
   const total = cartTotal - discountAmount;
@@ -159,16 +160,18 @@ export default function CartNew() {
     const code = discountCode.trim();
     if (!code) {
       toast.error("Please enter a discount code");
+      setDiscountFeedback({ type: 'error', message: 'Please enter a discount code' });
       return;
     }
 
     setValidatingDiscount(true);
-    console.debug("Applying discount code", code);
+    setDiscountFeedback(null);
     const result = await validateDiscount(code.toUpperCase());
-    console.debug("Discount validation result", result);
     setValidatingDiscount(false);
-    
+
     if (result?.is_valid) {
+      const successMsg = (result && (result as any).message) || 'Discount applied successfully!';
+      setDiscountFeedback({ type: 'success', message: successMsg });
       // Clear auto discounts and disable them
       setAppliedDiscounts([]);
       setAutoDiscountsDisabled(true);
@@ -178,6 +181,7 @@ export default function CartNew() {
     } else {
       setAppliedDiscount(null);
       setDiscountCode("");
+      setDiscountFeedback({ type: 'error', message: 'Invalid or expired discount code' });
     }
   };
 
@@ -1028,11 +1032,14 @@ export default function CartNew() {
                       onClick={handleApplyDiscount}
                       disabled={validatingDiscount}
                     >
-                      {validatingDiscount ? "..." : "Apply"}
+                      {validatingDiscount ? "Applying..." : "Apply"}
                     </Button>
                   </div>
-                  
-                  {/* Check Available Auto Discounts Button */}
+                  {discountFeedback && (
+                    <p className={`${discountFeedback.type === 'error' ? 'text-destructive' : 'text-green-600 dark:text-green-400'} text-xs`}>
+                      {discountFeedback.message}
+                    </p>
+                  )}
                   <Button
                     type="button"
                     variant="secondary"
