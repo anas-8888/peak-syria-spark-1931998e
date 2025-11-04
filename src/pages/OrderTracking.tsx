@@ -13,7 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Package, CheckCircle, Truck, XCircle, Clock, Home, Settings } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Package, CheckCircle, Truck, XCircle, Clock, Home, Settings, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -101,6 +102,9 @@ const OrderTracking = () => {
   const orderIdFromUrl = searchParams.get("orderId");
   const [selectedOrderId, setSelectedOrderId] = useState<string>(orderIdFromUrl || "");
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
 
   // Fetch user's orders
   const { data: userOrders, isLoading: ordersLoading } = useQuery({
@@ -177,6 +181,23 @@ const OrderTracking = () => {
     refetchInterval: 10000, // Auto-refresh every 10 seconds
   });
 
+  // Fetch order review
+  const { data: orderReview } = useQuery({
+    queryKey: ["order-review", selectedOrderId],
+    queryFn: async () => {
+      if (!selectedOrderId || !user) return null;
+      const { data, error } = await supabase
+        .from("order_reviews")
+        .select("*")
+        .eq("order_id", selectedOrderId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedOrderId && !!user,
+  });
+
   // Mutation to confirm receipt
   const confirmReceiptMutation = useMutation({
     mutationFn: async (orderId: string) => {
@@ -201,6 +222,39 @@ const OrderTracking = () => {
     onError: () => {
       toast.error("Failed to confirm receipt", {
         description: "Please try again later.",
+      });
+    },
+  });
+
+  // Mutation to submit review
+  const submitReviewMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || !selectedOrderId) throw new Error("Missing user or order");
+      if (reviewRating === 0) throw new Error("Please select a rating");
+      if (!reviewComment.trim()) throw new Error("Please write a comment");
+
+      const { error } = await supabase
+        .from("order_reviews")
+        .insert({
+          order_id: selectedOrderId,
+          user_id: user.id,
+          rating: reviewRating,
+          comment: reviewComment.trim(),
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["order-review"] });
+      setReviewRating(0);
+      setReviewComment("");
+      toast.success("Thank you for your review!", {
+        description: "Your feedback helps us improve.",
+      });
+    },
+    onError: (error: any) => {
+      toast.error("Failed to submit review", {
+        description: error.message || "Please try again later.",
       });
     },
   });
@@ -428,6 +482,86 @@ const OrderTracking = () => {
                             {format(new Date(orderDetails.receipt_confirmed_at!), "MMM dd, yyyy 'at' HH:mm")}
                           </p>
                         </div>
+                      </div>
+                    )}
+
+                    {/* Review Section */}
+                    {orderDetails.customer_confirmed_receipt && (
+                      <div className="mt-6">
+                        {orderReview ? (
+                          <div className="p-4 bg-muted/50 border rounded-lg">
+                            <h4 className="font-semibold mb-3 flex items-center gap-2">
+                              <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                              Your Review
+                            </h4>
+                            <div className="flex gap-1 mb-2">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`h-5 w-5 ${
+                                    star <= orderReview.rating
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-muted-foreground"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <p className="text-sm text-muted-foreground">{orderReview.comment}</p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {format(new Date(orderReview.created_at), "MMM dd, yyyy")}
+                            </p>
+                          </div>
+                        ) : (
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-lg">Rate Your Order</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-2">Your Rating</label>
+                                <div className="flex gap-1">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                      key={star}
+                                      type="button"
+                                      onClick={() => setReviewRating(star)}
+                                      onMouseEnter={() => setHoveredRating(star)}
+                                      onMouseLeave={() => setHoveredRating(0)}
+                                      className="transition-transform hover:scale-110"
+                                    >
+                                      <Star
+                                        className={`h-8 w-8 ${
+                                          star <= (hoveredRating || reviewRating)
+                                            ? "fill-yellow-400 text-yellow-400"
+                                            : "text-muted-foreground"
+                                        }`}
+                                      />
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              <div>
+                                <label htmlFor="review-comment" className="block text-sm font-medium mb-2">
+                                  Your Review
+                                </label>
+                                <Textarea
+                                  id="review-comment"
+                                  placeholder="Tell us about your experience with this order..."
+                                  rows={4}
+                                  value={reviewComment}
+                                  onChange={(e) => setReviewComment(e.target.value)}
+                                />
+                              </div>
+                              <Button
+                                onClick={() => submitReviewMutation.mutate()}
+                                disabled={submitReviewMutation.isPending}
+                                className="w-full"
+                              >
+                                {submitReviewMutation.isPending ? "Submitting..." : "Submit Review"}
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        )}
                       </div>
                     )}
 

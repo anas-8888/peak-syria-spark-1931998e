@@ -906,6 +906,51 @@ export type Database = {
           },
         ]
       }
+      order_reviews: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          order_id: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          id?: string
+          order_id: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           cancel_date: string | null

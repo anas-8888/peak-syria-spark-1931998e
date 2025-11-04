@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Eye, Package, Truck, CheckCircle, XCircle, Edit, Settings } from "lucide-react";
+import { Search, Eye, Package, Truck, CheckCircle, XCircle, Edit, Settings, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,6 +71,12 @@ type OrderWithDetails = {
       name: string;
       code: string | null;
     };
+  }>;
+  order_reviews: Array<{
+    id: string;
+    rating: number;
+    comment: string;
+    created_at: string;
   }>;
   regions: {
     name: string;
@@ -160,6 +166,12 @@ const Orders = () => {
               name,
               code
             )
+          ),
+          order_reviews (
+            id,
+            rating,
+            comment,
+            created_at
           ),
           regions (
             name
@@ -720,6 +732,36 @@ const Orders = () => {
                         Confirmed on {format(new Date(selectedOrder.receipt_confirmed_at), "MMM dd, yyyy 'at' HH:mm")}
                       </p>
                     )}
+                  </div>
+                )}
+                
+                {/* Order Review */}
+                {selectedOrder.order_reviews && selectedOrder.order_reviews.length > 0 && (
+                  <div className="p-4 bg-muted/50 border rounded-lg">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                      Customer Review
+                    </h4>
+                    {selectedOrder.order_reviews.map((review) => (
+                      <div key={review.id}>
+                        <div className="flex gap-1 mb-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`h-4 w-4 ${
+                                star <= review.rating
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-muted-foreground"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">{review.comment}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(review.created_at), "MMM dd, yyyy 'at' HH:mm")}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 )}
                 
