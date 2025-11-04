@@ -156,13 +156,16 @@ export default function CartNew() {
   };
 
   const handleApplyDiscount = async () => {
-    if (!discountCode.trim()) {
+    const code = discountCode.trim();
+    if (!code) {
       toast.error("Please enter a discount code");
       return;
     }
 
     setValidatingDiscount(true);
-    const result = await validateDiscount(discountCode.trim());
+    console.debug("Applying discount code", code);
+    const result = await validateDiscount(code.toUpperCase());
+    console.debug("Discount validation result", result);
     setValidatingDiscount(false);
     
     if (result?.is_valid) {
@@ -173,7 +176,7 @@ export default function CartNew() {
       localStorage.removeItem("appliedCartDiscounts");
       localStorage.removeItem("appliedCartDiscountAmount");
     } else {
-      // Clear the invalid code from input
+      setAppliedDiscount(null);
       setDiscountCode("");
     }
   };
