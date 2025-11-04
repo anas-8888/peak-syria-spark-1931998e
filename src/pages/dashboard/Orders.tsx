@@ -48,6 +48,7 @@ type OrderWithDetails = {
   receipt_confirmed_at: string | null;
   cancel_reason: string | null;
   cancel_status: string | null;
+  cancel_date: string | null;
   cancelled_at: string | null;
   itemCount: number;
   order_items: Array<{
@@ -144,6 +145,7 @@ const Orders = () => {
           receipt_confirmed_at,
           cancel_reason,
           cancel_status,
+          cancel_date,
           cancelled_at,
           order_items (
             id,
@@ -309,6 +311,48 @@ const Orders = () => {
     },
     onError: () => {
       toast.error("Failed to update order status");
+    },
+  });
+
+  const approveCancellationMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      const { error } = await supabase
+        .from("orders")
+        .update({ 
+          status: "cancelled",
+          cancel_status: "approved",
+          cancelled_at: new Date().toISOString()
+        })
+        .eq("id", orderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast.success("Cancellation request approved");
+      setDetailsDialogOpen(false);
+    },
+    onError: () => {
+      toast.error("Failed to approve cancellation");
+    },
+  });
+
+  const rejectCancellationMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      const { error } = await supabase
+        .from("orders")
+        .update({ 
+          cancel_status: "rejected"
+        })
+        .eq("id", orderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast.success("Cancellation request rejected");
+      setDetailsDialogOpen(false);
+    },
+    onError: () => {
+      toast.error("Failed to reject cancellation");
     },
   });
 
@@ -678,8 +722,53 @@ const Orders = () => {
                   {statusLabels[selectedOrder.status as keyof typeof statusLabels]}
                 </Badge>
                 
-                {/* Cancellation Information */}
-                {selectedOrder.status === 'cancelled' && selectedOrder.cancel_reason && (
+                {/* Pending Cancellation Request */}
+                {selectedOrder.cancel_status === 'pending' && selectedOrder.cancel_reason && (
+                  <div className="mt-4 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                    <div className="flex items-start gap-2">
+                      <XCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-2">
+                          Cancellation Request Pending
+                        </h4>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          <span className="font-medium">Customer requested cancellation: </span>
+                          {selectedOrder.cancel_reason}
+                        </p>
+                        {selectedOrder.cancel_date && (
+                          <p className="text-xs text-muted-foreground mb-4">
+                            Requested on {format(new Date(selectedOrder.cancel_date), "MMM dd, yyyy 'at' HH:mm")}
+                          </p>
+                        )}
+                        <div className="flex gap-2 mt-4">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => approveCancellationMutation.mutate(selectedOrder.id)}
+                            disabled={approveCancellationMutation.isPending || rejectCancellationMutation.isPending}
+                            className="gap-2"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            {approveCancellationMutation.isPending ? "Approving..." : "Approve Cancellation"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => rejectCancellationMutation.mutate(selectedOrder.id)}
+                            disabled={approveCancellationMutation.isPending || rejectCancellationMutation.isPending}
+                            className="gap-2"
+                          >
+                            <XCircle className="h-4 w-4" />
+                            {rejectCancellationMutation.isPending ? "Rejecting..." : "Reject Cancellation"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Cancellation Information (After Approval/Rejection) */}
+                {selectedOrder.status === 'cancelled' && selectedOrder.cancel_reason && selectedOrder.cancel_status !== 'pending' && (
                   <div className="mt-4 p-4 rounded-lg bg-destructive/10 border border-destructive/20">
                     <div className="flex items-start gap-2">
                       <XCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
@@ -702,6 +791,27 @@ const Orders = () => {
                             Cancelled on {format(new Date(selectedOrder.cancelled_at), "MMM dd, yyyy 'at' HH:mm")}
                           </p>
                         )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Rejected Cancellation Request */}
+                {selectedOrder.cancel_status === 'rejected' && selectedOrder.cancel_reason && selectedOrder.status !== 'cancelled' && (
+                  <div className="mt-4 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <div className="flex items-start gap-2">
+                      <XCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-blue-700 dark:text-blue-400 mb-1">
+                          Cancellation Request Rejected
+                        </h4>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          <span className="font-medium">Customer requested cancellation: </span>
+                          {selectedOrder.cancel_reason}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          The cancellation request has been rejected. Order continues as normal.
+                        </p>
                       </div>
                     </div>
                   </div>

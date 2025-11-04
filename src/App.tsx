@@ -55,6 +55,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Refund from "./pages/Refund";
 import LegalPages from "./pages/dashboard/LegalPages";
+import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <AuthProvider>
             <LanguageProvider>
               <CurrencyProvider>
