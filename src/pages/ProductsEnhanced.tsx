@@ -337,7 +337,7 @@ const ProductsEnhanced = () => {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between bg-card p-3 sm:p-4 rounded-lg shadow-sm">
                 <div className="flex items-center gap-2">
                   <span className="text-xs sm:text-sm text-muted-foreground">
-                    Showing {sortedProducts.length} of {allProducts.length} products
+                    Showing {sortedProducts.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, sortedProducts.length)} of {sortedProducts.length} products
                   </span>
                 </div>
 
