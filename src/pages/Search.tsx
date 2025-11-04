@@ -219,7 +219,7 @@ const Search = () => {
       <Navbar />
 
       {/* Search Section */}
-      <section className="relative z-20 bg-gradient-to-br from-secondary via-secondary to-secondary/80 py-12 sm:py-16 text-secondary-foreground overflow-visible">
+      <section className="relative z-20 bg-gradient-to-br from-secondary via-secondary to-secondary/80 py-12 sm:py-16 pb-32 text-secondary-foreground overflow-visible">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(227,30,36,0.3),transparent_50%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(227,30,36,0.2),transparent_50%)]" />
@@ -256,10 +256,10 @@ const Search = () => {
 
             {/* Suggestions Dropdown */}
             {showSuggestions && (suggestions.length > 0 || recentSearches.length > 0) && (
-              <div className="absolute top-full mt-2 w-full bg-background border-2 border-border rounded-2xl shadow-2xl overflow-hidden z-[300] animate-fade-in">
+              <div className="absolute top-full left-0 right-0 mt-2 w-full bg-card/100 backdrop-blur-xl border-2 border-border rounded-2xl shadow-2xl overflow-visible z-[9999] animate-fade-in max-h-96 overflow-y-auto">
                 {/* Recent Searches */}
                 {!searchQuery && recentSearches.length > 0 && (
-                  <div className="p-2 border-b bg-background">
+                  <div className="p-2 border-b bg-card/100 backdrop-blur-xl">
                     <p className="text-xs text-muted-foreground px-3 py-2 font-semibold">Recent Searches</p>
                     {recentSearches.map((search, index) => (
                       <button
@@ -289,7 +289,7 @@ const Search = () => {
 
                 {/* Suggestions */}
                 {suggestions.length > 0 && (
-                  <div className="p-2 bg-background">
+                  <div className="p-2 bg-card/100 backdrop-blur-xl">
                     <p className="text-xs text-muted-foreground px-3 py-2 font-semibold">Suggestions</p>
                     {suggestions.map((suggestion, index) => (
                       <button
