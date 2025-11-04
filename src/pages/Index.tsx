@@ -150,7 +150,7 @@ const Index = () => {
       </div>
 
       {/* Featured Products */}
-      <section className="py-12 sm:py-16 md:py-20 w-full min-h-[1000px]">
+      <section className="pt-12 sm:pt-16 md:pt-20 pb-6 sm:pb-8 w-full">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12 animate-fade-in">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">{t("home.featuredTitle")}</h2>
@@ -216,7 +216,7 @@ const Index = () => {
       </section>
 
       {/* Categories */}
-      <section className="py-12 sm:py-16 bg-muted/50 w-full min-h-[600px]">
+      <section className="pt-6 sm:pt-8 pb-6 sm:pb-16 bg-muted/50 w-full">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12 animate-fade-in">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">{t("home.categoryTitle")}</h2>
@@ -233,7 +233,7 @@ const Index = () => {
                 const container = document.getElementById('categories-scroll');
                 if (container) container.scrollBy({ left: -320, behavior: 'smooth' });
               }}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 carousel-container:hover:opacity-100 transition-opacity pointer-events-auto"
+              className="hidden sm:block absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 carousel-container:hover:opacity-100 transition-opacity pointer-events-auto"
               aria-label="Scroll left"
             >
               <ArrowRight className="h-6 w-6 rotate-180" />
@@ -247,7 +247,7 @@ const Index = () => {
                 const container = document.getElementById('categories-scroll');
                 if (container) container.scrollBy({ left: 320, behavior: 'smooth' });
               }}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 carousel-container:hover:opacity-100 transition-opacity pointer-events-auto"
+              className="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 carousel-container:hover:opacity-100 transition-opacity pointer-events-auto"
               aria-label="Scroll right"
             >
               <ArrowRight className="h-6 w-6" />
@@ -262,11 +262,11 @@ const Index = () => {
                       key={category.id}
                       to={category.hasChildren ? `/categories/${category.id}` : `/products?category=${category.path}`}
                       style={{ animationDelay: `${index * 150}ms` }}
-                      className="group bg-card rounded-lg shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fade-in overflow-hidden w-[165px] sm:w-[280px] md:w-[320px] flex-shrink-0"
+                      className="group bg-card rounded-lg shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fade-in overflow-hidden w-[200px] sm:w-[280px] md:w-[320px] flex-shrink-0"
                     >
                       {/* Category Image */}
                       {category.image_url ? (
-                        <div className="aspect-video overflow-hidden bg-muted relative">
+                        <div className="h-[140px] sm:aspect-video overflow-hidden bg-muted relative">
                           <img
                             src={category.image_url}
                             alt={category.name}
@@ -279,20 +279,20 @@ const Index = () => {
                           <div className="absolute inset-0 bg-gradient-to-t from-secondary/90 via-secondary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                         </div>
                       ) : (
-                        <div className="aspect-video overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                          <Icon className="h-8 w-8 sm:h-16 sm:w-16 text-primary/40" />
+                        <div className="h-[140px] sm:aspect-video overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                          <Icon className="h-10 w-10 sm:h-16 sm:w-16 text-primary/40" />
                         </div>
                       )}
                       
                       {/* Category Content */}
-                      <div className="p-3 sm:p-6 md:p-8">
+                      <div className="p-4 sm:p-6 md:p-8">
                         <div className="flex flex-col items-center gap-1.5 sm:gap-3 mb-2 sm:mb-4">
-                          <h3 className="text-sm sm:text-xl md:text-2xl font-bold group-hover:text-primary transition-colors text-center">{category.name}</h3>
+                          <h3 className="text-base sm:text-xl md:text-2xl font-bold group-hover:text-primary transition-colors text-center">{category.name}</h3>
                         </div>
-                        <p className="text-muted-foreground mb-2 sm:mb-4 text-[10px] sm:text-sm md:text-base text-center line-clamp-2">{category.description}</p>
-                        <div className="flex items-center justify-center text-primary font-semibold group-hover:gap-3 transition-all text-[10px] sm:text-sm md:text-base">
+                        <p className="text-muted-foreground mb-2 sm:mb-4 text-xs sm:text-sm md:text-base text-center line-clamp-2">{category.description}</p>
+                        <div className="flex items-center justify-center text-primary font-semibold group-hover:gap-3 transition-all text-xs sm:text-sm md:text-base">
                           {t("home.explore")}
-                          <ArrowRight className="ml-0.5 sm:ml-1 h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 group-hover:translate-x-2 transition-transform duration-300" />
+                          <ArrowRight className="ml-0.5 sm:ml-1 h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 group-hover:translate-x-2 transition-transform duration-300" />
                         </div>
                       </div>
                     </Link>
