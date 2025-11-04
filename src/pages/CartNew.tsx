@@ -165,6 +165,13 @@ export default function CartNew() {
       localStorage.setItem("autoDiscountsDisabled", "true");
       localStorage.removeItem("appliedCartDiscounts");
       localStorage.removeItem("appliedCartDiscountAmount");
+    } else {
+      // Show error for invalid discount code
+      toast.error("Invalid discount code", {
+        description: "The code you entered is not valid or has expired. Please check and try again.",
+        duration: 4000,
+      });
+      setDiscountCode("");
     }
   };
 
