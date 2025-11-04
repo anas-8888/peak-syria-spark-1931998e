@@ -231,7 +231,7 @@ const Search = () => {
           </h1>
 
           {/* Search Input */}
-          <div className="relative">
+          <div className="relative z-[200]">
             <div className="relative">
               <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
@@ -256,7 +256,7 @@ const Search = () => {
 
             {/* Suggestions Dropdown */}
             {showSuggestions && (suggestions.length > 0 || recentSearches.length > 0) && (
-              <div className="absolute top-full mt-2 w-full bg-background border-2 border-border rounded-2xl shadow-2xl overflow-hidden z-[100] animate-fade-in">
+              <div className="absolute top-full mt-2 w-full bg-background border-2 border-border rounded-2xl shadow-2xl overflow-hidden z-[300] animate-fade-in">
                 {/* Recent Searches */}
                 {!searchQuery && recentSearches.length > 0 && (
                   <div className="p-2 border-b bg-background">
