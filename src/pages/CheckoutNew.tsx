@@ -256,6 +256,16 @@ export default function CheckoutNew() {
                   try {
                     const discount = JSON.parse(savedDiscount);
                     setDiscountCode(savedCode);
+                    // Ensure free_shipping flag is present
+                    if (discount && discount.id && typeof discount.free_shipping === "undefined") {
+                      const { data: meta } = await supabase
+                        .from("discounts")
+                        .select("type, stack_with_shipping")
+                        .eq("id", discount.id)
+                        .single();
+                      discount.free_shipping = meta?.type === "free_shipping";
+                      discount.stack_with_shipping = !!meta?.stack_with_shipping;
+                    }
                     setAppliedDiscount(discount);
                     setDiscountAmount(discount.amount);
                     setAutoDiscountsDisabled(true);
@@ -673,14 +683,26 @@ export default function CheckoutNew() {
       if (data && data.length > 0) {
         const result = data[0];
         if (result.is_valid) {
-          setAppliedDiscount({
+          // Fetch discount metadata to detect free shipping type
+          const { data: discountMeta } = await supabase
+            .from("discounts")
+            .select("type, stack_with_shipping")
+            .eq("id", result.discount_id)
+            .single();
+
+          const isFreeShipping = discountMeta?.type === "free_shipping";
+          const appliedObj = {
             id: result.discount_id,
             code: code,
             amount: result.discount_amount,
-            message: result.message,
-          });
+            message: isFreeShipping ? "Free shipping applied" : (result.message || "Discount applied successfully"),
+            free_shipping: isFreeShipping,
+            stack_with_shipping: !!discountMeta?.stack_with_shipping,
+          } as any;
+
+          setAppliedDiscount(appliedObj);
           setDiscountAmount(Number(result.discount_amount));
-          return result;
+          return { ...result, free_shipping: isFreeShipping, applied: appliedObj } as any;
         } else {
           if (!silent) {
             toast.error(result.message || "Invalid discount code");
@@ -754,7 +776,8 @@ export default function CheckoutNew() {
     toast.success("Automatic discounts removed. You can now apply a discount code.");
   };
 
-  const total = cartTotal + shippingCost - discountAmount;
+  const shippingDiscount = appliedDiscount?.free_shipping ? shippingCost : 0;
+  const total = cartTotal + shippingCost - discountAmount - shippingDiscount;
 
   const onSubmit = async (data: CheckoutFormData) => {
     if (!user || !profile) {
@@ -862,7 +885,7 @@ export default function CheckoutNew() {
           p_shipping_region_id: data.regionId,
           p_shipping_cost: shippingCost,
           p_discount_id: appliedDiscount?.id || null,
-          p_discount_amount: discountAmount,
+          p_discount_amount: discountAmount + (appliedDiscount?.free_shipping ? shippingCost : 0),
           p_items: cartItems.map((item) => ({
             product_id: item.product_id,
             quantity: item.quantity,
@@ -897,7 +920,7 @@ export default function CheckoutNew() {
           p_discount_id: appliedDiscount.id,
           p_order_id: orderId,
           p_user_id: user.id,
-          p_discount_amount: appliedDiscount.amount,
+          p_discount_amount: (appliedDiscount.amount || 0) + (appliedDiscount.free_shipping ? shippingCost : 0),
           p_order_subtotal: cartTotal,
         });
       }

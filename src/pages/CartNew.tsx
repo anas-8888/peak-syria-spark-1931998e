@@ -139,15 +139,27 @@ export default function CartNew() {
         const result = data[0];
         console.log("Validation result:", result);
         if (result.is_valid) {
-          setAppliedDiscount({
+          // Fetch discount metadata to detect free shipping type
+          const { data: discountMeta } = await supabase
+            .from("discounts")
+            .select("type, stack_with_shipping")
+            .eq("id", result.discount_id)
+            .single();
+
+          const isFreeShipping = discountMeta?.type === "free_shipping";
+          const appliedObj = {
             id: result.discount_id,
             code: code,
             amount: result.discount_amount,
-            message: result.message,
-          });
+            message: isFreeShipping ? "Free shipping applied" : (result.message || "Discount applied successfully!"),
+            free_shipping: isFreeShipping,
+            stack_with_shipping: !!discountMeta?.stack_with_shipping,
+          } as any;
+
+          setAppliedDiscount(appliedObj);
           setDiscountAmount(Number(result.discount_amount));
-          toast.success(result.message || "Discount applied successfully!");
-          return result;
+          toast.success(appliedObj.message);
+          return { ...result, free_shipping: isFreeShipping, applied: appliedObj } as any;
         }
       }
 
@@ -174,20 +186,28 @@ export default function CartNew() {
 
         if (startsOk && endsOk && channelOk && loginOk && subtotalOk) {
           let amount = 0;
+          let isFreeShipping = false;
           if (discountRow.type === "percentage") {
             amount = (Number(discountRow.value) / 100) * cartTotal;
             if (discountRow.per_order_max_discount) {
               amount = Math.min(amount, Number(discountRow.per_order_max_discount));
             }
-          } else {
+          } else if (discountRow.type === "fixed_amount") {
             amount = Number(discountRow.value);
+          } else if (discountRow.type === "free_shipping") {
+            // Cart page does not know shipping cost, mark as free shipping for checkout
+            amount = 0;
+            isFreeShipping = true;
           }
 
-          const msg = discountRow.marketing_label || `${discountRow.value}% off applied`;
-          setAppliedDiscount({ id: discountRow.id, code, amount, message: msg });
+          const msg = isFreeShipping
+            ? (discountRow.marketing_label || "Free shipping applied")
+            : (discountRow.marketing_label || `${discountRow.value}% off applied`);
+          const appliedObj = { id: discountRow.id, code, amount, message: msg, free_shipping: isFreeShipping } as any;
+          setAppliedDiscount(appliedObj);
           setDiscountAmount(amount);
           toast.success(msg);
-          return { is_valid: true, discount_id: discountRow.id, discount_amount: amount, message: msg };
+          return { is_valid: true, discount_id: discountRow.id, discount_amount: amount, message: msg, free_shipping: isFreeShipping, applied: appliedObj } as any;
         }
       }
 
@@ -220,9 +240,10 @@ export default function CartNew() {
       const successMsg = (result && (result as any).message) || 'Discount applied successfully!';
       setDiscountFeedback({ type: 'success', message: successMsg });
       
-      // Save manual discount code to localStorage
-      localStorage.setItem("appliedCartDiscount", JSON.stringify(appliedDiscount));
-      localStorage.setItem("manualDiscountCode", code.toUpperCase());
+      // Save manual discount code to localStorage using the validated object
+      const toSave = (result as any).applied || appliedDiscount;
+      localStorage.setItem("appliedCartDiscount", JSON.stringify(toSave));
+      localStorage.setItem("manualDiscountCode", (toSave?.code || code).toUpperCase());
       
       // Clear auto discounts and disable them
       setAppliedDiscounts([]);
