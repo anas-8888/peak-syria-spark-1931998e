@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, ShoppingCart, Heart, Share2, ArrowLeft, Star } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Heart, Share2, ArrowLeft, Star, Copy, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
@@ -13,6 +13,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ReviewForm } from "@/components/ReviewForm";
 import { ReviewsList } from "@/components/ReviewsList";
 import GoogleSignInPopup from "@/components/GoogleSignInPopup";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type ProductImage = {
   id: string;
@@ -791,19 +797,41 @@ const ProductDetail = () => {
                   <Heart className={`mr-2 h-4 w-4 sm:h-5 sm:w-5 ${isInWishlist ? "fill-current text-primary" : ""}`} />
                   {isInWishlist ? "In Wishlist" : "Wishlist"}
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="flex-1 h-10 sm:h-12 text-sm sm:text-base"
-                  onClick={() => {
-                    const url = window.location.href;
-                    navigator.clipboard.writeText(url);
-                    toast.success("Product link copied to clipboard!");
-                  }}
-                >
-                  <Share2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                  Share
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="lg" 
+                      className="flex-1 h-10 sm:h-12 text-sm sm:text-base"
+                    >
+                      <Share2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                      Share
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        const url = window.location.href;
+                        navigator.clipboard.writeText(url);
+                        toast.success("Link copied to clipboard!");
+                      }}
+                    >
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copy Link
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        const url = window.location.href;
+                        const text = `Check out ${product.name} on PEAK Syria`;
+                        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}`;
+                        window.open(whatsappUrl, '_blank');
+                      }}
+                    >
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Share on WhatsApp
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 

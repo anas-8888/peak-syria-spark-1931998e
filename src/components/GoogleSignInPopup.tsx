@@ -38,7 +38,9 @@ const GoogleSignInPopup = ({ open, onOpenChange }: GoogleSignInPopupProps) => {
         <DialogContent className="sm:max-w-[400px] sm:h-[450px] p-0 overflow-hidden border-2 border-primary/20 shadow-2xl animate-scale-in z-[101]">
           {/* Header with gradient */}
           <div className="bg-gradient-to-r from-primary via-red-500 to-primary p-8 text-center">
-            <img src={peakLogo} alt="PEAK Logo" className="h-16 w-auto mx-auto mb-4 drop-shadow-2xl" />
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-3 w-fit mx-auto mb-4 shadow-xl">
+              <img src={peakLogo} alt="PEAK Logo" className="h-12 w-auto" />
+            </div>
             <h2 className="text-2xl font-bold text-white drop-shadow-md">
               Welcome to PEAK Syria
             </h2>
