@@ -209,10 +209,25 @@ const Navbar = () => {
               </DropdownMenu> : <GoogleSignInButton />}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button className="lg:hidden p-1.5 rounded-md hover:bg-accent transition-colors text-xs flex items-center justify-center" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          {/* Mobile Actions - Search, Cart, and Menu Button */}
+          <div className="lg:hidden flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-accent/50 transition-all" asChild>
+              <Link to="/search">
+                <SearchIcon className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Link to="/cart">
+              <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full hover:bg-accent/50 transition-all">
+                <ShoppingCart className="h-4 w-4" />
+                {cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-primary to-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold shadow-lg">
+                    {cartCount}
+                  </span>}
+              </Button>
+            </Link>
+            <button className="p-1.5 rounded-md hover:bg-accent transition-colors text-xs flex items-center justify-center" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -221,21 +236,6 @@ const Navbar = () => {
                 {link.name}
               </Link>)}
             <div className="flex flex-col items-center justify-center gap-2 pt-2 border-t mt-1.5">
-              <div className="flex items-center justify-center gap-2.5">
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-8 sm:w-8 rounded-full hover:bg-accent/50 transition-all" asChild>
-                  <Link to="/search">
-                    <SearchIcon className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Link to="/cart">
-                  <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-8 sm:w-8 rounded-full hover:bg-accent/50 transition-all">
-                    <ShoppingCart className="h-4 w-4" />
-                    {cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-primary to-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold shadow-lg">
-                        {cartCount}
-                      </span>}
-                  </Button>
-                </Link>
-              </div>
               {user ? <div className="flex flex-col gap-1.5 w-full px-3">
                   <div className="flex items-center justify-center gap-1.5 p-1.5 bg-accent/50 rounded-full">
                     <Avatar className="h-6 w-6 sm:h-7 sm:w-7 border border-primary/20">
