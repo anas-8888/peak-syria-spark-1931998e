@@ -860,7 +860,7 @@ const ProductDetail = () => {
               <p className="text-muted-foreground mb-4">
                 Please log in to write a review
               </p>
-              <Button onClick={() => navigate("/login")} variant="outline">
+              <Button onClick={() => setShowSignInPopup(true)} variant="outline">
                 Log In
               </Button>
             </div>
