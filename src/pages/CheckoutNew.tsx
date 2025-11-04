@@ -641,6 +641,15 @@ export default function CheckoutNew() {
           }
           return result;
         }
+      } else {
+        // No data returned from RPC — treat as invalid
+        if (!silent) {
+          toast.error("Invalid discount code", {
+            description: "The code you entered is not valid or has expired.",
+            duration: 4000,
+          });
+        }
+        return { is_valid: false };
       }
     } catch (error: any) {
       if (!silent) {
@@ -667,6 +676,8 @@ export default function CheckoutNew() {
       localStorage.setItem("autoDiscountsDisabled", "true");
       localStorage.removeItem("appliedCartDiscounts");
       localStorage.removeItem("appliedCartDiscountAmount");
+    } else {
+      setDiscountCode("");
     }
   };
 
