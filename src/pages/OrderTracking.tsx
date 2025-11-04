@@ -48,6 +48,8 @@ type OrderWithDetails = {
     id: string;
     quantity: number;
     price: number;
+    selected_color: string | null;
+    selected_size: string | null;
     products: {
       name: string;
       image_url: string;
@@ -153,6 +155,8 @@ const OrderTracking = () => {
             id,
             quantity,
             price,
+            selected_color,
+            selected_size,
             products (
               name,
               image_url,
@@ -674,6 +678,13 @@ const OrderTracking = () => {
                             />
                             <div className="flex-1">
                               <h4 className="font-semibold">{item.products.name}</h4>
+                              {(item.selected_color || item.selected_size) && (
+                                <p className="text-sm text-muted-foreground">
+                                  {item.selected_color && <span>Color: {item.selected_color}</span>}
+                                  {item.selected_color && item.selected_size && <span> • </span>}
+                                  {item.selected_size && <span>Size: {item.selected_size}</span>}
+                                </p>
+                              )}
                               <p className="text-sm text-muted-foreground">
                                 Quantity: {item.quantity}
                               </p>
