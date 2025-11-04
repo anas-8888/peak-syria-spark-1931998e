@@ -11,6 +11,7 @@ const HeroSection = () => {
   const [touchEnd, setTouchEnd] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch hero slides from database
   const { data: dbSlides, isLoading } = useQuery({
@@ -37,20 +38,75 @@ const HeroSection = () => {
   const slides = dbSlides || [];
 
   useEffect(() => {
-    if (slides.length === 0 || isHovering) return;
-    const timer = setInterval(() => {
+    if (slides.length === 0 || isHovering) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+    // Clear any existing timer before starting a new one
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    timerRef.current = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
-    return () => clearInterval(timer);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [slides.length, isHovering]);
+
+  // Restart timer after manual navigation (when timer was cleared by button click)
+  useEffect(() => {
+    if (slides.length === 0 || isHovering || timerRef.current) return;
+    
+    // Only restart if timer was cleared (i.e., manual navigation happened)
+    const timeoutId = setTimeout(() => {
+      if (!timerRef.current && !isHovering && slides.length > 0) {
+        timerRef.current = setInterval(() => {
+          setCurrentSlide((prev) => (prev + 1) % slides.length);
+        }, 5000);
+      }
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [currentSlide, slides.length, isHovering]);
 
   // If no slides, don't render anything
   if (isLoading || slides.length === 0) {
     return null;
   }
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  const nextSlide = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    // Clear auto-slide timer to prevent conflicts
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    // Move to next slide (one at a time)
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
+  const prevSlide = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    // Clear auto-slide timer to prevent conflicts
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    // Move to previous slide (one at a time)
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
 
   // Touch handlers for mobile swipe
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -151,14 +207,16 @@ const HeroSection = () => {
 
       {/* Navigation Arrows */}
       <button
-        onClick={prevSlide}
+        onClick={(e) => prevSlide(e)}
+        type="button"
         className="absolute left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/30 backdrop-blur text-white p-0.5 sm:p-1.5 md:p-2 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20 flex items-center justify-center"
         aria-label="Previous slide"
       >
         <ChevronLeft className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />
       </button>
       <button
-        onClick={nextSlide}
+        onClick={(e) => nextSlide(e)}
+        type="button"
         className="absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/30 backdrop-blur text-white p-0.5 sm:p-1.5 md:p-2 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-20 flex items-center justify-center"
         aria-label="Next slide"
       >
