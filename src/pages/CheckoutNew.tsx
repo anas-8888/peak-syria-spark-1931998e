@@ -248,6 +248,21 @@ export default function CheckoutNew() {
                     }
                   });
                 }
+              } else {
+                // Check localStorage for manual discount from cart
+                const savedCode = localStorage.getItem("manualDiscountCode");
+                const savedDiscount = localStorage.getItem("appliedCartDiscount");
+                if (savedCode && savedDiscount) {
+                  try {
+                    const discount = JSON.parse(savedDiscount);
+                    setDiscountCode(savedCode);
+                    setAppliedDiscount(discount);
+                    setDiscountAmount(discount.amount);
+                    setAutoDiscountsDisabled(true);
+                  } catch (e) {
+                    console.error("Error loading manual discount:", e);
+                  }
+                }
               }
               
               // Restore address (takes priority over profile address)
@@ -553,6 +568,37 @@ export default function CheckoutNew() {
     }
   }, [cartItems, appliedDiscount, appliedDiscounts]);
 
+  // Revalidate manual discount code when cart changes
+  useEffect(() => {
+    const revalidateDiscount = async () => {
+      if (!appliedDiscount || !appliedDiscount.code || cartItems.length === 0) return;
+      
+      const result = await validateDiscount(appliedDiscount.code, true);
+      if (!result?.is_valid) {
+        // Discount no longer valid
+        setAppliedDiscount(null);
+        setDiscountAmount(0);
+        setDiscountCode("");
+        localStorage.removeItem("appliedCartDiscount");
+        localStorage.removeItem("manualDiscountCode");
+        toast.error("Your discount code is no longer valid for this cart");
+      } else if (result && 'discount_amount' in result && result.discount_amount !== appliedDiscount.amount) {
+        // Update discount amount if it changed
+        setAppliedDiscount({
+          ...appliedDiscount,
+          amount: result.discount_amount,
+        });
+        setDiscountAmount(result.discount_amount);
+        localStorage.setItem("appliedCartDiscount", JSON.stringify({
+          ...appliedDiscount,
+          amount: result.discount_amount,
+        }));
+      }
+    };
+
+    revalidateDiscount();
+  }, [cartTotal, cartItems.length]);
+
   // Save form data to sessionStorage with expiration (30 minutes)
   useEffect(() => {
     const formData = {
@@ -739,6 +785,21 @@ export default function CheckoutNew() {
     setSubmitting(true);
 
     try {
+      // Revalidate discount before placing order
+      if (appliedDiscount && appliedDiscount.code) {
+        const revalidation = await validateDiscount(appliedDiscount.code, true);
+        if (!revalidation?.is_valid) {
+          toast.error("Your discount code is no longer valid", {
+            description: "The discount has expired or no longer applies to your cart",
+            duration: 5000,
+          });
+          setAppliedDiscount(null);
+          setDiscountAmount(0);
+          setSubmitting(false);
+          return;
+        }
+      }
+
       // Check stock availability for all items
       for (const item of cartItems) {
         if (item.variant_id) {

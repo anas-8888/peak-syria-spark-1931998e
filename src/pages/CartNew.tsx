@@ -114,6 +114,10 @@ export default function CartNew() {
 
   const validateDiscount = async (code: string) => {
     try {
+      console.log("Validating discount code:", code);
+      console.log("Cart total:", cartTotal);
+      console.log("Cart items:", cartItems.map(i => ({ product_id: i.product_id, quantity: i.quantity })));
+      
       const { data, error } = await supabase.rpc("validate_discount_code", {
         p_code: code,
         p_user_id: user?.id || null,
@@ -124,10 +128,16 @@ export default function CartNew() {
         })),
       });
 
-      if (error) throw error;
+      console.log("RPC response - data:", data, "error:", error);
+
+      if (error) {
+        console.error("RPC error:", error);
+        throw error;
+      }
 
       if (data && data.length > 0) {
         const result = data[0];
+        console.log("Validation result:", result);
         if (result.is_valid) {
           setAppliedDiscount({
             id: result.discount_id,
@@ -142,12 +152,15 @@ export default function CartNew() {
       }
 
       // Fallback: validate code from discounts table
+      console.log("Checking discounts table directly for code:", code);
       const { data: discountRow } = await supabase
         .from("discounts")
         .select("*")
         .eq("code", code)
         .eq("status", "active")
         .maybeSingle();
+
+      console.log("Direct discount lookup:", discountRow);
 
       if (discountRow) {
         const now = new Date();
@@ -156,6 +169,8 @@ export default function CartNew() {
         const channelOk = !discountRow.channels || discountRow.channels.includes("web");
         const loginOk = !discountRow.logged_in_only || !!user;
         const subtotalOk = Number(discountRow.min_cart_subtotal || 0) <= cartTotal;
+
+        console.log("Validation checks:", { startsOk, endsOk, channelOk, loginOk, subtotalOk });
 
         if (startsOk && endsOk && channelOk && loginOk && subtotalOk) {
           let amount = 0;
@@ -182,6 +197,7 @@ export default function CartNew() {
       });
       return { is_valid: false };
     } catch (error: any) {
+      console.error("Discount validation error:", error);
       toast.error(error.message || "Error validating discount");
       return { is_valid: false };
     }
@@ -203,12 +219,18 @@ export default function CartNew() {
     if (result?.is_valid) {
       const successMsg = (result && (result as any).message) || 'Discount applied successfully!';
       setDiscountFeedback({ type: 'success', message: successMsg });
+      
+      // Save manual discount code to localStorage
+      localStorage.setItem("appliedCartDiscount", JSON.stringify(appliedDiscount));
+      localStorage.setItem("manualDiscountCode", code.toUpperCase());
+      
       // Clear auto discounts and disable them
       setAppliedDiscounts([]);
       setAutoDiscountsDisabled(true);
       localStorage.setItem("autoDiscountsDisabled", "true");
       localStorage.removeItem("appliedCartDiscounts");
       localStorage.removeItem("appliedCartDiscountAmount");
+      localStorage.removeItem("selectedAutoDiscountId");
     } else {
       setAppliedDiscount(null);
       setDiscountCode("");
@@ -224,11 +246,13 @@ export default function CartNew() {
     setSelectedAutoDiscountId(null);
     lastAppliedDiscountIds.current = "";
     setAutoDiscountsDisabled(false);
+    setDiscountFeedback(null);
     localStorage.removeItem("autoDiscountsDisabled");
     localStorage.removeItem("appliedCartDiscount");
     localStorage.removeItem("appliedCartDiscounts");
     localStorage.removeItem("appliedCartDiscountAmount");
     localStorage.removeItem("selectedAutoDiscountId");
+    localStorage.removeItem("manualDiscountCode");
     toast.success("Discount removed");
   };
 
@@ -306,19 +330,25 @@ export default function CartNew() {
       }
 
       // Apply the discount
-      setAppliedDiscounts([{
+      const discountToApply = {
         ...discount,
         calculatedAmount: discountValue,
         message: discount.marketing_label || discount.name,
-      }]);
+      };
+      
+      setAppliedDiscounts([discountToApply]);
       setDiscountAmount(discountValue);
       setSelectedAutoDiscountId(discountId);
       setAutoDiscountsDisabled(false);
       lastAppliedDiscountIds.current = discountId;
       
-      // Save to localStorage
+      // Save to localStorage for persistence
       localStorage.setItem("selectedAutoDiscountId", discountId);
+      localStorage.setItem("appliedCartDiscounts", JSON.stringify([discountToApply]));
+      localStorage.setItem("appliedCartDiscountAmount", discountValue.toString());
       localStorage.removeItem("autoDiscountsDisabled");
+      localStorage.removeItem("manualDiscountCode");
+      localStorage.removeItem("appliedCartDiscount");
       
       toast.success(`${discount.name} applied! You save ${formatPrice(discountValue)}`);
       setShowingAvailableDiscounts(false);
@@ -716,7 +746,24 @@ export default function CartNew() {
     if (selectedId) {
       setSelectedAutoDiscountId(selectedId);
     }
-  }, []);
+
+    // Load and revalidate manual discount code
+    const savedCode = localStorage.getItem("manualDiscountCode");
+    if (savedCode && cartItems.length > 0) {
+      setDiscountCode(savedCode);
+      // Revalidate the saved code
+      validateDiscount(savedCode).then((result) => {
+        if (result?.is_valid) {
+          setDiscountFeedback({ type: 'success', message: 'Discount code restored' });
+        } else {
+          // Invalid, clear it
+          localStorage.removeItem("manualDiscountCode");
+          localStorage.removeItem("appliedCartDiscount");
+          setDiscountCode("");
+        }
+      });
+    }
+  }, [cartItems.length]);
 
   // Restore and validate previously selected discount on mount
   useEffect(() => {
@@ -827,12 +874,34 @@ export default function CartNew() {
         setAppliedDiscounts([]);
         setDiscountAmount(0);
         lastAppliedDiscountIds.current = "";
+        localStorage.removeItem("appliedCartDiscount");
+        localStorage.removeItem("appliedCartDiscounts");
+        localStorage.removeItem("appliedCartDiscountAmount");
+        localStorage.removeItem("manualDiscountCode");
       }
       return;
     }
 
     // Skip if cart total is 0
     if (cartTotal <= 0) return;
+    
+    // Revalidate manual discount code on cart changes
+    if (appliedDiscount && appliedDiscount.code) {
+      const revalidateManualCode = async () => {
+        const result = await validateDiscount(appliedDiscount.code);
+        if (!result?.is_valid) {
+          // No longer valid, clear it
+          setAppliedDiscount(null);
+          setDiscountAmount(0);
+          setDiscountCode("");
+          localStorage.removeItem("appliedCartDiscount");
+          localStorage.removeItem("manualDiscountCode");
+          toast.error("Your discount code is no longer valid for this cart");
+        }
+      };
+      revalidateManualCode();
+      return;
+    }
     
     // Skip if auto discounts are disabled (user chose manual code)
     if (autoDiscountsDisabled) return;
