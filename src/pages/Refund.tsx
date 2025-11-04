@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import ReactMarkdown from "react-markdown";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const Refund = () => {
   const { data: legalPage, isLoading } = useQuery({
@@ -19,8 +21,9 @@ const Refund = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
+    <div className="min-h-screen bg-background flex flex-col">
+      <Navbar />
+      <div className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
         {isLoading ? (
           <>
             <Skeleton className="h-12 w-64 mb-8" />
@@ -40,6 +43,7 @@ const Refund = () => {
           </>
         )}
       </div>
+      <Footer />
     </div>
   );
 };
