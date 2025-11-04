@@ -138,18 +138,49 @@ export default function CartNew() {
           setDiscountAmount(Number(result.discount_amount));
           toast.success(result.message || "Discount applied successfully!");
           return result;
-        } else {
-          toast.error(result.message || "Invalid discount code");
-          return result;
         }
-      } else {
-        // No data returned from RPC
-        toast.error("Invalid discount code", {
-          description: "The code you entered is not valid or has expired.",
-          duration: 4000,
-        });
-        return { is_valid: false };
       }
+
+      // Fallback: validate code from discounts table
+      const { data: discountRow } = await supabase
+        .from("discounts")
+        .select("*")
+        .eq("code", code)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (discountRow) {
+        const now = new Date();
+        const startsOk = discountRow.start_date ? new Date(discountRow.start_date) <= now : true;
+        const endsOk = discountRow.end_date ? new Date(discountRow.end_date) >= now : true;
+        const channelOk = !discountRow.channels || discountRow.channels.includes("web");
+        const loginOk = !discountRow.logged_in_only || !!user;
+        const subtotalOk = Number(discountRow.min_cart_subtotal || 0) <= cartTotal;
+
+        if (startsOk && endsOk && channelOk && loginOk && subtotalOk) {
+          let amount = 0;
+          if (discountRow.type === "percentage") {
+            amount = (Number(discountRow.value) / 100) * cartTotal;
+            if (discountRow.per_order_max_discount) {
+              amount = Math.min(amount, Number(discountRow.per_order_max_discount));
+            }
+          } else {
+            amount = Number(discountRow.value);
+          }
+
+          const msg = discountRow.marketing_label || `${discountRow.value}% off applied`;
+          setAppliedDiscount({ id: discountRow.id, code, amount, message: msg });
+          setDiscountAmount(amount);
+          toast.success(msg);
+          return { is_valid: true, discount_id: discountRow.id, discount_amount: amount, message: msg };
+        }
+      }
+
+      toast.error("Invalid discount code", {
+        description: "The code you entered is not valid or has expired.",
+        duration: 4000,
+      });
+      return { is_valid: false };
     } catch (error: any) {
       toast.error(error.message || "Error validating discount");
       return { is_valid: false };
