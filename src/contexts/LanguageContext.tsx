@@ -61,6 +61,15 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     loadTranslations();
   }, [loadTranslations]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (batchTimeoutRef.current) {
+        clearTimeout(batchTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Batch insert missing keys to database
   const batchInsertMissingKeys = useCallback(async () => {
     if (pendingKeys.current.size === 0) return;
@@ -81,7 +90,8 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
         .upsert(records, { 
           onConflict: "english_key",
           ignoreDuplicates: false 
-        });
+        })
+        .select();
 
       if (error) {
         console.error("Error inserting translations:", error);
