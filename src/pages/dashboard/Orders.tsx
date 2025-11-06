@@ -33,6 +33,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type OrderWithDetails = {
   id: string;
@@ -122,6 +123,7 @@ const Orders = () => {
   const ITEMS_PER_PAGE = 50;
   const queryClient = useQueryClient();
   const { formatPrice } = useCurrency();
+  const { t } = useLanguage();
 
   const { data: paginatedData, isLoading } = useQuery({
     queryKey: ["orders", currentPage],
@@ -305,12 +307,12 @@ const Orders = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      toast.success("Order status updated successfully");
+      toast.success(t("Order status updated successfully"));
       setStatusDialogOpen(false);
       setDetailsDialogOpen(false);
     },
     onError: () => {
-      toast.error("Failed to update order status");
+      toast.error(t("Failed to update order status"));
     },
   });
 
@@ -328,11 +330,11 @@ const Orders = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      toast.success("Cancellation request approved");
+      toast.success(t("Cancellation request approved"));
       setDetailsDialogOpen(false);
     },
     onError: () => {
-      toast.error("Failed to approve cancellation");
+      toast.error(t("Failed to approve cancellation"));
     },
   });
 
@@ -348,11 +350,11 @@ const Orders = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      toast.success("Cancellation request rejected");
+      toast.success(t("Cancellation request rejected"));
       setDetailsDialogOpen(false);
     },
     onError: () => {
-      toast.error("Failed to reject cancellation");
+      toast.error(t("Failed to reject cancellation"));
     },
   });
 
@@ -447,7 +449,7 @@ const Orders = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by order ID or customer name..."
+              placeholder={t("Search by order ID or customer name...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -652,11 +654,11 @@ const Orders = () => {
                     <div key={item.id} className="flex items-start gap-3 p-3 border rounded-lg">
                       <img
                         src={item.products.image_url || "/placeholder.svg"}
-                        alt={item.products.name}
+                        alt={t(item.products.name)}
                         className="h-16 w-16 object-cover rounded bg-muted"
                       />
                       <div className="flex-1">
-                        <p className="font-medium">{item.products.name}</p>
+                        <p className="font-medium">{t(item.products.name)}</p>
                         {(item.selected_color || item.selected_size) && (
                           <p className="text-sm text-muted-foreground">
                             {item.selected_color && <span>Color: {item.selected_color}</span>}

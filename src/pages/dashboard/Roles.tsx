@@ -35,6 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Permission {
   id: string;
@@ -57,6 +58,7 @@ interface RoleWithPermissions {
 }
 
 const Roles = () => {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -189,13 +191,13 @@ const Roles = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles"] });
-      toast.success("Role created with permissions");
+      toast.success(t("Role created with permissions"));
       setIsAddDialogOpen(false);
       setNewRoleName("");
       setSelectedPermissions([]);
     },
     onError: (error: any) => {
-      toast.error("Failed to create role", { description: error.message });
+      toast.error(t("Failed to create role"), { description: error.message });
     },
   });
 
@@ -212,13 +214,13 @@ const Roles = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles"] });
-      toast.success("Role renamed");
+      toast.success(t("Role renamed"));
       setIsRenameDialogOpen(false);
       setSelectedRole(null);
       setRenameValue("");
     },
     onError: (error: any) => {
-      toast.error("Failed to rename role", { description: error.message });
+      toast.error(t("Failed to rename role"), { description: error.message });
     },
   });
 
@@ -230,12 +232,12 @@ const Roles = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles"] });
-      toast.success("Role deleted successfully");
+      toast.success(t("Role deleted successfully"));
       setDeleteDialogOpen(false);
       setRoleToDelete(null);
     },
     onError: (error: any) => {
-      toast.error("Failed to delete role", { description: error.message });
+      toast.error(t("Failed to delete role"), { description: error.message });
     },
   });
 
@@ -266,13 +268,13 @@ const Roles = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles"] });
-      toast.success("Role permissions updated successfully");
+      toast.success(t("Role permissions updated successfully"));
       setIsEditDialogOpen(false);
       setSelectedRole(null);
       setSelectedPermissions([]);
     },
     onError: (error: any) => {
-      toast.error("Failed to update role permissions", {
+      toast.error(t("Failed to update role permissions"), {
         description: error.message,
       });
     },

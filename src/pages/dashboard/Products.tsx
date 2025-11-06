@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ProductImageManager } from "@/components/ProductImageManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ColorImageSelector } from "@/components/ColorImageSelector";
@@ -56,6 +57,7 @@ type Category = {
   is_active: boolean;
 };
 const Products = () => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -246,8 +248,8 @@ const Products = () => {
       queryClient.invalidateQueries({
         queryKey: ["products"]
       });
-      toast.success("Product added successfully", {
-        description: "You can now add images to this product"
+      toast.success(t("Product added successfully"), {
+        description: t("You can now add images to this product")
       });
       // Switch to the product for editing with images
       setSelectedProduct({
@@ -262,7 +264,7 @@ const Products = () => {
       resetForm();
     },
     onError: error => {
-      toast.error("Failed to add product", {
+      toast.error(t("Failed to add product"), {
         description: error.message
       });
     }
@@ -329,13 +331,13 @@ const Products = () => {
       queryClient.invalidateQueries({
         queryKey: ["products"]
       });
-      toast.success("Product updated successfully");
+      toast.success(t("Product updated successfully"));
       setIsEditDialogOpen(false);
       setSelectedProduct(null);
       resetForm();
     },
     onError: error => {
-      toast.error("Failed to update product", {
+      toast.error(t("Failed to update product"), {
         description: error.message
       });
     }
@@ -353,11 +355,11 @@ const Products = () => {
       queryClient.invalidateQueries({
         queryKey: ["products"]
       });
-      toast.success("Product deleted successfully");
+      toast.success(t("Product deleted successfully"));
       setDeleteProductId(null);
     },
     onError: error => {
-      toast.error("Failed to delete product", {
+      toast.error(t("Failed to delete product"), {
         description: error.message
       });
     }
@@ -375,11 +377,11 @@ const Products = () => {
       queryClient.invalidateQueries({
         queryKey: ["products"]
       });
-      toast.success(`${selectedProducts.length} products deleted successfully`);
+      toast.success(t(`${selectedProducts.length} products deleted successfully`));
       setSelectedProducts([]);
     },
     onError: error => {
-      toast.error("Failed to delete products", {
+      toast.error(t("Failed to delete products"), {
         description: error.message
       });
     }
@@ -396,10 +398,10 @@ const Products = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast.success("Product status updated");
+      toast.success(t("Product status updated"));
     },
     onError: (error) => {
-      toast.error("Failed to update product status", {
+      toast.error(t("Failed to update product status"), {
         description: error.message,
       });
     },
@@ -527,7 +529,7 @@ const Products = () => {
   };
   const handleAddProduct = async () => {
     if (!formData.name || !formData.category) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("Please fill in all required fields"));
       return;
     }
     try {
@@ -577,16 +579,16 @@ const Products = () => {
       queryClient.invalidateQueries({
         queryKey: ["products"]
       });
-      toast.success("Product added! Now add images.");
+      toast.success(t("Product added! Now add images."));
     } catch (error: any) {
-      toast.error("Failed to add product", {
+      toast.error(t("Failed to add product"), {
         description: error.message
       });
     }
   };
   const handleEditProduct = () => {
     if (!selectedProduct || !formData.name || !formData.category) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("Please fill in all required fields"));
       return;
     }
     updateProductMutation.mutate({
@@ -624,7 +626,7 @@ const Products = () => {
       
       if (error) {
         console.error("Error loading product colors:", error);
-        toast.error("Failed to load product colors");
+        toast.error(t("Failed to load product colors"));
       }
 
       console.log("Loaded product colors:", productColors);
@@ -637,7 +639,7 @@ const Products = () => {
       setIsEditDialogOpen(true);
     } catch (error) {
       console.error("Error opening edit dialog:", error);
-      toast.error("Failed to open product for editing");
+      toast.error(t("Failed to open product for editing"));
     }
   };
   const getStockStatus = (stock: number) => {
@@ -1103,9 +1105,9 @@ const Products = () => {
                         .insert(colorInserts);
                       if (error) throw error;
                     }
-                    toast.success("Color-image mappings saved!");
+                    toast.success(t("Color-image mappings saved!"));
                   } catch (error: any) {
-                    toast.error("Failed to save color-image mappings: " + error.message);
+                    toast.error(t("Failed to save color-image mappings: ") + error.message);
                     return;
                   }
                 }
@@ -1122,7 +1124,7 @@ const Products = () => {
                   resetForm();
                   setSelectedProduct(null);
                   queryClient.invalidateQueries({ queryKey: ["products"] });
-                  toast.success("Product and variants created successfully!");
+                  toast.success(t("Product and variants created successfully!"));
                 } catch (error) {
                   console.error("Failed to save variants:", error);
                 }
@@ -1388,9 +1390,9 @@ const Products = () => {
                         .insert(colorInserts);
                       if (error) throw error;
                     }
-                    toast.success("Color-image mappings saved!");
+                    toast.success(t("Color-image mappings saved!"));
                   } catch (error: any) {
-                    toast.error("Failed to save color-image mappings: " + error.message);
+                    toast.error(t("Failed to save color-image mappings: ") + error.message);
                     return;
                   }
                 }
@@ -1407,7 +1409,7 @@ const Products = () => {
                   resetForm();
                   setSelectedProduct(null);
                   queryClient.invalidateQueries({ queryKey: ["products"] });
-                  toast.success("Product copied successfully!");
+                  toast.success(t("Product copied successfully!"));
                 } catch (error) {
                   console.error("Failed to save variants:", error);
                 }
@@ -1668,9 +1670,9 @@ const Products = () => {
                         .insert(colorInserts);
                       if (error) throw error;
                     }
-                    toast.success("Color-image mappings saved!");
+                    toast.success(t("Color-image mappings saved!"));
                   } catch (error: any) {
-                    toast.error("Failed to save color-image mappings: " + error.message);
+                    toast.error(t("Failed to save color-image mappings: ") + error.message);
                     return;
                   }
                 }
@@ -1687,7 +1689,7 @@ const Products = () => {
                   resetForm();
                   setSelectedProduct(null);
                   queryClient.invalidateQueries({ queryKey: ["products"] });
-                  toast.success("Product updated successfully!");
+                  toast.success(t("Product updated successfully!"));
                 } catch (error) {
                   console.error("Failed to save variants:", error);
                 }

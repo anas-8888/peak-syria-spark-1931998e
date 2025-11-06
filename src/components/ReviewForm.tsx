@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type ReviewFormProps = {
   productId: string;
@@ -12,6 +13,7 @@ type ReviewFormProps = {
 };
 
 export const ReviewForm = ({ productId, onSuccess }: ReviewFormProps) => {
+  const { t } = useLanguage();
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -21,12 +23,12 @@ export const ReviewForm = ({ productId, onSuccess }: ReviewFormProps) => {
     e.preventDefault();
 
     if (rating === 0) {
-      toast.error("Please select a rating");
+      toast.error(t("Please select a rating"));
       return;
     }
 
     if (!comment.trim()) {
-      toast.error("Please write a comment");
+      toast.error(t("Please write a comment"));
       return;
     }
 
@@ -46,22 +48,22 @@ export const ReviewForm = ({ productId, onSuccess }: ReviewFormProps) => {
 
       if (error) {
         if (error.code === "23505") {
-          toast.error("You've already reviewed this product");
+          toast.error(t("You've already reviewed this product"));
         } else {
           throw error;
         }
         return;
       }
 
-      toast.success("Review submitted!", {
-        description: "Your review is pending approval from our team.",
+      toast.success(t("Review submitted!"), {
+        description: t("Your review is pending approval from our team."),
       });
       setRating(0);
       setComment("");
       onSuccess();
     } catch (error) {
       console.error("Error submitting review:", error);
-      toast.error("Failed to submit review");
+      toast.error(t("Failed to submit review"));
     } finally {
       setSubmitting(false);
     }

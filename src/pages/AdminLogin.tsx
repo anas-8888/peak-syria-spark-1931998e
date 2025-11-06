@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ const adminLoginSchema = z.object({
 type AdminLoginForm = z.infer<typeof adminLoginSchema>;
 
 const AdminLogin = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -55,21 +57,21 @@ const AdminLogin = () => {
         // Block customer role - use generic error message to prevent user enumeration
         if (roleName === "customer") {
           await supabase.auth.signOut();
-          toast.error("Authentication Failed", {
-            description: "Invalid credentials or insufficient permissions",
+          toast.error(t("Authentication Failed"), {
+            description: t("Invalid credentials or insufficient permissions"),
           });
           return;
         }
 
-        toast.success("Login Successful!", {
-          description: `Welcome back`,
+        toast.success(t("Login Successful!"), {
+          description: t("Welcome back"),
         });
         navigate("/dashboard");
       }
     } catch (error: any) {
       // Use generic error message to prevent user enumeration
-      toast.error("Authentication Failed", {
-        description: "Invalid credentials or insufficient permissions",
+      toast.error(t("Authentication Failed"), {
+        description: t("Invalid credentials or insufficient permissions"),
       });
     } finally {
       setIsLoading(false);
@@ -84,15 +86,15 @@ const AdminLogin = () => {
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <Lock className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Admin Login</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t("Admin Login")}</h1>
             <p className="text-muted-foreground text-sm mt-2">
-              Sign in to access the dashboard
+              {t("Sign in to access the dashboard")}
             </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("Email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -106,7 +108,7 @@ const AdminLogin = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("Password")}</Label>
               <Input
                 id="password"
                 type="password"
@@ -127,10 +129,10 @@ const AdminLogin = () => {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  {t("Signing in...")}
                 </>
               ) : (
-                "Sign In"
+                t("Sign In")
               )}
             </Button>
           </form>
@@ -141,7 +143,7 @@ const AdminLogin = () => {
               onClick={() => navigate("/")}
               className="text-sm text-muted-foreground"
             >
-              Back to Home
+              {t("Back to Home")}
             </Button>
           </div>
         </div>

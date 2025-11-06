@@ -3,6 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useLanguage } from "./LanguageContext";
 
 interface AuthContextType {
   user: User | null;
@@ -23,6 +24,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const { t } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,8 +67,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    toast.success("Signed Out Successfully! 👋", {
-      description: "See you next time!",
+    toast.success(t("Signed Out Successfully! 👋"), {
+      description: t("See you next time!"),
       duration: 3000,
     });
     navigate("/");

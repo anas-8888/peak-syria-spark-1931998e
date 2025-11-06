@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, MoveUp, MoveDown, Edit } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import PercentageLoader from "@/components/PercentageLoader";
 import BannerDialog from "@/components/BannerDialog";
 
@@ -24,6 +25,7 @@ interface Banner {
 }
 
 const Banners = () => {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -47,9 +49,9 @@ const Banners = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
-      toast.success("Banner created successfully");
+      toast.success(t("Banner created successfully"));
     },
-    onError: () => toast.error("Failed to create banner"),
+    onError: () => toast.error(t("Failed to create banner")),
   });
 
   const updateMutation = useMutation({
@@ -62,9 +64,9 @@ const Banners = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
-      toast.success("Banner updated successfully");
+      toast.success(t("Banner updated successfully"));
     },
-    onError: () => toast.error("Failed to update banner"),
+    onError: () => toast.error(t("Failed to update banner")),
   });
 
   const deleteMutation = useMutation({
@@ -74,9 +76,9 @@ const Banners = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
-      toast.success("Banner deleted successfully");
+      toast.success(t("Banner deleted successfully"));
     },
-    onError: () => toast.error("Failed to delete banner"),
+    onError: () => toast.error(t("Failed to delete banner")),
   });
 
   const handleSave = async (banner: Omit<Banner, "id"> | Banner) => {

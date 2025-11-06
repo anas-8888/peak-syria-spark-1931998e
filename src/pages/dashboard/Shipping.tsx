@@ -43,6 +43,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import PercentageLoader from "@/components/PercentageLoader";
 
 interface ShippingCarrier {
@@ -71,6 +72,7 @@ interface CarrierRegion {
 }
 
 const Shipping = () => {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [carrierDialogOpen, setCarrierDialogOpen] = useState(false);
@@ -154,12 +156,12 @@ const Shipping = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shipping-carriers-admin"] });
-      toast.success(editingCarrier ? "Carrier updated successfully" : "Carrier created successfully");
+      toast.success(editingCarrier ? t("Carrier updated successfully") : t("Carrier created successfully"));
       resetCarrierForm();
       setCarrierDialogOpen(false);
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to save carrier");
+      toast.error(error.message || t("Failed to save carrier"));
     },
   });
 
@@ -174,10 +176,10 @@ const Shipping = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shipping-carriers-admin"] });
-      toast.success("Carrier status updated");
+      toast.success(t("Carrier status updated"));
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to update carrier status");
+      toast.error(error.message || t("Failed to update carrier status"));
     },
   });
 
@@ -189,12 +191,12 @@ const Shipping = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shipping-carriers-admin"] });
-      toast.success("Carrier deleted successfully");
+      toast.success(t("Carrier deleted successfully"));
       setDeleteDialogOpen(false);
       setDeletingCarrierId(null);
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to delete carrier");
+      toast.error(error.message || t("Failed to delete carrier"));
     },
   });
 
@@ -206,12 +208,12 @@ const Shipping = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shipping-carrier-regions-admin"] });
-      toast.success("Region added to carrier successfully");
+      toast.success(t("Region added to carrier successfully"));
       resetRegionForm();
       setRegionDialogOpen(false);
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to add region");
+      toast.error(error.message || t("Failed to add region"));
     },
   });
 
@@ -223,7 +225,7 @@ const Shipping = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shipping-carrier-regions-admin"] });
-      toast.success("Region removed from carrier successfully");
+      toast.success(t("Region removed from carrier successfully"));
       setDeleteRegionDialogOpen(false);
       setDeletingRegionId(null);
     },
@@ -271,13 +273,13 @@ const Shipping = () => {
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file");
+      toast.error(t("Please upload an image file"));
       return;
     }
 
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image size should be less than 2MB");
+      toast.error(t("Image size should be less than 2MB"));
       return;
     }
 
@@ -296,9 +298,9 @@ const Shipping = () => {
       const { data } = supabase.storage.from("product-images").getPublicUrl(filePath);
 
       setCarrierForm({ ...carrierForm, image_url: data.publicUrl });
-      toast.success("Image uploaded successfully");
+      toast.success(t("Image uploaded successfully"));
     } catch (error: any) {
-      toast.error(error.message || "Failed to upload image");
+      toast.error(error.message || t("Failed to upload image"));
     } finally {
       setUploadingImage(false);
     }
@@ -306,7 +308,7 @@ const Shipping = () => {
 
   const handleSaveCarrier = () => {
     if (!carrierForm.name) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("Please fill in all required fields"));
       return;
     }
 
@@ -322,7 +324,7 @@ const Shipping = () => {
 
   const handleSaveCarrierRegion = () => {
     if (!regionForm.carrier_id || !regionForm.region_id || !regionForm.cost) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("Please fill in all required fields"));
       return;
     }
 

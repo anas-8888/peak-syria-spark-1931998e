@@ -7,12 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const iconOptions = ["Shield", "Award", "Users", "TrendingUp"];
 
 const AboutManagement = () => {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [heroTitle, setHeroTitle] = useState("");
   const [heroSubtitle, setHeroSubtitle] = useState("");
@@ -71,11 +73,11 @@ const AboutManagement = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["about-us-admin"] });
       queryClient.invalidateQueries({ queryKey: ["about-us"] });
-      toast.success("About page updated successfully");
+      toast.success(t("About page updated successfully"));
     },
     onError: (error) => {
       console.error("Error updating about page:", error);
-      toast.error("Failed to update about page");
+      toast.error(t("Failed to update about page"));
     },
   });
 

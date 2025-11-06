@@ -2,6 +2,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import peakLogo from "@/assets/peak-logo-new.png";
 
 interface GoogleSignInPopupProps {
@@ -11,12 +12,13 @@ interface GoogleSignInPopupProps {
 
 const GoogleSignInPopup = ({ open, onOpenChange }: GoogleSignInPopupProps) => {
   const { signInWithGoogle } = useAuth();
+  const { t } = useLanguage();
 
   const handleGoogleSignIn = async () => {
     const { error } = await signInWithGoogle();
     
     if (error) {
-      toast.error("Sign In Failed", {
+      toast.error(t("Sign In Failed"), {
         description: error.message,
         duration: 4000,
       });
@@ -42,15 +44,15 @@ const GoogleSignInPopup = ({ open, onOpenChange }: GoogleSignInPopupProps) => {
               <img src={peakLogo} alt="PEAK Logo" className="h-12 w-auto" />
             </div>
             <h2 className="text-2xl font-bold text-white drop-shadow-md">
-              Welcome to PEAK Syria
+              {t("Welcome to PEAK Syria")}
             </h2>
-            <p className="text-white/90 text-sm mt-2">Official PEAK distributor</p>
+            <p className="text-white/90 text-sm mt-2">{t("Official PEAK distributor")}</p>
           </div>
 
           {/* Content */}
           <div className="p-8 space-y-6">
             <p className="text-center text-muted-foreground text-sm leading-relaxed">
-              Sign in to access exclusive products, track orders, and enjoy personalized shopping
+              {t("Sign in to access exclusive products, track orders, and enjoy personalized shopping")}
             </p>
 
             {/* Google Sign In Button */}
@@ -77,13 +79,13 @@ const GoogleSignInPopup = ({ open, onOpenChange }: GoogleSignInPopupProps) => {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              <span className="text-lg font-semibold">Continue with Google</span>
+              <span className="text-lg font-semibold">{t("Continue with Google")}</span>
             </Button>
 
             <p className="text-xs text-center text-muted-foreground mt-4 px-2">
-              By signing in, you agree to our{" "}
-              <a href="/terms" className="text-primary hover:underline">Terms</a> and{" "}
-              <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
+              {t("By signing in, you agree to our")}{" "}
+              <a href="/terms" className="text-primary hover:underline">{t("Terms")}</a> {t("and")}{" "}
+              <a href="/privacy" className="text-primary hover:underline">{t("Privacy Policy")}</a>
             </p>
           </div>
         </DialogContent>

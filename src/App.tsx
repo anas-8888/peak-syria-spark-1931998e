@@ -57,6 +57,7 @@ import Refund from "./pages/Refund";
 import LegalPages from "./pages/dashboard/LegalPages";
 import Translations from "./pages/dashboard/Translations";
 import ScrollToTop from "./components/ScrollToTop";
+import LanguageToggle from "./components/LanguageToggle";
 
 const queryClient = new QueryClient();
 
@@ -71,14 +72,18 @@ function App() {
           }}
         >
           <ScrollToTop />
-          <AuthProvider>
-            <LanguageProvider>
+          <LanguageProvider>
+            <AuthProvider>
               <CurrencyProvider>
                 <CartProvider>
                   <ProfileCompletionCheck>
                     <TooltipProvider>
                       <Toaster />
                       <Sonner />
+                      {/* Language Toggle Button - Available on all pages */}
+                      <div className="fixed bottom-20 left-4 z-50">
+                        <LanguageToggle />
+                      </div>
                       <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/products" element={<ProductsEnhanced />} />
@@ -132,8 +137,8 @@ function App() {
                 </ProfileCompletionCheck>
               </CartProvider>
             </CurrencyProvider>
-          </LanguageProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </LanguageProvider>
         </BrowserRouter>
       </HelmetProvider>
     </QueryClientProvider>

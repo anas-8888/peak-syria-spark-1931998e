@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, Search, CreditCard } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import PercentageLoader from "@/components/PercentageLoader";
 
 interface PaymentMethod {
@@ -49,6 +50,7 @@ interface PaymentMethod {
 }
 
 export default function PaymentMethods() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -83,11 +85,11 @@ export default function PaymentMethods() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
-      toast.success("Payment method created");
+      toast.success(t("Payment method created"));
       resetForm();
     },
     onError: () => {
-      toast.error("Failed to create payment method");
+      toast.error(t("Failed to create payment method"));
     },
   });
 
@@ -101,11 +103,11 @@ export default function PaymentMethods() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
-      toast.success("Payment method updated");
+      toast.success(t("Payment method updated"));
       resetForm();
     },
     onError: () => {
-      toast.error("Failed to update payment method");
+      toast.error(t("Failed to update payment method"));
     },
   });
 
@@ -116,10 +118,10 @@ export default function PaymentMethods() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
-      toast.success("Payment method deleted");
+      toast.success(t("Payment method deleted"));
     },
     onError: () => {
-      toast.error("Failed to delete payment method");
+      toast.error(t("Failed to delete payment method"));
     },
   });
 

@@ -154,7 +154,7 @@ const HeroSection = () => {
           <div className="absolute inset-0">
             <img
               src={slide.image_url}
-              alt={slide.title}
+              alt={t(slide.title)}
               loading={index === 0 ? "eager" : "lazy"}
               fetchPriority={index === 0 ? "high" : "auto"}
               className="absolute inset-0 w-full h-full object-cover"

@@ -442,7 +442,7 @@ const ProductsEnhanced = () => {
                                 onClick={(e) => { e.preventDefault(); setCurrentPage(pageNum as number); }}
                                 isActive={currentPage === pageNum}
                                 className="cursor-pointer"
-                                aria-label={`Go to page ${pageNum}`}
+                                aria-label={t("Go to page") + ` ${pageNum}`}
                               >
                                 {pageNum}
                               </PaginationLink>

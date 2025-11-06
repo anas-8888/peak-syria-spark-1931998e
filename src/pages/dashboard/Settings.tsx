@@ -11,11 +11,13 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Loader2 } from "lucide-react";
 
 const Settings = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminCheck();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   
@@ -67,7 +69,7 @@ const Settings = () => {
         if (import.meta.env.DEV) {
           console.error("Error loading profile:", error);
         }
-        toast.error("Failed to load profile");
+        toast.error(t("Failed to load profile"));
       } finally {
         setLoadingProfile(false);
       }
@@ -126,12 +128,12 @@ const Settings = () => {
 
       if (error) throw error;
 
-      toast.success("Profile updated successfully");
+      toast.success(t("Profile updated successfully"));
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error("Error updating profile:", error);
       }
-      toast.error("Failed to update profile");
+      toast.error(t("Failed to update profile"));
     } finally {
       setLoading(false);
     }
@@ -139,37 +141,37 @@ const Settings = () => {
 
   const handleUpdatePassword = async () => {
     if (!currentPassword) {
-      toast.error("Please enter your current password");
+      toast.error(t("Please enter your current password"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error("New passwords do not match");
+      toast.error(t("New passwords do not match"));
       return;
     }
 
     if (newPassword.length < 12) {
-      toast.error("Password must be at least 12 characters");
+      toast.error(t("Password must be at least 12 characters"));
       return;
     }
 
     if (!/[A-Z]/.test(newPassword)) {
-      toast.error("Password must contain at least one uppercase letter");
+      toast.error(t("Password must contain at least one uppercase letter"));
       return;
     }
 
     if (!/[a-z]/.test(newPassword)) {
-      toast.error("Password must contain at least one lowercase letter");
+      toast.error(t("Password must contain at least one lowercase letter"));
       return;
     }
 
     if (!/[0-9]/.test(newPassword)) {
-      toast.error("Password must contain at least one number");
+      toast.error(t("Password must contain at least one number"));
       return;
     }
 
     if (!/[^A-Za-z0-9]/.test(newPassword)) {
-      toast.error("Password must contain at least one special character");
+      toast.error(t("Password must contain at least one special character"));
       return;
     }
 
@@ -186,7 +188,7 @@ const Settings = () => {
       });
 
       if (signInError) {
-        toast.error("Current password is incorrect");
+        toast.error(t("Current password is incorrect"));
         setLoading(false);
         return;
       }
@@ -198,7 +200,7 @@ const Settings = () => {
 
       if (error) throw error;
 
-      toast.success("Password updated successfully. Please sign in again with your new password.");
+      toast.success(t("Password updated successfully. Please sign in again with your new password."));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -206,7 +208,7 @@ const Settings = () => {
       if (import.meta.env.DEV) {
         console.error("Error updating password:", error);
       }
-      toast.error("Failed to update password");
+      toast.error(t("Failed to update password"));
     } finally {
       setLoading(false);
     }
@@ -237,12 +239,12 @@ const Settings = () => {
 
       if (error) throw error;
 
-      toast.success("Store settings updated successfully");
+      toast.success(t("Store settings updated successfully"));
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error("Error updating store settings:", error);
       }
-      toast.error("Failed to update store settings");
+      toast.error(t("Failed to update store settings"));
     } finally {
       setLoading(false);
     }

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Search, Save, Plus, Languages, Filter, CheckCircle2, AlertCircle, Trash2, RefreshCw } from "lucide-react";
+import { Search, Save, Languages, Filter, CheckCircle2, AlertCircle, Trash2, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -21,17 +21,17 @@ type Translation = {
   updated_at: string;
 };
 
-type FilterType = "all" | "translated" | "untranslated" | "auto_detected";
+type FilterType = "all" | "translated" | "untranslated";
 
 const Translations = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [newEnglish, setNewEnglish] = useState("");
-  const [newArabic, setNewArabic] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
-  const [editingValue, setEditingValue] = useState<string>("");
+  // Store pending changes: { translationId: newArabicValue }
+  const [pendingChanges, setPendingChanges] = useState<Record<string, string>>({});
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationProgress, setTranslationProgress] = useState({ current: 0, total: 0 });
   const queryClient = useQueryClient();
-  const { refreshTranslations } = useLanguage();
+  const { t, refreshTranslations } = useLanguage();
 
   // Fetch translations from database
   const { data: translations = [], isLoading } = useQuery({
@@ -47,48 +47,66 @@ const Translations = () => {
     },
   });
 
-  // Update translation mutation
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, arabic_value }: { id: string; arabic_value: string }) => {
-      const { error } = await supabase
+  // Batch update translations mutation
+  const batchUpdateMutation = useMutation({
+    mutationFn: async (updates: Array<{ id: string; arabic_value: string }>) => {
+      // Update all translations in parallel
+      const updatePromises = updates.map(({ id, arabic_value }) =>
+        supabase
         .from("translations")
         .update({ 
           arabic_value, 
           is_auto_detected: false,
           updated_at: new Date().toISOString() 
         })
-        .eq("id", id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["translations"] });
-      refreshTranslations();
-      toast.success("Translation updated successfully");
-    },
-    onError: (error) => {
-      toast.error(`Failed to update: ${error.message}`);
-    },
-  });
+          .eq("id", id)
+      );
 
-  // Add translation mutation
-  const addMutation = useMutation({
-    mutationFn: async ({ english_key, arabic_value }: { english_key: string; arabic_value: string }) => {
-      const { error } = await supabase
-        .from("translations")
-        .insert({ english_key, arabic_value, is_auto_detected: false });
+      const results = await Promise.all(updatePromises);
       
-      if (error) throw error;
+      // Check for errors
+      const errors = results.filter(r => r.error);
+      if (errors.length > 0) {
+        throw new Error(`Failed to update ${errors.length} translation(s)`);
+      }
+      
+      // Return the updates for cache update
+      return updates;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["translations"] });
-      refreshTranslations();
-      setNewEnglish("");
-      setNewArabic("");
-      toast.success("Translation added successfully");
+    onSuccess: async (updates, variables) => {
+      // First, update the query cache directly for immediate UI update
+      queryClient.setQueryData(["translations"], (oldData: Translation[] | undefined) => {
+        if (!oldData) return oldData;
+        
+        const updatedData = oldData.map(translation => {
+          const update = updates.find(u => u.id === translation.id);
+          if (update) {
+            return {
+              ...translation,
+              arabic_value: update.arabic_value,
+              is_auto_detected: false,
+              updated_at: new Date().toISOString()
+            };
+          }
+          return translation;
+        });
+        
+        return updatedData;
+      });
+      
+      // Invalidate and refetch translations query to ensure consistency
+      await queryClient.invalidateQueries({ queryKey: ["translations"] });
+      await queryClient.refetchQueries({ queryKey: ["translations"] });
+      
+      // Wait for translations to refresh in context
+      await refreshTranslations();
+      
+      const savedCount = variables.length;
+      setPendingChanges({});
+      toast.success(t("Successfully updated") + ` ${savedCount} ` + t("translation(s)"));
     },
     onError: (error) => {
-      toast.error(`Failed to add: ${error.message}`);
+      toast.error(t("Failed to update") + ": " + error.message);
     },
   });
 
@@ -105,10 +123,10 @@ const Translations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["translations"] });
       refreshTranslations();
-      toast.success("Translation deleted successfully");
+      toast.success(t("Translation deleted successfully"));
     },
     onError: (error) => {
-      toast.error(`Failed to delete: ${error.message}`);
+      toast.error(t("Failed to delete") + ": " + error.message);
     },
   });
 
@@ -125,8 +143,6 @@ const Translations = () => {
       filtered = filtered.filter(isTranslated);
     } else if (filter === "untranslated") {
       filtered = filtered.filter(t => !isTranslated(t));
-    } else if (filter === "auto_detected") {
-      filtered = filtered.filter(t => t.is_auto_detected);
     }
     
     if (searchTerm) {
@@ -142,51 +158,189 @@ const Translations = () => {
 
   const stats = useMemo(() => {
     const translated = translations.filter(isTranslated).length;
-    const autoDetected = translations.filter(t => t.is_auto_detected).length;
     return { 
       total: translations.length, 
       translated, 
-      untranslated: translations.length - translated,
-      autoDetected 
+      untranslated: translations.length - translated
     };
   }, [translations]);
 
-  const handleStartEdit = (translation: Translation) => {
-    setEditingKey(translation.id);
-    setEditingValue(translation.arabic_value || "");
+  // Handle change in translation value
+  const handleTranslationChange = (id: string, value: string) => {
+    setPendingChanges(prev => ({
+      ...prev,
+      [id]: value
+    }));
   };
 
-  const handleSaveEdit = async (id: string) => {
-    if (!editingValue.trim()) {
-      toast.error("Translation cannot be empty");
-      return;
-    }
-    await updateMutation.mutateAsync({ id, arabic_value: editingValue });
-    setEditingKey(null);
-    setEditingValue("");
+  // Get current value for a translation (pending change or original)
+  const getTranslationValue = (translation: Translation): string => {
+    return pendingChanges[translation.id] !== undefined 
+      ? pendingChanges[translation.id] 
+      : translation.arabic_value;
   };
 
-  const handleAddNewTranslation = async () => {
-    if (!newEnglish.trim()) {
-      toast.error("English text is required");
-      return;
-    }
-
-    const exists = translations.find(t => t.english_key === newEnglish.trim());
-    if (exists) {
-      toast.error("This English text already exists");
-      return;
-    }
-
-    await addMutation.mutateAsync({
-      english_key: newEnglish.trim(),
-      arabic_value: newArabic.trim() || newEnglish.trim(),
-    });
+  // Check if translation has pending changes
+  const hasPendingChanges = (translation: Translation): boolean => {
+    if (pendingChanges[translation.id] === undefined) return false;
+    return pendingChanges[translation.id] !== translation.arabic_value;
   };
+
+  // Save all pending changes
+  const handleSaveAll = async () => {
+    const changesToSave = Object.entries(pendingChanges)
+      .filter(([id, value]) => {
+        const translation = translations.find(t => t.id === id);
+        return translation && value.trim() && value !== translation.arabic_value;
+      })
+      .map(([id, arabic_value]) => ({ id, arabic_value }));
+
+    if (changesToSave.length === 0) {
+      toast.info(t("No changes to save"));
+      return;
+    }
+
+    await batchUpdateMutation.mutateAsync(changesToSave);
+  };
+
+  // Cancel all pending changes
+  const handleCancelAll = () => {
+    setPendingChanges({});
+    toast.info(t("All changes cancelled"));
+  };
+
+  // Check if there are any pending changes
+  const hasAnyPendingChanges = Object.keys(pendingChanges).some(id => {
+    const translation = translations.find(t => t.id === id);
+    return translation && pendingChanges[id] !== translation.arabic_value;
+  });
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this translation?")) {
+    if (confirm(t("Are you sure you want to delete this translation?"))) {
       await deleteMutation.mutateAsync(id);
+    }
+  };
+
+  // Auto-translate function using MyMemory Translation API (free, no API key needed)
+  const translateText = async (text: string, retries = 3): Promise<string> => {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        // MyMemory Translation API - free, no API key required
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        const response = await fetch(
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ar`,
+          { 
+            signal: controller.signal,
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+            }
+          }
+        );
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.responseStatus === 200 && data.responseData?.translatedText) {
+          const translated = data.responseData.translatedText.trim();
+          // If translation is same as original, it might be an error
+          if (translated && translated !== text) {
+            return translated;
+          } else {
+            throw new Error("Translation returned same text");
+          }
+        } else {
+          throw new Error(`API Error: ${data.responseStatus || 'Unknown'}`);
+        }
+      } catch (error: any) {
+        console.error(`Translation attempt ${attempt + 1} failed for "${text}":`, error);
+        
+        if (attempt === retries - 1) {
+          // Last attempt failed, throw error
+          throw error;
+        }
+        
+        // Wait before retry (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+      }
+    }
+    
+    throw new Error("All translation attempts failed");
+  };
+
+  // Translate all untranslated items (only those visible in current filter)
+  const handleTranslateAll = async () => {
+    // Get untranslated items from the CURRENT filtered view (what user sees)
+    const untranslatedItems = filteredTranslations.filter(t => !isTranslated(t));
+    
+    if (untranslatedItems.length === 0) {
+      toast.info(t("No untranslated items to translate"));
+      return;
+    }
+
+    // Confirm with user
+    if (!confirm(t("Are you sure you want to translate") + ` ${untranslatedItems.length} ` + t("item(s)?"))) {
+      return;
+    }
+
+    setIsTranslating(true);
+    setTranslationProgress({ current: 0, total: untranslatedItems.length });
+    const translationsMap: Record<string, string> = {};
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      // Translate items one by one (with delay to avoid rate limiting)
+      for (let i = 0; i < untranslatedItems.length; i++) {
+        const item = untranslatedItems[i];
+        setTranslationProgress({ current: i + 1, total: untranslatedItems.length });
+        
+        try {
+          const translatedText = await translateText(item.english_key);
+          translationsMap[item.id] = translatedText;
+          successCount++;
+          
+          // Update pending changes immediately so user can see progress
+          setPendingChanges(prev => ({
+            ...prev,
+            [item.id]: translatedText
+          }));
+          
+          // Small delay to avoid rate limiting (200ms between requests)
+          if (i < untranslatedItems.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        } catch (error: any) {
+          console.error(`Failed to translate "${item.english_key}":`, error);
+          errorCount++;
+          // Continue with next item even if this one failed
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(t("Translated") + ` ${successCount} ` + t("item(s) successfully. Click \"Save All\" to save changes."));
+      }
+      
+      if (errorCount > 0) {
+        toast.warning(t("Failed to translate") + ` ${errorCount} ` + t("item(s). Please try again or translate manually."));
+      }
+      
+      if (successCount === 0 && errorCount > 0) {
+        toast.error(t("Translation failed. Please check your internet connection and try again."));
+      }
+    } catch (error: any) {
+      console.error("Translation process error:", error);
+      toast.error(t("An error occurred during translation: ") + error.message);
+    } finally {
+      setIsTranslating(false);
+      setTranslationProgress({ current: 0, total: 0 });
     }
   };
 
@@ -196,15 +350,15 @@ const Translations = () => {
       <div>
         <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
           <Languages className="h-8 w-8" />
-          Translations Management
+          {t("Translations Management")}
         </h1>
         <p className="text-muted-foreground">
-          All website text is automatically tracked. Translate any text from English to Arabic.
+          {t("All website text is automatically tracked. Translate any text from English to Arabic.")}
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -212,7 +366,7 @@ const Translations = () => {
                 <Languages className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Keys</p>
+                <p className="text-sm text-muted-foreground">{t("Total Keys")}</p>
                 <p className="text-2xl font-bold">{stats.total}</p>
               </div>
             </div>
@@ -225,7 +379,7 @@ const Translations = () => {
                 <CheckCircle2 className="h-6 w-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Translated</p>
+                <p className="text-sm text-muted-foreground">{t("Translated")}</p>
                 <p className="text-2xl font-bold text-green-600">{stats.translated}</p>
               </div>
             </div>
@@ -238,21 +392,8 @@ const Translations = () => {
                 <AlertCircle className="h-6 w-6 text-orange-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Untranslated</p>
+                <p className="text-sm text-muted-foreground">{t("Untranslated")}</p>
                 <p className="text-2xl font-bold text-orange-600">{stats.untranslated}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                <RefreshCw className="h-6 w-6 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Auto-Detected</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.autoDetected}</p>
               </div>
             </div>
           </CardContent>
@@ -261,46 +402,35 @@ const Translations = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Add New Translation</CardTitle>
-          <CardDescription>Manually add a new translation key</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-center justify-between">
             <div>
-              <Label htmlFor="new-english">English Text (Key)</Label>
-              <Input
-                id="new-english"
-                placeholder="e.g., Featured Collection"
-                value={newEnglish}
-                onChange={(e) => setNewEnglish(e.target.value)}
-              />
+              <CardTitle>{t("Translations")}</CardTitle>
+              <CardDescription>{t("Search and edit all translations")}</CardDescription>
             </div>
-            <div>
-              <Label htmlFor="new-arabic">Arabic Translation (Value)</Label>
-              <Input
-                id="new-arabic"
-                placeholder="e.g., المجموعة المميزة"
-                value={newArabic}
-                onChange={(e) => setNewArabic(e.target.value)}
-                dir="rtl"
-              />
+            {hasAnyPendingChanges && (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancelAll}
+                  disabled={batchUpdateMutation.isPending}
+                >
+                  {t("Cancel All")}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSaveAll}
+                  disabled={batchUpdateMutation.isPending}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {batchUpdateMutation.isPending ? t("Saving...") : `${t("Save All")} (${Object.keys(pendingChanges).filter(id => {
+                    const translation = translations.find(t => t.id === id);
+                    return translation && pendingChanges[id] !== translation.arabic_value;
+                  }).length})`}
+                </Button>
             </div>
+            )}
           </div>
-          <Button 
-            onClick={handleAddNewTranslation} 
-            className="w-full md:w-auto"
-            disabled={addMutation.isPending}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {addMutation.isPending ? "Adding..." : "Add Translation"}
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Translations</CardTitle>
-          <CardDescription>Search and edit all translations</CardDescription>
         </CardHeader>
         <CardContent>
           {/* Search and Filter */}
@@ -308,7 +438,7 @@ const Translations = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by English text or Arabic translation..."
+                placeholder={t("Search by English text or Arabic translation...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -316,14 +446,14 @@ const Translations = () => {
             </div>
             
             {/* Filter Buttons */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
               <Button
                 variant={filter === "all" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilter("all")}
               >
                 <Filter className="mr-2 h-4 w-4" />
-                All ({stats.total})
+                {t("All")} ({stats.total})
               </Button>
               <Button
                 variant={filter === "translated" ? "default" : "outline"}
@@ -331,7 +461,7 @@ const Translations = () => {
                 onClick={() => setFilter("translated")}
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
-                Translated ({stats.translated})
+                {t("Translated")} ({stats.translated})
               </Button>
               <Button
                 variant={filter === "untranslated" ? "default" : "outline"}
@@ -339,25 +469,32 @@ const Translations = () => {
                 onClick={() => setFilter("untranslated")}
               >
                 <AlertCircle className="mr-2 h-4 w-4" />
-                Untranslated ({stats.untranslated})
+                {t("Untranslated")} ({stats.untranslated})
               </Button>
+              {filter === "untranslated" && filteredTranslations.filter(t => !isTranslated(t)).length > 0 && (
               <Button
-                variant={filter === "auto_detected" ? "default" : "outline"}
+                  variant="default"
                 size="sm"
-                onClick={() => setFilter("auto_detected")}
+                  onClick={handleTranslateAll}
+                  disabled={isTranslating}
+                  className="ml-auto"
               >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Auto-Detected ({stats.autoDetected})
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {isTranslating 
+                    ? `${t("Translating...")} (${translationProgress.current}/${translationProgress.total})`
+                    : `${t("Translate All")} (${filteredTranslations.filter(t => !isTranslated(t)).length})`
+                  }
               </Button>
+              )}
             </div>
           </div>
 
           <div className="space-y-4 max-h-[600px] overflow-y-auto">
             {isLoading ? (
-              <p className="text-center text-muted-foreground py-8">Loading translations...</p>
+              <p className="text-center text-muted-foreground py-8">{t("Loading translations...")}</p>
             ) : filteredTranslations.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                No translations found matching your search
+                {t("No translations found matching your search")}
               </p>
             ) : (
               filteredTranslations.map((translation) => (
@@ -367,15 +504,15 @@ const Translations = () => {
                       <div className="flex-1 space-y-2">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <Label className="text-sm font-semibold">English</Label>
+                            <Label className="text-sm font-semibold">{t("English")}</Label>
                             {translation.is_auto_detected && (
                               <Badge variant="secondary" className="text-xs">
-                                Auto-detected
+                                {t("Auto-detected")}
                               </Badge>
                             )}
                             {!isTranslated(translation) && (
                               <Badge variant="destructive" className="text-xs">
-                                Not translated
+                                {t("Not translated")}
                               </Badge>
                             )}
                           </div>
@@ -383,53 +520,24 @@ const Translations = () => {
                         </div>
                         
                         <div>
-                          <Label className="text-sm font-semibold">Arabic</Label>
-                          {editingKey === translation.id ? (
+                          <Label className="text-sm font-semibold">{t("Arabic")}</Label>
                             <Textarea
-                              value={editingValue}
-                              onChange={(e) => setEditingValue(e.target.value)}
+                            value={getTranslationValue(translation)}
+                            onChange={(e) => handleTranslationChange(translation.id, e.target.value)}
                               dir="rtl"
                               className="mt-1"
                               rows={3}
+                            placeholder={t("Enter Arabic translation...")}
                             />
-                          ) : (
-                            <p className="text-sm mt-1" dir="rtl">
-                              {translation.arabic_value}
+                          {hasPendingChanges(translation) && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              * {t("Modified")}
                             </p>
                           )}
                         </div>
                       </div>
                       
                       <div className="flex gap-2">
-                        {editingKey === translation.id ? (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => handleSaveEdit(translation.id)}
-                              disabled={updateMutation.isPending}
-                            >
-                              <Save className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setEditingKey(null);
-                                setEditingValue("");
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleStartEdit(translation)}
-                            >
-                              Edit
-                            </Button>
                             <Button
                               size="sm"
                               variant="destructive"
@@ -438,8 +546,6 @@ const Translations = () => {
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
-                          </>
-                        )}
                       </div>
                     </div>
                   </div>

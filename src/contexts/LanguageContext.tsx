@@ -32,9 +32,11 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   // Load translations from database
   const loadTranslations = useCallback(async () => {
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from("translations")
-        .select("english_key, arabic_value");
+        .select("english_key, arabic_value")
+        .order("english_key", { ascending: true });
       
       if (error) throw error;
       
@@ -53,6 +55,8 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   // Refresh translations (exposed to context)
   const refreshTranslations = useCallback(async () => {
+    // Force reload by setting loading state first
+    setIsLoading(true);
     await loadTranslations();
   }, [loadTranslations]);
 
@@ -78,27 +82,56 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     pendingKeys.current.clear();
 
     try {
-      const records = keysToInsert.map(key => ({
+      // First, check which keys already exist in the database
+      const { data: existingTranslations, error: fetchError } = await supabase
+        .from("translations")
+        .select("english_key")
+        .in("english_key", keysToInsert);
+
+      if (fetchError) {
+        console.error("Error fetching existing translations:", fetchError);
+        return;
+      }
+
+      // Get all existing keys (regardless of translation status)
+      // We don't want to overwrite any existing keys, even if they're not translated yet
+      const existingKeys = new Set(
+        (existingTranslations || []).map(t => t.english_key)
+      );
+
+      // Only insert keys that don't exist at all
+      const keysToActuallyInsert = keysToInsert.filter(key => !existingKeys.has(key));
+
+      if (keysToActuallyInsert.length === 0) {
+        // All keys already exist and are translated, just reload
+        await loadTranslations();
+        return;
+      }
+
+      const records = keysToActuallyInsert.map(key => ({
         english_key: key,
         arabic_value: key, // Default to English until translated
         is_auto_detected: true,
         last_seen_at: new Date().toISOString()
       }));
 
+      // Use insert to add new keys only (we already filtered out existing translated keys)
+      // If there's a duplicate key error, we ignore it since it means the key already exists
       const { error } = await supabase
         .from("translations")
-        .upsert(records, { 
-          onConflict: "english_key",
-          ignoreDuplicates: false 
-        })
+        .insert(records)
         .select();
 
       if (error) {
-        console.error("Error inserting translations:", error);
-      } else {
-        // Reload translations after batch insert
-        await loadTranslations();
+        // If error is due to duplicate key, it's okay - the key already exists
+        // Only log other errors
+        if (!error.message.includes("duplicate") && !error.message.includes("unique")) {
+          console.error("Error inserting translations:", error);
+        }
       }
+      
+      // Always reload translations to get the latest state
+      await loadTranslations();
     } catch (error) {
       console.error("Error batch inserting translations:", error);
     }
@@ -149,8 +182,13 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
     const currentTranslations = translationsRef.current;
     
-    // Track if key doesn't exist
-    if (!currentTranslations[englishText] && !isLoading) {
+    // Check if translation exists and is actually translated (not just default English)
+    const hasTranslation = currentTranslations[englishText] && 
+                          currentTranslations[englishText].trim() && 
+                          currentTranslations[englishText] !== englishText;
+    
+    // Only track as missing if it doesn't exist or is not translated
+    if (!hasTranslation && !isLoading) {
       trackMissingTranslation(englishText);
     }
     

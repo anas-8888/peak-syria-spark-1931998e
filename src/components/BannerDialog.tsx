@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Banner {
@@ -44,6 +45,7 @@ export default function BannerDialog({
   onSave,
   maxPosition,
 }: BannerDialogProps) {
+  const { t } = useLanguage();
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState<Omit<Banner, "id">>({
     title: "",
@@ -96,9 +98,9 @@ export default function BannerDialog({
         .getPublicUrl(data.path);
 
       setFormData({ ...formData, image_url: publicUrl });
-      toast.success("Image uploaded successfully");
+      toast.success(t("Image uploaded successfully"));
     } catch (error) {
-      toast.error("Failed to upload image");
+      toast.error(t("Failed to upload image"));
     } finally {
       setUploading(false);
     }
@@ -106,7 +108,7 @@ export default function BannerDialog({
 
   const handleSave = async () => {
     if (!formData.title || !formData.image_url) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("Please fill in all required fields"));
       return;
     }
 
@@ -126,12 +128,12 @@ export default function BannerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{banner ? "Edit Banner" : "Create Banner"}</DialogTitle>
-          <DialogDescription>Configure your promotional banner</DialogDescription>
+          <DialogTitle>{banner ? t("Edit Banner") : t("Create Banner")}</DialogTitle>
+          <DialogDescription>{t("Configure your promotional banner")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
+            <Label htmlFor="title">{t("Title")} *</Label>
             <Input
               id="title"
               value={formData.title}
@@ -141,7 +143,7 @@ export default function BannerDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="subtitle">Subtitle</Label>
+            <Label htmlFor="subtitle">{t("Subtitle")}</Label>
             <Input
               id="subtitle"
               value={formData.subtitle || ""}
@@ -151,7 +153,7 @@ export default function BannerDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="image">Banner Image *</Label>
+            <Label htmlFor="image">{t("Banner Image")} *</Label>
             <div className="flex gap-2">
               <Input
                 id="image"
@@ -169,7 +171,7 @@ export default function BannerDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="link_url">Link URL</Label>
+              <Label htmlFor="link_url">{t("Link URL")}</Label>
               <Input
                 id="link_url"
                 value={formData.link_url || ""}
@@ -179,7 +181,7 @@ export default function BannerDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="link_text">Link Text</Label>
+              <Label htmlFor="link_text">{t("Link Text")}</Label>
               <Input
                 id="link_text"
                 value={formData.link_text}
@@ -191,7 +193,7 @@ export default function BannerDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="bg_color">Background Color</Label>
+              <Label htmlFor="bg_color">{t("Background Color")}</Label>
               <Input
                 id="bg_color"
                 type="color"
@@ -201,7 +203,7 @@ export default function BannerDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="text_color">Text Color</Label>
+              <Label htmlFor="text_color">{t("Text Color")}</Label>
               <Input
                 id="text_color"
                 type="color"
@@ -212,7 +214,7 @@ export default function BannerDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="display_type">Display Type</Label>
+            <Label htmlFor="display_type">{t("Display Type")}</Label>
             <Select
               value={formData.display_type}
               onValueChange={(value) => setFormData({ ...formData, display_type: value })}
@@ -221,9 +223,9 @@ export default function BannerDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="full-width">Full Width</SelectItem>
-                <SelectItem value="half-width">Half Width</SelectItem>
-                <SelectItem value="card">Card Style</SelectItem>
+                <SelectItem value="full-width">{t("Full Width")}</SelectItem>
+                <SelectItem value="half-width">{t("Half Width")}</SelectItem>
+                <SelectItem value="card">{t("Card Style")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -234,16 +236,16 @@ export default function BannerDialog({
               checked={formData.is_active}
               onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
             />
-            <Label htmlFor="is_active">Active</Label>
+            <Label htmlFor="is_active">{t("Active")}</Label>
           </div>
         </div>
 
         <div className="flex gap-2 justify-end">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={handleSave} disabled={!formData.title || !formData.image_url}>
-            {banner ? "Update" : "Create"} Banner
+            {banner ? t("Update") : t("Create")} {t("Banner")}
           </Button>
         </div>
       </DialogContent>

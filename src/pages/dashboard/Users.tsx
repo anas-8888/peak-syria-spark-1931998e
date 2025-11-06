@@ -43,6 +43,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Customer {
   id: string;
@@ -61,6 +62,7 @@ interface Customer {
 const Users = () => {
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
@@ -162,12 +164,12 @@ const Users = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("User updated successfully");
+      toast.success(t("User updated successfully"));
       setIsEditDialogOpen(false);
       resetForm();
     },
     onError: (error: any) => {
-      toast.error("Failed to update customer", {
+      toast.error(t("Failed to update customer"), {
         description: error.message,
       });
     },
@@ -181,10 +183,10 @@ const Users = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("User deleted successfully");
+      toast.success(t("User deleted successfully"));
     },
     onError: (error: any) => {
-      toast.error("Failed to delete customer", {
+      toast.error(t("Failed to delete customer"), {
         description: error.message,
       });
     },
@@ -226,13 +228,13 @@ const Users = () => {
   const handleDeleteClick = (id: string, customer: Customer) => {
     // Prevent deleting yourself
     if (currentUser && id === currentUser.id) {
-      toast.error("Cannot delete your own account");
+      toast.error(t("Cannot delete your own account"));
       return;
     }
     
     // Prevent deleting super admin
     if (customer.role?.name?.toLowerCase() === 'super admin') {
-      toast.error("Cannot delete super admin accounts");
+      toast.error(t("Cannot delete super admin accounts"));
       return;
     }
     
@@ -299,11 +301,11 @@ const Users = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("User created successfully");
+      toast.success(t("User created successfully"));
       resetNewUserForm();
     },
     onError: (error: any) => {
-      toast.error("Failed to create user", { description: error.message });
+      toast.error(t("Failed to create user"), { description: error.message });
     },
   });
 

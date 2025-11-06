@@ -134,7 +134,7 @@ const ProductCardEnhanced = ({
 
   const handleToggleFavorite = async () => {
     if (!user) {
-      toast.error("Please log in to add items to your wishlist");
+      toast.error(t("Please log in to add items to your wishlist"));
       navigate('/login');
       return;
     }
@@ -152,7 +152,7 @@ const ProductCardEnhanced = ({
 
         if (error) throw error;
         setIsFavorite(false);
-        toast.success("Removed from wishlist");
+        toast.success(t("Removed from wishlist"));
       } else {
         // Add to wishlist
         const { error } = await supabase
@@ -164,11 +164,11 @@ const ProductCardEnhanced = ({
 
         if (error) throw error;
         setIsFavorite(true);
-        toast.success("Added to wishlist");
+        toast.success(t("Added to wishlist"));
       }
     } catch (error) {
       console.error('Error toggling wishlist:', error);
-      toast.error("Failed to update wishlist");
+      toast.error(t("Failed to update wishlist"));
     } finally {
       setIsLoading(false);
     }
@@ -226,7 +226,7 @@ const ProductCardEnhanced = ({
                 className="w-5/6 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-150"
               >
                 <ShoppingCart className="mr-2 h-5 w-5" />
-                {t("product.addToCart")}
+                {t("Add to Cart")}
               </Button>
             </div>
           )}
@@ -251,12 +251,12 @@ const ProductCardEnhanced = ({
         {/* Product Info */}
         <div className={`space-y-1 sm:space-y-1.5 md:space-y-2 ${viewMode === "list" ? "flex-1 p-1.5 sm:p-2 md:p-4 lg:p-6 flex flex-col" : "p-2 sm:p-3 md:p-4"}`}>
           <div className={viewMode === "list" ? "flex-1" : ""}>
-            <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">{category}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">{t(category)}</p>
             <Link to={`/product/${id}`}>
               <h3 className={`font-semibold text-card-foreground hover:text-primary transition-colors ${
                 viewMode === "list" ? "text-sm sm:text-base md:text-lg mt-1 line-clamp-2" : "text-xs sm:text-base min-h-[2.5rem] sm:min-h-[3rem] line-clamp-2"
               }`}>
-                {name}
+                {t(name)}
               </h3>
             </Link>
             {targetGender && targetGender !== "both" && (
@@ -374,8 +374,8 @@ const ProductCardEnhanced = ({
             </div>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-muted-foreground uppercase">{category}</p>
-                <h2 className="text-2xl font-bold">{name}</h2>
+                <p className="text-sm text-muted-foreground uppercase">{t(category)}</p>
+                <h2 className="text-2xl font-bold">{t(name)}</h2>
                 {targetGender && targetGender !== "both" && (
                   <p className="text-sm text-muted-foreground mt-1">
                     {targetGender === "men" ? t("Men's") : t("Women's")}

@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
 
 type ContactMessage = {
@@ -36,6 +37,7 @@ type ContactMessage = {
 };
 
 const Messages = () => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -64,11 +66,11 @@ const Messages = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact-messages"] });
-      toast.success("Message deleted successfully");
+      toast.success(t("Message deleted successfully"));
       setDeleteId(null);
     },
     onError: () => {
-      toast.error("Failed to delete message");
+      toast.error(t("Failed to delete message"));
     },
   });
 

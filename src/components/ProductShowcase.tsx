@@ -167,7 +167,7 @@ const ProductShowcase = () => {
                           <div className="aspect-square overflow-hidden bg-background">
                             <img 
                               src={product.image_url || ""} 
-                              alt={product.name}
+                              alt={t(product.name)}
                               width="280"
                               height="280"
                               loading="lazy"
@@ -180,7 +180,7 @@ const ProductShowcase = () => {
 
                           {/* Product Info Overlay */}
                           <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                            <p className="text-white font-semibold text-sm truncate">{product.name}</p>
+                            <p className="text-white font-semibold text-sm truncate">{t(product.name)}</p>
                             <p className="text-white/90 text-sm font-bold">${product.price}</p>
                           </div>
 

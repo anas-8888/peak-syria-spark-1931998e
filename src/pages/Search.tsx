@@ -153,26 +153,53 @@ const Search = () => {
     },
   });
 
-  // Search and filter products
+  // Search and filter products (supports both English and Arabic)
   const searchProducts = (query: string) => {
     if (!query.trim()) return [];
     
     const lowerQuery = query.toLowerCase();
     return allProducts.filter((product) => {
-      const matchName = product.name.toLowerCase().includes(lowerQuery);
-      const matchCategory = product.category.toLowerCase().includes(lowerQuery);
-      const matchFlag = product.flag?.toLowerCase().includes(lowerQuery);
-      const matchColor = product.colors.some(c => c.toLowerCase().includes(lowerQuery));
-      const matchSize = product.sizes.some(s => s.toLowerCase().includes(lowerQuery));
-      const matchDescription = product.description?.toLowerCase().includes(lowerQuery);
+      // Search in English text
+      const matchNameEn = product.name.toLowerCase().includes(lowerQuery);
+      const matchCategoryEn = product.category.toLowerCase().includes(lowerQuery);
+      const matchFlagEn = product.flag?.toLowerCase().includes(lowerQuery);
+      const matchDescriptionEn = product.description?.toLowerCase().includes(lowerQuery);
       
-      return matchName || matchCategory || matchFlag || matchColor || matchSize || matchDescription;
+      // Search in Arabic translations
+      const translatedName = t(product.name).toLowerCase();
+      const translatedCategory = t(product.category).toLowerCase();
+      const translatedFlag = product.flag ? t(product.flag).toLowerCase() : '';
+      const translatedDescription = product.description ? t(product.description).toLowerCase() : '';
+      
+      const matchNameAr = translatedName.includes(lowerQuery);
+      const matchCategoryAr = translatedCategory.includes(lowerQuery);
+      const matchFlagAr = translatedFlag.includes(lowerQuery);
+      const matchDescriptionAr = translatedDescription.includes(lowerQuery);
+      
+      // Search in colors and sizes (both English and Arabic)
+      const matchColor = product.colors.some(c => {
+        const colorEn = c.toLowerCase();
+        const colorAr = t(c).toLowerCase();
+        return colorEn.includes(lowerQuery) || colorAr.includes(lowerQuery);
+      });
+      
+      const matchSize = product.sizes.some(s => {
+        const sizeEn = s.toLowerCase();
+        const sizeAr = t(s).toLowerCase();
+        return sizeEn.includes(lowerQuery) || sizeAr.includes(lowerQuery);
+      });
+      
+      return matchNameEn || matchNameAr || 
+             matchCategoryEn || matchCategoryAr || 
+             matchFlagEn || matchFlagAr || 
+             matchColor || matchSize || 
+             matchDescriptionEn || matchDescriptionAr;
     });
   };
 
   const results = searchQuery ? searchProducts(searchQuery) : [];
 
-  // Get suggestions for autocomplete
+  // Get suggestions for autocomplete (supports both English and Arabic)
   const getSuggestions = (query: string) => {
     if (!query.trim() || query.length < 2) return [];
     
@@ -180,18 +207,47 @@ const Search = () => {
     const suggestions = new Set<string>();
 
     allProducts.forEach((product) => {
+      // Check English name
       if (product.name.toLowerCase().includes(lowerQuery)) {
         suggestions.add(product.name);
       }
+      // Check Arabic translation of name
+      const translatedName = t(product.name).toLowerCase();
+      if (translatedName.includes(lowerQuery) && translatedName !== product.name.toLowerCase()) {
+        suggestions.add(t(product.name));
+      }
+      
+      // Check English category
       if (product.category.toLowerCase().includes(lowerQuery)) {
         suggestions.add(product.category);
       }
+      // Check Arabic translation of category
+      const translatedCategory = t(product.category).toLowerCase();
+      if (translatedCategory.includes(lowerQuery) && translatedCategory !== product.category.toLowerCase()) {
+        suggestions.add(t(product.category));
+      }
+      
+      // Check English flag
       if (product.flag?.toLowerCase().includes(lowerQuery)) {
         suggestions.add(product.flag);
       }
+      // Check Arabic translation of flag
+      if (product.flag) {
+        const translatedFlag = t(product.flag).toLowerCase();
+        if (translatedFlag.includes(lowerQuery) && translatedFlag !== product.flag.toLowerCase()) {
+          suggestions.add(t(product.flag));
+        }
+      }
+      
+      // Check colors (both English and Arabic)
       product.colors.forEach(color => {
-        if (color.toLowerCase().includes(lowerQuery)) {
+        const colorEn = color.toLowerCase();
+        const colorAr = t(color).toLowerCase();
+        if (colorEn.includes(lowerQuery)) {
           suggestions.add(color.charAt(0).toUpperCase() + color.slice(1));
+        }
+        if (colorAr.includes(lowerQuery) && colorAr !== colorEn) {
+          suggestions.add(t(color));
         }
       });
     });

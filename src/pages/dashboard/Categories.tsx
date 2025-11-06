@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, FolderTree, Search, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,6 +58,7 @@ interface Category {
 }
 
 const Categories = () => {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
@@ -111,9 +113,9 @@ const Categories = () => {
     if (!category) return "";
     
     if (category.parent_id) {
-      return getCategoryHierarchy(category.parent_id, level + 1) + " > " + category.name;
+      return getCategoryHierarchy(category.parent_id, level + 1) + " > " + t(category.name);
     }
-    return category.name;
+    return t(category.name);
   };
 
   // Get child categories count
@@ -157,12 +159,12 @@ const Categories = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
-      toast.success("Category added successfully");
+      toast.success(t("Category added successfully"));
       setIsAddDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast.error("Failed to add category: " + error.message);
+      toast.error(t("Failed to add category: ") + error.message);
     },
   });
 
@@ -205,12 +207,12 @@ const Categories = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
-      toast.success("Category updated successfully");
+      toast.success(t("Category updated successfully"));
       setIsEditDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast.error("Failed to update category: " + error.message);
+      toast.error(t("Failed to update category: ") + error.message);
     },
   });
 
@@ -222,10 +224,10 @@ const Categories = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
-      toast.success("Category deleted successfully");
+      toast.success(t("Category deleted successfully"));
     },
     onError: (error) => {
-      toast.error("Failed to delete category: " + error.message);
+      toast.error(t("Failed to delete category: ") + error.message);
     },
   });
 
@@ -237,11 +239,11 @@ const Categories = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
-      toast.success(`${selectedCategories.length} categories deleted successfully`);
+      toast.success(t(`${selectedCategories.length} categories deleted successfully`));
       setSelectedCategories([]);
     },
     onError: (error) => {
-      toast.error("Failed to delete categories: " + error.message);
+      toast.error(t("Failed to delete categories: ") + error.message);
     },
   });
 
@@ -467,7 +469,7 @@ const Categories = () => {
                       {category.image_url ? (
                         <img 
                           src={category.image_url} 
-                          alt={category.name}
+                          alt={t(category.name)}
                           className="w-12 h-12 object-cover rounded-md"
                         />
                       ) : (
@@ -481,11 +483,11 @@ const Categories = () => {
                         className="font-medium cursor-pointer hover:text-primary"
                         onClick={() => openPreviewDialog(category)}
                       >
-                        {category.name}
+                        {t(category.name)}
                       </span>
                     </TableCell>
                     <TableCell className="max-w-xs truncate">
-                      {category.description || "-"}
+                      {category.description ? t(category.description) : "-"}
                     </TableCell>
                     <TableCell>
                       {category.parent_id ? (
@@ -719,12 +721,12 @@ const Categories = () => {
             <div className="space-y-4">
               <div>
                 <Label className="text-muted-foreground">Name</Label>
-                <p className="text-lg font-semibold">{selectedCategory.name}</p>
+                <p className="text-lg font-semibold">{t(selectedCategory.name)}</p>
               </div>
               
               <div>
                 <Label className="text-muted-foreground">Description</Label>
-                <p className="text-sm">{selectedCategory.description || "No description"}</p>
+                <p className="text-sm">{selectedCategory.description ? t(selectedCategory.description) : t("No description")}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

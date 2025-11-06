@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ type Region = {
 };
 
 const Regions = () => {
+  const { t } = useLanguage();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRegion, setEditingRegion] = useState<Region | null>(null);
   const [deletingRegionId, setDeletingRegionId] = useState<string | null>(null);
@@ -69,12 +71,12 @@ const Regions = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["regions"] });
-      toast.success(editingRegion ? "Region updated" : "Region created");
+      toast.success(editingRegion ? t("Region updated") : t("Region created"));
       setIsDialogOpen(false);
       resetForm();
     },
     onError: () => {
-      toast.error("Failed to save region");
+      toast.error(t("Failed to save region"));
     },
   });
 
@@ -89,10 +91,10 @@ const Regions = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["regions"] });
-      toast.success("Region status updated");
+      toast.success(t("Region status updated"));
     },
     onError: () => {
-      toast.error("Failed to update region status");
+      toast.error(t("Failed to update region status"));
     },
   });
 
@@ -107,11 +109,11 @@ const Regions = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["regions"] });
-      toast.success("Region deleted");
+      toast.success(t("Region deleted"));
       setDeletingRegionId(null);
     },
     onError: () => {
-      toast.error("Failed to delete region");
+      toast.error(t("Failed to delete region"));
     },
   });
 

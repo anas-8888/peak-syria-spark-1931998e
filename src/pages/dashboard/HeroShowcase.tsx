@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Plus, Trash2, MoveUp, MoveDown, ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import PercentageLoader from "@/components/PercentageLoader";
 
 interface HeroShowcase {
@@ -37,6 +38,7 @@ interface ShowcaseProduct {
 }
 
 const HeroShowcase = () => {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [editingShowcase, setEditingShowcase] = useState<HeroShowcase | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
@@ -114,12 +116,12 @@ const HeroShowcase = () => {
         await supabase.from("showcase_products").insert(showcaseProducts);
       }
       queryClient.invalidateQueries({ queryKey: ["admin-hero-showcases"] });
-      toast.success("Hero showcase created successfully");
+      toast.success(t("Hero showcase created successfully"));
       setEditingShowcase(null);
       setSelectedProducts([]);
       setModalOpen(false);
     },
-    onError: () => toast.error("Failed to create hero showcase"),
+    onError: () => toast.error(t("Failed to create hero showcase")),
   });
 
   const updateMutation = useMutation({
@@ -147,10 +149,10 @@ const HeroShowcase = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-hero-showcases"] });
-      toast.success("Hero showcase updated successfully");
+      toast.success(t("Hero showcase updated successfully"));
       setModalOpen(false);
     },
-    onError: () => toast.error("Failed to update hero showcase"),
+    onError: () => toast.error(t("Failed to update hero showcase")),
   });
 
   const deleteMutation = useMutation({
@@ -160,9 +162,9 @@ const HeroShowcase = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-hero-showcases"] });
-      toast.success("Hero showcase deleted successfully");
+      toast.success(t("Hero showcase deleted successfully"));
     },
-    onError: () => toast.error("Failed to delete hero showcase"),
+    onError: () => toast.error(t("Failed to delete hero showcase")),
   });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,9 +188,9 @@ const HeroShowcase = () => {
       if (editingShowcase) {
         setEditingShowcase({ ...editingShowcase, hero_image_url: publicUrl });
       }
-      toast.success("Image uploaded successfully");
+      toast.success(t("Image uploaded successfully"));
     } catch (error) {
-      toast.error("Failed to upload image");
+      toast.error(t("Failed to upload image"));
     } finally {
       setUploading(false);
     }
@@ -342,7 +344,7 @@ const HeroShowcase = () => {
                         } else if (selectedProducts.length < 4) {
                           setSelectedProducts([...selectedProducts, product.id]);
                         } else {
-                          toast.error("Maximum 4 products allowed");
+                          toast.error(t("Maximum 4 products allowed"));
                         }
                       }}
                       className={`relative cursor-pointer border-2 rounded-lg p-2 transition-all hover:shadow-md ${

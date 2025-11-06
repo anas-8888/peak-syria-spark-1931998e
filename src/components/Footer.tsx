@@ -57,7 +57,7 @@ const Footer = () => {
                   PEAK Syria
                 </h3>
                 <p className="text-secondary-foreground/80 leading-relaxed text-xs sm:text-sm">
-                  {settings?.brand_description || 'Official distributor of PEAK sportswear in Syria. Premium quality, authentic products.'}
+                  {settings?.brand_description ? t(settings.brand_description) : t('Official distributor of PEAK sportswear in Syria. Premium quality, authentic products.')}
                 </p>
                 <div>
                   <h4 className="font-semibold text-xs sm:text-sm mb-1.5 sm:mb-3 text-secondary-foreground/90">{t("CONNECT WITH US")}</h4>
@@ -123,29 +123,11 @@ const Footer = () => {
                 </h4>
                 <ul className="space-y-0 sm:space-y-1 [&>li]:!my-0 sm:[&>li]:!my-0">
                   {categories && categories.length > 0 ? categories.slice(0, 5).map(category => <li key={category.id}>
-                        <Link to={`/category/${category.id}`} className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
+                        <Link to={`/categories/${category.id}`} className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
                           <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                          {category.name}
+                          {t(category.name)}
                         </Link>
-                      </li>) : <>
-                      <li>
-                        <Link to="/products?category=basketball" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
-                          <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                          Basketball
-                        </Link>
-                      </li>
-                      <li>
-                        <Link to="/products?category=running" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
-                          <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                          Running
-                        </Link>
-                      </li>
-                      <li>
-                        <Link to="/products?category=apparel" className="group text-secondary-foreground/80 hover:text-primary transition-all duration-300 inline-flex sm:flex items-center gap-1 sm:gap-2 text-sm sm:text-sm">
-                          <span className="w-0 h-0.5 bg-primary group-hover:w-3 transition-all duration-300"></span>
-                          Apparel
-                        </Link>
-                      </li>
+                      </li>) : <> 
                     </>}
                 </ul>
               </div>
@@ -223,7 +205,7 @@ const Footer = () => {
             <div className="flex flex-col md:flex-row justify-between items-center gap-3 md:gap-4 text-secondary-foreground/70">
               <div className="flex flex-col items-center md:items-start gap-3 w-full md:w-auto">
                 <p className="font-semibold text-center md:text-left text-xs sm:text-sm">
-                  &copy; {new Date().getFullYear()} PEAK Syria. All rights reserved.
+                  &copy; {new Date().getFullYear()} PEAK Syria. {t("All rights reserved.")}
                 </p>
                 <div className="text-[11px] sm:text-xs">
                   <Link to="/terms" className="hover:text-primary transition-colors inline">{t("Terms")}</Link>
@@ -234,7 +216,7 @@ const Footer = () => {
                 </div>
               </div>
               <p className="text-[11px] sm:text-xs text-center md:text-right">
-                Developed by{" "}
+                {t("Developed by")}{" "}
                 <a href="https://nexa-group.net" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/90 transition-all duration-300 font-semibold relative inline-block group">
                   NEXA GROUP
                   <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300"></span>

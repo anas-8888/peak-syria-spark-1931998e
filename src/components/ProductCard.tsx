@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 
 interface ProductCardProps {
@@ -15,6 +16,7 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardProps) => {
+  const { t } = useLanguage();
   const { addToCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -30,7 +32,7 @@ const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardPro
       <div className="relative aspect-square overflow-hidden bg-muted">
         <img
           src={image}
-          alt={name}
+          alt={t(name)}
           width="280"
           height="280"
           loading="lazy"
@@ -60,7 +62,7 @@ const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardPro
       {/* Product Info */}
       <div className="p-4">
         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{category}</p>
-        <h3 className="font-semibold text-card-foreground mb-2 line-clamp-1">{name}</h3>
+        <h3 className="font-semibold text-card-foreground mb-2 line-clamp-1">{t(name)}</h3>
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-primary">{price.toLocaleString()} SYP</span>
           <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10" onClick={handleAddToCart}>

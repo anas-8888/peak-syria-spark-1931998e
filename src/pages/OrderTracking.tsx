@@ -666,7 +666,7 @@ const OrderTracking = () => {
                           <div key={item.id} className="flex items-center gap-4">
                             <img
                               src={derivedImage}
-                              alt={item.products.name}
+                              alt={t(item.products.name)}
                               className="h-20 w-20 object-cover rounded-lg bg-muted"
                               loading="lazy"
                               width={80}
@@ -679,7 +679,7 @@ const OrderTracking = () => {
                               }}
                             />
                             <div className="flex-1">
-                              <h4 className="font-semibold">{item.products.name}</h4>
+                              <h4 className="font-semibold">{t(item.products.name)}</h4>
                               {(item.selected_color || item.selected_size) && (
                                 <p className="text-sm text-muted-foreground">
                                   {item.selected_color && <span>Color: {item.selected_color}</span>}

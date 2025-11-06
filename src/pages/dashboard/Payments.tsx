@@ -29,6 +29,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
 
 type Payment = {
@@ -42,6 +43,7 @@ type Payment = {
 };
 
 const Payments = () => {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -71,11 +73,11 @@ const Payments = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payments"] });
-      toast.success("Payment status updated successfully");
+      toast.success(t("Payment status updated successfully"));
       setEditDialogOpen(false);
     },
     onError: () => {
-      toast.error("Failed to update payment status");
+      toast.error(t("Failed to update payment status"));
     },
   });
 

@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Plus, Edit, Trash2, Image as ImageIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
@@ -42,6 +43,7 @@ type HeroSlide = {
 };
 
 const HeroSlides = () => {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSlide, setEditingSlide] = useState<HeroSlide | null>(null);
@@ -125,12 +127,12 @@ const HeroSlides = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["hero-slides"] });
-      toast.success(editingSlide ? "Slide updated successfully" : "Slide created successfully");
+      toast.success(editingSlide ? t("Slide updated successfully") : t("Slide created successfully"));
       resetForm();
       setIsDialogOpen(false);
     },
     onError: (error) => {
-      toast.error("Error saving slide: " + error.message);
+      toast.error(t("Error saving slide: ") + error.message);
     },
   });
 
@@ -146,11 +148,11 @@ const HeroSlides = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["hero-slides"] });
-      toast.success("Slide deleted successfully");
+      toast.success(t("Slide deleted successfully"));
       setDeletingSlideId(null);
     },
     onError: (error) => {
-      toast.error("Error deleting slide: " + error.message);
+      toast.error(t("Error deleting slide: ") + error.message);
     },
   });
 

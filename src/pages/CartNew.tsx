@@ -214,14 +214,14 @@ export default function CartNew() {
         }
       }
 
-      toast.error("Invalid discount code", {
-        description: "The code you entered is not valid or has expired.",
+      toast.error(t("Invalid discount code"), {
+        description: t("The code you entered is not valid or has expired."),
         duration: 4000,
       });
       return { is_valid: false };
     } catch (error: any) {
       console.error("Discount validation error:", error);
-      toast.error(error.message || "Error validating discount");
+      toast.error(error.message || t("Error validating discount"));
       return { is_valid: false };
     }
   };
@@ -229,8 +229,8 @@ export default function CartNew() {
   const handleApplyDiscount = async () => {
     const code = discountCode.trim();
     if (!code) {
-      toast.error("Please enter a discount code");
-      setDiscountFeedback({ type: 'error', message: 'Please enter a discount code' });
+      toast.error(t("Please enter a discount code"));
+      setDiscountFeedback({ type: 'error', message: t('Please enter a discount code') });
       return;
     }
 
@@ -277,7 +277,7 @@ export default function CartNew() {
     localStorage.removeItem("appliedCartDiscountAmount");
     localStorage.removeItem("selectedAutoDiscountId");
     localStorage.removeItem("manualDiscountCode");
-    toast.success("Discount removed");
+    toast.success(t("Discount removed"));
   };
 
   const handleRemoveAutoDiscounts = () => {
@@ -290,7 +290,7 @@ export default function CartNew() {
     localStorage.removeItem("appliedCartDiscounts");
     localStorage.removeItem("appliedCartDiscountAmount");
     localStorage.removeItem("selectedAutoDiscountId");
-    toast.success("Automatic discounts removed. You can now apply a discount code.");
+    toast.success(t("Automatic discounts removed. You can now apply a discount code."));
   };
 
   const handleApplySelectedDiscount = async (discountId: string) => {
@@ -324,7 +324,7 @@ export default function CartNew() {
       }
 
       if (!meetsMinimum || !meetsQuantity || !meetsScope) {
-        toast.error("You no longer qualify for this discount");
+        toast.error(t("You no longer qualify for this discount"));
         return;
       }
 
@@ -374,17 +374,17 @@ export default function CartNew() {
       localStorage.removeItem("manualDiscountCode");
       localStorage.removeItem("appliedCartDiscount");
       
-      toast.success(`${discount.name} applied! You save ${formatPrice(discountValue)}`);
+      toast.success(t(`${discount.name} applied! You save ${formatPrice(discountValue)}`));
       setShowingAvailableDiscounts(false);
     } catch (error) {
       console.error("Error applying discount:", error);
-      toast.error("Failed to apply discount");
+      toast.error(t("Failed to apply discount"));
     }
   };
 
   const handleCheckAvailableDiscounts = async () => {
     if (cartItems.length === 0) {
-      toast.error("Add items to your cart first");
+      toast.error(t("Add items to your cart first"));
       return;
     }
 
@@ -404,7 +404,7 @@ export default function CartNew() {
 
       if (!data || data.length === 0) {
         setAvailableAutoDiscounts([]);
-        toast.info("No automatic discounts available at the moment");
+        toast.info(t("No automatic discounts available at the moment"));
         return;
       }
 
@@ -482,11 +482,11 @@ export default function CartNew() {
       setAvailableAutoDiscounts(availableDiscounts);
       
       if (availableDiscounts.length === 0) {
-        toast.info("No automatic discounts available");
+        toast.info(t("No automatic discounts available"));
       }
     } catch (error) {
       console.error("Error checking available discounts:", error);
-      toast.error("Failed to load available discounts");
+      toast.error(t("Failed to load available discounts"));
     } finally {
       setCheckingAutoDiscounts(false);
     }
@@ -517,7 +517,7 @@ export default function CartNew() {
           setDiscountAmount(0);
           setSelectedAutoDiscountId(null);
           localStorage.removeItem("selectedAutoDiscountId");
-          toast.error("Your selected discount is no longer available");
+          toast.error(t("Your selected discount is no longer available"));
           return;
         }
 
@@ -742,7 +742,7 @@ export default function CartNew() {
         if (currentDiscountIds !== lastAppliedDiscountIds.current) {
           lastAppliedDiscountIds.current = currentDiscountIds;
           const discountNames = finalDiscounts.map(d => d.name).join(" + ");
-          toast.success(`${discountNames} applied! You save ${formatPrice(totalDiscount)}`);
+          toast.success(t(`${discountNames} applied! You save ${formatPrice(totalDiscount)}`));
         }
       } else {
         // No applicable discounts, clear if we had some before
@@ -920,7 +920,7 @@ export default function CartNew() {
           setDiscountCode("");
           localStorage.removeItem("appliedCartDiscount");
           localStorage.removeItem("manualDiscountCode");
-          toast.error("Your discount code is no longer valid for this cart");
+          toast.error(t("Your discount code is no longer valid for this cart"));
         }
       };
       revalidateManualCode();
@@ -1009,7 +1009,7 @@ export default function CartNew() {
                   <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
                     <img
                       src={item.product.image_url || '/placeholder.svg'}
-                      alt={item.product.name}
+                      alt={t(item.product.name)}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.src = '/placeholder.svg';
@@ -1021,7 +1021,7 @@ export default function CartNew() {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h3 className="font-semibold text-lg truncate">{item.product.name}</h3>
+                        <h3 className="font-semibold text-lg truncate">{t(item.product.name)}</h3>
                         {(item.selected_color || item.selected_size) && (
                           <p className="text-xs text-muted-foreground mb-1">
                             {item.selected_color && <span>{t("Color")}: {item.selected_color}</span>}

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from './ui/switch';
 import { Trash2, Plus, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProductVariantManagerProps {
   productId: string;
@@ -37,6 +38,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
   availableSizes,
   onSave 
 }, ref) => {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [unifiedPricing, setUnifiedPricing] = useState(false);
   const [unifiedPrice, setUnifiedPrice] = useState<number>(0);
@@ -142,11 +144,11 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
     mutationFn: async () => {
       // Validate that we have data to save
       if (!mainPrice || mainPrice <= 0) {
-        throw new Error('Please enter a valid main price');
+        throw new Error(t('Please enter a valid main price'));
       }
       
       if (!totalStock || totalStock < 0) {
-        throw new Error('Please enter a valid total stock');
+        throw new Error(t('Please enter a valid total stock'));
       }
 
       // Auto-generate variants if using unified pricing
@@ -176,7 +178,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
         const remainingStock = totalStock - manualStock;
 
         if (remainingStock < 0) {
-          throw new Error(`Manual variants total stock (${manualStock}) exceeds product total stock (${totalStock}). Please adjust variant stocks.`);
+          throw new Error(t('Manual variants total stock') + ` (${manualStock}) ` + t('exceeds product total stock') + ` (${totalStock}). ` + t('Please adjust variant stocks.'));
         }
 
         // Get all possible color-size combinations
@@ -200,10 +202,10 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
         // If there's remaining stock, we need available combinations to distribute it
         if (remainingStock > 0 && availableCombinations.length === 0) {
           throw new Error(
-            `You have ${remainingStock} units of remaining stock but no available color-size combinations left. ` +
-            `Total possible combinations: ${allCombinations.length}, Already used: ${variants.length}. ` +
-            `Please either increase manual variant stocks to match total stock (${totalStock}), ` +
-            `reduce total stock to ${manualStock}, or add more color/size options to the product.`
+            t('You have') + ` ${remainingStock} ` + t('units of remaining stock but no available color-size combinations left.') + ` ` +
+            t('Total possible combinations') + `: ${allCombinations.length}, ` + t('Already used') + `: ${variants.length}. ` +
+            t('Please either increase manual variant stocks to match total stock') + ` (${totalStock}), ` +
+            t('reduce total stock to') + ` ${manualStock}, ` + t('or add more color/size options to the product.')
           );
         }
 
@@ -263,13 +265,13 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
       }
     },
     onSuccess: () => {
-      toast.success('Variants saved successfully');
+      toast.success(t('Variants saved successfully'));
       queryClient.invalidateQueries({ queryKey: ['product-variants', productId] });
       queryClient.invalidateQueries({ queryKey: ['product', productId] });
       if (onSave) onSave();
     },
     onError: (error) => {
-      toast.error('Failed to save variants: ' + error.message);
+      toast.error(t('Failed to save variants') + ': ' + error.message);
     },
   });
 
@@ -306,42 +308,42 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
     }
   }));
 
-  if (isLoading) return <div>Loading variants...</div>;
+  if (isLoading) return <div>{t('Loading variants...')}</div>;
 
   return (
     <div className="space-y-6">
       {/* Main Price and Total Stock - Always shown */}
       <Card>
         <CardHeader>
-          <CardTitle>Base Product Settings</CardTitle>
+          <CardTitle>{t('Base Product Settings')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="main-price">Main Price (USD) *</Label>
+              <Label htmlFor="main-price">{t('Main Price (USD)')} *</Label>
               <Input
                 id="main-price"
                 type="number"
                 step="0.01"
                 value={mainPrice}
                 onChange={(e) => setMainPrice(parseFloat(e.target.value) || 0)}
-                placeholder="Enter main price"
+                placeholder={t('Enter main price')}
               />
               <p className="text-xs text-muted-foreground">
-                Used for variants not explicitly added below
+                {t('Used for variants not explicitly added below')}
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="total-stock">Total Stock *</Label>
+              <Label htmlFor="total-stock">{t('Total Stock')} *</Label>
               <Input
                 id="total-stock"
                 type="number"
                 value={totalStock}
                 onChange={(e) => setTotalStock(parseInt(e.target.value) || 0)}
-                placeholder="Enter total stock"
+                placeholder={t('Enter total stock')}
               />
               <p className="text-xs text-muted-foreground">
-                Total available stock across all variants
+                {t('Total available stock across all variants')}
               </p>
             </div>
           </div>
@@ -352,10 +354,10 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
       <div className="flex items-center justify-between p-4 border rounded-lg">
         <div className="space-y-0.5">
           <Label htmlFor="unified-pricing" className="text-base">
-            Use Single Price for All Variants
+            {t('Use Single Price for All Variants')}
           </Label>
           <p className="text-sm text-muted-foreground">
-            Apply one price to all {colors?.length || 0} colors × {availableSizes.length} sizes = {(colors?.length || 0) * availableSizes.length} variants
+            {t('Apply one price to all')} {colors?.length || 0} {t('colors')} × {availableSizes.length} {t('sizes')} = {(colors?.length || 0) * availableSizes.length} {t('variants')}
           </p>
         </div>
         <Switch
@@ -369,25 +371,25 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
       {unifiedPricing && (
         <Card>
           <CardHeader>
-            <CardTitle>Offer Price (Optional)</CardTitle>
+            <CardTitle>{t('Offer Price (Optional)')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="offer-price">Offer Price (USD)</Label>
+              <Label htmlFor="offer-price">{t('Offer Price (USD)')}</Label>
               <Input
                 id="offer-price"
                 type="number"
                 step="0.01"
                 value={offerPrice || ''}
                 onChange={(e) => setOfferPrice(e.target.value ? parseFloat(e.target.value) : null)}
-                placeholder="Enter offer price (must be less than main price)"
+                placeholder={t('Enter offer price (must be less than main price)')}
               />
               <p className="text-xs text-muted-foreground">
-                If set, customers will see the main price with a strikethrough and this offer price will be used
+                {t('If set, customers will see the main price with a strikethrough and this offer price will be used')}
               </p>
               {offerPrice && offerPrice >= mainPrice && (
                 <p className="text-xs text-destructive">
-                  Offer price must be less than main price (${mainPrice})
+                  {t('Offer price must be less than main price')} (${mainPrice})
                 </p>
               )}
             </div>
@@ -399,7 +401,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
       {unifiedPricing && (
         <div className="p-4 bg-muted rounded-lg">
           <p className="text-sm text-muted-foreground">
-            Main Price (${mainPrice}){offerPrice && offerPrice < mainPrice ? ` → Offer Price ($${offerPrice})` : ''} and Total Stock ({totalStock}) will be applied to all {(colors?.length || 0) * availableSizes.length} variant combinations.
+            {t('Main Price')} (${mainPrice}){offerPrice && offerPrice < mainPrice ? ` → ${t('Offer Price')} ($${offerPrice})` : ''} {t('and')} {t('Total Stock')} ({totalStock}) {t('will be applied to all')} {(colors?.length || 0) * availableSizes.length} {t('variant combinations.')}
           </p>
         </div>
       )}
@@ -408,16 +410,16 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
       {!unifiedPricing && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label className="text-base">Manual Variants</Label>
+            <Label className="text-base">{t('Manual Variants')}</Label>
             <Button onClick={addVariant} size="sm">
               <Plus className="h-4 w-4 mr-2" />
-              Add Variant
+              {t('Add Variant')}
             </Button>
           </div>
 
           {variants.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-8">
-              No variants added yet. Click "Add Variant" to create custom price variants.
+              {t('No variants added yet. Click "Add Variant" to create custom price variants.')}
             </p>
           )}
 
@@ -428,7 +430,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
               <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-3">
                 {/* Color */}
                 <div className="space-y-2">
-                  <Label>Color</Label>
+                  <Label>{t('Color')}</Label>
                   <Select
                     value={variant.color_id}
                     onValueChange={(value) => updateVariant(index, 'color_id', value)}
@@ -444,7 +446,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
                             {selectedColor.name}
                           </div>
                         ) : (
-                          "Select color"
+                          t("Select color")
                         )}
                       </SelectValue>
                     </SelectTrigger>
@@ -471,13 +473,13 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
 
                 {/* Size */}
                 <div className="space-y-2">
-                  <Label>Size</Label>
+                  <Label>{t('Size')}</Label>
                   <Select
                     value={variant.size}
                     onValueChange={(value) => updateVariant(index, 'size', value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select size" />
+                      <SelectValue placeholder={t("Select size")} />
                     </SelectTrigger>
                     <SelectContent>
                       {availableSizes.filter(size => {
@@ -499,7 +501,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
                 {/* Price */}
                 {!unifiedPricing && (
                   <div className="space-y-2">
-                    <Label>Price</Label>
+                    <Label>{t('Price')}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -512,7 +514,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
 
                 {/* Stock */}
                 <div className="space-y-2">
-                  <Label>Stock</Label>
+                  <Label>{t('Stock')}</Label>
                   <Input
                     type="number"
                     value={variant.stock_quantity}
@@ -523,7 +525,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
 
                 {/* Active Toggle */}
                 <div className="space-y-2">
-                  <Label>Active</Label>
+                  <Label>{t('Active')}</Label>
                   <Switch
                     checked={variant.is_active}
                     onCheckedChange={(checked) => updateVariant(index, 'is_active', checked)}
@@ -548,27 +550,27 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
 
       {/* Summary */}
       <div className="p-4 bg-muted rounded-lg space-y-2">
-        <h4 className="font-medium">Variants Summary</h4>
+        <h4 className="font-medium">{t('Variants Summary')}</h4>
         {unifiedPricing ? (
           <>
             <p className="text-sm text-muted-foreground">
-              Unified pricing enabled: {(colors?.length || 0) * availableSizes.length} variants will be created
+              {t('Unified pricing enabled')}: {(colors?.length || 0) * availableSizes.length} {t('variants will be created')}
             </p>
             <p className="text-sm text-muted-foreground">
-              Colors: {colors?.length || 0} | Sizes: {availableSizes.length}
+              {t('Colors')}: {colors?.length || 0} | {t('Sizes')}: {availableSizes.length}
             </p>
             <p className="text-sm text-muted-foreground">
-              Price: ${mainPrice || 0} | Stock per variant: {Math.floor(totalStock / ((colors?.length || 0) * availableSizes.length)) || 0}
+              {t('Price')}: ${mainPrice || 0} | {t('Stock per variant')}: {Math.floor(totalStock / ((colors?.length || 0) * availableSizes.length)) || 0}
             </p>
           </>
         ) : (
           <>
             <p className="text-sm text-muted-foreground">
-              Manual variants: {variants.length}
+              {t('Manual variants')}: {variants.length}
             </p>
             {variants.length > 0 && product?.min_price && product?.max_price && (
               <p className="text-sm text-muted-foreground">
-                Price range: ${product.min_price} - ${product.max_price}
+                {t('Price range')}: ${product.min_price} - ${product.max_price}
               </p>
             )}
           </>

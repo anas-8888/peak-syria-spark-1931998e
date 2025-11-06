@@ -5,40 +5,42 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { X, Package, Truck, CheckCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const statusConfig = {
+const getStatusConfig = (t: (text: string) => string) => ({
   pending: {
     icon: Clock,
-    label: "Processing",
+    label: t("Processing"),
     bgColor: "bg-yellow-500/10",
     borderColor: "border-yellow-500/20",
     textColor: "text-yellow-700 dark:text-yellow-400",
   },
   processing: {
     icon: Package,
-    label: "Processing",
+    label: t("Processing"),
     bgColor: "bg-blue-500/10",
     borderColor: "border-blue-500/20",
     textColor: "text-blue-700 dark:text-blue-400",
   },
   shipped: {
     icon: Truck,
-    label: "Shipped",
+    label: t("Shipped"),
     bgColor: "bg-purple-500/10",
     borderColor: "border-purple-500/20",
     textColor: "text-purple-700 dark:text-purple-400",
   },
   delivered: {
     icon: CheckCircle,
-    label: "Delivered",
+    label: t("Delivered"),
     bgColor: "bg-green-500/10",
     borderColor: "border-green-500/20",
     textColor: "text-green-700 dark:text-green-400",
   },
-};
+});
 
 export const OrderStatusBanner = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [dismissed, setDismissed] = useState(false);
 
   // Fetch user's latest order that hasn't been confirmed as received
@@ -71,6 +73,7 @@ export const OrderStatusBanner = () => {
     return null;
   }
 
+  const statusConfig = getStatusConfig(t);
   const config = statusConfig[latestOrder.status as keyof typeof statusConfig] || statusConfig.pending;
   const Icon = config.icon;
 
@@ -86,7 +89,7 @@ export const OrderStatusBanner = () => {
               {config.label}
             </p>
             <p className="text-[10px] text-muted-foreground truncate">
-              Order #{latestOrder.id.slice(0, 8)}
+              {t("Order")} #{latestOrder.id.slice(0, 8)}
             </p>
           </div>
           <Button
@@ -96,12 +99,12 @@ export const OrderStatusBanner = () => {
             className="h-6 w-6 p-0 hover:bg-background/50 -mt-1"
           >
             <X className="h-3 w-3" />
-            <span className="sr-only">Dismiss</span>
+            <span className="sr-only">{t("Dismiss")}</span>
           </Button>
         </div>
         <Link to={`/order-tracking?orderId=${latestOrder.id}`}>
           <Button variant="outline" size="sm" className="w-full text-xs h-7">
-            Track Order
+            {t("Track Order")}
           </Button>
         </Link>
       </div>

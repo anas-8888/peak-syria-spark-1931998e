@@ -30,6 +30,7 @@ import { DiscountForm, DiscountFormData } from "@/components/DiscountForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
@@ -60,6 +61,7 @@ interface Discount {
 }
 
 const Discounts = () => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -154,7 +156,7 @@ const Discounts = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["discounts"] });
-      toast.success("Discount created successfully");
+      toast.success(t("Discount created successfully"));
       setIsCreateDialogOpen(false);
     },
     onError: (error: any) => {
@@ -232,7 +234,7 @@ const Discounts = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["discounts"] });
-      toast.success("Discount updated successfully");
+      toast.success(t("Discount updated successfully"));
       setEditingDiscount(null);
     },
     onError: (error: any) => {
@@ -248,7 +250,7 @@ const Discounts = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["discounts"] });
-      toast.success("Discount deleted successfully");
+      toast.success(t("Discount deleted successfully"));
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to delete discount");
@@ -266,7 +268,7 @@ const Discounts = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["discounts"] });
-      toast.success("Status updated");
+      toast.success(t("Status updated"));
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to update status");
@@ -294,7 +296,7 @@ const Discounts = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["discounts"] });
       queryClient.invalidateQueries({ queryKey: ["banner-discount"] });
-      toast.success("Banner visibility updated");
+      toast.success(t("Banner visibility updated"));
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to update banner visibility");

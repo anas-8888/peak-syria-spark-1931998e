@@ -8,7 +8,6 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import PromoBanner from "@/components/PromoBanner";
 import PercentageLoader from "@/components/PercentageLoader";
 import { OrderStatusBanner } from "@/components/OrderStatusBanner";
-import LanguageToggle from "@/components/LanguageToggle";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, TrendingUp, Zap, Shield } from "lucide-react";
@@ -124,7 +123,7 @@ const Index = () => {
       return (data || []).map(category => ({
         id: category.id,
         name: category.name,
-        description: category.description || `Explore our ${category.name.toLowerCase()} collection`,
+        description: category.description || t(`Explore our ${category.name.toLowerCase()} collection`),
         path: category.name.toLowerCase(),
         icon: TrendingUp,
         hasChildren: categoriesWithChildren.has(category.id),
@@ -134,7 +133,7 @@ const Index = () => {
   });
 
   if (isLoading) {
-    return <PercentageLoader message="Loading homepage..." />;
+    return <PercentageLoader message={t("Loading homepage...")} />;
   }
 
   return (
@@ -142,10 +141,6 @@ const Index = () => {
       <PromoBanner />
       <Navbar />
       <OrderStatusBanner />
-      {/* Language Toggle Button */}
-      <div className="fixed bottom-20 right-4 z-50">
-        <LanguageToggle />
-      </div>
       <HeroSection />
       <WhatsAppButton />
 
@@ -267,14 +262,14 @@ const Index = () => {
                       key={category.id}
                       to={category.hasChildren ? `/categories/${category.id}` : `/products?category=${category.path}`}
                       style={{ animationDelay: `${index * 150}ms` }}
-                      className="group bg-card rounded-lg shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fade-in overflow-hidden w-[200px] sm:w-[280px] md:w-[320px] flex-shrink-0"
+                      className="group bg-card rounded-lg shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fade-in overflow-hidden w-[200px] sm:w-[280px] md:w-[280px] flex-shrink-0"
                     >
                       {/* Category Image */}
                       {category.image_url ? (
-                        <div className="h-[140px] sm:aspect-video overflow-hidden bg-muted relative">
+                        <div className="h-[140px] sm:aspect-video md:w-[280px] overflow-hidden bg-muted relative">
                           <img
                             src={category.image_url}
-                            alt={category.name}
+                            alt={t(category.name)}
                             width="320"
                             height="180"
                             loading="lazy"
@@ -284,7 +279,7 @@ const Index = () => {
                           <div className="absolute inset-0 bg-gradient-to-t from-secondary/90 via-secondary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                         </div>
                       ) : (
-                        <div className="h-[140px] sm:aspect-video overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                        <div className="h-[140px] sm:aspect-video md:w-[320px] overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
                           <Icon className="h-10 w-10 sm:h-16 sm:w-16 text-primary/40" />
                         </div>
                       )}
@@ -292,9 +287,9 @@ const Index = () => {
                       {/* Category Content */}
                       <div className="p-4 sm:p-6 md:p-8">
                         <div className="flex flex-col items-center gap-1.5 sm:gap-3 mb-2 sm:mb-4">
-                          <h3 className="text-base sm:text-xl md:text-2xl font-bold group-hover:text-primary transition-colors text-center">{category.name}</h3>
+                          <h3 className="text-base sm:text-xl md:text-2xl font-bold group-hover:text-primary transition-colors text-center">{t(category.name)}</h3>
                         </div>
-                        <p className="text-muted-foreground mb-2 sm:mb-4 text-xs sm:text-sm md:text-base text-center line-clamp-2">{category.description}</p>
+                        <p className="text-muted-foreground mb-2 sm:mb-4 text-xs sm:text-sm md:text-base text-center line-clamp-2">{t(category.description)}</p>
                         <div className="flex items-center justify-center text-primary font-semibold group-hover:gap-3 transition-all text-xs sm:text-sm md:text-base">
                           {t("Explore Collection")}
                           <ArrowRight className="ml-0.5 sm:ml-1 h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 group-hover:translate-x-2 transition-transform duration-300" />

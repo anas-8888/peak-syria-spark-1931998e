@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Loader2 } from "lucide-react";
 
 const LegalPages = () => {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [editingPage, setEditingPage] = useState<'terms' | 'privacy' | 'refund'>('terms');
   const [formData, setFormData] = useState({ title: '', content: '' });
@@ -46,10 +48,10 @@ const LegalPages = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['legal-pages-admin'] });
-      toast.success('Legal page updated successfully');
+      toast.success(t('Legal page updated successfully'));
     },
     onError: (error) => {
-      toast.error('Failed to update legal page');
+      toast.error(t('Failed to update legal page'));
       console.error(error);
     }
   });

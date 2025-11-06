@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
+import { useLanguage } from "./LanguageContext";
 import { toast } from "sonner";
 
 interface CartItem {
@@ -46,6 +47,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const { t } = useLanguage();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -173,7 +175,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       setCartItems(itemsWithImages as CartItem[]);
     } catch (error) {
       console.error("Error fetching cart:", error);
-      toast.error("Failed to load cart");
+      toast.error(t("Failed to load cart"));
     } finally {
       setLoading(false);
     }
@@ -187,7 +189,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const { productId, quantity = 1, notes = "", variantId, selectedColor, selectedSize, variantPrice } = options;
     
     if (!user) {
-      toast.error("Please log in to add items to cart");
+      toast.error(t("Please log in to add items to cart"));
       return;
     }
 
@@ -215,13 +217,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             .single();
           
           if (variant && newQuantity > variant.stock_quantity) {
-            toast.error(`Only ${variant.stock_quantity} items available`);
+            toast.error(t(`Only ${variant.stock_quantity} items available`));
             return;
           }
         }
         
         await updateQuantity(existingItem.id, newQuantity);
-        toast.success("Cart updated");
+        toast.success(t("Cart updated"));
       } else {
         // Verify stock before adding new item
         if (variantId) {
@@ -232,12 +234,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             .single();
           
           if (stockError) {
-            toast.error("Failed to check stock availability");
+            toast.error(t("Failed to check stock availability"));
             return;
           }
           
           if (variant && quantity > variant.stock_quantity) {
-            toast.error(`Only ${variant.stock_quantity} items available`);
+            toast.error(t(`Only ${variant.stock_quantity} items available`));
             return;
           }
         }
@@ -261,11 +263,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           throw error;
         }
         await fetchCart();
-        toast.success("Added to cart");
+        toast.success(t("Added to cart"));
       }
     } catch (error: any) {
       console.error("Error adding to cart:", error);
-      toast.error(error.message || "Failed to add to cart");
+      toast.error(error.message || t("Failed to add to cart"));
     }
   };
 
@@ -276,7 +278,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       // Get the cart item to check variant stock
       const cartItem = cartItems.find(item => item.id === itemId);
       if (!cartItem) {
-        toast.error("Cart item not found");
+        toast.error(t("Cart item not found"));
         return;
       }
 
@@ -291,7 +293,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         if (variantError) throw variantError;
 
         if (quantity > variant.stock_quantity) {
-          toast.error(`Only ${variant.stock_quantity} items available for this variant`);
+          toast.error(t(`Only ${variant.stock_quantity} items available for this variant`));
           return;
         }
       } else {
@@ -305,7 +307,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         if (productError) throw productError;
 
         if (quantity > product.stock_quantity) {
-          toast.error(`Only ${product.stock_quantity} items available`);
+          toast.error(t(`Only ${product.stock_quantity} items available`));
           return;
         }
       }
@@ -319,7 +321,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       await fetchCart();
     } catch (error) {
       console.error("Error updating quantity:", error);
-      toast.error("Failed to update quantity");
+      toast.error(t("Failed to update quantity"));
     }
   };
 
@@ -332,10 +334,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
       await fetchCart();
-      toast.success("Notes updated");
+      toast.success(t("Notes updated"));
     } catch (error) {
       console.error("Error updating notes:", error);
-      toast.error("Failed to update notes");
+      toast.error(t("Failed to update notes"));
     }
   };
 
@@ -348,10 +350,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
       await fetchCart();
-      toast.success("Removed from cart");
+      toast.success(t("Removed from cart"));
     } catch (error) {
       console.error("Error removing from cart:", error);
-      toast.error("Failed to remove item");
+      toast.error(t("Failed to remove item"));
     }
   };
 
@@ -366,10 +368,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
       setCartItems([]);
-      toast.success("Cart cleared");
+      toast.success(t("Cart cleared"));
     } catch (error) {
       console.error("Error clearing cart:", error);
-      toast.error("Failed to clear cart");
+      toast.error(t("Failed to clear cart"));
     }
   };
 

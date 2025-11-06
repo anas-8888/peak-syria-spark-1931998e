@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ColorImageSelector } from "@/components/ColorImageSelector";
 
 type ProductImage = {
@@ -26,6 +27,7 @@ export const ProductImageManager = ({
   colorImageMappings, 
   onColorImageMappingsChange 
 }: ProductImageManagerProps) => {
+  const { t } = useLanguage();
   const [uploading, setUploading] = useState(false);
   const queryClient = useQueryClient();
 
@@ -89,10 +91,10 @@ export const ProductImageManager = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product-images", productId] });
-      toast.success("Image uploaded successfully");
+      toast.success(t("Image uploaded successfully"));
     },
     onError: (error) => {
-      toast.error("Failed to upload image", {
+      toast.error(t("Failed to upload image"), {
         description: error.message,
       });
     },
@@ -117,10 +119,10 @@ export const ProductImageManager = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product-images", productId] });
-      toast.success("Primary image updated");
+      toast.success(t("Primary image updated"));
     },
     onError: (error) => {
-      toast.error("Failed to set primary image", {
+      toast.error(t("Failed to set primary image"), {
         description: error.message,
       });
     },
@@ -158,10 +160,10 @@ export const ProductImageManager = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product-images", productId] });
-      toast.success("Image deleted successfully");
+      toast.success(t("Image deleted successfully"));
     },
     onError: (error) => {
-      toast.error("Failed to delete image", {
+      toast.error(t("Failed to delete image"), {
         description: error.message,
       });
     },
@@ -210,10 +212,10 @@ export const ProductImageManager = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product-images", productId] });
-      toast.success("Image order updated");
+      toast.success(t("Image order updated"));
     },
     onError: (error) => {
-      toast.error("Failed to reorder images", {
+      toast.error(t("Failed to reorder images"), {
         description: error.message,
       });
     },

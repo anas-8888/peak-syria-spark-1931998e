@@ -6,6 +6,7 @@ import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, SlidersHorizontal } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FilterOptions {
   categories: string[];
@@ -25,6 +26,7 @@ interface ProductFiltersProps {
 }
 
 const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, minPrice, maxPrice }: ProductFiltersProps) => {
+  const { t } = useLanguage();
   const [localFilters, setLocalFilters] = useState(filters);
   // Separate state for price slider - this is what the slider displays
   const [sliderValue, setSliderValue] = useState<[number, number]>(filters.priceRange);
@@ -107,13 +109,13 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
         sliderValue[1] !== maxPrice) && (
         <Button variant="outline" onClick={clearAllFilters} className="w-full">
           <X className="mr-2 h-4 w-4" />
-          Clear All Filters
+          {t("Clear All Filters")}
         </Button>
       )}
 
       {/* Categories */}
       <div className="space-y-3">
-        <h3 className="font-bold text-lg">Categories</h3>
+        <h3 className="font-bold text-lg">{t("Categories")}</h3>
         {categories.length > 0 ? (
           categories.map((category) => (
             <div key={category} className="flex items-center space-x-1.5">
@@ -124,18 +126,18 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
                 className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-3.5 md:w-3.5"
               />
               <Label htmlFor={`cat-${category}`} className="cursor-pointer text-[10px] sm:text-xs">
-                {category}
+                {t(category)}
               </Label>
             </div>
           ))
         ) : (
-          <p className="text-sm text-muted-foreground">No categories available</p>
+          <p className="text-sm text-muted-foreground">{t("No categories available")}</p>
         )}
       </div>
 
       {/* Colors */}
       <div className="space-y-3">
-        <h3 className="font-bold text-lg">Colors</h3>
+        <h3 className="font-bold text-lg">{t("Colors")}</h3>
         {colors.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {colors.map((color) => (
@@ -148,18 +150,18 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
                     : "border-border hover:scale-105"
                 }`}
                 style={{ backgroundColor: color.hex }}
-                title={color.name}
+                title={t(color.name)}
               />
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No colors available</p>
+          <p className="text-sm text-muted-foreground">{t("No colors available")}</p>
         )}
       </div>
 
       {/* Sizes */}
       <div className="space-y-3">
-        <h3 className="font-bold text-lg">Sizes (EU)</h3>
+        <h3 className="font-bold text-lg">{t("Sizes")} (EU)</h3>
         {sizes.length > 0 ? (
           <div className="grid grid-cols-4 gap-2">
             {sizes.map((size) => (
@@ -177,13 +179,13 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No sizes available</p>
+          <p className="text-sm text-muted-foreground">{t("No sizes available")}</p>
         )}
       </div>
 
       {/* Price Range */}
       <div className="space-y-3">
-        <h3 className="font-bold text-lg">Price Range</h3>
+        <h3 className="font-bold text-lg">{t("Price Range")}</h3>
         <div className="px-2">
           <Slider
             min={minPrice}
@@ -216,12 +218,12 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
         <SheetTrigger asChild>
           <Button variant="outline" className="lg:hidden">
             <SlidersHorizontal className="mr-2 h-4 w-4" />
-            Filters
+            {t("Filters")}
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Filters</SheetTitle>
+            <SheetTitle>{t("Filters")}</SheetTitle>
           </SheetHeader>
           <div className="mt-6">
             <FilterContent />

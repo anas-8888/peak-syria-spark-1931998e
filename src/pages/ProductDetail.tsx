@@ -425,7 +425,7 @@ const ProductDetail = () => {
                   {product.flag}
                 </div>
               )}
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">{product.name}</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">{t(product.name)}</h1>
               {product.sku && (
                 <p className="text-muted-foreground text-sm sm:text-base">SKU: {product.sku}</p>
               )}
@@ -470,7 +470,7 @@ const ProductDetail = () => {
 
             {product.description && (
               <p className="text-muted-foreground leading-relaxed">
-                {product.description}
+                {t(product.description)}
               </p>
             )}
 
@@ -489,33 +489,33 @@ const ProductDetail = () => {
                           {discount.marketing_label || discount.name}
                         </p>
                         <p className="text-sm text-green-700 dark:text-green-300">
-                          {discount.type === "percentage" ? `${discount.value}% off` : `$${discount.value} off`}
-                          {discount.scope === "products" && " - Applies to this product"}
-                          {discount.scope === "store_wide" && " - Store-wide"}
+                          {discount.type === "percentage" ? `${discount.value}% ${t("off")}` : `$${discount.value} ${t("off")}`}
+                          {discount.scope === "products" && ` - ${t("Applies to this product")}`}
+                          {discount.scope === "store_wide" && ` - ${t("Store-wide")}`}
                         </p>
                       </div>
                     </div>
                     <div className="text-xs text-green-600 dark:text-green-400 space-y-1">
                       {discount.min_cart_subtotal > 0 && (
-                        <p>• Minimum cart: ${discount.min_cart_subtotal.toFixed(2)}</p>
+                        <p>• {t("Minimum cart")}: ${discount.min_cart_subtotal.toFixed(2)}</p>
                       )}
                       {discount.min_quantity > 0 && (
-                        <p>• Minimum quantity: {discount.min_quantity}</p>
+                        <p>• {t("Minimum quantity")}: {discount.min_quantity}</p>
                       )}
                       {discount.per_customer_limit && (
-                        <p>• Limit: {discount.per_customer_limit} use{discount.per_customer_limit > 1 ? 's' : ''} per customer</p>
+                        <p>• {t("Limit")}: {discount.per_customer_limit} {t("use")}{discount.per_customer_limit > 1 ? 's' : ''} {t("per customer")}</p>
                       )}
                       {discount.first_order_only && (
-                        <p>• First order only</p>
+                        <p>• {t("First order only")}</p>
                       )}
                       {discount.end_date && (
-                        <p>• Valid until: {new Date(discount.end_date).toLocaleDateString()}</p>
+                        <p>• {t("Valid until")}: {new Date(discount.end_date).toLocaleDateString()}</p>
                       )}
                     </div>
                   </div>
                 ))}
                 <p className="text-xs text-green-600 dark:text-green-400 italic">
-                  ✓ Discount will be automatically applied at checkout when conditions are met
+                  ✓ {t("Discount will be automatically applied at checkout when conditions are met")}
                 </p>
               </div>
             )}
@@ -775,7 +775,7 @@ const ProductDetail = () => {
                         if (error) throw error;
                         
                         setIsInWishlist(false);
-                        toast.success("Removed from wishlist");
+                        toast.success(t("Removed from wishlist"));
                       } else {
                         // Add to wishlist
                         const { error } = await supabase
@@ -788,16 +788,16 @@ const ProductDetail = () => {
                         if (error) throw error;
                         
                         setIsInWishlist(true);
-                        toast.success("Added to wishlist");
+                        toast.success(t("Added to wishlist"));
                       }
                     } catch (error) {
                       console.error("Wishlist error:", error);
-                      toast.error("Failed to update wishlist");
+                      toast.error(t("Failed to update wishlist"));
                     }
                   }}
                 >
                   <Heart className={`mr-2 h-4 w-4 sm:h-5 sm:w-5 ${isInWishlist ? "fill-current text-primary" : ""}`} />
-                  {isInWishlist ? "In Wishlist" : "Wishlist"}
+                  {isInWishlist ? t("In Wishlist") : t("Wishlist")}
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

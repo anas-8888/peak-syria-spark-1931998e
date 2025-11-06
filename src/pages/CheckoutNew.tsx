@@ -197,7 +197,7 @@ export default function CheckoutNew() {
     }
 
     if (!user) {
-      toast.error("Please log in to checkout");
+      toast.error(t("Please log in to checkout"));
       navigate("/login");
       return;
     }
@@ -378,23 +378,23 @@ export default function CheckoutNew() {
                 setValue("regionId", matchedRegion.id);
               }
               
-              toast.success("Location detected successfully!");
+              toast.success(t("Location detected successfully!"));
             }
           } catch (error) {
             console.error("Error getting location details:", error);
-            toast.error("Could not get location details");
+            toast.error(t("Could not get location details"));
           } finally {
             setLoadingLocation(false);
           }
         },
         (error) => {
           console.error("Error getting location:", error);
-          toast.error("Could not access your location");
+          toast.error(t("Could not access your location"));
           setLoadingLocation(false);
         }
       );
     } else {
-      toast.error("Geolocation is not supported by your browser");
+      toast.error(t("Geolocation is not supported by your browser"));
       setLoadingLocation(false);
     }
   };
@@ -840,7 +840,7 @@ export default function CheckoutNew() {
           if (variant.stock_quantity < item.quantity) {
             const colorName = (variant.colors as any)?.name || '';
             toast.error(
-              `${t("Insufficient stock for")} ${item.product.name} (${colorName} - ${variant.size}). ${t("Available")}: ${variant.stock_quantity}, ${t("Requested")}: ${item.quantity}`
+              `${t("Insufficient stock for")} ${t(item.product.name)} (${colorName} - ${variant.size}). ${t("Available")}: ${variant.stock_quantity}, ${t("Requested")}: ${item.quantity}`
             );
             setSubmitting(false);
             return;
@@ -1242,21 +1242,21 @@ export default function CheckoutNew() {
                       {item.product.image_url && (
                         <img
                           src={item.product.image_url}
-                          alt={item.product.name}
+                          alt={t(item.product.name)}
                           className="w-full h-full object-cover rounded"
                         />
                       )}
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium">{item.product.name}</p>
+                      <p className="font-medium">{t(item.product.name)}</p>
                       {(item.selected_color || item.selected_size) && (
                         <p className="text-xs text-muted-foreground">
-                          {item.selected_color && <span>Color: {item.selected_color}</span>}
+                          {item.selected_color && <span>{t("Color")}: {item.selected_color}</span>}
                           {item.selected_color && item.selected_size && <span> • </span>}
-                          {item.selected_size && <span>Size: {item.selected_size}</span>}
+                          {item.selected_size && <span>{t("Size")}: {item.selected_size}</span>}
                         </p>
                       )}
-                      <p className="text-muted-foreground">Qty: {item.quantity}</p>
+                      <p className="text-muted-foreground">{t("Qty")}: {item.quantity}</p>
                     </div>
                     <p className="font-medium">
                       {formatPrice((item.variant_price || item.product.offer_price || item.product.price) * item.quantity)}

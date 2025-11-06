@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +64,7 @@ type Segment = {
 };
 
 const Marketing = () => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("overview");
   const [isCampaignDialogOpen, setIsCampaignDialogOpen] = useState(false);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
@@ -227,11 +229,11 @@ const Marketing = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["marketing-campaigns"] });
-      toast.success("Campaign deleted");
+      toast.success(t("Campaign deleted"));
       setDeletingCampaignId(null);
     },
     onError: () => {
-      toast.error("Failed to delete campaign");
+      toast.error(t("Failed to delete campaign"));
     },
   });
 
@@ -265,12 +267,12 @@ const Marketing = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["marketing-templates"] });
-      toast.success(editingTemplate ? "Template updated" : "Template created");
+      toast.success(editingTemplate ? t("Template updated") : t("Template created"));
       setIsTemplateDialogOpen(false);
       resetTemplateForm();
     },
     onError: () => {
-      toast.error("Failed to save template");
+      toast.error(t("Failed to save template"));
     },
   });
 
@@ -285,11 +287,11 @@ const Marketing = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["marketing-templates"] });
-      toast.success("Template deleted");
+      toast.success(t("Template deleted"));
       setDeletingTemplateId(null);
     },
     onError: () => {
-      toast.error("Failed to delete template");
+      toast.error(t("Failed to delete template"));
     },
   });
 
@@ -328,12 +330,12 @@ const Marketing = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customer-segments"] });
-      toast.success(editingSegment ? "Segment updated" : "Segment created");
+      toast.success(editingSegment ? t("Segment updated") : t("Segment created"));
       setIsSegmentDialogOpen(false);
       resetSegmentForm();
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to save segment");
+      toast.error(error.message || t("Failed to save segment"));
     },
   });
 
@@ -348,11 +350,11 @@ const Marketing = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customer-segments"] });
-      toast.success("Segment deleted");
+      toast.success(t("Segment deleted"));
       setDeletingSegmentId(null);
     },
     onError: () => {
-      toast.error("Failed to delete segment");
+      toast.error(t("Failed to delete segment"));
     },
   });
 
@@ -367,10 +369,10 @@ const Marketing = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["marketing-campaigns"] });
-      toast.success("Campaign status updated");
+      toast.success(t("Campaign status updated"));
     },
     onError: () => {
-      toast.error("Failed to update campaign status");
+      toast.error(t("Failed to update campaign status"));
     },
   });
 

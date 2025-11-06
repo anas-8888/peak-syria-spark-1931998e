@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
 type Review = {
   id: string;
@@ -26,6 +27,7 @@ type Review = {
   };
 };
 const Reviews = () => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -80,10 +82,10 @@ const Reviews = () => {
       queryClient.invalidateQueries({
         queryKey: ["admin-reviews"]
       });
-      toast.success("Review status updated");
+      toast.success(t("Review status updated"));
     },
     onError: () => {
-      toast.error("Failed to update review status");
+      toast.error(t("Failed to update review status"));
     }
   });
   const deleteMutation = useMutation({
@@ -97,11 +99,11 @@ const Reviews = () => {
       queryClient.invalidateQueries({
         queryKey: ["admin-reviews"]
       });
-      toast.success("Review deleted successfully");
+      toast.success(t("Review deleted successfully"));
       setDeleteId(null);
     },
     onError: () => {
-      toast.error("Failed to delete review");
+      toast.error(t("Failed to delete review"));
     }
   });
   const filteredReviews = reviews.filter(review => review.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || review.products.name.toLowerCase().includes(searchTerm.toLowerCase()) || review.comment.toLowerCase().includes(searchTerm.toLowerCase()));

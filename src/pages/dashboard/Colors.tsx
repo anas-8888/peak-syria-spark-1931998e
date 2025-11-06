@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import PercentageLoader from "@/components/PercentageLoader";
 
 type Color = {
@@ -25,6 +26,7 @@ type Color = {
 };
 
 const Colors = () => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -72,12 +74,12 @@ const Colors = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["colors"] });
-      toast.success("Color added successfully");
+      toast.success(t("Color added successfully"));
       setIsAddDialogOpen(false);
       resetForm();
     },
     onError: (error: any) => {
-      toast.error("Failed to add color", {
+      toast.error(t("Failed to add color"), {
         description: error.message
       });
     }
@@ -100,13 +102,13 @@ const Colors = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["colors"] });
-      toast.success("Color updated successfully");
+      toast.success(t("Color updated successfully"));
       setIsEditDialogOpen(false);
       setSelectedColor(null);
       resetForm();
     },
     onError: (error: any) => {
-      toast.error("Failed to update color", {
+      toast.error(t("Failed to update color"), {
         description: error.message
       });
     }
@@ -124,11 +126,11 @@ const Colors = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["colors"] });
-      toast.success("Color deleted successfully");
+      toast.success(t("Color deleted successfully"));
       setDeleteColorId(null);
     },
     onError: (error: any) => {
-      toast.error("Failed to delete color", {
+      toast.error(t("Failed to delete color"), {
         description: error.message
       });
     }
@@ -149,7 +151,7 @@ const Colors = () => {
 
   const handleAddColor = () => {
     if (!formData.name || !formData.hex_code) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("Please fill in all required fields"));
       return;
     }
     addColorMutation.mutate(formData);
@@ -157,7 +159,7 @@ const Colors = () => {
 
   const handleEditColor = () => {
     if (!selectedColor || !formData.name || !formData.hex_code) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("Please fill in all required fields"));
       return;
     }
     updateColorMutation.mutate({ id: selectedColor.id, updates: formData });
