@@ -1735,6 +1735,36 @@ export type Database = {
         }
         Relationships: []
       }
+      translations: {
+        Row: {
+          arabic_value: string
+          created_at: string
+          english_key: string
+          id: string
+          is_auto_detected: boolean
+          last_seen_at: string
+          updated_at: string
+        }
+        Insert: {
+          arabic_value: string
+          created_at?: string
+          english_key: string
+          id?: string
+          is_auto_detected?: boolean
+          last_seen_at?: string
+          updated_at?: string
+        }
+        Update: {
+          arabic_value?: string
+          created_at?: string
+          english_key?: string
+          id?: string
+          is_auto_detected?: boolean
+          last_seen_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       wishlist: {
         Row: {
           created_at: string
