@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getOptimizedImageUrl } from "@/utils/imageCache";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
@@ -120,8 +122,8 @@ const Reviews = () => {
   return <div className="p-8 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2">Reviews & Ratings</h1>
-        <p className="text-muted-foreground">Manage product reviews and customer feedback</p>
+        <h1 className="text-3xl font-bold mb-2">{t("Reviews & Ratings")}</h1>
+        <p className="text-muted-foreground">{t("Manage product reviews and customer feedback")}</p>
       </div>
 
       {/* Stats */}
@@ -133,7 +135,7 @@ const Reviews = () => {
                 <Star className="h-6 w-6 text-yellow-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Average Rating</p>
+                <p className="text-sm text-muted-foreground">{t("Average Rating")}</p>
                 <p className="text-2xl font-bold">4.5</p>
               </div>
             </div>
@@ -146,7 +148,7 @@ const Reviews = () => {
                 <MessageSquare className="h-6 w-6 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Reviews</p>
+                <p className="text-sm text-muted-foreground">{t("Total Reviews")}</p>
                 <p className="text-2xl font-bold">1,456</p>
               </div>
             </div>
@@ -159,7 +161,7 @@ const Reviews = () => {
                 <ThumbsUp className="h-6 w-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Positive Reviews</p>
+                <p className="text-sm text-muted-foreground">{t("Positive Reviews")}</p>
                 <p className="text-2xl font-bold">89%</p>
               </div>
             </div>
@@ -172,7 +174,7 @@ const Reviews = () => {
                 <Eye className="h-6 w-6 text-orange-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Pending Review</p>
+                <p className="text-sm text-muted-foreground">{t("Pending Review")}</p>
                 <p className="text-2xl font-bold">24</p>
               </div>
             </div>
@@ -185,7 +187,7 @@ const Reviews = () => {
         <CardContent className="pt-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search by customer or product name..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+            <Input placeholder={t("Search by customer or product name...")} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
           </div>
         </CardContent>
       </Card>
@@ -193,33 +195,76 @@ const Reviews = () => {
       {/* Reviews Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Reviews ({filteredReviews.length})</CardTitle>
+          <CardTitle>{t("Reviews")} ({filteredReviews.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Comment</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t("Customer")}</TableHead>
+                <TableHead>{t("Product")}</TableHead>
+                <TableHead>{t("Rating")}</TableHead>
+                <TableHead>{t("Comment")}</TableHead>
+                <TableHead>{t("Date")}</TableHead>
+                <TableHead>{t("Status")}</TableHead>
                 
-                <TableHead>Actions</TableHead>
+                <TableHead>{t("Actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredReviews.map(review => <TableRow key={review.id} className="hover:bg-muted/50">
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                    </TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : filteredReviews.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    {t("No reviews found")}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredReviews.map(review => (
+                  <TableRow key={review.id} className="hover:bg-muted/50">
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={review.profiles?.avatar_url || ""} alt={review.profiles?.full_name || "User"} />
+                          <AvatarImage 
+                            src={getOptimizedImageUrl(review.profiles?.avatar_url, {
+                              width: 64,
+                              quality: 85,
+                              format: 'webp'
+                            }) || ""} 
+                            alt={review.profiles?.full_name || "User"}
+                            loading="lazy"
+                            decoding="async"
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
+                          />
                         <AvatarFallback className="bg-primary/10">
                           <User className="h-4 w-4 text-primary" />
                         </AvatarFallback>
                       </Avatar>
-                      <span>{review.profiles?.full_name || "Anonymous"}</span>
+                      <span>{review.profiles?.full_name || t("Anonymous")}</span>
                     </div>
                   </TableCell>
                   <TableCell>{review.products.name}</TableCell>
@@ -234,7 +279,7 @@ const Reviews = () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant={review.status === "approved" ? "default" : review.status === "rejected" ? "destructive" : "secondary"}>
-                      {review.status.charAt(0).toUpperCase() + review.status.slice(1)}
+                      {review.status === "approved" ? t("Approved") : review.status === "rejected" ? t("Rejected") : t("Pending")}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -242,27 +287,29 @@ const Reviews = () => {
                       {review.status !== "approved" && <Button variant="ghost" size="sm" onClick={() => updateStatusMutation.mutate({
                     id: review.id,
                     status: "approved"
-                  })} disabled={updateStatusMutation.isPending} title="Approve">
+                  })} disabled={updateStatusMutation.isPending} title={t("Approve")}>
                           <CheckCircle className="h-4 w-4 text-green-600" />
                         </Button>}
                       {review.status !== "rejected" && <Button variant="ghost" size="sm" onClick={() => updateStatusMutation.mutate({
                     id: review.id,
                     status: "rejected"
-                  })} disabled={updateStatusMutation.isPending} title="Reject">
+                  })} disabled={updateStatusMutation.isPending} title={t("Reject")}>
                           <XCircle className="h-4 w-4 text-destructive" />
                         </Button>}
                       {review.status !== "pending" && <Button variant="ghost" size="sm" onClick={() => updateStatusMutation.mutate({
                     id: review.id,
                     status: "pending"
-                  })} disabled={updateStatusMutation.isPending} title="Set to Pending">
+                  })} disabled={updateStatusMutation.isPending} title={t("Set to Pending")}>
                           <Clock className="h-4 w-4 text-yellow-600" />
                         </Button>}
-                      <Button variant="ghost" size="sm" onClick={() => setDeleteId(review.id)} title="Delete">
+                      <Button variant="ghost" size="sm" onClick={() => setDeleteId(review.id)} title={t("Delete")}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
-                </TableRow>)}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -272,15 +319,15 @@ const Reviews = () => {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Review</AlertDialogTitle>
+            <AlertDialogTitle>{t("Delete Review")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this review? This action cannot be undone.
+              {t("Are you sure you want to delete this review? This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => deleteId && deleteMutation.mutate(deleteId)} className="bg-destructive hover:bg-destructive/90">
-              Delete
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

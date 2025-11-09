@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { getOptimizedImageUrl } from "@/utils/imageCache";
 
 interface ProductCardEnhancedProps {
   id: string;
@@ -112,7 +113,7 @@ const ProductCardEnhanced = ({
         .select('id')
         .eq('user_id', user.id)
         .eq('product_id', id)
-        .single();
+        .maybeSingle();
 
       setIsFavorite(!!data);
     };
@@ -192,9 +193,23 @@ const ProductCardEnhanced = ({
           viewMode === "list" ? "w-36 sm:w-32 md:w-48 h-36 sm:h-32 md:h-48 flex-shrink-0" : "aspect-square"
         }`}>
           <img
-            src={currentImage}
+            src={getOptimizedImageUrl(currentImage, {
+              width: viewMode === "list" ? 192 : 400,
+              quality: 85,
+              format: 'webp'
+            })}
             alt={name}
+            loading="lazy"
+            decoding="async"
+            width={viewMode === "list" ? 192 : 400}
+            height={viewMode === "list" ? 192 : 400}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            onError={(e) => {
+              const target = e.currentTarget as HTMLImageElement;
+              if (target.src !== '/placeholder.svg') {
+                target.src = '/placeholder.svg';
+              }
+            }}
           />
 
           {/* Overlay on Hover - Only in grid mode */}
@@ -370,7 +385,25 @@ const ProductCardEnhanced = ({
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-              <img src={currentImage} alt={name} className="w-full h-full object-cover" />
+              <img 
+                src={getOptimizedImageUrl(currentImage, {
+                  width: 600,
+                  quality: 90,
+                  format: 'webp'
+                })} 
+                alt={name} 
+                loading="eager"
+                decoding="async"
+                width={600}
+                height={600}
+                className="w-full h-full object-cover" 
+                onError={(e) => {
+                  const target = e.currentTarget as HTMLImageElement;
+                  if (target.src !== '/placeholder.svg') {
+                    target.src = '/placeholder.svg';
+                  }
+                }}
+              />
             </div>
             <div className="space-y-4">
               <div>

@@ -185,8 +185,7 @@ const Search = () => {
       
       const matchSize = product.sizes.some(s => {
         const sizeEn = s.toLowerCase();
-        const sizeAr = t(s).toLowerCase();
-        return sizeEn.includes(lowerQuery) || sizeAr.includes(lowerQuery);
+        return sizeEn.includes(lowerQuery);
       });
       
       return matchNameEn || matchNameAr || 

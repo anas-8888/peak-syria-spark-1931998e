@@ -50,13 +50,31 @@ export const ProductImageManager = ({
   // Upload image mutation
   const uploadImageMutation = useMutation({
     mutationFn: async (file: File) => {
-      const fileExt = file.name.split(".").pop();
+      // Import compression utility dynamically
+      const { compressImageForUseCase, needsCompression } = await import("@/utils/imageCompression");
+      
+      // Compress image if needed
+      let fileToUpload = file;
+      if (needsCompression(file)) {
+        try {
+          const compressedBlob = await compressImageForUseCase(file, 'productDetail', 0.85);
+          fileToUpload = new File([compressedBlob], file.name, {
+            type: compressedBlob.type || file.type,
+            lastModified: Date.now()
+          });
+        } catch (error) {
+          console.warn('Failed to compress image, using original:', error);
+          // Continue with original file if compression fails
+        }
+      }
+      
+      const fileExt = fileToUpload.name.split(".").pop() || 'jpg';
       const fileName = `${productId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
       // Upload to storage
       const { error: uploadError } = await supabase.storage
         .from("product-images")
-        .upload(fileName, file);
+        .upload(fileName, fileToUpload);
 
       if (uploadError) throw uploadError;
 

@@ -6,14 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import PercentageLoader from "@/components/PercentageLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Color = {
   id: string;
@@ -176,23 +176,20 @@ const Colors = () => {
     setIsEditDialogOpen(true);
   };
 
-  if (isLoading) {
-    return <PercentageLoader />;
-  }
 
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Color Management</h1>
+          <h1 className="text-3xl font-bold mb-2">{t("Color Management")}</h1>
           <p className="text-muted-foreground">
-            Manage product colors and swatches
+            {t("Manage product colors and swatches")}
           </p>
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
-          Add New Color
+          {t("Add New Color")}
         </Button>
       </div>
 
@@ -202,7 +199,7 @@ const Colors = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search for a color..."
+              placeholder={t("Search for a color...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -214,22 +211,59 @@ const Colors = () => {
       {/* Colors Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Colors ({filteredColors.length})</CardTitle>
+          <CardTitle>{t("All Colors")} ({filteredColors.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Swatch</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Hex Code</TableHead>
-                <TableHead>Display Order</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredColors.map((color) => (
+          {isLoading ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("Swatch")}</TableHead>
+                  <TableHead>{t("Name")}</TableHead>
+                  <TableHead>{t("Hex Code")}</TableHead>
+                  <TableHead>{t("Display Order")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead className="text-right">{t("Actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Skeleton className="h-10 w-10 rounded-md" />
+                    </TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : filteredColors.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {t("No colors found")}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("Swatch")}</TableHead>
+                  <TableHead>{t("Name")}</TableHead>
+                  <TableHead>{t("Hex Code")}</TableHead>
+                  <TableHead>{t("Display Order")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead className="text-right">{t("Actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredColors.map((color) => (
                 <TableRow key={color.id}>
                   <TableCell>
                     <div
@@ -246,7 +280,7 @@ const Colors = () => {
                   <TableCell>{color.display_order}</TableCell>
                   <TableCell>
                     <Badge variant={color.is_active ? "default" : "secondary"}>
-                      {color.is_active ? "Active" : "Inactive"}
+                      {color.is_active ? t("Active") : t("Inactive")}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -268,9 +302,10 @@ const Colors = () => {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -280,21 +315,22 @@ const Colors = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Palette className="h-5 w-5" />
-              Add New Color
+              {t("Add New Color")}
             </DialogTitle>
+            <DialogDescription>{t("Add a new color option for products")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Color Name *</Label>
+              <Label htmlFor="name">{t("Color Name")} *</Label>
               <Input
                 id="name"
-                placeholder="e.g., Navy Blue"
+                placeholder={t("e.g., Navy Blue")}
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="hex_code">Hex Code *</Label>
+              <Label htmlFor="hex_code">{t("Hex Code")} *</Label>
               <div className="flex gap-2">
                 <Input
                   id="hex_code"
@@ -311,7 +347,7 @@ const Colors = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="display_order">Display Order</Label>
+              <Label htmlFor="display_order">{t("Display Order")}</Label>
               <Input
                 id="display_order"
                 type="number"
@@ -320,7 +356,7 @@ const Colors = () => {
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="is_active">Active</Label>
+              <Label htmlFor="is_active">{t("Active")}</Label>
               <Switch
                 id="is_active"
                 checked={formData.is_active}
@@ -330,10 +366,10 @@ const Colors = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={handleAddColor} disabled={addColorMutation.isPending}>
-              {addColorMutation.isPending ? "Adding..." : "Add Color"}
+              {addColorMutation.isPending ? t("Adding...") : t("Add Color")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -345,21 +381,22 @@ const Colors = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Palette className="h-5 w-5" />
-              Edit Color
+              {t("Edit Color")}
             </DialogTitle>
+            <DialogDescription>{t("Update color information")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Color Name *</Label>
+              <Label htmlFor="edit-name">{t("Color Name")} *</Label>
               <Input
                 id="edit-name"
-                placeholder="e.g., Navy Blue"
+                placeholder={t("e.g., Navy Blue")}
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-hex_code">Hex Code *</Label>
+              <Label htmlFor="edit-hex_code">{t("Hex Code")} *</Label>
               <div className="flex gap-2">
                 <Input
                   id="edit-hex_code"
@@ -376,7 +413,7 @@ const Colors = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-display_order">Display Order</Label>
+              <Label htmlFor="edit-display_order">{t("Display Order")}</Label>
               <Input
                 id="edit-display_order"
                 type="number"
@@ -385,7 +422,7 @@ const Colors = () => {
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="edit-is_active">Active</Label>
+              <Label htmlFor="edit-is_active">{t("Active")}</Label>
               <Switch
                 id="edit-is_active"
                 checked={formData.is_active}
@@ -395,10 +432,10 @@ const Colors = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={handleEditColor} disabled={updateColorMutation.isPending}>
-              {updateColorMutation.isPending ? "Updating..." : "Update Color"}
+              {updateColorMutation.isPending ? t("Updating...") : t("Update Color")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -408,18 +445,18 @@ const Colors = () => {
       <AlertDialog open={!!deleteColorId} onOpenChange={() => setDeleteColorId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("Are you sure?")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this color. Products using this color will not be affected.
+              {t("This will permanently delete this color. Products using this color will not be affected.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteColorId && deleteColorMutation.mutate(deleteColorId)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

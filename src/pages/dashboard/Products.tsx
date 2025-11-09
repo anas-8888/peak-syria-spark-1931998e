@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { ProductImageManager } from "@/components/ProductImageManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ColorImageSelector } from "@/components/ColorImageSelector";
@@ -58,6 +60,7 @@ type Category = {
 };
 const Products = () => {
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -629,8 +632,6 @@ const Products = () => {
         toast.error(t("Failed to load product colors"));
       }
 
-      console.log("Loaded product colors:", productColors);
-      
       setColorImageMappings(productColors?.map(pc => ({
         color_id: pc.color_id,
         image_id: pc.image_id
@@ -644,15 +645,15 @@ const Products = () => {
   };
   const getStockStatus = (stock: number) => {
     if (stock === 0) return {
-      label: "Out of Stock",
+      label: t("Out of Stock"),
       variant: "destructive" as const
     };
     if (stock < 10) return {
-      label: "Low Stock",
+      label: t("Low Stock"),
       variant: "secondary" as const
     };
     return {
-      label: "In Stock",
+      label: t("In Stock"),
       variant: "default" as const
     };
   };
@@ -701,19 +702,19 @@ const Products = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Product Management</h1>
+          <h1 className="text-3xl font-bold mb-2">{t("Product Management")}</h1>
           <p className="text-muted-foreground">
-            View and manage all products in the store
+            {t("View and manage all products in the store")}
           </p>
         </div>
         <div className="flex gap-2">
           {selectedProducts.length > 0 && <Button variant="destructive" onClick={handleBulkDelete} disabled={bulkDeleteMutation.isPending}>
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete {selectedProducts.length} Selected
+              {t("Delete")} {selectedProducts.length} {t("Selected")}
             </Button>}
           <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
-            Add New Product
+            {t("Add New Product")}
           </Button>
         </div>
       </div>
@@ -724,7 +725,7 @@ const Products = () => {
           <div className="flex items-center gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search for a product..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+              <Input placeholder={t("Search for a product...")} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
           </div>
         </CardContent>
@@ -733,26 +734,75 @@ const Products = () => {
       {/* Products Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Products ({filteredProducts.length})</CardTitle>
+          <CardTitle>{t("Products")} ({filteredProducts.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? <div className="text-center py-8 text-muted-foreground">
-              Loading products...
-            </div> : filteredProducts.length === 0 ? <div className="text-center py-8 text-muted-foreground">
-              No products found
-            </div> : <Table>
+          {isLoading ? (
+            <div className="space-y-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("Image")}</TableHead>
+                    <TableHead>{t("Name")}</TableHead>
+                    <TableHead>{t("Category")}</TableHead>
+                    <TableHead>{t("Price")}</TableHead>
+                    <TableHead>{t("Stock")}</TableHead>
+                    <TableHead>{t("Status")}</TableHead>
+                    <TableHead>{t("Actions")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <Skeleton className="h-16 w-16 rounded-lg" />
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                      </TableCell>
+                      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Skeleton className="h-4 w-16" />
+                          <Skeleton className="h-3 w-12" />
+                        </div>
+                      </TableCell>
+                      <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Skeleton className="h-8 w-8" />
+                          <Skeleton className="h-8 w-8" />
+                          <Skeleton className="h-8 w-8" />
+                          <Skeleton className="h-8 w-8" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {t("No products found")}
+            </div>
+          ) : (
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
                     <input type="checkbox" checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0} onChange={toggleSelectAll} className="cursor-pointer" />
                   </TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Flag</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t("Product")}</TableHead>
+                  <TableHead>{t("Category")}</TableHead>
+                  <TableHead>{t("Flag")}</TableHead>
+                  <TableHead>{t("Price")}</TableHead>
+                  <TableHead>{t("Stock")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -765,7 +815,7 @@ const Products = () => {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           {product.image_url ? <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded-lg object-cover cursor-pointer" onClick={() => openPreviewDialog(product)} /> : <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
-                              <span className="text-xs text-muted-foreground">No image</span>
+                              <span className="text-xs text-muted-foreground">{t("No image")}</span>
                             </div>}
                           <span className="font-medium cursor-pointer hover:text-primary" onClick={() => openPreviewDialog(product)}>{product.name}</span>
                         </div>
@@ -783,22 +833,22 @@ const Products = () => {
                       <TableCell className="font-semibold">
                         {product.offer_price && product.offer_price < product.price ? (
                           <div className="flex items-center gap-2">
-                            <span className="text-primary">${product.offer_price.toFixed(2)}</span>
+                            <span className="text-primary">{formatPrice(product.offer_price)}</span>
                             <span className="text-sm text-muted-foreground line-through">
-                              ${product.price.toFixed(2)}
+                              {formatPrice(product.price)}
                             </span>
                           </div>
                         ) : product.min_price && product.max_price && product.min_price !== product.max_price ? (
                           <span className="text-muted-foreground">
-                            ${product.min_price.toFixed(2)} - ${product.max_price.toFixed(2)}
+                            {formatPrice(product.min_price)} - {formatPrice(product.max_price)}
                           </span>
                         ) : (
-                          <span>${product.price?.toFixed(2) || '0.00'}</span>
+                          <span>{formatPrice(product.price || 0)}</span>
                         )}
                       </TableCell>
                       <TableCell>
                         <span className={`font-medium ${product.stock_quantity === 0 ? "text-destructive" : product.stock_quantity < 10 ? "text-yellow-600" : "text-green-600"}`}>
-                          {product.stock_quantity || 0} units
+                          {product.stock_quantity || 0} {t("units")}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -814,19 +864,19 @@ const Products = () => {
                               onCheckedChange={(checked) => {
                                 toggleActiveMutation.mutate({ id: product.id, isActive: checked });
                               }}
-                              title={product.is_active ? "Deactivate" : "Activate"}
+                              title={product.is_active ? t("Deactivate") : t("Activate")}
                             />
                           </div>
-                          <Button variant="ghost" size="icon" onClick={() => openPreviewDialog(product)} title="Preview">
+                          <Button variant="ghost" size="icon" onClick={() => openPreviewDialog(product)} title={t("Preview")}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(product)} title="Edit">
+                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(product)} title={t("Edit")}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => openCopyDialog(product)} title="Copy Product">
+                          <Button variant="ghost" size="icon" onClick={() => openCopyDialog(product)} title={t("Copy Product")}>
                             <Copy className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDeleteProductId(product.id)} title="Delete">
+                          <Button variant="ghost" size="icon" onClick={() => setDeleteProductId(product.id)} title={t("Delete")}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
@@ -834,7 +884,8 @@ const Products = () => {
                     </TableRow>;
             })}
               </TableBody>
-            </Table>}
+            </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -848,43 +899,43 @@ const Products = () => {
     }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add New Product</DialogTitle>
+            <DialogTitle>{t("Add New Product")}</DialogTitle>
           </DialogHeader>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="details">Product Details</TabsTrigger>
+              <TabsTrigger value="details">{t("Product Details")}</TabsTrigger>
               <TabsTrigger value="images" disabled={!selectedProduct}>
-                Images and Color
+                {t("Images and Color")}
               </TabsTrigger>
               <TabsTrigger value="variants" disabled={!selectedProduct}>
-                Variants
+                {t("Variants")}
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="details" className="space-y-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Product Name *</Label>
+              <Label htmlFor="name">{t("Product Name")} *</Label>
               <Input id="name" value={formData.name} onChange={e => setFormData({
                 ...formData,
                 name: e.target.value
-              })} placeholder="Enter product name" />
+              })} placeholder={t("Enter product name")} />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t("Description")}</Label>
               <Textarea id="description" value={formData.description} onChange={e => setFormData({
                 ...formData,
                 description: e.target.value
-              })} placeholder="Enter product description" rows={3} />
+              })} placeholder={t("Enter product description")} rows={3} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="category">Category *</Label>
+                <Label htmlFor="category">{t("Category")} *</Label>
                 <Select value={formData.category} onValueChange={value => setFormData({
                   ...formData,
                   category: value
                 })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder={t("Select a category")} />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>
@@ -894,13 +945,13 @@ const Products = () => {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="flag">Product Flag</Label>
+                <Label htmlFor="flag">{t("Product Flag")}</Label>
                 <Select value={formData.flag || undefined} onValueChange={value => setFormData({
                   ...formData,
                   flag: value
                 })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="No flag" />
+                    <SelectValue placeholder={t("No flag")} />
                   </SelectTrigger>
                   <SelectContent className="bg-background z-50">
                     {productFlags.map((flag) => (
@@ -915,38 +966,38 @@ const Products = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="target-gender">Target Gender *</Label>
+                <Label htmlFor="target-gender">{t("Target Gender")} *</Label>
                 <Select value={formData.target_gender} onValueChange={value => setFormData({
                   ...formData,
                   target_gender: value
                 })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select target gender" />
+                    <SelectValue placeholder={t("Select target gender")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="men">Men</SelectItem>
-                    <SelectItem value="women">Women</SelectItem>
-                    <SelectItem value="both">Both</SelectItem>
+                    <SelectItem value="men">{t("Men")}</SelectItem>
+                    <SelectItem value="women">{t("Women")}</SelectItem>
+                    <SelectItem value="both">{t("Both")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="sku">SKU (Auto-generated)</Label>
+                <Label htmlFor="sku">{t("SKU (Auto-generated)")}</Label>
                 <Input 
                   id="sku" 
-                  value={selectedProduct?.sku || "Will be generated on save"} 
+                  value={selectedProduct?.sku || t("Will be generated on save")} 
                   disabled
                   className="bg-muted"
-                  placeholder="Auto-generated SKU"
+                  placeholder={t("Auto-generated SKU")}
                 />
               </div>
             </div>
 
             {/* Sizes Management */}
             <div className="grid gap-2">
-              <Label>Available Sizes (EU)</Label>
+              <Label>{t("Available Sizes (EU)")}</Label>
               <div className="flex gap-2">
-                <Input value={newSize} onChange={e => setNewSize(e.target.value)} placeholder="e.g., 42" onKeyDown={e => {
+                <Input value={newSize} onChange={e => setNewSize(e.target.value)} placeholder={t("e.g., 42")} onKeyDown={e => {
                   if (e.key === 'Enter' && newSize.trim()) {
                     e.preventDefault();
                     setFormData({
@@ -965,7 +1016,7 @@ const Products = () => {
                     setNewSize("");
                   }
                 }}>
-                  Add Size
+                  {t("Add Size")}
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
@@ -985,9 +1036,9 @@ const Products = () => {
 
             {/* Features Management */}
             <div className="grid gap-2">
-              <Label>Product Features</Label>
+              <Label>{t("Product Features")}</Label>
               <div className="flex gap-2">
-                <Input value={newFeature} onChange={e => setNewFeature(e.target.value)} placeholder="e.g., Premium cushioning technology" onKeyDown={e => {
+                <Input value={newFeature} onChange={e => setNewFeature(e.target.value)} placeholder={t("e.g., Premium cushioning technology")} onKeyDown={e => {
                   if (e.key === 'Enter' && newFeature.trim()) {
                     e.preventDefault();
                     setFormData({
@@ -1006,7 +1057,7 @@ const Products = () => {
                     setNewFeature("");
                   }
                 }}>
-                  Add Feature
+                  {t("Add Feature")}
                 </Button>
               </div>
               <div className="flex flex-col gap-2 mt-2">
@@ -1019,7 +1070,7 @@ const Products = () => {
                       features: formData.features.filter((_, i) => i !== index)
                     });
                   }} className="text-destructive hover:underline">
-                      Remove
+                      {t("Remove")}
                     </button>
                   </div>)}
               </div>
@@ -1036,7 +1087,7 @@ const Products = () => {
                 />
               ) : (
                 <p className="text-sm text-muted-foreground mb-4">
-                  Save the product first before adding images
+                  {t("Save the product first before adding images")}
                 </p>
               )}
             </div>
@@ -1056,7 +1107,7 @@ const Products = () => {
                 />
               ) : (
                 <p className="text-sm text-muted-foreground mb-4">
-                  Save the product first before managing variants
+                  {t("Save the product first before managing variants")}
                 </p>
               )}
             </div>
@@ -1069,14 +1120,14 @@ const Products = () => {
             resetForm();
             setSelectedProduct(null);
           }}>
-              Cancel
+              {t("Cancel")}
             </Button>
             {activeTab === "details" && (
               <Button onClick={async () => {
                 await handleAddProduct();
                 setActiveTab("images");
               }}>
-                Save & Go to Next Tab
+                {t("Save & Go to Next Tab")}
               </Button>
             )}
             {activeTab === "images" && selectedProduct && (
@@ -1113,7 +1164,7 @@ const Products = () => {
                 }
                 setActiveTab("variants");
               }}>
-                Save & Go to Next Tab
+                {t("Save & Go to Next Tab")}
               </Button>
             )}
             {activeTab === "variants" && selectedProduct && (
@@ -1129,7 +1180,7 @@ const Products = () => {
                   console.error("Failed to save variants:", error);
                 }
               }}>
-                Done (Save All & Add Product)
+                {t("Done (Save All & Add Product)")}
               </Button>
             )}
           </DialogFooter>
@@ -1146,43 +1197,43 @@ const Products = () => {
     }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Copy Product</DialogTitle>
+            <DialogTitle>{t("Copy Product")}</DialogTitle>
           </DialogHeader>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="details">Product Details</TabsTrigger>
+              <TabsTrigger value="details">{t("Product Details")}</TabsTrigger>
               <TabsTrigger value="images" disabled={!selectedProduct}>
-                Images and Color
+                {t("Images and Color")}
               </TabsTrigger>
               <TabsTrigger value="variants" disabled={!selectedProduct}>
-                Variants
+                {t("Variants")}
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="details" className="space-y-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="copy-name">Product Name *</Label>
+              <Label htmlFor="copy-name">{t("Product Name")} *</Label>
               <Input id="copy-name" value={formData.name} onChange={e => setFormData({
                 ...formData,
                 name: e.target.value
-              })} placeholder="Enter product name" />
+              })} placeholder={t("Enter product name")} />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="copy-description">Description</Label>
+              <Label htmlFor="copy-description">{t("Description")}</Label>
               <Textarea id="copy-description" value={formData.description} onChange={e => setFormData({
                 ...formData,
                 description: e.target.value
-              })} placeholder="Enter product description" rows={3} />
+              })} placeholder={t("Enter product description")} rows={3} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="copy-category">Category *</Label>
+                <Label htmlFor="copy-category">{t("Category")} *</Label>
                 <Select value={formData.category} onValueChange={value => setFormData({
                   ...formData,
                   category: value
                 })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder={t("Select a category")} />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>
@@ -1192,46 +1243,46 @@ const Products = () => {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="copy-flag">Product Flag</Label>
+                <Label htmlFor="copy-flag">{t("Product Flag")}</Label>
                 <Select value={formData.flag || undefined} onValueChange={value => setFormData({
                   ...formData,
                   flag: value
                 })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="No flag" />
+                    <SelectValue placeholder={t("No flag")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="New Arrival">New Arrival</SelectItem>
-                    <SelectItem value="Offer">Offer</SelectItem>
-                    <SelectItem value="Best Seller">Best Seller</SelectItem>
-                    <SelectItem value="Limited Edition">Limited Edition</SelectItem>
+                    <SelectItem value="New Arrival">{t("New Arrival")}</SelectItem>
+                    <SelectItem value="Offer">{t("Offer")}</SelectItem>
+                    <SelectItem value="Best Seller">{t("Best Seller")}</SelectItem>
+                    <SelectItem value="Limited Edition">{t("Limited Edition")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="copy-target_gender">Target Gender</Label>
+              <Label htmlFor="copy-target_gender">{t("Target Gender")}</Label>
               <Select value={formData.target_gender} onValueChange={value => setFormData({
                 ...formData,
                 target_gender: value
               })}>
                 <SelectTrigger id="copy-target_gender">
-                  <SelectValue placeholder="Select target gender" />
+                  <SelectValue placeholder={t("Select target gender")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="men">Men</SelectItem>
-                  <SelectItem value="women">Women</SelectItem>
-                  <SelectItem value="both">Both / Unisex</SelectItem>
+                  <SelectItem value="men">{t("Men")}</SelectItem>
+                  <SelectItem value="women">{t("Women")}</SelectItem>
+                  <SelectItem value="both">{t("Both / Unisex")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Sizes Management */}
             <div className="grid gap-2">
-              <Label>Available Sizes (EU)</Label>
+              <Label>{t("Available Sizes (EU)")}</Label>
               <div className="flex gap-2">
-                <Input value={newSize} onChange={e => setNewSize(e.target.value)} placeholder="e.g., 42" onKeyDown={e => {
+                <Input value={newSize} onChange={e => setNewSize(e.target.value)} placeholder={t("e.g., 42")} onKeyDown={e => {
                   if (e.key === 'Enter' && newSize.trim()) {
                     e.preventDefault();
                     setFormData({
@@ -1250,7 +1301,7 @@ const Products = () => {
                     setNewSize("");
                   }
                 }}>
-                  Add Size
+                  {t("Add Size")}
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
@@ -1270,9 +1321,9 @@ const Products = () => {
 
             {/* Features Management */}
             <div className="grid gap-2">
-              <Label>Product Features</Label>
+              <Label>{t("Product Features")}</Label>
               <div className="flex gap-2">
-                <Input value={newFeature} onChange={e => setNewFeature(e.target.value)} placeholder="e.g., Premium cushioning technology" onKeyDown={e => {
+                <Input value={newFeature} onChange={e => setNewFeature(e.target.value)} placeholder={t("e.g., Premium cushioning technology")} onKeyDown={e => {
                   if (e.key === 'Enter' && newFeature.trim()) {
                     e.preventDefault();
                     setFormData({
@@ -1291,7 +1342,7 @@ const Products = () => {
                     setNewFeature("");
                   }
                 }}>
-                  Add Feature
+                  {t("Add Feature")}
                 </Button>
               </div>
               <div className="flex flex-col gap-2 mt-2">
@@ -1304,7 +1355,7 @@ const Products = () => {
                       features: formData.features.filter((_, i) => i !== index)
                     });
                   }} className="text-destructive hover:underline">
-                      Remove
+                      {t("Remove")}
                     </button>
                   </div>)}
               </div>
@@ -1321,7 +1372,7 @@ const Products = () => {
                 />
               ) : (
                 <p className="text-sm text-muted-foreground mb-4">
-                  Save the product first before adding images
+                  {t("Save the product first before adding images")}
                 </p>
               )}
             </div>
@@ -1341,7 +1392,7 @@ const Products = () => {
                 />
               ) : (
                 <p className="text-sm text-muted-foreground mb-4">
-                  Save the product first before managing variants
+                  {t("Save the product first before managing variants")}
                 </p>
               )}
             </div>
@@ -1354,14 +1405,14 @@ const Products = () => {
             resetForm();
             setSelectedProduct(null);
           }}>
-              Cancel
+              {t("Cancel")}
             </Button>
             {activeTab === "details" && (
               <Button onClick={async () => {
                 await handleAddProduct();
                 setActiveTab("images");
               }} disabled={addProductMutation.isPending}>
-                {addProductMutation.isPending ? "Copying..." : "Save & Go to Next Tab"}
+                {addProductMutation.isPending ? t("Copying...") : t("Save & Go to Next Tab")}
               </Button>
             )}
             {activeTab === "images" && selectedProduct && (
@@ -1398,7 +1449,7 @@ const Products = () => {
                 }
                 setActiveTab("variants");
               }}>
-                Save & Go to Next Tab
+                {t("Save & Go to Next Tab")}
               </Button>
             )}
             {activeTab === "variants" && selectedProduct && (
@@ -1414,7 +1465,7 @@ const Products = () => {
                   console.error("Failed to save variants:", error);
                 }
               }}>
-                Done (Save All & Copy Product)
+                {t("Done (Save All & Copy Product)")}
               </Button>
             )}
           </DialogFooter>
@@ -1432,39 +1483,39 @@ const Products = () => {
       }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Product</DialogTitle>
+            <DialogTitle>{t("Edit Product")}</DialogTitle>
           </DialogHeader>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="details">Product Details</TabsTrigger>
-              <TabsTrigger value="images">Images and Color</TabsTrigger>
-              <TabsTrigger value="variants">Variants</TabsTrigger>
+              <TabsTrigger value="details">{t("Product Details")}</TabsTrigger>
+              <TabsTrigger value="images">{t("Images and Color")}</TabsTrigger>
+              <TabsTrigger value="variants">{t("Variants")}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="details" className="space-y-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">Product Name *</Label>
+              <Label htmlFor="edit-name">{t("Product Name")} *</Label>
               <Input id="edit-name" value={formData.name} onChange={e => setFormData({
                 ...formData,
                 name: e.target.value
-              })} placeholder="Enter product name" />
+              })} placeholder={t("Enter product name")} />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-description">Description</Label>
+              <Label htmlFor="edit-description">{t("Description")}</Label>
               <Textarea id="edit-description" value={formData.description} onChange={e => setFormData({
                 ...formData,
                 description: e.target.value
-              })} placeholder="Enter product description" rows={3} />
+              })} placeholder={t("Enter product description")} rows={3} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-category">Category *</Label>
+                <Label htmlFor="edit-category">{t("Category")} *</Label>
                 <Select value={formData.category} onValueChange={value => setFormData({
                   ...formData,
                   category: value
                 })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder={t("Select a category")} />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>
@@ -1474,19 +1525,19 @@ const Products = () => {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-flag">Product Flag</Label>
+                <Label htmlFor="edit-flag">{t("Product Flag")}</Label>
                 <Select value={formData.flag || undefined} onValueChange={value => setFormData({
                   ...formData,
                   flag: value
                 })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="No flag" />
+                    <SelectValue placeholder={t("No flag")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="New Arrival">New Arrival</SelectItem>
-                    <SelectItem value="Offer">Offer</SelectItem>
-                    <SelectItem value="Best Seller">Best Seller</SelectItem>
-                    <SelectItem value="Limited Edition">Limited Edition</SelectItem>
+                    <SelectItem value="New Arrival">{t("New Arrival")}</SelectItem>
+                    <SelectItem value="Offer">{t("Offer")}</SelectItem>
+                    <SelectItem value="Best Seller">{t("Best Seller")}</SelectItem>
+                    <SelectItem value="Limited Edition">{t("Limited Edition")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1494,32 +1545,32 @@ const Products = () => {
 
             {/* Display SKU */}
             {selectedProduct?.sku && <div className="grid gap-2">
-                <Label>SKU (Auto-generated)</Label>
+                <Label>{t("SKU (Auto-generated)")}</Label>
                 <Input value={selectedProduct.sku} disabled className="bg-muted" />
               </div>}
 
             <div className="grid gap-2">
-              <Label htmlFor="edit-target_gender">Target Gender</Label>
+              <Label htmlFor="edit-target_gender">{t("Target Gender")}</Label>
               <Select value={formData.target_gender} onValueChange={value => setFormData({
                 ...formData,
                 target_gender: value
               })}>
                 <SelectTrigger id="edit-target_gender">
-                  <SelectValue placeholder="Select target gender" />
+                  <SelectValue placeholder={t("Select target gender")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="men">Men</SelectItem>
-                  <SelectItem value="women">Women</SelectItem>
-                  <SelectItem value="both">Both / Unisex</SelectItem>
+                  <SelectItem value="men">{t("Men")}</SelectItem>
+                  <SelectItem value="women">{t("Women")}</SelectItem>
+                  <SelectItem value="both">{t("Both / Unisex")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Sizes Management */}
             <div className="grid gap-2">
-              <Label>Available Sizes (EU)</Label>
+              <Label>{t("Available Sizes (EU)")}</Label>
               <div className="flex gap-2">
-                <Input value={newSize} onChange={e => setNewSize(e.target.value)} placeholder="e.g., 42" onKeyDown={e => {
+                <Input value={newSize} onChange={e => setNewSize(e.target.value)} placeholder={t("e.g., 42")} onKeyDown={e => {
                   if (e.key === 'Enter' && newSize.trim()) {
                     e.preventDefault();
                     setFormData({
@@ -1538,7 +1589,7 @@ const Products = () => {
                     setNewSize("");
                   }
                 }}>
-                  Add Size
+                  {t("Add Size")}
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
@@ -1558,9 +1609,9 @@ const Products = () => {
 
             {/* Features Management */}
             <div className="grid gap-2">
-              <Label>Product Features</Label>
+              <Label>{t("Product Features")}</Label>
               <div className="flex gap-2">
-                <Input value={newFeature} onChange={e => setNewFeature(e.target.value)} placeholder="e.g., Premium cushioning technology" onKeyDown={e => {
+                <Input value={newFeature} onChange={e => setNewFeature(e.target.value)} placeholder={t("e.g., Premium cushioning technology")} onKeyDown={e => {
                   if (e.key === 'Enter' && newFeature.trim()) {
                     e.preventDefault();
                     setFormData({
@@ -1579,7 +1630,7 @@ const Products = () => {
                     setNewFeature("");
                   }
                 }}>
-                  Add Feature
+                  {t("Add Feature")}
                 </Button>
               </div>
               <div className="flex flex-col gap-2 mt-2">
@@ -1592,7 +1643,7 @@ const Products = () => {
                       features: formData.features.filter((_, i) => i !== index)
                     });
                   }} className="text-destructive hover:underline">
-                      Remove
+                      {t("Remove")}
                     </button>
                   </div>)}
               </div>
@@ -1634,14 +1685,14 @@ const Products = () => {
             setSelectedProduct(null);
             resetForm();
           }}>
-              Cancel
+              {t("Cancel")}
             </Button>
             {activeTab === "details" && (
               <Button onClick={async () => {
                 await handleEditProduct();
                 setActiveTab("images");
               }} disabled={updateProductMutation.isPending}>
-                {updateProductMutation.isPending ? "Updating..." : "Save & Go to Next Tab"}
+                {updateProductMutation.isPending ? t("Updating...") : t("Save & Go to Next Tab")}
               </Button>
             )}
             {activeTab === "images" && (
@@ -1678,7 +1729,7 @@ const Products = () => {
                 }
                 setActiveTab("variants");
               }}>
-                Save & Go to Next Tab
+                {t("Save & Go to Next Tab")}
               </Button>
             )}
             {activeTab === "variants" && (
@@ -1694,7 +1745,7 @@ const Products = () => {
                   console.error("Failed to save variants:", error);
                 }
               }}>
-                Done (Save All & Update Product)
+                {t("Done (Save All & Update Product)")}
               </Button>
             )}
           </DialogFooter>
@@ -1705,22 +1756,22 @@ const Products = () => {
       <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Product Preview</DialogTitle>
+            <DialogTitle>{t("Product Preview")}</DialogTitle>
           </DialogHeader>
           {selectedProduct && <div className="space-y-6">
               {/* Image Gallery */}
               <div className="space-y-4">
-                <h3 className="font-semibold">Product Images</h3>
+                <h3 className="font-semibold">{t("Product Images")}</h3>
                 {previewImages.length > 0 ? <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {previewImages.map(image => {
                       // Find the color associated with this image
                       const colorAssociation = previewProductColors.find(pc => pc.image_id === image.id);
                       return (
                         <div key={image.id} className="relative group">
-                          <img src={image.image_url} alt="Product" className={`w-full aspect-square object-cover rounded-lg ${image.is_primary ? "ring-2 ring-primary" : ""}`} />
+                          <img src={image.image_url} alt={t("Product")} className={`w-full aspect-square object-cover rounded-lg ${image.is_primary ? "ring-2 ring-primary" : ""}`} />
                           {image.is_primary && <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
                               <Star className="h-3 w-3 fill-current" />
-                              Primary
+                              {t("Primary")}
                             </div>}
                           {colorAssociation && colorAssociation.colors && (
                             <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur-sm text-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1 border">
@@ -1736,57 +1787,57 @@ const Products = () => {
                     })}
                   </div> : <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
                     <ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>No images available</p>
+                    <p>{t("No images available")}</p>
                   </div>}
               </div>
 
               {/* Product Details */}
               <div className="space-y-4 border-t pt-4">
                 <div>
-                  <Label className="text-muted-foreground">Name</Label>
+                  <Label className="text-muted-foreground">{t("Name")}</Label>
                   <p className="text-lg font-semibold">{selectedProduct.name}</p>
                 </div>
                 
                 <div>
-                  <Label className="text-muted-foreground">Description</Label>
-                  <p className="text-sm">{selectedProduct.description || "No description"}</p>
+                  <Label className="text-muted-foreground">{t("Description")}</Label>
+                  <p className="text-sm">{selectedProduct.description || t("No description")}</p>
                 </div>
 
                 {selectedProduct.sku && <div>
-                    <Label className="text-muted-foreground">SKU</Label>
+                    <Label className="text-muted-foreground">{t("SKU")}</Label>
                     <p className="font-mono text-sm">{selectedProduct.sku}</p>
                   </div>}
 
                 {selectedProduct.flag && <div>
-                    <Label className="text-muted-foreground">Flag</Label>
+                    <Label className="text-muted-foreground">{t("Flag")}</Label>
                     <Badge variant="secondary">{selectedProduct.flag}</Badge>
                   </div>}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Category</Label>
+                    <Label className="text-muted-foreground">{t("Category")}</Label>
                     <p className="font-medium">{selectedProduct.category}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Target Gender</Label>
+                    <Label className="text-muted-foreground">{t("Target Gender")}</Label>
                     <Badge variant="outline">
-                      {(selectedProduct as any).target_gender === 'men' ? 'Men' : 
-                       (selectedProduct as any).target_gender === 'women' ? 'Women' : 
-                       'Both / Unisex'}
+                      {(selectedProduct as any).target_gender === 'men' ? t('Men') : 
+                       (selectedProduct as any).target_gender === 'women' ? t('Women') : 
+                       t('Both / Unisex')}
                     </Badge>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Rating</Label>
+                    <Label className="text-muted-foreground">{t("Rating")}</Label>
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       <span className="font-medium">
                         {previewRating > 0 ? previewRating.toFixed(1) : '0'}/5
                         {previewReviews.length > 0 && (
                           <span className="text-xs text-muted-foreground ml-1">
-                            ({previewReviews.length} {previewReviews.length === 1 ? 'review' : 'reviews'})
+                            ({previewReviews.length} {previewReviews.length === 1 ? t('review') : t('reviews')})
                           </span>
                         )}
                       </span>
@@ -1796,35 +1847,35 @@ const Products = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Price</Label>
+                    <Label className="text-muted-foreground">{t("Price")}</Label>
                     {selectedProduct.offer_price && selectedProduct.offer_price < selectedProduct.price ? (
                       <div className="flex items-center gap-2">
-                        <p className="text-lg font-bold text-primary">${selectedProduct.offer_price.toFixed(2)}</p>
-                        <p className="text-sm text-muted-foreground line-through">${selectedProduct.price.toFixed(2)}</p>
+                        <p className="text-lg font-bold text-primary">{formatPrice(selectedProduct.offer_price)}</p>
+                        <p className="text-sm text-muted-foreground line-through">{formatPrice(selectedProduct.price)}</p>
                       </div>
                     ) : selectedProduct.min_price && selectedProduct.max_price && selectedProduct.min_price !== selectedProduct.max_price ? (
                       <p className="text-lg font-bold text-muted-foreground">
-                        ${selectedProduct.min_price.toFixed(2)} - ${selectedProduct.max_price.toFixed(2)}
+                        {formatPrice(selectedProduct.min_price)} - {formatPrice(selectedProduct.max_price)}
                       </p>
                     ) : (
-                      <p className="text-lg font-bold">${(selectedProduct.price || 0).toFixed(2)}</p>
+                      <p className="text-lg font-bold">{formatPrice(selectedProduct.price || 0)}</p>
                     )}
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Total Stock</Label>
-                    <p className="font-medium">{selectedProduct.stock_quantity || 0} units</p>
+                    <Label className="text-muted-foreground">{t("Total Stock")}</Label>
+                    <p className="font-medium">{selectedProduct.stock_quantity || 0} {t("units")}</p>
                   </div>
                 </div>
 
                 {selectedProduct.sizes && selectedProduct.sizes.length > 0 && <div>
-                    <Label className="text-muted-foreground">Available Sizes</Label>
+                    <Label className="text-muted-foreground">{t("Available Sizes")}</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {selectedProduct.sizes.map((size, idx) => <Badge key={idx} variant="outline">{size}</Badge>)}
                     </div>
                   </div>}
 
                 {selectedProduct.features && selectedProduct.features.length > 0 && <div>
-                    <Label className="text-muted-foreground">Features</Label>
+                    <Label className="text-muted-foreground">{t("Features")}</Label>
                     <div className="flex flex-col gap-2 mt-2">
                       {selectedProduct.features.map((feature, idx) => <div key={idx} className="flex items-center gap-2 text-sm">
                           <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
@@ -1834,7 +1885,7 @@ const Products = () => {
                   </div>}
 
                 {selectedProduct.colors && selectedProduct.colors.length > 0 && <div>
-                    <Label className="text-muted-foreground">Available Colors</Label>
+                    <Label className="text-muted-foreground">{t("Available Colors")}</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {previewProductColors.length > 0 ? (
                         previewProductColors.map((colorItem, idx) => (
@@ -1843,7 +1894,7 @@ const Products = () => {
                               backgroundColor: colorItem.colors?.hex_code
                             }} title={colorItem.colors?.name} />
                             <span className="text-sm font-medium">{colorItem.colors?.name}</span>
-                            {colorItem.image_id && <Badge variant="secondary" className="text-xs">Has Image</Badge>}
+                            {colorItem.image_id && <Badge variant="secondary" className="text-xs">{t("Has Image")}</Badge>}
                           </div>
                         ))
                       ) : (
@@ -1862,15 +1913,15 @@ const Products = () => {
                 {/* Product Variants Table */}
                 {(previewVariants.length > 0 || (selectedProduct.colors && selectedProduct.sizes?.length)) && (
                   <div>
-                    <Label className="text-muted-foreground mb-3 block">Product Variants</Label>
+                    <Label className="text-muted-foreground mb-3 block">{t("Product Variants")}</Label>
                     <div className="border rounded-lg overflow-hidden">
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Color</TableHead>
-                            <TableHead>Size</TableHead>
-                            <TableHead>Price</TableHead>
-                            <TableHead>Stock</TableHead>
+                            <TableHead>{t("Color")}</TableHead>
+                            <TableHead>{t("Size")}</TableHead>
+                            <TableHead>{t("Price")}</TableHead>
+                            <TableHead>{t("Stock")}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1886,8 +1937,8 @@ const Products = () => {
                                 </div>
                               </TableCell>
                               <TableCell>{variant.size}</TableCell>
-                              <TableCell className="font-semibold">${variant.price.toFixed(2)}</TableCell>
-                              <TableCell>{variant.stock_quantity} units</TableCell>
+                              <TableCell className="font-semibold">{formatPrice(variant.price)}</TableCell>
+                              <TableCell>{variant.stock_quantity} {t("units")}</TableCell>
                             </TableRow>
                           ))}
                           {(() => {
@@ -1913,7 +1964,7 @@ const Products = () => {
                                 <TableRow className="bg-muted/50">
                                   <TableCell>
                                     <div className="text-sm text-muted-foreground">
-                                      Unlisted: {unlistedColorIds.length} color(s)
+                                      {t("Unlisted")}: {unlistedColorIds.length} {t("color(s)")}
                                     </div>
                                   </TableCell>
                                   <TableCell>
@@ -1921,8 +1972,8 @@ const Products = () => {
                                       {unlistedSizes.join(', ')}
                                     </div>
                                   </TableCell>
-                                  <TableCell className="font-semibold">${(selectedProduct.price || 0).toFixed(2)}</TableCell>
-                                  <TableCell>{unlistedStock} units</TableCell>
+                                  <TableCell className="font-semibold">{formatPrice(selectedProduct.price || 0)}</TableCell>
+                                  <TableCell>{unlistedStock} {t("units")}</TableCell>
                                 </TableRow>
                               );
                             }
@@ -1936,15 +1987,15 @@ const Products = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Status</Label>
+                    <Label className="text-muted-foreground">{t("Status")}</Label>
                     <Badge variant={getStockStatus(selectedProduct.stock_quantity).variant} className="mx-[20px]">
                       {getStockStatus(selectedProduct.stock_quantity).label}
                     </Badge>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Active</Label>
+                    <Label className="text-muted-foreground">{t("Active")}</Label>
                     <Badge variant={selectedProduct.is_active ? "default" : "secondary"} className="mx-[20px]">
-                      {selectedProduct.is_active ? "Active" : "Inactive"}
+                      {selectedProduct.is_active ? t("Active") : t("Inactive")}
                     </Badge>
                   </div>
                 </div>
@@ -1952,13 +2003,13 @@ const Products = () => {
             </div>}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>
-              Close
+              {t("Close")}
             </Button>
             <Button onClick={() => {
             setIsPreviewDialogOpen(false);
             if (selectedProduct) openEditDialog(selectedProduct);
           }}>
-              Edit Product
+              {t("Edit Product")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1968,20 +2019,19 @@ const Products = () => {
       <AlertDialog open={!!deleteProductId} onOpenChange={() => setDeleteProductId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("Are you sure?")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the product
-              from the database.
+              {t("This action cannot be undone. This will permanently delete the product from the database.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => {
             if (deleteProductId) {
               deleteProductMutation.mutate(deleteProductId);
             }
           }} className="bg-destructive hover:bg-destructive/90">
-              Delete
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1991,16 +2041,16 @@ const Products = () => {
       <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selectedProducts.length} products?</AlertDialogTitle>
+            <AlertDialogTitle>{t("Delete")} {selectedProducts.length} {t("products?")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete {selectedProducts.length} 
-              {selectedProducts.length === 1 ? " product" : " products"} from the database.
+              {t("This action cannot be undone. This will permanently delete")} {selectedProducts.length} 
+              {selectedProducts.length === 1 ? ` ${t("product")}` : ` ${t("products")}`} {t("from the database.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive hover:bg-destructive/90">
-              Delete All
+              {t("Delete All")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

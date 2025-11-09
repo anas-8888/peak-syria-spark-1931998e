@@ -12,25 +12,20 @@ const menuItems = [{
   icon: LayoutDashboard,
   end: true
 }, {
-  title: "Hero Slides",
-  path: "/dashboard/hero-slides",
-  icon: Image,
-  end: false
-}, {
-  title: "Banners",
-  path: "/dashboard/banners",
-  icon: LayoutGrid,
-  end: false
-}, {
-  title: "Product Showcase",
-  path: "/dashboard/showcase",
-  icon: Presentation,
-  end: false
-}, {
   title: "Analytics",
   path: "/dashboard/analytics",
   icon: BarChart3,
   end: false
+}, {
+  title: "Roles",
+  path: "/dashboard/roles",
+  icon: Shield,
+  end: false
+}, {
+title: "Users",
+path: "/dashboard/users",
+icon: Users,
+end: false
 }, {
   title: "Categories",
   path: "/dashboard/categories",
@@ -50,6 +45,16 @@ const menuItems = [{
   title: "Products",
   path: "/dashboard/products",
   icon: Package,
+  end: false
+}, {
+  title: "Discounts",
+  path: "/dashboard/discounts",
+  icon: Tag,
+  end: false
+}, {
+  title: "Shipping",
+  path: "/dashboard/shipping",
+  icon: Truck,
   end: false
 }, {
   title: "Orders",
@@ -77,19 +82,24 @@ const menuItems = [{
   icon: Mail,
   end: false
 }, {
-  title: "Discounts",
-  path: "/dashboard/discounts",
-  icon: Tag,
-  end: false
-}, {
-  title: "Shipping",
-  path: "/dashboard/shipping",
-  icon: Truck,
-  end: false
-}, {
   title: "Marketing",
   path: "/dashboard/marketing",
   icon: Megaphone,
+  end: false
+}, {
+  title: "Hero Slides",
+  path: "/dashboard/hero-slides",
+  icon: Image,
+  end: false
+}, {
+  title: "Banners",
+  path: "/dashboard/banners",
+  icon: LayoutGrid,
+  end: false
+}, {
+  title: "Product Showcase",
+  path: "/dashboard/showcase",
+  icon: Presentation,
   end: false
 }, {
   title: "About Page",
@@ -107,23 +117,13 @@ const menuItems = [{
     icon: Languages,
     end: false
   }, {
-    title: "Roles",
-    path: "/dashboard/roles",
-    icon: Shield,
-    end: false
-  }, {
-  title: "Users",
-  path: "/dashboard/users",
-  icon: Users,
-  end: false
-}, {
   title: "Settings",
   path: "/dashboard/settings",
   icon: Settings,
   end: false
 }];
 const DashboardSidebar = () => {
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
@@ -138,6 +138,9 @@ const DashboardSidebar = () => {
     } catch (error) {
       toast.error(t("Failed to logout"));
     }
+  };
+  const toggleLanguage = () => {
+    setLanguage(language === "en" ? "ar" : "en");
   };
   return <>
       {/* Mobile Menu Button - Fixed at top left */}
@@ -195,13 +198,17 @@ const DashboardSidebar = () => {
 
         {/* Footer */}
         <div className="p-4 border-t border-border space-y-3">
+          {/* Language Toggle Button */}
+          <Button onClick={toggleLanguage} variant="outline" className={`w-full gap-3 ${collapsed ? 'px-0 justify-center' : 'justify-start'}`}>
+            <Languages className="h-5 w-5 flex-shrink-0" />
+            {!collapsed && <span className="font-medium">{language === "en" ? "العربية" : "English"}</span>}
+          </Button>
+          
           {/* Logout Button */}
           <Button onClick={handleLogout} variant="outline" className={`w-full gap-3 ${collapsed ? 'px-0 justify-center' : 'justify-start'}`}>
             <LogOut className="h-5 w-5 flex-shrink-0" />
             {!collapsed && <span className="font-medium">{t("Sign Out")}</span>}
           </Button>
-
-          {!collapsed}
         </div>
       </aside>
     </>;

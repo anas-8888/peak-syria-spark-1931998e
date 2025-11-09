@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, SlidersHorizontal } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface FilterOptions {
   categories: string[];
@@ -27,6 +28,7 @@ interface ProductFiltersProps {
 
 const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, minPrice, maxPrice }: ProductFiltersProps) => {
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const [localFilters, setLocalFilters] = useState(filters);
   // Separate state for price slider - this is what the slider displays
   const [sliderValue, setSliderValue] = useState<[number, number]>(filters.priceRange);
@@ -196,8 +198,8 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
             className="mb-4"
           />
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>${sliderValue[0].toFixed(2)}</span>
-            <span>${sliderValue[1].toFixed(2)}</span>
+            <span>{formatPrice(sliderValue[0])}</span>
+            <span>{formatPrice(sliderValue[1])}</span>
           </div>
         </div>
       </div>

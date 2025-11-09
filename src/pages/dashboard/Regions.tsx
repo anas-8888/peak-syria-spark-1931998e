@@ -7,11 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, Edit, Trash2, MapPin } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Region = {
   id: string;
@@ -35,7 +36,7 @@ const Regions = () => {
   const queryClient = useQueryClient();
 
   // Fetch regions
-  const { data: regions = [] } = useQuery({
+  const { data: regions = [], isLoading } = useQuery({
     queryKey: ["regions"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -138,36 +139,67 @@ const Regions = () => {
     <div className="p-8 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Regions</h1>
-          <p className="text-muted-foreground">Manage delivery regions and locations</p>
+          <h1 className="text-3xl font-bold">{t("Regions")}</h1>
+          <p className="text-muted-foreground">{t("Manage delivery regions and locations")}</p>
         </div>
         <Button onClick={() => {
           resetForm();
           setIsDialogOpen(true);
         }}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Region
+          {t("Add Region")}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>All Regions</CardTitle>
+          <CardTitle>{t("All Regions")}</CardTitle>
         </CardHeader>
         <CardContent>
-          {regions.length === 0 ? (
+          {isLoading ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("Region Name")}</TableHead>
+                  <TableHead>{t("Country")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead className="text-right">{t("Actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-6 w-12" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : regions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No regions yet. Add your first region to get started!</p>
+              <p>{t("No regions yet. Add your first region to get started!")}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Region Name</TableHead>
-                  <TableHead>Country</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("Region Name")}</TableHead>
+                  <TableHead>{t("Country")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead className="text-right">{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -184,7 +216,7 @@ const Regions = () => {
                           }
                         />
                         <span className="text-sm text-muted-foreground">
-                          {region.is_active ? "Active" : "Inactive"}
+                          {region.is_active ? t("Active") : t("Inactive")}
                         </span>
                       </div>
                     </TableCell>
@@ -218,38 +250,39 @@ const Regions = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingRegion ? "Edit Region" : "Add Region"}</DialogTitle>
+            <DialogTitle>{editingRegion ? t("Edit Region") : t("Add Region")}</DialogTitle>
+            <DialogDescription>{editingRegion ? t("Update region information") : t("Add a new delivery region")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="region-name">Region Name *</Label>
+              <Label htmlFor="region-name">{t("Region Name")} *</Label>
               <Input
                 id="region-name"
                 value={regionForm.name}
                 onChange={(e) => setRegionForm({ ...regionForm, name: e.target.value })}
-                placeholder="Damascus"
+                placeholder={t("Damascus")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="region-country">Country</Label>
+              <Label htmlFor="region-country">{t("Country")}</Label>
               <Input
                 id="region-country"
                 value={regionForm.country}
                 onChange={(e) => setRegionForm({ ...regionForm, country: e.target.value })}
-                placeholder="Syria"
+                placeholder={t("Syria")}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               onClick={() => saveRegionMutation.mutate(editingRegion ? { ...regionForm, id: editingRegion.id } : regionForm)}
               disabled={!regionForm.name}
             >
-              {editingRegion ? "Update" : "Add"} Region
+              {editingRegion ? t("Update") : t("Add")} {t("Region")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -259,17 +292,17 @@ const Regions = () => {
       <AlertDialog open={!!deletingRegionId} onOpenChange={() => setDeletingRegionId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Region</AlertDialogTitle>
+            <AlertDialogTitle>{t("Delete Region")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this region? This action cannot be undone.
+              {t("Are you sure you want to delete this region? This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deletingRegionId && deleteRegionMutation.mutate(deletingRegionId)}
             >
-              Delete
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Plus, Trash2, MoveUp, MoveDown, ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import PercentageLoader from "@/components/PercentageLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface HeroShowcase {
   id: string;
@@ -210,7 +210,7 @@ const HeroShowcase = () => {
       hero_subtitle: "",
       hero_description: "",
       hero_image_url: "",
-      cta_text: "View Models",
+      cta_text: t("View Models"),
       cta_url: "/products",
       position: (showcases?.length || 0),
       is_active: true,
@@ -241,14 +241,13 @@ const HeroShowcase = () => {
     updateMutation.mutate({ ...swapShowcase, position: showcase.position });
   };
 
-  if (isLoading) return <PercentageLoader />;
 
   return (
     <div className="p-8 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Hero Showcase Management</h1>
+        <h1 className="text-3xl font-bold">{t("Hero Showcase Management")}</h1>
         <p className="text-muted-foreground">
-          Create featured product sections with hero images and product grids
+          {t("Create featured product sections with hero images and product grids")}
         </p>
       </div>
 
@@ -256,46 +255,46 @@ const HeroShowcase = () => {
         <DialogTrigger asChild>
           <Button onClick={handleCreateNew}>
             <Plus className="mr-2 h-4 w-4" />
-            Create Hero Showcase
+            {t("Create Hero Showcase")}
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingShowcase?.id ? "Edit Hero Showcase" : "Create Hero Showcase"}</DialogTitle>
-            <DialogDescription>Configure your featured product section</DialogDescription>
+            <DialogTitle>{editingShowcase?.id ? t("Edit Hero Showcase") : t("Create Hero Showcase")}</DialogTitle>
+            <DialogDescription>{t("Configure your featured product section")}</DialogDescription>
           </DialogHeader>
           {editingShowcase && (
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Title</Label>
+              <Label>{t("Title")}</Label>
               <Input
                 value={editingShowcase.hero_title}
                 onChange={(e) => setEditingShowcase({ ...editingShowcase, hero_title: e.target.value })}
-                placeholder="Outdoor Collection"
+                placeholder={t("Outdoor Collection")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Subtitle (Optional)</Label>
+              <Label>{t("Subtitle (Optional)")}</Label>
               <Input
                 value={editingShowcase.hero_subtitle || ""}
                 onChange={(e) => setEditingShowcase({ ...editingShowcase, hero_subtitle: e.target.value })}
-                placeholder="Premium Trail Shoes"
+                placeholder={t("Premium Trail Shoes")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label>{t("Description")}</Label>
               <Textarea
                 value={editingShowcase.hero_description}
                 onChange={(e) => setEditingShowcase({ ...editingShowcase, hero_description: e.target.value })}
-                placeholder="Explore all terrains with our Peak Outdoor robust, comfortable, and stylish shoes."
+                placeholder={t("Explore all terrains with our Peak Outdoor robust, comfortable, and stylish shoes.")}
                 rows={3}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Hero Image</Label>
+              <Label>{t("Hero Image")}</Label>
               <div className="flex gap-2">
                 <Input
                   type="file"
@@ -306,22 +305,22 @@ const HeroShowcase = () => {
                 {uploading && <Loader2 className="h-4 w-4 animate-spin" />}
               </div>
               {editingShowcase.hero_image_url && (
-                <img src={editingShowcase.hero_image_url} alt="Preview" className="h-64 rounded-lg object-cover" />
+                <img src={editingShowcase.hero_image_url} alt={t("Preview")} className="h-64 rounded-lg object-cover" />
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>CTA Text</Label>
+                <Label>{t("CTA Text")}</Label>
                 <Input
                   value={editingShowcase.cta_text}
                   onChange={(e) => setEditingShowcase({ ...editingShowcase, cta_text: e.target.value })}
-                  placeholder="View Models"
+                  placeholder={t("View Models")}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>CTA URL</Label>
+                <Label>{t("CTA URL")}</Label>
                 <Input
                   value={editingShowcase.cta_url || ""}
                   onChange={(e) => setEditingShowcase({ ...editingShowcase, cta_url: e.target.value })}
@@ -331,7 +330,7 @@ const HeroShowcase = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Featured Products (Select up to 4)</Label>
+              <Label>{t("Featured Products (Select up to 4)")}</Label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-[300px] overflow-y-auto p-2 border rounded-lg">
                 {products?.map((product) => {
                   const isSelected = selectedProducts.includes(product.id);
@@ -376,7 +375,7 @@ const HeroShowcase = () => {
                 })}
               </div>
               <p className="text-xs text-muted-foreground font-medium">
-                Selected: {selectedProducts.length}/4 products
+                {t("Selected")}: {selectedProducts.length}/4 {t("products")}
               </p>
             </div>
 
@@ -385,7 +384,7 @@ const HeroShowcase = () => {
                 checked={editingShowcase.is_active}
                 onCheckedChange={(checked) => setEditingShowcase({ ...editingShowcase, is_active: checked })}
               />
-              <Label>Active</Label>
+              <Label>{t("Active")}</Label>
             </div>
 
             <div className="flex gap-2 pt-4">
@@ -394,14 +393,14 @@ const HeroShowcase = () => {
                 disabled={!editingShowcase.hero_title || !editingShowcase.hero_description || !editingShowcase.hero_image_url}
                 className="flex-1"
               >
-                {editingShowcase.id ? "Update Showcase" : "Create Showcase"}
+                {editingShowcase.id ? t("Update Showcase") : t("Create Showcase")}
               </Button>
               <Button variant="outline" onClick={() => {
                 setModalOpen(false);
                 setEditingShowcase(null);
                 setSelectedProducts([]);
               }}>
-                Cancel
+                {t("Cancel")}
               </Button>
             </div>
           </div>
@@ -409,8 +408,33 @@ const HeroShowcase = () => {
         </DialogContent>
       </Dialog>
 
-      <div className="grid gap-4">
-        {showcases?.map((showcase, index) => (
+      {isLoading ? (
+        <div className="grid gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-24 w-40 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-48" />
+                    <Skeleton className="h-4 w-64" />
+                    <Skeleton className="h-3 w-96" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-8 w-8" />
+                    <Skeleton className="h-8 w-8" />
+                    <Skeleton className="h-6 w-12" />
+                    <Skeleton className="h-8 w-16" />
+                    <Skeleton className="h-8 w-8" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {showcases?.map((showcase, index) => (
           <Card key={showcase.id}>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
@@ -430,7 +454,7 @@ const HeroShowcase = () => {
                     <MoveDown className="h-4 w-4" />
                   </Button>
                   <Switch checked={showcase.is_active} onCheckedChange={(checked) => updateMutation.mutate({ ...showcase, is_active: checked })} />
-                  <Button variant="outline" onClick={() => handleEditShowcase(showcase)}>Edit</Button>
+                  <Button variant="outline" onClick={() => handleEditShowcase(showcase)}>{t("Edit")}</Button>
                   <Button variant="destructive" size="icon" onClick={() => deleteMutation.mutate(showcase.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -439,7 +463,8 @@ const HeroShowcase = () => {
             </CardContent>
           </Card>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

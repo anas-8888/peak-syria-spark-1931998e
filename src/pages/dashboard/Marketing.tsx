@@ -3,19 +3,21 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, Mail, MessageSquare, Bell, Share2, Edit, Trash2, Play, Pause, BarChart3, Users, Target, FileText, TrendingUp, MousePointerClick, DollarSign, Send } from "lucide-react";
 import CountdownTimer from "@/components/CountdownTimer";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Campaign = {
   id: string;
@@ -65,6 +67,7 @@ type Segment = {
 
 const Marketing = () => {
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const [activeTab, setActiveTab] = useState("overview");
   const [isCampaignDialogOpen, setIsCampaignDialogOpen] = useState(false);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
@@ -106,7 +109,7 @@ const Marketing = () => {
   const queryClient = useQueryClient();
 
   // Fetch campaigns
-  const { data: campaigns = [] } = useQuery({
+  const { data: campaigns = [], isLoading: campaignsLoading } = useQuery({
     queryKey: ["marketing-campaigns"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -119,7 +122,7 @@ const Marketing = () => {
   });
 
   // Fetch campaign analytics
-  const { data: analytics = [] } = useQuery({
+  const { data: analytics = [], isLoading: analyticsLoading } = useQuery({
     queryKey: ["campaign-analytics"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -131,7 +134,7 @@ const Marketing = () => {
   });
 
   // Fetch templates
-  const { data: templates = [] } = useQuery({
+  const { data: templates = [], isLoading: templatesLoading } = useQuery({
     queryKey: ["marketing-templates"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -144,7 +147,7 @@ const Marketing = () => {
   });
 
   // Fetch segments
-  const { data: segments = [] } = useQuery({
+  const { data: segments = [], isLoading: segmentsLoading } = useQuery({
     queryKey: ["customer-segments"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -174,7 +177,7 @@ const Marketing = () => {
       // Get template details
       const template = templates.find(t => t.id === data.template_id);
       if (!template) {
-        throw new Error("Please select a template");
+        throw new Error(t("Please select a template"));
       }
 
       if (data.id) {
@@ -209,12 +212,12 @@ const Marketing = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["marketing-campaigns"] });
-      toast.success(editingCampaign ? "Campaign updated" : "Campaign created");
+      toast.success(editingCampaign ? t("Campaign updated") : t("Campaign created"));
       setIsCampaignDialogOpen(false);
       resetCampaignForm();
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to save campaign");
+      toast.error(error.message || t("Failed to save campaign"));
     },
   });
 
@@ -485,12 +488,14 @@ const Marketing = () => {
     ? (analytics.reduce((sum, a) => sum + (a.opened_count > 0 ? (a.clicked_count / a.opened_count) * 100 : 0), 0) / analytics.length)
     : 0;
 
+  const isLoading = campaignsLoading || analyticsLoading || templatesLoading || segmentsLoading;
+
   return (
     <div className="p-8 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Marketing & Campaigns</h1>
-          <p className="text-muted-foreground">Manage your marketing campaigns and customer engagement</p>
+          <h1 className="text-3xl font-bold">{t("Marketing & Campaigns")}</h1>
+          <p className="text-muted-foreground">{t("Manage your marketing campaigns and customer engagement")}</p>
         </div>
         {activeTab === "overview" && (
           <Button onClick={() => {
@@ -498,7 +503,7 @@ const Marketing = () => {
             setIsCampaignDialogOpen(true);
           }}>
             <Plus className="h-4 w-4 mr-2" />
-            Create Campaign
+            {t("Create Campaign")}
           </Button>
         )}
         {activeTab === "templates" && (
@@ -507,7 +512,7 @@ const Marketing = () => {
             setIsTemplateDialogOpen(true);
           }}>
             <Plus className="h-4 w-4 mr-2" />
-            Create Template
+            {t("Create Template")}
           </Button>
         )}
         {activeTab === "segments" && (
@@ -516,16 +521,16 @@ const Marketing = () => {
             setIsSegmentDialogOpen(true);
           }}>
             <Plus className="h-4 w-4 mr-2" />
-            Create Segment
+            {t("Create Segment")}
           </Button>
         )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="segments">Segments</TabsTrigger>
+          <TabsTrigger value="overview">{t("Overview")}</TabsTrigger>
+          <TabsTrigger value="templates">{t("Templates")}</TabsTrigger>
+          <TabsTrigger value="segments">{t("Segments")}</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -533,45 +538,81 @@ const Marketing = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("Total Campaigns")}</CardTitle>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{totalCampaigns}</div>
-                <p className="text-xs text-muted-foreground">{activeCampaigns} active</p>
+                {isLoading ? (
+                  <>
+                    <Skeleton className="h-8 w-16 mb-2" />
+                    <Skeleton className="h-3 w-20" />
+                  </>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold">{totalCampaigns}</div>
+                    <p className="text-xs text-muted-foreground">{activeCampaigns} {t("active")}</p>
+                  </>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Messages Sent</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("Messages Sent")}</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{totalSent.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">All campaigns</p>
+                {isLoading ? (
+                  <>
+                    <Skeleton className="h-8 w-24 mb-2" />
+                    <Skeleton className="h-3 w-24" />
+                  </>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold">{totalSent.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground">{t("All campaigns")}</p>
+                  </>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Avg. Open Rate</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("Avg. Open Rate")}</CardTitle>
                 <MousePointerClick className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{avgOpenRate.toFixed(1)}%</div>
-                <p className="text-xs text-muted-foreground">Click rate: {avgClickRate.toFixed(1)}%</p>
+                {isLoading ? (
+                  <>
+                    <Skeleton className="h-8 w-16 mb-2" />
+                    <Skeleton className="h-3 w-24" />
+                  </>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold">{avgOpenRate.toFixed(1)}%</div>
+                    <p className="text-xs text-muted-foreground">{t("Click rate")}: {avgClickRate.toFixed(1)}%</p>
+                  </>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Revenue Generated</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("Revenue Generated")}</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
-                <p className="text-xs text-muted-foreground">From campaigns</p>
+                {isLoading ? (
+                  <>
+                    <Skeleton className="h-8 w-24 mb-2" />
+                    <Skeleton className="h-3 w-24" />
+                  </>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold">{formatPrice(totalRevenue)}</div>
+                    <p className="text-xs text-muted-foreground">{t("From campaigns")}</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -579,29 +620,29 @@ const Marketing = () => {
           <Card>
             <CardHeader>
               <CardTitle>
-                {activeTab === "overview" && "Recent Campaigns"}
-                {activeTab === "templates" && "Recent Templates"}
-                {activeTab === "segments" && "Recent Segments"}
+                {activeTab === "overview" && t("Recent Campaigns")}
+                {activeTab === "templates" && t("Recent Templates")}
+                {activeTab === "segments" && t("Recent Segments")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {activeTab === "overview" && (
                 campaigns.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    <p>No campaigns yet. Create your first campaign to get started!</p>
+                    <p>{t("No campaigns yet. Create your first campaign to get started!")}</p>
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Campaign</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Schedule / Timer</TableHead>
-                        <TableHead>Sent</TableHead>
-                        <TableHead>Opens</TableHead>
-                        <TableHead>Clicks</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t("Campaign")}</TableHead>
+                        <TableHead>{t("Type")}</TableHead>
+                        <TableHead>{t("Status")}</TableHead>
+                        <TableHead>{t("Schedule / Timer")}</TableHead>
+                        <TableHead>{t("Sent")}</TableHead>
+                        <TableHead>{t("Opens")}</TableHead>
+                        <TableHead>{t("Clicks")}</TableHead>
+                        <TableHead className="text-right">{t("Actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -625,7 +666,7 @@ const Marketing = () => {
                                   {new Date(campaign.scheduled_date).toLocaleString()}
                                 </span>
                               ) : (
-                                <span className="text-xs text-muted-foreground">Not scheduled</span>
+                                <span className="text-xs text-muted-foreground">{t("Not scheduled")}</span>
                               )}
                             </TableCell>
                             <TableCell>{campaignAnalytics?.sent_count || 0}</TableCell>
@@ -637,7 +678,7 @@ const Marketing = () => {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => openEditCampaign(campaign)}
-                                  title="Edit campaign"
+                                  title={t("Edit campaign")}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -648,7 +689,7 @@ const Marketing = () => {
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => updateCampaignStatusMutation.mutate({ id: campaign.id, status: 'scheduled' })}
-                                      title="Schedule campaign"
+                                      title={t("Schedule campaign")}
                                     >
                                       <Pause className="h-4 w-4" />
                                     </Button>
@@ -656,7 +697,7 @@ const Marketing = () => {
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => updateCampaignStatusMutation.mutate({ id: campaign.id, status: 'active' })}
-                                      title="Send now"
+                                      title={t("Send now")}
                                     >
                                       <Send className="h-4 w-4" />
                                     </Button>
@@ -669,7 +710,7 @@ const Marketing = () => {
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => updateCampaignStatusMutation.mutate({ id: campaign.id, status: 'active' })}
-                                      title="Send now"
+                                      title={t("Send now")}
                                     >
                                       <Send className="h-4 w-4" />
                                     </Button>
@@ -677,7 +718,7 @@ const Marketing = () => {
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => updateCampaignStatusMutation.mutate({ id: campaign.id, status: 'paused' })}
-                                      title="Pause campaign"
+                                      title={t("Pause campaign")}
                                     >
                                       <Pause className="h-4 w-4" />
                                     </Button>
@@ -689,7 +730,7 @@ const Marketing = () => {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => updateCampaignStatusMutation.mutate({ id: campaign.id, status: 'paused' })}
-                                    title="Pause campaign"
+                                    title={t("Pause campaign")}
                                   >
                                     <Pause className="h-4 w-4" />
                                   </Button>
@@ -700,7 +741,7 @@ const Marketing = () => {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => updateCampaignStatusMutation.mutate({ id: campaign.id, status: 'active' })}
-                                    title="Resume campaign"
+                                    title={t("Resume campaign")}
                                   >
                                     <Play className="h-4 w-4" />
                                   </Button>
@@ -710,7 +751,7 @@ const Marketing = () => {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => setDeletingCampaignId(campaign.id)}
-                                  title="Delete campaign"
+                                  title={t("Delete campaign")}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -725,9 +766,25 @@ const Marketing = () => {
               )}
 
               {activeTab === "templates" && (
-                templates.length === 0 ? (
+                isLoading ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <Card key={i}>
+                        <CardHeader>
+                          <Skeleton className="h-6 w-32 mb-2" />
+                          <Skeleton className="h-5 w-20" />
+                        </CardHeader>
+                        <CardContent>
+                          <Skeleton className="h-4 w-full mb-2" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-3/4 mt-2" />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : templates.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    <p>No templates yet. Create your first template to get started!</p>
+                    <p>{t("No templates yet. Create your first template to get started!")}</p>
                   </div>
                 ) : (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -746,7 +803,7 @@ const Marketing = () => {
                         </CardHeader>
                         <CardContent>
                           {template.subject && (
-                            <p className="text-sm font-medium mb-2">Subject: {template.subject}</p>
+                            <p className="text-sm font-medium mb-2">{t("Subject")}: {template.subject}</p>
                           )}
                           <p className="text-sm text-muted-foreground line-clamp-3">{template.content}</p>
                         </CardContent>
@@ -757,9 +814,23 @@ const Marketing = () => {
               )}
 
               {activeTab === "segments" && (
-                segments.length === 0 ? (
+                isLoading ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <Card key={i}>
+                        <CardHeader>
+                          <Skeleton className="h-6 w-32 mb-2" />
+                          <Skeleton className="h-4 w-24" />
+                        </CardHeader>
+                        <CardContent>
+                          <Skeleton className="h-4 w-full" />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : segments.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    <p>No segments yet. Create your first segment to get started!</p>
+                    <p>{t("No segments yet. Create your first segment to get started!")}</p>
                   </div>
                 ) : (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -771,13 +842,13 @@ const Marketing = () => {
                               <CardTitle className="text-lg">{segment.name}</CardTitle>
                               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                 <Users className="h-4 w-4" />
-                                <span>{segment.customer_count} customers</span>
+                                <span>{segment.customer_count} {t("customers")}</span>
                               </div>
                             </div>
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-sm text-muted-foreground">{segment.description || "No description"}</p>
+                          <p className="text-sm text-muted-foreground">{segment.description || t("No description")}</p>
                         </CardContent>
                       </Card>
                     ))}
@@ -792,15 +863,15 @@ const Marketing = () => {
         <TabsContent value="campaigns" className="space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-bold">Campaigns</h2>
-              <p className="text-muted-foreground">Create and manage marketing campaigns</p>
+              <h2 className="text-2xl font-bold">{t("Campaigns")}</h2>
+              <p className="text-muted-foreground">{t("Create and manage marketing campaigns")}</p>
             </div>
             <Button onClick={() => {
               resetCampaignForm();
               setIsCampaignDialogOpen(true);
             }}>
               <Plus className="h-4 w-4 mr-2" />
-              Create Campaign
+              {t("Create Campaign")}
             </Button>
           </div>
 
@@ -808,14 +879,14 @@ const Marketing = () => {
             <Card>
               <CardContent className="text-center py-12">
                 <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No campaigns yet</h3>
-                <p className="text-muted-foreground mb-4">Get started by creating your first marketing campaign</p>
+                <h3 className="text-lg font-semibold mb-2">{t("No campaigns yet")}</h3>
+                <p className="text-muted-foreground mb-4">{t("Get started by creating your first marketing campaign")}</p>
                 <Button onClick={() => {
                   resetCampaignForm();
                   setIsCampaignDialogOpen(true);
                 }}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Campaign
+                  {t("Create Campaign")}
                 </Button>
               </CardContent>
             </Card>
@@ -834,7 +905,7 @@ const Marketing = () => {
                             {getStatusBadge(campaign.status)}
                           </div>
                           {campaign.subject && (
-                            <p className="text-sm text-muted-foreground">Subject: {campaign.subject}</p>
+                            <p className="text-sm text-muted-foreground">{t("Subject")}: {campaign.subject}</p>
                           )}
                         </div>
                         <div className="flex gap-2">
@@ -876,24 +947,24 @@ const Marketing = () => {
                     <CardContent>
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                         <div>
-                          <p className="text-muted-foreground">Sent</p>
+                          <p className="text-muted-foreground">{t("Sent")}</p>
                           <p className="font-semibold">{campaignAnalytics?.sent_count || 0}</p>
                         </div>
                         <div>
-                          <p className="text-muted-foreground">Opened</p>
+                          <p className="text-muted-foreground">{t("Opened")}</p>
                           <p className="font-semibold">{campaignAnalytics?.opened_count || 0}</p>
                         </div>
                         <div>
-                          <p className="text-muted-foreground">Clicked</p>
+                          <p className="text-muted-foreground">{t("Clicked")}</p>
                           <p className="font-semibold">{campaignAnalytics?.clicked_count || 0}</p>
                         </div>
                         <div>
-                          <p className="text-muted-foreground">Conversions</p>
+                          <p className="text-muted-foreground">{t("Conversions")}</p>
                           <p className="font-semibold">{campaignAnalytics?.converted_count || 0}</p>
                         </div>
                         <div>
-                          <p className="text-muted-foreground">Revenue</p>
-                          <p className="font-semibold">${Number(campaignAnalytics?.revenue_generated || 0).toFixed(2)}</p>
+                          <p className="text-muted-foreground">{t("Revenue")}</p>
+                          <p className="font-semibold">{formatPrice(Number(campaignAnalytics?.revenue_generated || 0))}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -908,12 +979,12 @@ const Marketing = () => {
         <TabsContent value="templates" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Templates</CardTitle>
+              <CardTitle>{t("Recent Templates")}</CardTitle>
             </CardHeader>
             <CardContent>
               {templates.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <p>No templates yet. Create your first template to get started!</p>
+                  <p>{t("No templates yet. Create your first template to get started!")}</p>
                 </div>
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -948,7 +1019,7 @@ const Marketing = () => {
                       </CardHeader>
                       <CardContent>
                         {template.subject && (
-                          <p className="text-sm font-medium mb-2">Subject: {template.subject}</p>
+                          <p className="text-sm font-medium mb-2">{t("Subject")}: {template.subject}</p>
                         )}
                         <p className="text-sm text-muted-foreground line-clamp-3">{template.content}</p>
                       </CardContent>
@@ -964,12 +1035,12 @@ const Marketing = () => {
         <TabsContent value="segments" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Segments</CardTitle>
+              <CardTitle>{t("Recent Segments")}</CardTitle>
             </CardHeader>
             <CardContent>
               {segments.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <p>No segments yet. Create your first segment to get started!</p>
+                  <p>{t("No segments yet. Create your first segment to get started!")}</p>
                 </div>
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -981,7 +1052,7 @@ const Marketing = () => {
                             <CardTitle className="text-lg">{segment.name}</CardTitle>
                             <div className="flex items-center gap-1 text-sm text-muted-foreground">
                               <Users className="h-4 w-4" />
-                              <span>{segment.customer_count} customers</span>
+                              <span>{segment.customer_count} {t("customers")}</span>
                             </div>
                           </div>
                           <div className="flex gap-2">
@@ -1003,7 +1074,7 @@ const Marketing = () => {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm text-muted-foreground">{segment.description || "No description"}</p>
+                        <p className="text-sm text-muted-foreground">{segment.description || t("No description")}</p>
                       </CardContent>
                     </Card>
                   ))}
@@ -1018,21 +1089,22 @@ const Marketing = () => {
       <Dialog open={isCampaignDialogOpen} onOpenChange={setIsCampaignDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingCampaign ? "Edit Campaign" : "Create Campaign"}</DialogTitle>
+            <DialogTitle>{editingCampaign ? t("Edit Campaign") : t("Create Campaign")}</DialogTitle>
+            <DialogDescription>{editingCampaign ? t("Update campaign details") : t("Create a new marketing campaign")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="campaign-name">Campaign Name *</Label>
+              <Label htmlFor="campaign-name">{t("Campaign Name")} *</Label>
               <Input
                 id="campaign-name"
                 value={campaignForm.name}
                 onChange={(e) => setCampaignForm({ ...campaignForm, name: e.target.value })}
-                placeholder="Summer Sale Email"
+                placeholder={t("Summer Sale Email")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="campaign-type">Type *</Label>
+              <Label htmlFor="campaign-type">{t("Type")} *</Label>
               <Select
                 value={campaignForm.type}
                 onValueChange={(value: Campaign['type']) => {
@@ -1044,22 +1116,22 @@ const Marketing = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background z-50">
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="sms">SMS</SelectItem>
-                  <SelectItem value="push">Push Notification</SelectItem>
-                  <SelectItem value="social">Social Media</SelectItem>
+                  <SelectItem value="email">{t("Email")}</SelectItem>
+                  <SelectItem value="sms">{t("SMS")}</SelectItem>
+                  <SelectItem value="push">{t("Push Notification")}</SelectItem>
+                  <SelectItem value="social">{t("Social Media")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="campaign-template">Select Template *</Label>
+              <Label htmlFor="campaign-template">{t("Select Template")} *</Label>
               <Select
                 value={campaignForm.template_id}
                 onValueChange={(value) => setCampaignForm({ ...campaignForm, template_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose a template">
+                  <SelectValue placeholder={t("Choose a template")}>
                     {campaignForm.template_id && templates.find(t => t.id === campaignForm.template_id)?.name}
                   </SelectValue>
                 </SelectTrigger>
@@ -1075,22 +1147,22 @@ const Marketing = () => {
               </Select>
               {templates.filter(t => t.type === campaignForm.type).length === 0 && (
                 <p className="text-xs text-muted-foreground">
-                  No {campaignForm.type} templates available. Create one first.
+                  {t("No")} {campaignForm.type} {t("templates available. Create one first.")}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="campaign-segment">Target Segment</Label>
+              <Label htmlFor="campaign-segment">{t("Target Segment")}</Label>
               <Select
                 value={campaignForm.target_segment}
                 onValueChange={(value) => setCampaignForm({ ...campaignForm, target_segment: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All customers" />
+                  <SelectValue placeholder={t("All customers")} />
                 </SelectTrigger>
                 <SelectContent className="bg-background z-50">
-                  <SelectItem value="all">All Customers</SelectItem>
+                  <SelectItem value="all">{t("All Customers")}</SelectItem>
                   {segments.map((segment) => (
                     <SelectItem key={segment.id} value={segment.id}>
                       {segment.name}
@@ -1101,7 +1173,7 @@ const Marketing = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="campaign-scheduled">Schedule Date (Optional)</Label>
+              <Label htmlFor="campaign-scheduled">{t("Schedule Date (Optional)")}</Label>
               <Input
                 id="campaign-scheduled"
                 type="datetime-local"
@@ -1112,13 +1184,13 @@ const Marketing = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCampaignDialogOpen(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               onClick={() => saveCampaignMutation.mutate(editingCampaign ? { ...campaignForm, id: editingCampaign.id } : campaignForm)}
               disabled={!campaignForm.name || !campaignForm.template_id}
             >
-              {editingCampaign ? "Update" : "Create"} Campaign
+              {editingCampaign ? t("Update") : t("Create")} {t("Campaign")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1128,21 +1200,22 @@ const Marketing = () => {
       <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingTemplate ? "Edit Template" : "Create Template"}</DialogTitle>
+            <DialogTitle>{editingTemplate ? t("Edit Template") : t("Create Template")}</DialogTitle>
+            <DialogDescription>{editingTemplate ? t("Update template details") : t("Create a new email template")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="template-name">Template Name *</Label>
+              <Label htmlFor="template-name">{t("Template Name")} *</Label>
               <Input
                 id="template-name"
                 value={templateForm.name}
                 onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
-                placeholder="Welcome Email Template"
+                placeholder={t("Welcome Email Template")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="template-type">Type *</Label>
+              <Label htmlFor="template-type">{t("Type")} *</Label>
               <Select
                 value={templateForm.type}
                 onValueChange={(value: Template['type']) => setTemplateForm({ ...templateForm, type: value })}
@@ -1151,57 +1224,57 @@ const Marketing = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background z-50">
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="sms">SMS</SelectItem>
-                  <SelectItem value="push">Push Notification</SelectItem>
+                  <SelectItem value="email">{t("Email")}</SelectItem>
+                  <SelectItem value="sms">{t("SMS")}</SelectItem>
+                  <SelectItem value="push">{t("Push Notification")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {templateForm.type === 'email' && (
               <div className="space-y-2">
-                <Label htmlFor="template-subject">Subject</Label>
+                <Label htmlFor="template-subject">{t("Subject")}</Label>
                 <Input
                   id="template-subject"
                   value={templateForm.subject}
                   onChange={(e) => setTemplateForm({ ...templateForm, subject: e.target.value })}
-                  placeholder="Welcome to our store!"
+                  placeholder={t("Welcome to our store!")}
                 />
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="template-content">Content *</Label>
+              <Label htmlFor="template-content">{t("Content")} *</Label>
               <Textarea
                 id="template-content"
                 value={templateForm.content}
                 onChange={(e) => setTemplateForm({ ...templateForm, content: e.target.value })}
-                placeholder="Template content..."
+                placeholder={t("Template content...")}
                 rows={8}
               />
             </div>
 
             {templateForm.type === 'email' && (
               <div className="space-y-2">
-                <Label htmlFor="template-preview">Preview Text</Label>
+                <Label htmlFor="template-preview">{t("Preview Text")}</Label>
                 <Input
                   id="template-preview"
                   value={templateForm.preview_text}
                   onChange={(e) => setTemplateForm({ ...templateForm, preview_text: e.target.value })}
-                  placeholder="Preview text shown in email client..."
+                  placeholder={t("Preview text shown in email client...")}
                 />
               </div>
             )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsTemplateDialogOpen(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               onClick={() => saveTemplateMutation.mutate(editingTemplate ? { ...templateForm, id: editingTemplate.id } : templateForm)}
               disabled={!templateForm.name || !templateForm.content}
             >
-              {editingTemplate ? "Update" : "Create"} Template
+              {editingTemplate ? t("Update") : t("Create")} {t("Template")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1211,36 +1284,37 @@ const Marketing = () => {
       <Dialog open={isSegmentDialogOpen} onOpenChange={setIsSegmentDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingSegment ? "Edit Segment" : "Create Segment"}</DialogTitle>
+            <DialogTitle>{editingSegment ? t("Edit Segment") : t("Create Segment")}</DialogTitle>
+            <DialogDescription>{editingSegment ? t("Update segment details") : t("Create a new customer segment")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="segment-name">Segment Name *</Label>
+              <Label htmlFor="segment-name">{t("Segment Name")} *</Label>
               <Input
                 id="segment-name"
                 value={segmentForm.name}
                 onChange={(e) => setSegmentForm({ ...segmentForm, name: e.target.value })}
-                placeholder="VIP Customers"
+                placeholder={t("VIP Customers")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="segment-description">Description</Label>
+              <Label htmlFor="segment-description">{t("Description")}</Label>
               <Textarea
                 id="segment-description"
                 value={segmentForm.description}
                 onChange={(e) => setSegmentForm({ ...segmentForm, description: e.target.value })}
-                placeholder="Customers who have spent over $1000..."
+                placeholder={`${t("Customers who have spent over")} 1000000 ${t("s.p")}...`}
                 rows={3}
               />
             </div>
 
             <div className="border-t pt-4">
-              <h3 className="text-sm font-medium mb-4">Segmentation Criteria</h3>
+              <h3 className="text-sm font-medium mb-4">{t("Segmentation Criteria")}</h3>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="min-purchase">Minimum Purchase Amount ($)</Label>
+                  <Label htmlFor="min-purchase">{t("Minimum Purchase Amount")} ({t("s.p")})</Label>
                   <Input
                     id="min-purchase"
                     type="number"
@@ -1253,20 +1327,20 @@ const Marketing = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="max-purchase">Maximum Purchase Amount ($)</Label>
+                  <Label htmlFor="max-purchase">{t("Maximum Purchase Amount")} ({t("s.p")})</Label>
                   <Input
                     id="max-purchase"
                     type="number"
                     value={segmentForm.maxPurchaseAmount}
                     onChange={(e) => setSegmentForm({ ...segmentForm, maxPurchaseAmount: e.target.value })}
-                    placeholder="No limit"
+                    placeholder={t("No limit")}
                     min="0"
                     step="0.01"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="min-orders">Minimum Number of Orders</Label>
+                  <Label htmlFor="min-orders">{t("Minimum Number of Orders")}</Label>
                   <Input
                     id="min-orders"
                     type="number"
@@ -1278,28 +1352,28 @@ const Marketing = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="max-orders">Maximum Number of Orders</Label>
+                  <Label htmlFor="max-orders">{t("Maximum Number of Orders")}</Label>
                   <Input
                     id="max-orders"
                     type="number"
                     value={segmentForm.maxOrders}
                     onChange={(e) => setSegmentForm({ ...segmentForm, maxOrders: e.target.value })}
-                    placeholder="No limit"
+                    placeholder={t("No limit")}
                     min="0"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="location">Location/Region</Label>
+                  <Label htmlFor="location">{t("Location/Region")}</Label>
                   <Select
                     value={segmentForm.location}
                     onValueChange={(value) => setSegmentForm({ ...segmentForm, location: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select region" />
+                      <SelectValue placeholder={t("Select region")} />
                     </SelectTrigger>
                     <SelectContent className="bg-background z-50">
-                      <SelectItem value="all">All Regions</SelectItem>
+                      <SelectItem value="all">{t("All Regions")}</SelectItem>
                       {regions.map((region: any) => (
                         <SelectItem key={region.id} value={region.name}>
                           {region.name}
@@ -1310,32 +1384,32 @@ const Marketing = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="last-purchase">Last Purchase Within (Days)</Label>
+                  <Label htmlFor="last-purchase">{t("Last Purchase Within (Days)")}</Label>
                   <Input
                     id="last-purchase"
                     type="number"
                     value={segmentForm.lastPurchaseDays}
                     onChange={(e) => setSegmentForm({ ...segmentForm, lastPurchaseDays: e.target.value })}
-                    placeholder="e.g., 30"
+                    placeholder={t("e.g., 30")}
                     min="0"
                   />
                 </div>
               </div>
 
               <p className="text-xs text-muted-foreground mt-4">
-                Fill in the criteria fields to define your customer segment. All fields are optional - only filled fields will be used for segmentation.
+                {t("Fill in the criteria fields to define your customer segment. All fields are optional - only filled fields will be used for segmentation.")}
               </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsSegmentDialogOpen(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               onClick={() => saveSegmentMutation.mutate(editingSegment ? { ...segmentForm, id: editingSegment.id } : segmentForm)}
               disabled={!segmentForm.name}
             >
-              {editingSegment ? "Update" : "Create"} Segment
+              {editingSegment ? t("Update") : t("Create")} {t("Segment")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1345,15 +1419,15 @@ const Marketing = () => {
       <AlertDialog open={!!deletingCampaignId} onOpenChange={() => setDeletingCampaignId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
+            <AlertDialogTitle>{t("Delete Campaign")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this campaign? This action cannot be undone.
+              {t("Are you sure you want to delete this campaign? This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => deletingCampaignId && deleteCampaignMutation.mutate(deletingCampaignId)}>
-              Delete
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1363,15 +1437,15 @@ const Marketing = () => {
       <AlertDialog open={!!deletingTemplateId} onOpenChange={() => setDeletingTemplateId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Template</AlertDialogTitle>
+            <AlertDialogTitle>{t("Delete Template")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this template? This action cannot be undone.
+              {t("Are you sure you want to delete this template? This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => deletingTemplateId && deleteTemplateMutation.mutate(deletingTemplateId)}>
-              Delete
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1381,15 +1455,15 @@ const Marketing = () => {
       <AlertDialog open={!!deletingSegmentId} onOpenChange={() => setDeletingSegmentId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Segment</AlertDialogTitle>
+            <AlertDialogTitle>{t("Delete Segment")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this segment? This action cannot be undone.
+              {t("Are you sure you want to delete this segment? This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => deletingSegmentId && deleteSegmentMutation.mutate(deletingSegmentId)}>
-              Delete
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

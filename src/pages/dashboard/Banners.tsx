@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, MoveUp, MoveDown, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import PercentageLoader from "@/components/PercentageLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 import BannerDialog from "@/components/BannerDialog";
 
 interface Banner {
@@ -101,15 +101,14 @@ const Banners = () => {
     updateMutation.mutate({ ...swapBanner, position: banner.position });
   };
 
-  if (isLoading) return <PercentageLoader />;
 
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Banners Management</h1>
+          <h1 className="text-3xl font-bold">{t("Banners Management")}</h1>
           <p className="text-muted-foreground">
-            Create and manage promotional banners for your home page
+            {t("Create and manage promotional banners for your home page")}
           </p>
         </div>
         <Button
@@ -119,12 +118,37 @@ const Banners = () => {
           }}
         >
           <Plus className="mr-2 h-4 w-4" />
-          Create Banner
+          {t("Create Banner")}
         </Button>
       </div>
 
-      <div className="grid gap-4">
-        {banners?.map((banner, index) => (
+      {isLoading ? (
+        <div className="grid gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-24 w-40 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-48" />
+                    <Skeleton className="h-4 w-64" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-8 w-8" />
+                    <Skeleton className="h-8 w-8" />
+                    <Skeleton className="h-6 w-12" />
+                    <Skeleton className="h-8 w-8" />
+                    <Skeleton className="h-8 w-8" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {banners?.map((banner, index) => (
           <Card key={banner.id}>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
@@ -139,7 +163,7 @@ const Banners = () => {
                     <p className="text-sm text-muted-foreground">{banner.subtitle}</p>
                   )}
                   <p className="text-xs text-muted-foreground mt-1">
-                    Type: {banner.display_type}
+                    {t("Type")}: {banner.display_type}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -187,7 +211,8 @@ const Banners = () => {
             </CardContent>
           </Card>
         ))}
-      </div>
+        </div>
+      )}
 
       <BannerDialog
         open={dialogOpen}

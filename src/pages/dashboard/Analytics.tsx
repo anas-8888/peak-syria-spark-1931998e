@@ -20,15 +20,40 @@ import {
 } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 
 const CHART_COLORS = ["#EF4444", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"];
 
 const Analytics = () => {
-  // Fetch all orders with items
-  const { data: ordersData, isLoading: ordersLoading } = useQuery({
-    queryKey: ["analytics-orders"],
+  const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
+  // Fetch completed payments first
+  const { data: completedPayments, isLoading: paymentsLoading } = useQuery({
+    queryKey: ["analytics-completed-payments"],
     queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("order_id, amount, created_at")
+        .eq("status", "completed")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch orders that have completed payments
+  const { data: ordersData, isLoading: ordersLoading } = useQuery({
+    queryKey: ["analytics-orders", completedPayments],
+    queryFn: async () => {
+      if (!completedPayments || completedPayments.length === 0) {
+        return [];
+      }
+
+      const orderIds = completedPayments.map(p => p.order_id);
+      
       const { data, error } = await supabase
         .from("orders")
         .select(`
@@ -46,11 +71,13 @@ const Analytics = () => {
             )
           )
         `)
+        .in("id", orderIds)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data || [];
     },
+    enabled: !!completedPayments,
   });
 
   // Fetch customer count
@@ -79,35 +106,49 @@ const Analytics = () => {
     },
   });
 
-  const isLoading = ordersLoading || customersLoading;
+  const isLoading = ordersLoading || customersLoading || paymentsLoading;
 
-  // Calculate metrics
-  const totalRevenue = ordersData?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
+  // Calculate metrics using only completed payments
+  const totalRevenue = completedPayments?.reduce((sum, payment) => sum + Number(payment.amount), 0) || 0;
   const totalOrders = ordersData?.length || 0;
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-  // Calculate previous period for growth comparison
+  // Calculate previous period for growth comparison - using completed payments
   const sixMonthsAgo = subMonths(new Date(), 6);
+  
+  // Filter completed payments by date
+  const recentPayments = completedPayments?.filter(p => new Date(p.created_at) >= sixMonthsAgo) || [];
+  const oldPayments = completedPayments?.filter(p => new Date(p.created_at) < sixMonthsAgo) || [];
+  
+  // Calculate revenue from completed payments
+  const recentRevenue = recentPayments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+  const oldRevenue = oldPayments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+  const revenueGrowth = oldRevenue > 0 ? ((recentRevenue - oldRevenue) / oldRevenue) * 100 : 0;
+  
+  // Calculate orders growth from orders with completed payments
   const recentOrders = ordersData?.filter(o => new Date(o.created_at) >= sixMonthsAgo) || [];
   const oldOrders = ordersData?.filter(o => new Date(o.created_at) < sixMonthsAgo) || [];
-  
-  const recentRevenue = recentOrders.reduce((sum, order) => sum + Number(order.total_amount), 0);
-  const oldRevenue = oldOrders.reduce((sum, order) => sum + Number(order.total_amount), 0);
-  const revenueGrowth = oldRevenue > 0 ? ((recentRevenue - oldRevenue) / oldRevenue) * 100 : 0;
   const ordersGrowth = oldOrders.length > 0 ? ((recentOrders.length - oldOrders.length) / oldOrders.length) * 100 : 0;
 
-  // Monthly sales data for the last 6 months
+  // Monthly sales data for the last 6 months - using completed payments
   const monthlyData = Array.from({ length: 6 }, (_, i) => {
     const date = subMonths(new Date(), 5 - i);
     const monthStart = startOfMonth(date);
     const monthEnd = endOfMonth(date);
     
-    const monthOrders = ordersData?.filter(order => {
-      const orderDate = new Date(order.created_at);
-      return orderDate >= monthStart && orderDate <= monthEnd;
+    // Get completed payments for this month
+    const monthPayments = completedPayments?.filter(payment => {
+      const paymentDate = new Date(payment.created_at);
+      return paymentDate >= monthStart && paymentDate <= monthEnd;
     }) || [];
 
-    const revenue = monthOrders.reduce((sum, order) => sum + Number(order.total_amount), 0);
+    // Get orders for this month (from completed payments)
+    const monthOrderIds = monthPayments.map(p => p.order_id);
+    const monthOrders = ordersData?.filter(order => 
+      monthOrderIds.includes(order.id)
+    ) || [];
+
+    const revenue = monthPayments.reduce((sum, payment) => sum + Number(payment.amount), 0);
 
     return {
       month: format(date, "MMM"),
@@ -160,12 +201,12 @@ const Analytics = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Analytics & Reports</h1>
-          <p className="text-muted-foreground">Detailed insights and performance metrics</p>
+          <h1 className="text-3xl font-bold mb-2">{t("Analytics & Reports")}</h1>
+          <p className="text-muted-foreground">{t("Detailed insights and performance metrics")}</p>
         </div>
         <Button className="gap-2">
           <Download className="h-4 w-4" />
-          Export Full Report
+          {t("Export Full Report")}
         </Button>
       </div>
 
@@ -178,12 +219,12 @@ const Analytics = () => {
                 <DollarSign className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Revenue (6M)</p>
+                <p className="text-sm text-muted-foreground">{t("Revenue (6M)")}</p>
                 {isLoading ? (
                   <Skeleton className="h-8 w-24" />
                 ) : (
                   <>
-                    <p className="text-2xl font-bold">${(recentRevenue).toLocaleString()}</p>
+                    <p className="text-2xl font-bold">{formatPrice(recentRevenue)}</p>
                     <Badge variant="default" className="mt-1">
                       {revenueGrowth >= 0 ? '+' : ''}{revenueGrowth.toFixed(1)}%
                     </Badge>
@@ -200,7 +241,7 @@ const Analytics = () => {
                 <ShoppingBag className="h-6 w-6 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Orders</p>
+                <p className="text-sm text-muted-foreground">{t("Total Orders")}</p>
                 {isLoading ? (
                   <Skeleton className="h-8 w-24" />
                 ) : (
@@ -222,7 +263,7 @@ const Analytics = () => {
                 <Users className="h-6 w-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Customers</p>
+                <p className="text-sm text-muted-foreground">{t("Customers")}</p>
                 {isLoading ? (
                   <Skeleton className="h-8 w-24" />
                 ) : (
@@ -242,12 +283,12 @@ const Analytics = () => {
                 <TrendingUp className="h-6 w-6 text-yellow-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Avg. Order Value</p>
+                <p className="text-sm text-muted-foreground">{t("Avg. Order Value")}</p>
                 {isLoading ? (
                   <Skeleton className="h-8 w-24" />
                 ) : (
                   <>
-                    <p className="text-2xl font-bold">${avgOrderValue.toFixed(0)}</p>
+                    <p className="text-2xl font-bold">{formatPrice(avgOrderValue)}</p>
                     <Badge variant="secondary" className="mt-1">+3.2%</Badge>
                   </>
                 )}
@@ -262,7 +303,7 @@ const Analytics = () => {
         {/* Revenue Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Revenue Trend (6 Months)</CardTitle>
+            <CardTitle>{t("Revenue Trend (6 Months)")}</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -273,14 +314,14 @@ const Analytics = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <Tooltip formatter={(value: number) => `$${value.toLocaleString()}`} />
+                  <Tooltip formatter={(value: number) => formatPrice(value)} />
                   <Legend />
                   <Line
                     type="monotone"
                     dataKey="revenue"
                     stroke="#EF4444"
                     strokeWidth={2}
-                    name="Revenue ($)"
+                    name={t("Revenue")}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -291,7 +332,7 @@ const Analytics = () => {
         {/* Orders Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Orders Trend (6 Months)</CardTitle>
+            <CardTitle>{t("Orders Trend (6 Months)")}</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -304,7 +345,7 @@ const Analytics = () => {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="orders" fill="#3B82F6" name="Orders" />
+                  <Bar dataKey="orders" fill="#3B82F6" name={t("Orders")} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -317,14 +358,14 @@ const Analytics = () => {
         {/* Product Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Sales by Category</CardTitle>
+            <CardTitle>{t("Sales by Category")}</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <Skeleton className="h-[300px] w-full" />
             ) : categoryPercentages.length === 0 ? (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No category data available
+                {t("No category data available")}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
@@ -353,7 +394,7 @@ const Analytics = () => {
         {/* Top Products */}
         <Card>
           <CardHeader>
-            <CardTitle>Top Selling Products</CardTitle>
+            <CardTitle>{t("Top Selling Products")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -363,7 +404,7 @@ const Analytics = () => {
                 ))
               ) : topProducts.length === 0 ? (
                 <div className="py-8 text-center text-muted-foreground">
-                  No product sales data available
+                  {t("No product sales data available")}
                 </div>
               ) : (
                 topProducts.map((product, index) => (
@@ -377,10 +418,10 @@ const Analytics = () => {
                       </div>
                       <div>
                         <p className="font-medium">{product.name}</p>
-                        <p className="text-sm text-muted-foreground">{product.sales} units sold</p>
+                        <p className="text-sm text-muted-foreground">{product.sales} {t("units sold")}</p>
                       </div>
                     </div>
-                    <p className="font-semibold text-primary">${product.revenue.toLocaleString()}</p>
+                    <p className="font-semibold text-primary">{formatPrice(product.revenue)}</p>
                   </div>
                 ))
               )}

@@ -30,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useState } from "react";
 
 type Payment = {
@@ -44,6 +45,7 @@ type Payment = {
 
 const Payments = () => {
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const queryClient = useQueryClient();
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -131,12 +133,12 @@ const Payments = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Payment Management</h1>
-          <p className="text-muted-foreground">View and track all financial transactions</p>
+          <h1 className="text-3xl font-bold mb-2">{t("Payment Management")}</h1>
+          <p className="text-muted-foreground">{t("View and track all financial transactions")}</p>
         </div>
         <Button className="gap-2">
           <Download className="h-4 w-4" />
-          Export Report
+          {t("Export Report")}
         </Button>
       </div>
 
@@ -149,11 +151,11 @@ const Payments = () => {
                 <DollarSign className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Revenue</p>
+                <p className="text-sm text-muted-foreground">{t("Total Revenue")}</p>
                 {isLoading ? (
                   <Skeleton className="h-8 w-24" />
                 ) : (
-                  <p className="text-2xl font-bold">${totalRevenue.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{formatPrice(totalRevenue)}</p>
                 )}
               </div>
             </div>
@@ -166,7 +168,7 @@ const Payments = () => {
                 <TrendingUp className="h-6 w-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Revenue Growth</p>
+                <p className="text-sm text-muted-foreground">{t("Revenue Growth")}</p>
                 {isLoading ? (
                   <Skeleton className="h-8 w-24" />
                 ) : (
@@ -185,7 +187,7 @@ const Payments = () => {
                 <CreditCard className="h-6 w-6 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Successful Transactions</p>
+                <p className="text-sm text-muted-foreground">{t("Successful Transactions")}</p>
                 {isLoading ? (
                   <Skeleton className="h-8 w-24" />
                 ) : (
@@ -202,7 +204,7 @@ const Payments = () => {
                 <Banknote className="h-6 w-6 text-yellow-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Pending Transactions</p>
+                <p className="text-sm text-muted-foreground">{t("Pending Transactions")}</p>
                 {isLoading ? (
                   <Skeleton className="h-8 w-24" />
                 ) : (
@@ -235,11 +237,11 @@ const Payments = () => {
                 <CardTitle className="text-lg">{method}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold mb-2">${stats.total.toLocaleString()}</p>
+                <p className="text-3xl font-bold mb-2">{formatPrice(stats.total)}</p>
                 <p className="text-sm text-muted-foreground">
                   {totalPayments > 0 
                     ? Math.round((stats.count / totalPayments) * 100) 
-                    : 0}% of total transactions
+                    : 0}% {t("of total transactions")}
                 </p>
               </CardContent>
             </Card>
@@ -250,20 +252,20 @@ const Payments = () => {
       {/* Transactions Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle>{t("Recent Transactions")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Transaction ID</TableHead>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Payment Method</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>{t("Transaction ID")}</TableHead>
+                <TableHead>{t("Order ID")}</TableHead>
+                <TableHead>{t("Customer")}</TableHead>
+                <TableHead>{t("Amount")}</TableHead>
+                <TableHead>{t("Payment Method")}</TableHead>
+                <TableHead>{t("Status")}</TableHead>
+                <TableHead>{t("Date")}</TableHead>
+                <TableHead>{t("Actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -283,7 +285,7 @@ const Payments = () => {
               ) : payments.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    No payments found
+                    {t("No payments found")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -297,7 +299,7 @@ const Payments = () => {
                     </TableCell>
                     <TableCell>{payment.customer_name}</TableCell>
                     <TableCell className="font-semibold">
-                      ${Number(payment.amount).toLocaleString()}
+                      {formatPrice(Number(payment.amount))}
                     </TableCell>
                     <TableCell>{payment.payment_method}</TableCell>
                     <TableCell>
@@ -310,7 +312,10 @@ const Payments = () => {
                             : "destructive"
                         }
                       >
-                        {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                        {payment.status === "completed" ? t("Completed") :
+                         payment.status === "pending" ? t("Pending") :
+                         payment.status === "failed" ? t("Failed") :
+                         payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
                       </Badge>
                     </TableCell>
                     <TableCell>{format(new Date(payment.created_at), "yyyy/MM/dd")}</TableCell>
@@ -341,34 +346,34 @@ const Payments = () => {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Update Payment Status</DialogTitle>
+            <DialogTitle>{t("Update Payment Status")}</DialogTitle>
             <DialogDescription>
-              Change the payment status for this Cash on Delivery order
+              {t("Change the payment status for this Cash on Delivery order")}
             </DialogDescription>
           </DialogHeader>
           {selectedPayment && (
             <div className="space-y-4">
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  Order ID: #{selectedPayment.order_id.slice(0, 8)}
+                  {t("Order ID")}: #{selectedPayment.order_id.slice(0, 8)}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Customer: {selectedPayment.customer_name}
+                  {t("Customer")}: {selectedPayment.customer_name}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Amount: ${Number(selectedPayment.amount).toLocaleString()}
+                  {t("Amount")}: {formatPrice(Number(selectedPayment.amount))}
                 </p>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Payment Status</label>
+                <label className="text-sm font-medium">{t("Payment Status")}</label>
                 <Select value={newStatus} onValueChange={setNewStatus}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="failed">Failed</SelectItem>
+                    <SelectItem value="pending">{t("Pending")}</SelectItem>
+                    <SelectItem value="completed">{t("Completed")}</SelectItem>
+                    <SelectItem value="failed">{t("Failed")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -384,10 +389,10 @@ const Payments = () => {
                   }}
                   disabled={updateStatusMutation.isPending}
                 >
-                  {updateStatusMutation.isPending ? "Updating..." : "Update Status"}
+                  {updateStatusMutation.isPending ? t("Updating...") : t("Update Status")}
                 </Button>
                 <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                  Cancel
+                  {t("Cancel")}
                 </Button>
               </div>
             </div>

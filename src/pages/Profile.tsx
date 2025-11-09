@@ -14,9 +14,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Camera, Loader2, Mail, Phone, MapPin, User, Navigation } from "lucide-react";
+import { getOptimizedImageUrl } from "@/utils/imageCache";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Profile = () => {
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -91,11 +94,9 @@ const Profile = () => {
           });
         }
         
-        // Add cache-busting timestamp to avatar URL
-        const avatarWithTimestamp = (data.avatar_url || googleAvatar)
-          ? `${data.avatar_url || googleAvatar}?t=${Date.now()}`
-          : "";
-        setAvatarUrl(avatarWithTimestamp);
+        // Use avatar URL without timestamp to allow browser caching
+        const avatarUrlToUse = data.avatar_url || googleAvatar || "";
+        setAvatarUrl(avatarUrlToUse);
         setRegionId(data.region_id || "");
         
         // Auto-update profile with Google data if empty
@@ -151,12 +152,15 @@ const Profile = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL with cache-busting timestamp
+      // Get public URL (without timestamp to allow browser caching)
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-      const timestamp = Date.now();
-      const avatarUrlWithTimestamp = `${urlData.publicUrl}?t=${timestamp}`;
+      const optimizedAvatarUrl = getOptimizedImageUrl(urlData.publicUrl, {
+        width: 200,
+        quality: 90,
+        format: 'webp'
+      });
 
-      // Update profile with new avatar URL (without timestamp for storage)
+      // Update profile with new avatar URL
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ avatar_url: urlData.publicUrl })
@@ -164,9 +168,12 @@ const Profile = () => {
 
       if (updateError) throw updateError;
 
-      // Force complete re-render of Avatar component
-      setAvatarUrl(avatarUrlWithTimestamp);
-      setAvatarKey(timestamp);
+      // Update local state with optimized URL
+      setAvatarUrl(optimizedAvatarUrl);
+      setAvatarKey(Date.now());
+      
+      // Invalidate profile cache in React Query
+      queryClient.invalidateQueries({ queryKey: ["user-profile", user?.id] });
       
       // Trigger a custom event to notify Navbar to refresh
       window.dispatchEvent(new CustomEvent('avatarUpdated'));
@@ -316,7 +323,20 @@ const Profile = () => {
               <div className="flex flex-col items-center gap-4">
                 <div className="relative group">
                   <Avatar key={avatarKey} className="h-32 w-32 border-4 border-primary/20 transition-all duration-300 group-hover:border-primary/40">
-                    <AvatarImage src={avatarUrl} alt={fullName} />
+                    <AvatarImage 
+                      src={getOptimizedImageUrl(avatarUrl, {
+                        width: 200,
+                        quality: 90,
+                        format: 'webp'
+                      })} 
+                      alt={fullName}
+                      loading="eager"
+                      decoding="async"
+                      onError={(e) => {
+                        const target = e.currentTarget as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
                     {!avatarUrl && (
                       <AvatarFallback className="text-3xl bg-gradient-to-r from-primary to-red-500 text-white">
                         {fullName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}

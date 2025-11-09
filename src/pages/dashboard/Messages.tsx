@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -85,8 +86,8 @@ const Messages = () => {
     <div className="p-8 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2">Messages Management</h1>
-        <p className="text-muted-foreground">View and manage customer contact messages</p>
+        <h1 className="text-3xl font-bold mb-2">{t("Messages Management")}</h1>
+        <p className="text-muted-foreground">{t("View and manage customer contact messages")}</p>
       </div>
 
       {/* Stats */}
@@ -98,7 +99,7 @@ const Messages = () => {
                 <Mail className="h-6 w-6 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Messages</p>
+                <p className="text-sm text-muted-foreground">{t("Total Messages")}</p>
                 <p className="text-2xl font-bold">{messages.length}</p>
               </div>
             </div>
@@ -112,7 +113,7 @@ const Messages = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name, email, or message..."
+              placeholder={t("Search by name, email, or message...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -124,25 +125,48 @@ const Messages = () => {
       {/* Messages Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Messages ({filteredMessages.length})</CardTitle>
+          <CardTitle>{t("Messages")} ({filteredMessages.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8">Loading...</div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("Name")}</TableHead>
+                  <TableHead>{t("Email")}</TableHead>
+                  <TableHead>{t("Phone")}</TableHead>
+                  <TableHead>{t("Message")}</TableHead>
+                  <TableHead>{t("Date")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-64" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           ) : filteredMessages.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No messages found
+              {t("No messages found")}
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Message</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t("Name")}</TableHead>
+                  <TableHead>{t("Email")}</TableHead>
+                  <TableHead>{t("Phone")}</TableHead>
+                  <TableHead>{t("Message")}</TableHead>
+                  <TableHead>{t("Date")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -150,7 +174,7 @@ const Messages = () => {
                   <TableRow key={message.id} className="hover:bg-muted/50">
                     <TableCell className="font-medium">{message.name}</TableCell>
                     <TableCell>{message.email}</TableCell>
-                    <TableCell>{message.phone || "N/A"}</TableCell>
+                    <TableCell>{message.phone || t("N/A")}</TableCell>
                     <TableCell className="max-w-md">
                       <p className="text-sm truncate">{message.message}</p>
                     </TableCell>
@@ -178,18 +202,18 @@ const Messages = () => {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Message</AlertDialogTitle>
+            <AlertDialogTitle>{t("Delete Message")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this message? This action cannot be undone.
+              {t("Are you sure you want to delete this message? This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteId && deleteMutation.mutate(deleteId)}
               className="bg-destructive hover:bg-destructive/90"
             >
-              Delete
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

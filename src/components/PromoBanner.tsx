@@ -5,9 +5,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const PromoBanner = () => {
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const [isVisible, setIsVisible] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -68,8 +70,8 @@ const PromoBanner = () => {
       return t(bannerDiscount.marketing_label);
     }
     
-    const typeText = bannerDiscount.type === 'percentage' ? `${bannerDiscount.value}%` : `$${bannerDiscount.value}`;
-    const minText = bannerDiscount.min_cart_subtotal > 0 ? ` ${t("for orders above")} $${bannerDiscount.min_cart_subtotal}` : '';
+    const typeText = bannerDiscount.type === 'percentage' ? `${bannerDiscount.value}%` : formatPrice(bannerDiscount.value);
+    const minText = bannerDiscount.min_cart_subtotal > 0 ? ` ${t("for orders above")} ${formatPrice(bannerDiscount.min_cart_subtotal)}` : '';
     return `🔥 ${t(bannerDiscount.name)}: ${t("Automatic")} ${typeText} ${t("discount")}${minText}`;
   };
 

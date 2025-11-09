@@ -29,10 +29,38 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const pendingKeys = useRef<Set<string>>(new Set());
   const batchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load translations from database
+  // Load translations from database with caching
   const loadTranslations = useCallback(async () => {
     try {
       setIsLoading(true);
+      
+      // Try to load from cache first
+      const cacheKey = 'translations-cache';
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          // Check if cache is still valid (24 hours)
+          if (Date.now() - parsed.timestamp < 1000 * 60 * 60 * 24) {
+            setTranslations(parsed.data);
+            setIsLoading(false);
+            // Still fetch in background to update cache
+            fetchTranslations();
+            return;
+          }
+        } catch (e) {
+          // Invalid cache, continue to fetch
+        }
+      }
+      
+      // Fetch from database
+      await fetchTranslations();
+    } catch (error) {
+      console.error("Error loading translations:", error);
+      setIsLoading(false);
+    }
+    
+    async function fetchTranslations() {
       const { data, error } = await supabase
         .from("translations")
         .select("english_key, arabic_value")
@@ -46,9 +74,17 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
       });
       
       setTranslations(translationsMap);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error loading translations:", error);
+      
+      // Cache translations for 24 hours
+      try {
+        localStorage.setItem('translations-cache', JSON.stringify({
+          data: translationsMap,
+          timestamp: Date.now(),
+        }));
+      } catch (e) {
+        // Ignore cache errors
+      }
+      
       setIsLoading(false);
     }
   }, []);

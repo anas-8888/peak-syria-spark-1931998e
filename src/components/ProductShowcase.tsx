@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { getOptimizedImageUrl } from "@/utils/imageCache";
 interface HeroShowcase {
   id: string;
   hero_title: string;
@@ -25,6 +27,7 @@ interface ShowcaseProduct {
 }
 const ProductShowcase = () => {
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const {
     data: showcases
   } = useQuery({
@@ -110,12 +113,23 @@ const ProductShowcase = () => {
                   {/* Main Image */}
                   <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                     <img 
-                      src={showcase.hero_image_url} 
+                      src={getOptimizedImageUrl(showcase.hero_image_url, {
+                        width: 614,
+                        quality: 85,
+                        format: 'webp'
+                      })} 
                       alt={showcase.hero_title}
                       width="614"
                       height="500"
                       loading="lazy"
+                      decoding="async"
                       className="w-full h-[500px] object-cover transform group-hover:scale-105 transition-transform duration-700" 
+                      onError={(e) => {
+                        const target = e.currentTarget as HTMLImageElement;
+                        if (target.src !== '/placeholder.svg') {
+                          target.src = '/placeholder.svg';
+                        }
+                      }}
                     />
                   {/* Floating Badge */}
                   <div className="absolute top-6 left-6 bg-primary text-primary-foreground px-6 py-3 rounded-full font-bold text-sm shadow-lg animate-bounce-slow">
@@ -166,12 +180,23 @@ const ProductShowcase = () => {
                           {/* Product Image */}
                           <div className="aspect-square overflow-hidden bg-background">
                             <img 
-                              src={product.image_url || ""} 
+                              src={getOptimizedImageUrl(product.image_url, {
+                                width: 280,
+                                quality: 85,
+                                format: 'webp'
+                              }) || ""} 
                               alt={t(product.name)}
                               width="280"
                               height="280"
                               loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                              onError={(e) => {
+                                const target = e.currentTarget as HTMLImageElement;
+                                if (target.src !== '/placeholder.svg') {
+                                  target.src = '/placeholder.svg';
+                                }
+                              }}
                             />
                           </div>
 
@@ -181,7 +206,7 @@ const ProductShowcase = () => {
                           {/* Product Info Overlay */}
                           <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                             <p className="text-white font-semibold text-sm truncate">{t(product.name)}</p>
-                            <p className="text-white/90 text-sm font-bold">${product.price}</p>
+                            <p className="text-white/90 text-sm font-bold">{formatPrice(product.price)}</p>
                           </div>
 
                           {/* Corner Animation */}

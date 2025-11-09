@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
 import { useLanguage } from "./LanguageContext";
@@ -181,9 +181,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Use ref to track previous user ID to prevent unnecessary refetches
+  const prevUserIdRef = useRef<string | undefined>(undefined);
+  
   useEffect(() => {
-    fetchCart();
-  }, [user]);
+    // Only fetch cart if user actually changed (not just token refresh)
+    const currentUserId = user?.id;
+    if (prevUserIdRef.current !== currentUserId) {
+      prevUserIdRef.current = currentUserId;
+      fetchCart();
+    }
+  }, [user?.id]); // Only depend on user.id, not the entire user object
 
   const addToCart = async (options: AddToCartOptions) => {
     const { productId, quantity = 1, notes = "", variantId, selectedColor, selectedSize, variantPrice } = options;

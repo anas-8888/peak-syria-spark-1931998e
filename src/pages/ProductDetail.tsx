@@ -11,7 +11,9 @@ import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { ReviewForm } from "@/components/ReviewForm";
+import { getOptimizedImageUrl } from "@/utils/imageCache";
 import { ReviewsList } from "@/components/ReviewsList";
 import GoogleSignInPopup from "@/components/GoogleSignInPopup";
 import {
@@ -52,6 +54,7 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
@@ -383,11 +386,25 @@ const ProductDetail = () => {
               onMouseMove={handleImageMouseMove}
             >
               <img 
-                src={selectedImageUrl || images[0]?.image_url || "/placeholder.svg"} 
-                alt={product.name} 
+                src={getOptimizedImageUrl(selectedImageUrl || images[0]?.image_url, {
+                  width: 800,
+                  quality: 90,
+                  format: 'webp'
+                }) || "/placeholder.svg"} 
+                alt={product.name}
+                loading="eager"
+                decoding="async"
+                width={800}
+                height={800}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-150" 
                 style={{
                   transformOrigin: `${imageZoomOrigin.x}% ${imageZoomOrigin.y}%`
+                }}
+                onError={(e) => {
+                  const target = e.currentTarget as HTMLImageElement;
+                  if (target.src !== '/placeholder.svg') {
+                    target.src = '/placeholder.svg';
+                  }
                 }}
               />
             </div>
@@ -410,7 +427,25 @@ const ProductDetail = () => {
                       }
                     }}
                   >
-                    <img src={image.image_url} alt="Thumbnail" className="w-full h-full object-cover" />
+                    <img 
+                      src={getOptimizedImageUrl(image.image_url, {
+                        width: 200,
+                        quality: 80,
+                        format: 'webp'
+                      })} 
+                      alt="Thumbnail" 
+                      loading="lazy"
+                      decoding="async"
+                      width={200}
+                      height={200}
+                      className="w-full h-full object-cover" 
+                      onError={(e) => {
+                        const target = e.currentTarget as HTMLImageElement;
+                        if (target.src !== '/placeholder.svg') {
+                          target.src = '/placeholder.svg';
+                        }
+                      }}
+                    />
                   </div>
                 ))}
               </div>
@@ -459,11 +494,11 @@ const ProductDetail = () => {
 
             <div className="flex items-center gap-3">
               <div className="text-2xl sm:text-3xl font-bold text-primary">
-                ${displayPrice.toFixed(2)}
+                {formatPrice(displayPrice)}
               </div>
               {hasDiscount && product.offer_price && (
                 <div className="text-lg sm:text-xl line-through text-muted-foreground">
-                  ${product.price.toFixed(2)}
+                  {formatPrice(product.price)}
                 </div>
               )}
             </div>
@@ -489,7 +524,7 @@ const ProductDetail = () => {
                           {discount.marketing_label || discount.name}
                         </p>
                         <p className="text-sm text-green-700 dark:text-green-300">
-                          {discount.type === "percentage" ? `${discount.value}% ${t("off")}` : `$${discount.value} ${t("off")}`}
+                          {discount.type === "percentage" ? `${discount.value}% ${t("off")}` : `${formatPrice(discount.value)} ${t("off")}`}
                           {discount.scope === "products" && ` - ${t("Applies to this product")}`}
                           {discount.scope === "store_wide" && ` - ${t("Store-wide")}`}
                         </p>
@@ -497,7 +532,7 @@ const ProductDetail = () => {
                     </div>
                     <div className="text-xs text-green-600 dark:text-green-400 space-y-1">
                       {discount.min_cart_subtotal > 0 && (
-                        <p>• {t("Minimum cart")}: ${discount.min_cart_subtotal.toFixed(2)}</p>
+                        <p>• {t("Minimum cart")}: {formatPrice(discount.min_cart_subtotal)}</p>
                       )}
                       {discount.min_quantity > 0 && (
                         <p>• {t("Minimum quantity")}: {discount.min_quantity}</p>

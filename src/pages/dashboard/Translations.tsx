@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Translation = {
   id: string;
@@ -491,7 +492,16 @@ const Translations = () => {
 
           <div className="space-y-4 max-h-[600px] overflow-y-auto">
             {isLoading ? (
-              <p className="text-center text-muted-foreground py-8">{t("Loading translations...")}</p>
+              <div className="space-y-4">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-10 w-24 ml-auto" />
+                  </div>
+                ))}
+              </div>
             ) : filteredTranslations.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
                 {t("No translations found matching your search")}

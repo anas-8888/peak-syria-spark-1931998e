@@ -59,7 +59,34 @@ import Translations from "./pages/dashboard/Translations";
 import ScrollToTop from "./components/ScrollToTop";
 import LanguageToggle from "./components/LanguageToggle";
 
-const queryClient = new QueryClient();
+// Configure QueryClient with optimal cache settings for maximum caching
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Data is considered fresh for 10 minutes (longer cache)
+      staleTime: 1000 * 60 * 10, // 10 minutes
+      // Cache data for 1 hour (gcTime replaces cacheTime in v5)
+      gcTime: 1000 * 60 * 60, // 1 hour
+      // Retry failed requests 3 times
+      retry: 3,
+      // Retry delay increases exponentially
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // Don't refetch on window focus to prevent flickering when returning to browser
+      // Data will still be refetched if stale (older than staleTime)
+      refetchOnWindowFocus: false,
+      // Don't refetch on mount if data is fresh (saves requests)
+      refetchOnMount: false,
+      // Refetch on reconnect if data is stale
+      refetchOnReconnect: true,
+      // Keep previous data while fetching new data
+      keepPreviousData: true,
+    },
+    mutations: {
+      // Retry failed mutations once
+      retry: 1,
+    },
+  },
+});
 
 function App() {
   return (

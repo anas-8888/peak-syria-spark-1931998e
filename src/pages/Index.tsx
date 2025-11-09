@@ -14,6 +14,7 @@ import { ArrowRight, TrendingUp, Zap, Shield } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getOptimizedImageUrl } from "@/utils/imageCache";
 
 const Index = () => {
   const { t } = useLanguage();
@@ -268,12 +269,23 @@ const Index = () => {
                       {category.image_url ? (
                         <div className="h-[140px] sm:aspect-video md:w-[280px] overflow-hidden bg-muted relative">
                           <img
-                            src={category.image_url}
+                            src={getOptimizedImageUrl(category.image_url, {
+                              width: 320,
+                              quality: 85,
+                              format: 'webp'
+                            })}
                             alt={t(category.name)}
                             width="320"
                             height="180"
                             loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              if (target.src !== '/placeholder.svg') {
+                                target.src = '/placeholder.svg';
+                              }
+                            }}
                           />
                           {/* Overlay gradient */}
                           <div className="absolute inset-0 bg-gradient-to-t from-secondary/90 via-secondary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

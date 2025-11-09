@@ -60,7 +60,21 @@ const Cart = () => {
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map((item) => (
                 <div key={item.id} className="bg-card p-4 rounded-lg shadow-sm flex gap-4">
-                  <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-md" />
+                  <img 
+                    src={item.image} 
+                    alt={item.name} 
+                    loading="lazy"
+                    decoding="async"
+                    width={96}
+                    height={96}
+                    className="w-24 h-24 object-cover rounded-md" 
+                    onError={(e) => {
+                      const target = e.currentTarget as HTMLImageElement;
+                      if (target.src !== '/placeholder.svg') {
+                        target.src = '/placeholder.svg';
+                      }
+                    }}
+                  />
                   
                   <div className="flex-1">
                     <div className="flex justify-between items-start mb-2">

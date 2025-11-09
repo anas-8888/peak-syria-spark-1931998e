@@ -37,7 +37,7 @@ import {
 import { Plus, Pencil, Trash2, Search, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import PercentageLoader from "@/components/PercentageLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PaymentMethod {
   id: string;
@@ -171,13 +171,6 @@ export default function PaymentMethods() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <PercentageLoader />
-      </div>
-    );
-  }
 
   const filteredMethods = paymentMethods?.filter(method =>
     method.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -189,12 +182,12 @@ export default function PaymentMethods() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Payment Methods</h1>
-          <p className="text-muted-foreground mt-1">Manage available payment options for customers</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("Payment Methods")}</h1>
+          <p className="text-muted-foreground mt-1">{t("Manage available payment options for customers")}</p>
         </div>
         <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Payment Method
+          {t("Add Payment Method")}
         </Button>
       </div>
 
@@ -202,33 +195,45 @@ export default function PaymentMethods() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Methods</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("Total Methods")}</CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{paymentMethods?.length || 0}</div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold">{paymentMethods?.length || 0}</div>
+            )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Methods</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("Active Methods")}</CardTitle>
             <CreditCard className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {paymentMethods?.filter(m => m.is_active).length || 0}
-            </div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold">
+                {paymentMethods?.filter(m => m.is_active).length || 0}
+              </div>
+            )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inactive Methods</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("Inactive Methods")}</CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {paymentMethods?.filter(m => !m.is_active).length || 0}
-            </div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold">
+                {paymentMethods?.filter(m => !m.is_active).length || 0}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -236,14 +241,14 @@ export default function PaymentMethods() {
       {/* Search and Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Payment Methods List</CardTitle>
+          <CardTitle>{t("Payment Methods List")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Search payment methods..."
+                placeholder={t("Search payment methods...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -255,19 +260,35 @@ export default function PaymentMethods() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Icon</TableHead>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("Name")}</TableHead>
+                  <TableHead>{t("Description")}</TableHead>
+                  <TableHead>{t("Icon")}</TableHead>
+                  <TableHead>{t("Order")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead className="text-right">{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredMethods.length === 0 ? (
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          <Skeleton className="h-8 w-8" />
+                          <Skeleton className="h-8 w-8" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : filteredMethods.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      No payment methods found
+                      {t("No payment methods found")}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -285,7 +306,7 @@ export default function PaymentMethods() {
                       <TableCell>{method.display_order}</TableCell>
                       <TableCell>
                         <Badge variant={method.is_active ? "default" : "secondary"}>
-                          {method.is_active ? "Active" : "Inactive"}
+                          {method.is_active ? t("Active") : t("Inactive")}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -321,49 +342,49 @@ export default function PaymentMethods() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingMethod ? "Edit Payment Method" : "Add Payment Method"}
+              {editingMethod ? t("Edit Payment Method") : t("Add Payment Method")}
             </DialogTitle>
             <DialogDescription>
-              Configure a payment method for customers
+              {t("Configure a payment method for customers")}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">{t("Name")} *</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Cash on Delivery"
+                placeholder={t("e.g., Cash on Delivery")}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t("Description")}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Brief description of the payment method"
+                placeholder={t("Brief description of the payment method")}
                 rows={3}
               />
             </div>
             <div>
-              <Label htmlFor="icon">Icon (Lucide Icon Name)</Label>
+              <Label htmlFor="icon">{t("Icon (Lucide Icon Name)")}</Label>
               <Input
                 id="icon"
                 value={formData.icon}
                 onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                placeholder="e.g., CreditCard, Banknote, Wallet"
+                placeholder={t("e.g., CreditCard, Banknote, Wallet")}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                See <a href="https://lucide.dev" target="_blank" rel="noopener" className="underline">lucide.dev</a> for available icons
+                {t("See")} <a href="https://lucide.dev" target="_blank" rel="noopener" className="underline">lucide.dev</a> {t("for available icons")}
               </p>
             </div>
             <div>
-              <Label htmlFor="display_order">Display Order</Label>
+              <Label htmlFor="display_order">{t("Display Order")}</Label>
               <Input
                 id="display_order"
                 type="number"
@@ -382,14 +403,14 @@ export default function PaymentMethods() {
                   setFormData({ ...formData, is_active: checked })
                 }
               />
-              <Label htmlFor="is_active">Active</Label>
+              <Label htmlFor="is_active">{t("Active")}</Label>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={resetForm}>
-                Cancel
+                {t("Cancel")}
               </Button>
               <Button type="submit">
-                {editingMethod ? "Update" : "Create"}
+                {editingMethod ? t("Update") : t("Create")}
               </Button>
             </DialogFooter>
           </form>
@@ -400,15 +421,15 @@ export default function PaymentMethods() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("Are you sure?")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this payment method. This action cannot be undone.
+              {t("This will permanently delete this payment method. This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -13,8 +13,21 @@ const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminCheck();
 
+  // Use refs to track previous values and prevent unnecessary re-renders
+  const hasCheckedRef = useRef(false);
+  const previousUserIdRef = useRef<string | undefined>(undefined);
+  const previousIsAdminRef = useRef<boolean | undefined>(undefined);
+
   useEffect(() => {
-    if (!authLoading && !adminLoading) {
+    const currentUserId = user?.id;
+    const currentIsAdmin = isAdmin;
+    
+    // Only check once when loading completes, not on every state change
+    if (!authLoading && !adminLoading && !hasCheckedRef.current) {
+      hasCheckedRef.current = true;
+      previousUserIdRef.current = currentUserId;
+      previousIsAdminRef.current = currentIsAdmin;
+      
       if (!user) {
         toast.error(t("Authentication Required"), {
           description: t("Please login to access the dashboard"),
@@ -27,7 +40,18 @@ const Dashboard = () => {
         navigate("/");
       }
     }
-  }, [user, isAdmin, authLoading, adminLoading, navigate]);
+    
+    // Only reset check flag if user or admin status actually changed
+    if (previousUserIdRef.current !== currentUserId || previousIsAdminRef.current !== currentIsAdmin) {
+      previousUserIdRef.current = currentUserId;
+      previousIsAdminRef.current = currentIsAdmin;
+      
+      if (!user || !isAdmin) {
+        // Reset flag if user logs out or loses admin status
+        hasCheckedRef.current = false;
+      }
+    }
+  }, [user?.id, isAdmin, authLoading, adminLoading, navigate, t, user]);
 
   // Return null until verification completes - don't render anything
   if (authLoading || adminLoading || !user || !isAdmin) {

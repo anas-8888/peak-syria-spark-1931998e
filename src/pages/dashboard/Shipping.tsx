@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,7 +45,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import PercentageLoader from "@/components/PercentageLoader";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ShippingCarrier {
   id: string;
@@ -73,6 +74,7 @@ interface CarrierRegion {
 
 const Shipping = () => {
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [carrierDialogOpen, setCarrierDialogOpen] = useState(false);
@@ -230,7 +232,7 @@ const Shipping = () => {
       setDeletingRegionId(null);
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to remove region");
+      toast.error(error.message || t("Failed to remove region"));
     },
   });
 
@@ -285,13 +287,30 @@ const Shipping = () => {
 
     setUploadingImage(true);
     try {
-      const fileExt = file.name.split(".").pop();
+      // Import compression utility dynamically
+      const { compressImageForUseCase, needsCompression } = await import("@/utils/imageCompression");
+      
+      // Compress image if needed
+      let fileToUpload = file;
+      if (needsCompression(file)) {
+        try {
+          const compressedBlob = await compressImageForUseCase(file, 'small', 0.85);
+          fileToUpload = new File([compressedBlob], file.name, {
+            type: compressedBlob.type || file.type,
+            lastModified: Date.now()
+          });
+        } catch (error) {
+          console.warn('Failed to compress image, using original:', error);
+        }
+      }
+      
+      const fileExt = fileToUpload.name.split(".").pop() || 'jpg';
       const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
       const filePath = `shipping-carriers/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("product-images")
-        .upload(filePath, file);
+        .upload(filePath, fileToUpload);
 
       if (uploadError) throw uploadError;
 
@@ -343,43 +362,37 @@ const Shipping = () => {
   const inactiveCarriers = (carriers?.length || 0) - activeCarriers;
   const totalRegions = regions?.length || 0;
 
-  if (carriersLoading || regionsLoading || carrierRegionsLoading) {
-    return (
-      <div className="p-8">
-        <PercentageLoader />
-      </div>
-    );
-  }
+  const isLoading = carriersLoading || regionsLoading || carrierRegionsLoading;
 
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Shipping Management</h1>
-          <p className="text-muted-foreground">Manage carriers, rates, and delivery regions</p>
+          <h1 className="text-3xl font-bold mb-2">{t("Shipping Management")}</h1>
+          <p className="text-muted-foreground">{t("Manage carriers, rates, and delivery regions")}</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={regionDialogOpen} onOpenChange={setRegionDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2" onClick={resetRegionForm}>
                 <MapPin className="h-4 w-4" />
-                Add Region Coverage
+                {t("Add Region Coverage")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add Region Coverage</DialogTitle>
+                <DialogTitle>{t("Add Region Coverage")}</DialogTitle>
                 <DialogDescription>
-                  Assign a region to a carrier with specific cost
+                  {t("Assign a region to a carrier with specific cost")}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label>Carrier *</Label>
+                  <Label>{t("Carrier")} *</Label>
                   <Select value={regionForm.carrier_id} onValueChange={(value) => setRegionForm({ ...regionForm, carrier_id: value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select carrier" />
+                      <SelectValue placeholder={t("Select carrier")} />
                     </SelectTrigger>
                     <SelectContent>
                       {carriers?.map((carrier) => (
@@ -391,10 +404,10 @@ const Shipping = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label>Region *</Label>
+                  <Label>{t("Region")} *</Label>
                   <Select value={regionForm.region_id} onValueChange={(value) => setRegionForm({ ...regionForm, region_id: value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select region" />
+                      <SelectValue placeholder={t("Select region")} />
                     </SelectTrigger>
                     <SelectContent>
                       {regions?.map((region) => (
@@ -406,16 +419,16 @@ const Shipping = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label>Cost ($) *</Label>
+                  <Label>{t("Cost")} ({t("s.p")}) *</Label>
                   <Input
                     type="number"
                     value={regionForm.cost}
                     onChange={(e) => setRegionForm({ ...regionForm, cost: e.target.value })}
-                    placeholder="50"
+                    placeholder="50000"
                   />
                 </div>
                 <Button onClick={handleSaveCarrierRegion} className="w-full">
-                  Add Region
+                  {t("Add Region")}
                 </Button>
               </div>
             </DialogContent>
@@ -424,41 +437,41 @@ const Shipping = () => {
             <DialogTrigger asChild>
               <Button className="gap-2" onClick={resetCarrierForm}>
                 <Plus className="h-4 w-4" />
-                Add Carrier
+                {t("Add Carrier")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{editingCarrier ? "Edit Carrier" : "Add New Carrier"}</DialogTitle>
+                <DialogTitle>{editingCarrier ? t("Edit Carrier") : t("Add New Carrier")}</DialogTitle>
                 <DialogDescription>
-                  {editingCarrier ? "Update carrier information" : "Create a new shipping carrier"}
+                  {editingCarrier ? t("Update carrier information") : t("Create a new shipping carrier")}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label>Carrier Name *</Label>
+                  <Label>{t("Carrier Name")} *</Label>
                   <Input
                     value={carrierForm.name}
                     onChange={(e) => setCarrierForm({ ...carrierForm, name: e.target.value })}
-                    placeholder="Express Delivery"
+                    placeholder={t("Express Delivery")}
                   />
                 </div>
                 <div>
-                  <Label>Description</Label>
+                  <Label>{t("Description")}</Label>
                   <Textarea
                     value={carrierForm.description}
                     onChange={(e) => setCarrierForm({ ...carrierForm, description: e.target.value })}
-                    placeholder="Fast and reliable delivery service"
+                    placeholder={t("Fast and reliable delivery service")}
                   />
                 </div>
                 <div>
-                  <Label>Carrier Image</Label>
+                  <Label>{t("Carrier Image")}</Label>
                   <div className="space-y-2">
                     {carrierForm.image_url && (
                       <div className="relative w-24 h-24 rounded-lg overflow-hidden border">
                         <img
                           src={carrierForm.image_url}
-                          alt="Carrier"
+                          alt={t("Carrier")}
                           className="w-full h-full object-contain"
                         />
                       </div>
@@ -470,20 +483,20 @@ const Shipping = () => {
                       disabled={uploadingImage}
                     />
                     {uploadingImage && (
-                      <p className="text-xs text-muted-foreground">Uploading image...</p>
+                      <p className="text-xs text-muted-foreground">{t("Uploading image...")}</p>
                     )}
                   </div>
                 </div>
                 <div>
-                  <Label>Estimated Delivery Time</Label>
+                  <Label>{t("Estimated Delivery Time")}</Label>
                   <Input
                     value={carrierForm.estimated_days}
                     onChange={(e) => setCarrierForm({ ...carrierForm, estimated_days: e.target.value })}
-                    placeholder="2-3 days"
+                    placeholder={t("2-3 days")}
                   />
                 </div>
                 <div>
-                  <Label>Display Order</Label>
+                  <Label>{t("Display Order")}</Label>
                   <Input
                     type="number"
                     value={carrierForm.display_order}
@@ -496,10 +509,10 @@ const Shipping = () => {
                     checked={carrierForm.is_active}
                     onCheckedChange={(checked) => setCarrierForm({ ...carrierForm, is_active: checked })}
                   />
-                  <Label>Active</Label>
+                  <Label>{t("Active")}</Label>
                 </div>
                 <Button onClick={handleSaveCarrier} className="w-full">
-                  {editingCarrier ? "Update Carrier" : "Create Carrier"}
+                  {editingCarrier ? t("Update Carrier") : t("Create Carrier")}
                 </Button>
               </div>
             </DialogContent>
@@ -516,8 +529,12 @@ const Shipping = () => {
                 <Truck className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Carriers</p>
-                <p className="text-2xl font-bold">{carriers?.length || 0}</p>
+                <p className="text-sm text-muted-foreground">{t("Total Carriers")}</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-16 mt-1" />
+                ) : (
+                  <p className="text-2xl font-bold">{carriers?.length || 0}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -529,8 +546,12 @@ const Shipping = () => {
                 <Truck className="h-6 w-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Active / Inactive</p>
-                <p className="text-2xl font-bold">{activeCarriers} / {inactiveCarriers}</p>
+                <p className="text-sm text-muted-foreground">{t("Active / Inactive")}</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-24 mt-1" />
+                ) : (
+                  <p className="text-2xl font-bold">{activeCarriers} / {inactiveCarriers}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -542,8 +563,12 @@ const Shipping = () => {
                 <MapPin className="h-6 w-6 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Available Regions</p>
-                <p className="text-2xl font-bold">{totalRegions}</p>
+                <p className="text-sm text-muted-foreground">{t("Available Regions")}</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-16 mt-1" />
+                ) : (
+                  <p className="text-2xl font-bold">{totalRegions}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -555,7 +580,7 @@ const Shipping = () => {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search carriers..."
+            placeholder={t("Search carriers...")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -566,21 +591,55 @@ const Shipping = () => {
       {/* Carriers Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Shipping Carriers</CardTitle>
+          <CardTitle>{t("Shipping Carriers")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Delivery Time</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCarriers?.map((carrier) => (
+          {isLoading ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("Name")}</TableHead>
+                  <TableHead>{t("Description")}</TableHead>
+                  <TableHead>{t("Delivery Time")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : filteredCarriers?.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {t("No carriers found")}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("Name")}</TableHead>
+                  <TableHead>{t("Description")}</TableHead>
+                  <TableHead>{t("Delivery Time")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCarriers?.map((carrier) => (
                 <TableRow key={carrier.id}>
                   <TableCell className="font-medium">{carrier.name}</TableCell>
                   <TableCell className="text-muted-foreground">
@@ -620,56 +679,86 @@ const Shipping = () => {
               ))}
             </TableBody>
           </Table>
+          )}
         </CardContent>
       </Card>
 
       {/* Carrier Regions */}
       <Card>
         <CardHeader>
-          <CardTitle>Carrier Region Coverage</CardTitle>
+          <CardTitle>{t("Carrier Region Coverage")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Carrier</TableHead>
-                <TableHead>Region</TableHead>
-                <TableHead>Cost</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {carrierRegions?.map((cr) => {
-                const carrier = carriers?.find((c) => c.id === cr.carrier_id);
-                return (
-                  <TableRow key={cr.id}>
-                    <TableCell className="font-medium">{carrier?.name || "-"}</TableCell>
+          {isLoading ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("Carrier")}</TableHead>
+                  <TableHead>{t("Region")}</TableHead>
+                  <TableHead>{t("Cost")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        {cr.regions?.name || "-"}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-semibold">
-                      ${Number(cr.cost).toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setDeletingRegionId(cr.id);
-                          setDeleteRegionDialogOpen(true);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <Skeleton className="h-8 w-8" />
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          ) : carrierRegions?.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {t("No region coverage added yet")}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("Carrier")}</TableHead>
+                  <TableHead>{t("Region")}</TableHead>
+                  <TableHead>{t("Cost")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {carrierRegions?.map((cr) => {
+                  const carrier = carriers?.find((c) => c.id === cr.carrier_id);
+                  return (
+                    <TableRow key={cr.id}>
+                      <TableCell className="font-medium">{carrier?.name || "-"}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          {cr.regions?.name || "-"}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-semibold">
+                        {formatPrice(Number(cr.cost))}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setDeletingRegionId(cr.id);
+                            setDeleteRegionDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -677,18 +766,18 @@ const Shipping = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Carrier</AlertDialogTitle>
+            <AlertDialogTitle>{t("Delete Carrier")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this carrier? This action cannot be undone.
+              {t("Are you sure you want to delete this carrier? This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deletingCarrierId && deleteCarrierMutation.mutate(deletingCarrierId)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -698,18 +787,18 @@ const Shipping = () => {
       <AlertDialog open={deleteRegionDialogOpen} onOpenChange={setDeleteRegionDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove Region Coverage</AlertDialogTitle>
+            <AlertDialogTitle>{t("Remove Region Coverage")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove this region from the carrier?
+              {t("Are you sure you want to remove this region from the carrier?")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deletingRegionId && deleteCarrierRegionMutation.mutate(deletingRegionId)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Remove
+              {t("Remove")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

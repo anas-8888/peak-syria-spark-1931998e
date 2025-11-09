@@ -1243,7 +1243,17 @@ export default function CheckoutNew() {
                         <img
                           src={item.product.image_url}
                           alt={t(item.product.name)}
+                          loading="lazy"
+                          decoding="async"
+                          width={64}
+                          height={64}
                           className="w-full h-full object-cover rounded"
+                          onError={(e) => {
+                            const target = e.currentTarget as HTMLImageElement;
+                            if (target.src !== '/placeholder.svg') {
+                              target.src = '/placeholder.svg';
+                            }
+                          }}
                         />
                       )}
                     </div>

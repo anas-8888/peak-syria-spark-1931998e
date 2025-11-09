@@ -28,6 +28,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const discountSchema = z.object({
   code: z.string().optional(),
@@ -102,6 +103,7 @@ interface DiscountFormProps {
 }
 
 export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormProps) {
+  const { formatPrice } = useCurrency();
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialData?.selected_categories || []);
   const [selectedProducts, setSelectedProducts] = useState<string[]>(initialData?.selected_products || []);
   const [categorySearch, setCategorySearch] = useState("");
@@ -418,7 +420,7 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
                   placeholder="90000"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Total price: ${calculateBundleTotalPrice(products, bundleProducts).toLocaleString()} (Max allowed)
+                  Total price: {formatPrice(calculateBundleTotalPrice(products, bundleProducts))} (Max allowed)
                 </p>
               </div>
             )}
@@ -673,7 +675,7 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
                         htmlFor={`bundle-${product.id}`}
                         className="text-sm font-normal cursor-pointer"
                       >
-                        {product.name} - ${Number(product.price || 0).toLocaleString()}
+                        {product.name} - {formatPrice(Number(product.price || 0))}
                         <span className="text-muted-foreground ml-2">({product.category})</span>
                       </Label>
                     </div>
@@ -693,7 +695,7 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
                     })}
                   </div>
                   <div className="p-2 bg-muted rounded text-sm font-semibold">
-                    Total Price: ${calculateBundleTotalPrice(products, bundleProducts).toLocaleString()}
+                    Total Price: {formatPrice(calculateBundleTotalPrice(products, bundleProducts))}
                   </div>
                 </div>
               )}

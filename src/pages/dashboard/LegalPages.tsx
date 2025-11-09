@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const LegalPages = () => {
   const { t } = useLanguage();
@@ -73,73 +73,88 @@ const LegalPages = () => {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
 
   const currentPage = legalPages?.find(p => p.page_type === editingPage);
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Legal Pages</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t("Legal Pages")}</h2>
         <p className="text-muted-foreground">
-          Manage your Terms of Service, Privacy Policy, and Refund Policy content
+          {t("Manage your Terms of Service, Privacy Policy, and Refund Policy content")}
         </p>
       </div>
 
       <Tabs value={editingPage} onValueChange={(v) => handlePageChange(v as any)}>
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="terms">Terms of Service</TabsTrigger>
-          <TabsTrigger value="privacy">Privacy Policy</TabsTrigger>
-          <TabsTrigger value="refund">Refund Policy</TabsTrigger>
+          <TabsTrigger value="terms">{t("Terms of Service")}</TabsTrigger>
+          <TabsTrigger value="privacy">{t("Privacy Policy")}</TabsTrigger>
+          <TabsTrigger value="refund">{t("Refund Policy")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value={editingPage} className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>{currentPage?.title}</CardTitle>
-              <CardDescription>
-                Last updated: {currentPage?.last_updated ? new Date(currentPage.last_updated).toLocaleString() : 'Never'}
-              </CardDescription>
+              {isLoading ? (
+                <>
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-4 w-32 mt-2" />
+                </>
+              ) : (
+                <>
+                  <CardTitle>{currentPage?.title}</CardTitle>
+                  <CardDescription>
+                    {t("Last updated")}: {currentPage?.last_updated ? new Date(currentPage.last_updated).toLocaleString() : t('Never')}
+                  </CardDescription>
+                </>
+              )}
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Page Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Enter page title"
-                    required
-                  />
+              {isLoading ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-96 w-full" />
+                  </div>
+                  <Skeleton className="h-10 w-32" />
                 </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">{t("Page Title")}</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder={t("Enter page title")}
+                      required
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="content">Content (Markdown supported)</Label>
-                  <Textarea
-                    id="content"
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    placeholder="Enter page content using Markdown formatting"
-                    className="min-h-[400px] font-mono"
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Use Markdown formatting: ## for headings, **bold**, *italic*, - for lists, etc.
-                  </p>
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="content">{t("Content (Markdown supported)")}</Label>
+                    <Textarea
+                      id="content"
+                      value={formData.content}
+                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                      placeholder={t("Enter page content using Markdown formatting")}
+                      className="min-h-[400px] font-mono"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t("Use Markdown formatting: ## for headings, **bold**, *italic*, - for lists, etc.")}
+                    </p>
+                  </div>
 
-                <Button type="submit" disabled={updateMutation.isPending}>
-                  {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Save Changes
-                </Button>
-              </form>
+                  <Button type="submit" disabled={updateMutation.isPending}>
+                    {t("Save Changes")}
+                  </Button>
+                </form>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

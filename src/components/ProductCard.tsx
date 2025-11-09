@@ -4,7 +4,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "sonner";
+import { getOptimizedImageUrl } from "@/utils/imageCache";
 
 interface ProductCardProps {
   id: number;
@@ -19,6 +21,7 @@ const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardPro
   const { t } = useLanguage();
   const { addToCart } = useCart();
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
 
   const handleAddToCart = async () => {
@@ -31,12 +34,23 @@ const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardPro
       {/* Product Image */}
       <div className="relative aspect-square overflow-hidden bg-muted">
         <img
-          src={image}
+          src={getOptimizedImageUrl(image, {
+            width: 280,
+            quality: 85,
+            format: 'webp'
+          })}
           alt={t(name)}
           width="280"
           height="280"
           loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={(e) => {
+            const target = e.currentTarget as HTMLImageElement;
+            if (target.src !== '/placeholder.svg') {
+              target.src = '/placeholder.svg';
+            }
+          }}
         />
         
         {/* Overlay on Hover */}
@@ -64,7 +78,7 @@ const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardPro
         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{category}</p>
         <h3 className="font-semibold text-card-foreground mb-2 line-clamp-1">{t(name)}</h3>
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-primary">{price.toLocaleString()} SYP</span>
+          <span className="text-lg font-bold text-primary">{formatPrice(price)}</span>
           <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10" onClick={handleAddToCart}>
             Add to Cart
           </Button>

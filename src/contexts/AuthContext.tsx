@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -29,23 +29,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  
+  // Use refs to track previous values and prevent unnecessary re-renders
+  const previousUserIdRef = useRef<string | undefined>(undefined);
+  const previousSessionIdRef = useRef<string | undefined>(undefined);
+  const hasInitializedRef = useRef(false);
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        // Ignore TOKEN_REFRESHED events to prevent unnecessary re-renders
+        // Only update state if user actually changed (sign in/out)
+        if (event === 'TOKEN_REFRESHED') {
+          // Token refreshed but user is the same, don't trigger re-renders
+          return;
+        }
+        
+        const newUserId = session?.user?.id;
+        const newSessionId = session?.access_token;
+        
+        // Only update state if user or session actually changed
+        if (previousUserIdRef.current !== newUserId || previousSessionIdRef.current !== newSessionId) {
+          previousUserIdRef.current = newUserId;
+          previousSessionIdRef.current = newSessionId;
         setSession(session);
         setUser(session?.user ?? null);
+        }
+        
+        if (hasInitializedRef.current) {
         setLoading(false);
+        }
       }
     );
 
-    // THEN check for existing session
+    // THEN check for existing session (only once on mount)
+    if (!hasInitializedRef.current) {
     supabase.auth.getSession().then(({ data: { session } }) => {
+        const newUserId = session?.user?.id;
+        const newSessionId = session?.access_token;
+        
+        previousUserIdRef.current = newUserId;
+        previousSessionIdRef.current = newSessionId;
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+        hasInitializedRef.current = true;
     });
+    }
 
     return () => subscription.unsubscribe();
   }, []);

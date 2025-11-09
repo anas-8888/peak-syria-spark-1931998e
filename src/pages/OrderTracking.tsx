@@ -669,6 +669,7 @@ const OrderTracking = () => {
                               alt={t(item.products.name)}
                               className="h-20 w-20 object-cover rounded-lg bg-muted"
                               loading="lazy"
+                              decoding="async"
                               width={80}
                               height={80}
                               onError={(e) => {

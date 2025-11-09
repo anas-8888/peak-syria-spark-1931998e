@@ -8,11 +8,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import GoogleSignInButton from "./GoogleSignInButton";
 import peakLogo from "@/assets/peak-logo-new.png";
+import { getOptimizedImageUrl } from "@/utils/imageCache";
 const Navbar = () => {
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const {
@@ -22,7 +24,6 @@ const Navbar = () => {
   const {
     cartCount
   } = useCart();
-  const [avatarUrl, setAvatarUrl] = useState("");
   const [fullName, setFullName] = useState("");
   const [userRole, setUserRole] = useState("");
 
@@ -42,7 +43,8 @@ const Navbar = () => {
         ...flag,
         button_url: `/flag-products?flag=${encodeURIComponent(flag.flag_name)}`
       }));
-    }
+    },
+    staleTime: 1000 * 60 * 10, // Cache for 10 minutes
   });
 
   // Fetch categories that should show in navbar
@@ -57,56 +59,68 @@ const Navbar = () => {
       } = await supabase.from("categories").select("id, name").eq("is_active", true).eq("show_in_navbar", true).order("display_order");
       if (error) throw error;
       return data || [];
-    }
+    },
+    staleTime: 1000 * 60 * 10, // Cache for 10 minutes
   });
-  useEffect(() => {
-    if (user) {
-      loadProfile();
-    }
-  }, [user]);
 
-  // Reload profile when navigating to profile page to catch any avatar updates
+  // Fetch user profile with React Query cache (no timestamp - allows browser caching)
+  const { data: profileData } = useQuery({
+    queryKey: ["user-profile", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("avatar_url, full_name, role_id")
+        .eq("id", user.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    refetchOnWindowFocus: false, // Don't refetch on focus to prevent flickering
+  });
+
+  // Update local state when profile data changes
   useEffect(() => {
-    if (user && location.pathname === "/profile") {
-      loadProfile();
+    if (profileData) {
+      setFullName(profileData.full_name || "");
+      
+      // Get role name
+      if (profileData.role_id) {
+        supabase
+          .from("roles")
+          .select("name")
+          .eq("id", profileData.role_id)
+          .single()
+          .then(({ data }) => {
+            if (data) {
+              setUserRole(data.name.toLowerCase());
+            }
+          });
+      }
     }
-  }, [location.pathname, user]);
+  }, [profileData]);
 
   // Listen for avatar update events from Profile page
   useEffect(() => {
     const handleAvatarUpdate = () => {
-      if (user) {
-        loadProfile();
-      }
+      // Invalidate profile cache to refetch
+      queryClient.invalidateQueries({ queryKey: ["user-profile", user?.id] });
     };
     window.addEventListener('avatarUpdated', handleAvatarUpdate);
     return () => window.removeEventListener('avatarUpdated', handleAvatarUpdate);
-  }, [user]);
-  const loadProfile = async () => {
-    try {
-      const {
-        data: profileData
-      } = await supabase.from("profiles").select("avatar_url, full_name, role_id").eq("id", user?.id).single();
-      if (profileData) {
-        // Add cache-busting timestamp to avatar URL to prevent caching issues
-        const avatarWithTimestamp = profileData.avatar_url ? `${profileData.avatar_url}?t=${Date.now()}` : "";
-        setAvatarUrl(avatarWithTimestamp);
-        setFullName(profileData.full_name || "");
+  }, [user?.id, queryClient]);
 
-        // Get role name
-        if (profileData.role_id) {
-          const {
-            data: roleData
-          } = await supabase.from("roles").select("name").eq("id", profileData.role_id).single();
-          if (roleData) {
-            setUserRole(roleData.name.toLowerCase());
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error loading profile:", error);
-    }
-  };
+  // Get optimized avatar URL with caching (no timestamp - allows browser cache)
+  const avatarUrl = profileData?.avatar_url 
+    ? getOptimizedImageUrl(profileData.avatar_url, {
+        width: 80,
+        quality: 85,
+        format: 'webp'
+      })
+    : "";
   const navLinks = [{
     name: t("All Products"),
     path: "/products"
@@ -168,7 +182,16 @@ const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="gap-2 rounded-full px-3 py-2 h-auto hover:bg-accent/50 transition-all duration-300 hover:scale-105">
                     <Avatar className="h-8 w-8 border-2 border-primary/20">
-                      <AvatarImage src={avatarUrl} alt={fullName} />
+                      <AvatarImage 
+                        src={avatarUrl} 
+                        alt={fullName}
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
                       {!avatarUrl && <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold text-sm">
                           {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
                         </AvatarFallback>}
@@ -241,7 +264,16 @@ const Navbar = () => {
               {user ? <div className="flex flex-col gap-1.5 w-full px-3">
                   <div className="flex items-center justify-center gap-1.5 p-1.5 bg-accent/50 rounded-full">
                     <Avatar className="h-6 w-6 sm:h-7 sm:w-7 border border-primary/20">
-                      <AvatarImage src={avatarUrl} alt={fullName} />
+                      <AvatarImage 
+                        src={avatarUrl} 
+                        alt={fullName}
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
                       {!avatarUrl && <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold text-[10px] sm:text-xs">
                           {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
                         </AvatarFallback>}

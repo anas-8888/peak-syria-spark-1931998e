@@ -10,6 +10,7 @@ import { Switch } from './ui/switch';
 import { Trash2, Plus, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface ProductVariantManagerProps {
   productId: string;
@@ -39,6 +40,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
   onSave 
 }, ref) => {
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const queryClient = useQueryClient();
   const [unifiedPricing, setUnifiedPricing] = useState(false);
   const [unifiedPrice, setUnifiedPrice] = useState<number>(0);
@@ -320,7 +322,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="main-price">{t('Main Price (USD)')} *</Label>
+              <Label htmlFor="main-price">{t('Main Price')} ({t("s.p")}) *</Label>
               <Input
                 id="main-price"
                 type="number"
@@ -375,7 +377,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="offer-price">{t('Offer Price (USD)')}</Label>
+              <Label htmlFor="offer-price">{t('Offer Price')} ({t("s.p")})</Label>
               <Input
                 id="offer-price"
                 type="number"
@@ -401,7 +403,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
       {unifiedPricing && (
         <div className="p-4 bg-muted rounded-lg">
           <p className="text-sm text-muted-foreground">
-            {t('Main Price')} (${mainPrice}){offerPrice && offerPrice < mainPrice ? ` → ${t('Offer Price')} ($${offerPrice})` : ''} {t('and')} {t('Total Stock')} ({totalStock}) {t('will be applied to all')} {(colors?.length || 0) * availableSizes.length} {t('variant combinations.')}
+            {t('Main Price')} ({formatPrice(mainPrice)}){offerPrice && offerPrice < mainPrice ? ` → ${t('Offer Price')} (${formatPrice(offerPrice)})` : ''} {t('and')} {t('Total Stock')} ({totalStock}) {t('will be applied to all')} {(colors?.length || 0) * availableSizes.length} {t('variant combinations.')}
           </p>
         </div>
       )}
@@ -560,7 +562,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
               {t('Colors')}: {colors?.length || 0} | {t('Sizes')}: {availableSizes.length}
             </p>
             <p className="text-sm text-muted-foreground">
-              {t('Price')}: ${mainPrice || 0} | {t('Stock per variant')}: {Math.floor(totalStock / ((colors?.length || 0) * availableSizes.length)) || 0}
+              {t('Price')}: {formatPrice(mainPrice || 0)} | {t('Stock per variant')}: {Math.floor(totalStock / ((colors?.length || 0) * availableSizes.length)) || 0}
             </p>
           </>
         ) : (
@@ -570,7 +572,7 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
             </p>
             {variants.length > 0 && product?.min_price && product?.max_price && (
               <p className="text-sm text-muted-foreground">
-                {t('Price range')}: ${product.min_price} - ${product.max_price}
+                {t('Price range')}: {formatPrice(product.min_price)} - {formatPrice(product.max_price)}
               </p>
             )}
           </>

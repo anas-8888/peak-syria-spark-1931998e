@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getOptimizedImageUrl } from "@/utils/imageCache";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -44,6 +46,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface Customer {
   id: string;
@@ -63,6 +66,7 @@ const Users = () => {
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
@@ -340,11 +344,11 @@ const Users = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">User Management</h1>
-          <p className="text-muted-foreground">View and manage all users</p>
+          <h1 className="text-3xl font-bold mb-2">{t("User Management")}</h1>
+          <p className="text-muted-foreground">{t("View and manage all users")}</p>
         </div>
         <Button onClick={() => setIsAddUserDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Add User
+          <Plus className="h-4 w-4 mr-2" /> {t("Add User")}
         </Button>
       </div>
 
@@ -357,7 +361,7 @@ const Users = () => {
                 <UsersIcon className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Customers</p>
+                <p className="text-sm text-muted-foreground">{t("Total Customers")}</p>
                 <p className="text-2xl font-bold">{totalCustomers}</p>
               </div>
             </div>
@@ -370,7 +374,7 @@ const Users = () => {
                 <UserCheck className="h-6 w-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Active Customers</p>
+                <p className="text-sm text-muted-foreground">{t("Active Customers")}</p>
                 <p className="text-2xl font-bold">{activeCustomers}</p>
               </div>
             </div>
@@ -383,7 +387,7 @@ const Users = () => {
                 <UserPlus className="h-6 w-6 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">New This Month</p>
+                <p className="text-sm text-muted-foreground">{t("New This Month")}</p>
                 <p className="text-2xl font-bold">{newThisMonth}</p>
               </div>
             </div>
@@ -396,7 +400,7 @@ const Users = () => {
                 <TrendingUp className="h-6 w-6 text-yellow-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Repeat Customers</p>
+                <p className="text-sm text-muted-foreground">{t("Repeat Customers")}</p>
                 <p className="text-2xl font-bold">{repeatPercentage}%</p>
               </div>
             </div>
@@ -411,7 +415,7 @@ const Users = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name or email..."
+                placeholder={t("Search by name or email...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -419,10 +423,10 @@ const Users = () => {
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by role" />
+                <SelectValue placeholder={t("Filter by role")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="all">{t("All Roles")}</SelectItem>
                 {roles.map((r: any) => (
                   <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
                 ))}
@@ -436,31 +440,74 @@ const Users = () => {
       <Card>
         <CardHeader>
           <CardTitle>
-            Users ({paginatedData?.total || 0})
-            {totalPages > 1 && <span className="text-sm text-muted-foreground ml-2">(Page {currentPage} of {totalPages})</span>}
+            {t("Users")} ({paginatedData?.total || 0})
+            {totalPages > 1 && <span className="text-sm text-muted-foreground ml-2">({t("Page")} {currentPage} {t("of")} {totalPages})</span>}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading users...
+            <div className="space-y-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Orders</TableHead>
+                    <TableHead>Total Spent</TableHead>
+                    <TableHead>Join Date</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-10 w-10 rounded-full" />
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-32" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                      </TableCell>
+                      <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Skeleton className="h-8 w-8" />
+                          <Skeleton className="h-8 w-8" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           ) : filteredCustomers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No users found
+              {t("No users found")}
             </div>
           ) : (
             <>
               <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Orders</TableHead>
-                  <TableHead>Total Spent</TableHead>
-                  <TableHead>Join Date</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t("User")}</TableHead>
+                  <TableHead>{t("Contact")}</TableHead>
+                  <TableHead>{t("Role")}</TableHead>
+                  <TableHead>{t("Orders")}</TableHead>
+                  <TableHead>{t("Total Spent")}</TableHead>
+                  <TableHead>{t("Join Date")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -470,8 +517,18 @@ const Users = () => {
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
                           <AvatarImage
-                            src={customer.avatar_url || undefined}
+                            src={getOptimizedImageUrl(customer.avatar_url, {
+                              width: 80,
+                              quality: 85,
+                              format: 'webp'
+                            }) || undefined}
                             alt={`${customer.full_name || customer.email || "User"} avatar`}
+                            loading="lazy"
+                            decoding="async"
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
                           />
                           <AvatarFallback>
                             {customer.full_name?.charAt(0) || customer.email?.charAt(0) || "?"}
@@ -502,7 +559,7 @@ const Users = () => {
                     </TableCell>
                     <TableCell className="font-semibold">{customer.totalOrders}</TableCell>
                     <TableCell className="font-semibold">
-                      ${customer.totalSpent.toFixed(2)}
+                      {formatPrice(customer.totalSpent)}
                     </TableCell>
                     <TableCell>{new Date(customer.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>
@@ -531,10 +588,10 @@ const Users = () => {
                           onClick={() => handleDeleteClick(customer.id, customer)}
                           title={
                             currentUser && customer.id === currentUser.id
-                              ? "Cannot delete your own account"
+                              ? t("Cannot delete your own account")
                               : customer.role?.name?.toLowerCase() === 'super admin'
-                              ? "Cannot delete super admin accounts"
-                              : "Delete user"
+                              ? t("Cannot delete super admin accounts")
+                              : t("Delete user")
                           }
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
@@ -550,7 +607,7 @@ const Users = () => {
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4">
                 <div className="text-sm text-muted-foreground">
-                  Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, paginatedData?.total || 0)} of {paginatedData?.total || 0} users
+                  {t("Showing")} {((currentPage - 1) * ITEMS_PER_PAGE) + 1} {t("to")} {Math.min(currentPage * ITEMS_PER_PAGE, paginatedData?.total || 0)} {t("of")} {paginatedData?.total || 0} {t("users")}
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -559,7 +616,7 @@ const Users = () => {
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                   >
-                    Previous
+                    {t("Previous")}
                   </Button>
                   <Button
                     variant="outline"
@@ -567,7 +624,7 @@ const Users = () => {
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                   >
-                    Next
+                    {t("Next")}
                   </Button>
                 </div>
               </div>
@@ -581,15 +638,26 @@ const Users = () => {
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
+            <DialogTitle>{t("User Details")}</DialogTitle>
+            <DialogDescription>{t("View detailed information about this user")}</DialogDescription>
           </DialogHeader>
             {selectedCustomer && (
               <div className="space-y-4 py-4">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12">
                     <AvatarImage
-                      src={selectedCustomer.avatar_url || undefined}
+                      src={getOptimizedImageUrl(selectedCustomer.avatar_url, {
+                        width: 96,
+                        quality: 90,
+                        format: 'webp'
+                      }) || undefined}
                       alt={`${selectedCustomer.full_name || selectedCustomer.email || "User"} avatar`}
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => {
+                        const target = e.currentTarget as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
                     />
                     <AvatarFallback>
                       {selectedCustomer.full_name?.charAt(0) || selectedCustomer.email?.charAt(0) || "?"}
@@ -601,33 +669,33 @@ const Users = () => {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-sm font-semibold">Full Name</Label>
+                  <Label className="text-sm font-semibold">{t("Full Name")}</Label>
                   <p className="mt-1">{selectedCustomer.full_name || "N/A"}</p>
                 </div>
               <div>
-                <Label className="text-sm font-semibold">Phone</Label>
+                <Label className="text-sm font-semibold">{t("Phone")}</Label>
                 <p className="mt-1">{selectedCustomer.phone || "N/A"}</p>
               </div>
               <div>
-                <Label className="text-sm font-semibold">Address</Label>
+                <Label className="text-sm font-semibold">{t("Address")}</Label>
                 <p className="mt-1">{selectedCustomer.address || "N/A"}</p>
               </div>
               <div>
-                <Label className="text-sm font-semibold">Total Orders</Label>
+                <Label className="text-sm font-semibold">{t("Total Orders")}</Label>
                 <p className="mt-1">{selectedCustomer.totalOrders}</p>
               </div>
               <div>
-                <Label className="text-sm font-semibold">Total Spent</Label>
-                <p className="mt-1">${selectedCustomer.totalSpent.toFixed(2)}</p>
+                <Label className="text-sm font-semibold">{t("Total Spent")}</Label>
+                <p className="mt-1">{formatPrice(selectedCustomer.totalSpent)}</p>
               </div>
               <div>
-                <Label className="text-sm font-semibold">Member Since</Label>
+                <Label className="text-sm font-semibold">{t("Member Since")}</Label>
                 <p className="mt-1">{new Date(selectedCustomer.created_at).toLocaleDateString()}</p>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
+            <Button onClick={() => setIsViewDialogOpen(false)}>{t("Close")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -636,55 +704,55 @@ const Users = () => {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>Update user information</DialogDescription>
+            <DialogTitle>{t("Edit User")}</DialogTitle>
+            <DialogDescription>{t("Update user information")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="edit-full-name">Full Name</Label>
+              <Label htmlFor="edit-full-name">{t("Full Name")}</Label>
               <Input
                 id="edit-full-name"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                placeholder="Enter full name"
+                placeholder={t("Enter full name")}
               />
             </div>
             <div>
-              <Label htmlFor="edit-email">Email</Label>
+              <Label htmlFor="edit-email">{t("Email")}</Label>
               <Input
                 id="edit-email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="Enter email"
+                placeholder={t("Enter email")}
               />
             </div>
             <div>
-              <Label htmlFor="edit-phone">Phone</Label>
+              <Label htmlFor="edit-phone">{t("Phone")}</Label>
               <Input
                 id="edit-phone"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="Enter phone number"
+                placeholder={t("Enter phone number")}
               />
             </div>
             <div>
-              <Label htmlFor="edit-address">Address</Label>
+              <Label htmlFor="edit-address">{t("Address")}</Label>
               <Input
                 id="edit-address"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Enter address"
+                placeholder={t("Enter address")}
               />
             </div>
             <div>
-              <Label htmlFor="edit-role">Role</Label>
+              <Label htmlFor="edit-role">{t("Role")}</Label>
               <Select 
                 value={formData.role_id} 
                 onValueChange={(value) => setFormData({ ...formData, role_id: value })}
               >
                 <SelectTrigger id="edit-role">
-                  <SelectValue placeholder="Select role" />
+                  <SelectValue placeholder={t("Select role")} />
                 </SelectTrigger>
                 <SelectContent>
                   {roles.map((r: any) => (
@@ -704,10 +772,10 @@ const Users = () => {
                 resetForm();
               }}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={handleUpdateCustomer} disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? "Updating..." : "Update User"}
+              {updateMutation.isPending ? t("Updating...") : t("Update User")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -717,19 +785,18 @@ const Users = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("Are you sure?")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete this user
-              and all associated data.
+              {t("This action cannot be undone. This will permanently delete this user and all associated data.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -739,12 +806,12 @@ const Users = () => {
       <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
-            <DialogDescription>Create a new user account with a specific role</DialogDescription>
+            <DialogTitle>{t("Add New User")}</DialogTitle>
+            <DialogDescription>{t("Create a new user account with a specific role")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="new-email">Email</Label>
+              <Label htmlFor="new-email">{t("Email")}</Label>
               <Input
                 id="new-email"
                 type="email"
@@ -754,7 +821,7 @@ const Users = () => {
               />
             </div>
             <div>
-              <Label htmlFor="new-password">Password</Label>
+              <Label htmlFor="new-password">{t("Password")}</Label>
               <Input
                 id="new-password"
                 type="password"
@@ -764,22 +831,22 @@ const Users = () => {
               />
             </div>
             <div>
-              <Label htmlFor="new-full-name">Full Name</Label>
+              <Label htmlFor="new-full-name">{t("Full Name")}</Label>
               <Input
                 id="new-full-name"
                 value={newUserData.full_name}
                 onChange={(e) => setNewUserData({ ...newUserData, full_name: e.target.value })}
-                placeholder="John Doe"
+                placeholder={t("John Doe")}
               />
             </div>
             <div>
-              <Label htmlFor="new-role">Role</Label>
+              <Label htmlFor="new-role">{t("Role")}</Label>
               <Select
                 value={newUserData.role_id}
                 onValueChange={(value) => setNewUserData({ ...newUserData, role_id: value })}
               >
                 <SelectTrigger id="new-role">
-                  <SelectValue placeholder="Select a role" />
+                  <SelectValue placeholder={t("Select a role")} />
                 </SelectTrigger>
                 <SelectContent>
                   {roles.map((role: any) => (
@@ -793,7 +860,7 @@ const Users = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={resetNewUserForm}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               onClick={() => createUserMutation.mutate(newUserData)}
@@ -804,7 +871,7 @@ const Users = () => {
                 !newUserData.role_id
               }
             >
-              {createUserMutation.isPending ? "Creating..." : "Create User"}
+              {createUserMutation.isPending ? t("Creating...") : t("Create User")}
             </Button>
           </DialogFooter>
         </DialogContent>

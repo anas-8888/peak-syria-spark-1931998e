@@ -117,9 +117,6 @@ export default function CartNew() {
 
   const validateDiscount = async (code: string) => {
     try {
-      console.log("Validating discount code:", code);
-      console.log("Cart total:", cartTotal);
-      console.log("Cart items:", cartItems.map(i => ({ product_id: i.product_id, quantity: i.quantity })));
       
       const { data, error } = await supabase.rpc("validate_discount_code", {
         p_code: code,
@@ -131,8 +128,6 @@ export default function CartNew() {
         })),
       });
 
-      console.log("RPC response - data:", data, "error:", error);
-
       if (error) {
         console.error("RPC error:", error);
         throw error;
@@ -140,7 +135,6 @@ export default function CartNew() {
 
       if (data && data.length > 0) {
         const result = data[0];
-        console.log("Validation result:", result);
         if (result.is_valid) {
           // Fetch discount metadata to detect free shipping type
           const { data: discountMeta } = await supabase
@@ -167,7 +161,6 @@ export default function CartNew() {
       }
 
       // Fallback: validate code from discounts table
-      console.log("Checking discounts table directly for code:", code);
       const { data: discountRow } = await supabase
         .from("discounts")
         .select("*")
@@ -175,7 +168,6 @@ export default function CartNew() {
         .eq("status", "active")
         .maybeSingle();
 
-      console.log("Direct discount lookup:", discountRow);
 
       if (discountRow) {
         const now = new Date();
@@ -184,8 +176,6 @@ export default function CartNew() {
         const channelOk = !discountRow.channels || discountRow.channels.includes("web");
         const loginOk = !discountRow.logged_in_only || !!user;
         const subtotalOk = Number(discountRow.min_cart_subtotal || 0) <= cartTotal;
-
-        console.log("Validation checks:", { startsOk, endsOk, channelOk, loginOk, subtotalOk });
 
         if (startsOk && endsOk && channelOk && loginOk && subtotalOk) {
           let amount = 0;
@@ -1010,9 +1000,16 @@ export default function CartNew() {
                     <img
                       src={item.product.image_url || '/placeholder.svg'}
                       alt={t(item.product.name)}
+                      loading="lazy"
+                      decoding="async"
+                      width={96}
+                      height={96}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        e.currentTarget.src = '/placeholder.svg';
+                        const target = e.currentTarget as HTMLImageElement;
+                        if (target.src !== '/placeholder.svg') {
+                          target.src = '/placeholder.svg';
+                        }
                       }}
                     />
                   </div>

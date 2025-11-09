@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Settings = () => {
   const { user } = useAuth();
@@ -20,6 +20,7 @@ const Settings = () => {
   const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingStoreSettings, setLoadingStoreSettings] = useState(true);
   
   // Account Information State
   const [fullName, setFullName] = useState("");
@@ -76,7 +77,10 @@ const Settings = () => {
     };
 
     const loadStoreSettings = async () => {
-      if (!isAdmin) return;
+      if (!isAdmin) {
+        setLoadingStoreSettings(false);
+        return;
+      }
 
       try {
         const { data, error } = await supabase
@@ -106,6 +110,8 @@ const Settings = () => {
         if (import.meta.env.DEV) {
           console.error("Error loading store settings:", error);
         }
+      } finally {
+        setLoadingStoreSettings(false);
       }
     };
 
@@ -250,19 +256,12 @@ const Settings = () => {
     }
   };
 
-  if (loadingProfile) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2">Settings</h1>
-        <p className="text-muted-foreground">Manage store and account settings</p>
+        <h1 className="text-3xl font-bold mb-2">{t("Settings")}</h1>
+        <p className="text-muted-foreground">{t("Manage store and account settings")}</p>
       </div>
 
       {/* Profile Settings */}
@@ -273,47 +272,69 @@ const Settings = () => {
               <User className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle>Account Information</CardTitle>
-              <CardDescription>Update your profile information</CardDescription>
+              <CardTitle>{t("Account Information")}</CardTitle>
+              <CardDescription>{t("Update your profile information")}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input 
-                id="name" 
-                placeholder="Enter your full name" 
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-              />
+          {loadingProfile ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <Skeleton className="h-10 w-32" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="admin@example.com"
-                value={email}
-                disabled
-                className="opacity-60"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input 
-              id="phone" 
-              placeholder="+963 123 456 789" 
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </div>
-          <Button className="gap-2" onClick={handleSaveProfile} disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Save Changes
-          </Button>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">{t("Full Name")}</Label>
+                  <Input 
+                    id="name" 
+                    placeholder={t("Enter your full name")} 
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">{t("Email")}</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="admin@example.com"
+                    value={email}
+                    disabled
+                    className="opacity-60"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">{t("Phone Number")}</Label>
+                <Input 
+                  id="phone" 
+                  placeholder={t("+963 123 456 789")} 
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+              <Button className="gap-2" onClick={handleSaveProfile} disabled={loading}>
+                <Save className="h-4 w-4" />
+                {t("Save Changes")}
+              </Button>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -325,48 +346,70 @@ const Settings = () => {
               <Shield className="h-5 w-5 text-red-500" />
             </div>
             <div>
-              <CardTitle>Security</CardTitle>
-              <CardDescription>Manage password and security</CardDescription>
+              <CardTitle>{t("Security")}</CardTitle>
+              <CardDescription>{t("Manage password and security")}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="current">Current Password</Label>
-            <Input 
-              id="current" 
-              type="password" 
-              placeholder="••••••••" 
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="new">New Password</Label>
-              <Input 
-                id="new" 
-                type="password" 
-                placeholder="••••••••" 
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
+          {loadingProfile ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+              <Skeleton className="h-10 w-40" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm">Confirm Password</Label>
-              <Input 
-                id="confirm" 
-                type="password" 
-                placeholder="••••••••" 
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
-          </div>
-          <Button variant="destructive" className="gap-2" onClick={handleUpdatePassword} disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
-            Update Password
-          </Button>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="current">{t("Current Password")}</Label>
+                <Input 
+                  id="current" 
+                  type="password" 
+                  placeholder="••••••••" 
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new">{t("New Password")}</Label>
+                  <Input 
+                    id="new" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm">{t("Confirm Password")}</Label>
+                  <Input 
+                    id="confirm" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+              <Button variant="destructive" className="gap-2" onClick={handleUpdatePassword} disabled={loading}>
+                <Shield className="h-4 w-4" />
+                {t("Update Password")}
+              </Button>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -378,43 +421,62 @@ const Settings = () => {
               <Bell className="h-5 w-5 text-blue-500" />
             </div>
             <div>
-              <CardTitle>Notifications</CardTitle>
-              <CardDescription>Manage notification preferences</CardDescription>
+              <CardTitle>{t("Notifications")}</CardTitle>
+              <CardDescription>{t("Manage notification preferences")}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">New Order Notifications</p>
-              <p className="text-sm text-muted-foreground">Receive alerts when new orders arrive</p>
+          {loadingProfile ? (
+            <div className="space-y-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <Skeleton className="h-5 w-48 mb-2" />
+                      <Skeleton className="h-4 w-64" />
+                    </div>
+                    <Skeleton className="h-6 w-12" />
+                  </div>
+                  {i < 3 && <Separator className="mt-4" />}
+                </div>
+              ))}
             </div>
-            <Switch defaultChecked />
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Low Stock Alerts</p>
-              <p className="text-sm text-muted-foreground">Get notified when products are running low</p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Payment Notifications</p>
-              <p className="text-sm text-muted-foreground">Receive updates about financial transactions</p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Newsletter</p>
-              <p className="text-sm text-muted-foreground">Receive latest news and updates</p>
-            </div>
-            <Switch />
-          </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{t("New Order Notifications")}</p>
+                  <p className="text-sm text-muted-foreground">{t("Receive alerts when new orders arrive")}</p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{t("Low Stock Alerts")}</p>
+                  <p className="text-sm text-muted-foreground">{t("Get notified when products are running low")}</p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{t("Payment Notifications")}</p>
+                  <p className="text-sm text-muted-foreground">{t("Receive updates about financial transactions")}</p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{t("Newsletter")}</p>
+                  <p className="text-sm text-muted-foreground">{t("Receive latest news and updates")}</p>
+                </div>
+                <Switch />
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -427,167 +489,153 @@ const Settings = () => {
                 <Globe className="h-5 w-5 text-green-500" />
               </div>
               <div>
-                <CardTitle>Store Settings</CardTitle>
-                <CardDescription>Manage store contact information and social media</CardDescription>
+                <CardTitle>{t("Store Settings")}</CardTitle>
+                <CardDescription>{t("Manage store contact information and social media")}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="storeEmail">Store Email</Label>
-              <Input 
-                id="storeEmail" 
-                type="email" 
-                value={storeEmail}
-                onChange={(e) => setStoreEmail(e.target.value)}
-                placeholder="info@peaksyria.com"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="storePhone">Store Phone</Label>
-              <Input 
-                id="storePhone" 
-                value={storePhone}
-                onChange={(e) => setStorePhone(e.target.value)}
-                placeholder="+963 XXX XXX XXX"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="businessHours">Business Hours</Label>
-              <Input 
-                id="businessHours" 
-                value={businessHours}
-                onChange={(e) => setBusinessHours(e.target.value)}
-                placeholder="Mon-Sat, 9AM-8PM"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
-              <Input 
-                id="whatsappNumber" 
-                value={whatsappNumber}
-                onChange={(e) => setWhatsappNumber(e.target.value)}
-                placeholder="963XXXXXXXXX"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="whatsappDescription">WhatsApp Description</Label>
-              <Input 
-                id="whatsappDescription" 
-                value={whatsappDescription}
-                onChange={(e) => setWhatsappDescription(e.target.value)}
-                placeholder="Quick responses guaranteed"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="emailResponseTime">Email Response Time</Label>
-              <Input 
-                id="emailResponseTime" 
-                value={emailResponseTime}
-                onChange={(e) => setEmailResponseTime(e.target.value)}
-                placeholder="We'll reply within 24 hours"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="physicalAddress">Physical Address</Label>
-              <Input 
-                id="physicalAddress" 
-                value={physicalAddress}
-                onChange={(e) => setPhysicalAddress(e.target.value)}
-                placeholder="Damascus, Syria"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="locationDescription">Location Description</Label>
-              <Input 
-                id="locationDescription" 
-                value={locationDescription}
-                onChange={(e) => setLocationDescription(e.target.value)}
-                placeholder="Visit us at our showroom"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="brandDescription">Brand Description</Label>
-              <Textarea
-                id="brandDescription"
-                value={brandDescription}
-                onChange={(e) => setBrandDescription(e.target.value)}
-                placeholder="Official distributor of PEAK sportswear in Syria..."
-                rows={3}
-              />
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <Label htmlFor="facebookUrl">Facebook URL</Label>
-              <Input 
-                id="facebookUrl" 
-                type="url"
-                value={facebookUrl}
-                onChange={(e) => setFacebookUrl(e.target.value)}
-                placeholder="https://facebook.com/yourpage"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="instagramUrl">Instagram URL</Label>
-              <Input 
-                id="instagramUrl" 
-                type="url"
-                value={instagramUrl}
-                onChange={(e) => setInstagramUrl(e.target.value)}
-                placeholder="https://instagram.com/yourpage"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="twitterUrl">Twitter URL</Label>
-              <Input 
-                id="twitterUrl" 
-                type="url"
-                value={twitterUrl}
-                onChange={(e) => setTwitterUrl(e.target.value)}
-                placeholder="https://twitter.com/yourpage"
-              />
-            </div>
-            <Button className="gap-2" onClick={handleSaveStoreSettings} disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Save Store Settings
-            </Button>
+            {loadingStoreSettings ? (
+              <div className="space-y-4">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    {i === 8 ? (
+                      <Skeleton className="h-20 w-full" />
+                    ) : (
+                      <Skeleton className="h-10 w-full" />
+                    )}
+                  </div>
+                ))}
+                <Skeleton className="h-10 w-40" />
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="storeEmail">{t("Store Email")}</Label>
+                  <Input 
+                    id="storeEmail" 
+                    type="email" 
+                    value={storeEmail}
+                    onChange={(e) => setStoreEmail(e.target.value)}
+                    placeholder="info@peaksyria.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="storePhone">{t("Store Phone")}</Label>
+                  <Input 
+                    id="storePhone" 
+                    value={storePhone}
+                    onChange={(e) => setStorePhone(e.target.value)}
+                    placeholder="+963 XXX XXX XXX"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="businessHours">{t("Business Hours")}</Label>
+                  <Input 
+                    id="businessHours" 
+                    value={businessHours}
+                    onChange={(e) => setBusinessHours(e.target.value)}
+                    placeholder={t("Mon-Sat, 9AM-8PM")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="whatsappNumber">{t("WhatsApp Number")}</Label>
+                  <Input 
+                    id="whatsappNumber" 
+                    value={whatsappNumber}
+                    onChange={(e) => setWhatsappNumber(e.target.value)}
+                    placeholder="963XXXXXXXXX"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="whatsappDescription">{t("WhatsApp Description")}</Label>
+                  <Input 
+                    id="whatsappDescription" 
+                    value={whatsappDescription}
+                    onChange={(e) => setWhatsappDescription(e.target.value)}
+                    placeholder={t("Quick responses guaranteed")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="emailResponseTime">{t("Email Response Time")}</Label>
+                  <Input 
+                    id="emailResponseTime" 
+                    value={emailResponseTime}
+                    onChange={(e) => setEmailResponseTime(e.target.value)}
+                    placeholder={t("We'll reply within 24 hours")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="physicalAddress">{t("Physical Address")}</Label>
+                  <Input 
+                    id="physicalAddress" 
+                    value={physicalAddress}
+                    onChange={(e) => setPhysicalAddress(e.target.value)}
+                    placeholder={t("Damascus, Syria")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="locationDescription">{t("Location Description")}</Label>
+                  <Input 
+                    id="locationDescription" 
+                    value={locationDescription}
+                    onChange={(e) => setLocationDescription(e.target.value)}
+                    placeholder={t("Visit us at our showroom")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="brandDescription">{t("Brand Description")}</Label>
+                  <Textarea
+                    id="brandDescription"
+                    value={brandDescription}
+                    onChange={(e) => setBrandDescription(e.target.value)}
+                    placeholder={t("Official distributor of PEAK sportswear in Syria...")}
+                    rows={3}
+                  />
+                </div>
+                <Separator />
+                <div className="space-y-2">
+                  <Label htmlFor="facebookUrl">{t("Facebook URL")}</Label>
+                  <Input 
+                    id="facebookUrl" 
+                    type="url"
+                    value={facebookUrl}
+                    onChange={(e) => setFacebookUrl(e.target.value)}
+                    placeholder="https://facebook.com/yourpage"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="instagramUrl">{t("Instagram URL")}</Label>
+                  <Input 
+                    id="instagramUrl" 
+                    type="url"
+                    value={instagramUrl}
+                    onChange={(e) => setInstagramUrl(e.target.value)}
+                    placeholder="https://instagram.com/yourpage"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="twitterUrl">{t("Twitter URL")}</Label>
+                  <Input 
+                    id="twitterUrl" 
+                    type="url"
+                    value={twitterUrl}
+                    onChange={(e) => setTwitterUrl(e.target.value)}
+                    placeholder="https://twitter.com/yourpage"
+                  />
+                </div>
+                <Button className="gap-2" onClick={handleSaveStoreSettings} disabled={loading}>
+                  <Save className="h-4 w-4" />
+                  {t("Save Store Settings")}
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
 
-      {/* Appearance Settings */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-purple-500/10 rounded-full flex items-center justify-center">
-              <Palette className="h-5 w-5 text-purple-500" />
-            </div>
-            <div>
-              <CardTitle>Appearance</CardTitle>
-              <CardDescription>Customize dashboard appearance</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Dark Mode</p>
-              <p className="text-sm text-muted-foreground">Enable dark theme for the interface</p>
-            </div>
-            <Switch />
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Language</p>
-              <p className="text-sm text-muted-foreground">English</p>
-            </div>
-            <Button variant="outline" size="sm">
-              Change
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      
     </div>
   );
 };

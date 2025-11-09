@@ -13,9 +13,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -160,7 +162,7 @@ const Discounts = () => {
       setIsCreateDialogOpen(false);
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to create discount");
+      toast.error(error.message || t("Failed to create discount"));
     },
   });
 
@@ -238,7 +240,7 @@ const Discounts = () => {
       setEditingDiscount(null);
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to update discount");
+      toast.error(error.message || t("Failed to update discount"));
     },
   });
 
@@ -253,7 +255,7 @@ const Discounts = () => {
       toast.success(t("Discount deleted successfully"));
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to delete discount");
+      toast.error(error.message || t("Failed to delete discount"));
     },
   });
 
@@ -271,7 +273,7 @@ const Discounts = () => {
       toast.success(t("Status updated"));
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to update status");
+      toast.error(error.message || t("Failed to update status"));
     },
   });
 
@@ -299,7 +301,7 @@ const Discounts = () => {
       toast.success(t("Banner visibility updated"));
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to update banner visibility");
+      toast.error(error.message || t("Failed to update banner visibility"));
     },
   });
 
@@ -376,7 +378,7 @@ const Discounts = () => {
     setEditingDiscount({
       ...discount,
       id: "",
-      name: `Copy of ${discount.name}`,
+      name: `${t("Copy of")} ${discount.name}`,
       code: discount.code ? `${discount.code}_COPY` : null,
       status: "scheduled",
     });
@@ -385,9 +387,9 @@ const Discounts = () => {
   const getDiscountValue = (discount: Discount) => {
     if (discount.type === "percentage") return `${discount.value}%`;
     if (discount.type === "fixed_amount") return formatPrice(discount.value);
-    if (discount.type === "free_shipping") return "Free";
-    if (discount.type === "bogo_x_for_y") return "BOGO";
-    if (discount.type === "tiered") return "Tiered";
+    if (discount.type === "free_shipping") return t("Free");
+    if (discount.type === "bogo_x_for_y") return t("BOGO");
+    if (discount.type === "tiered") return t("Tiered");
     if (discount.type === "bundle") return formatPrice(discount.value || 0);
     if (discount.type === "volume") return `${discount.value}%`;
     if (discount.type === "clearance") return `${discount.value}%`;
@@ -411,12 +413,12 @@ const Discounts = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Discount Codes</h1>
-          <p className="text-muted-foreground">Create and manage discount codes and promotions</p>
+          <h1 className="text-3xl font-bold mb-2">{t("Discount Codes")}</h1>
+          <p className="text-muted-foreground">{t("Create and manage discount codes and promotions")}</p>
         </div>
         <Button className="gap-2" onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="h-4 w-4" />
-          Create Discount
+          {t("Create Discount")}
         </Button>
       </div>
 
@@ -429,7 +431,7 @@ const Discounts = () => {
                 <Tag className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Active Codes</p>
+                <p className="text-sm text-muted-foreground">{t("Active Codes")}</p>
                 <p className="text-2xl font-bold">{kpis.active}</p>
               </div>
             </div>
@@ -442,7 +444,7 @@ const Discounts = () => {
                 <TrendingUp className="h-6 w-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Uses</p>
+                <p className="text-sm text-muted-foreground">{t("Total Uses")}</p>
                 <p className="text-2xl font-bold">{kpis.totalUses}</p>
               </div>
             </div>
@@ -455,7 +457,7 @@ const Discounts = () => {
                 <Percent className="h-6 w-6 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Avg. Discount</p>
+                <p className="text-sm text-muted-foreground">{t("Avg. Discount")}</p>
                 <p className="text-2xl font-bold">{kpis.avgDiscount.toFixed(0)}%</p>
               </div>
             </div>
@@ -468,7 +470,7 @@ const Discounts = () => {
                 <Users className="h-6 w-6 text-yellow-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Revenue Impact</p>
+                <p className="text-sm text-muted-foreground">{t("Revenue Impact")}</p>
                 <p className="text-2xl font-bold">{formatPrice(kpis.totalRevenue)}</p>
               </div>
             </div>
@@ -483,7 +485,7 @@ const Discounts = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by code or name..."
+                placeholder={t("Search by code or name...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -492,31 +494,31 @@ const Discounts = () => {
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px]">
                 <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t("Status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="scheduled">Scheduled</SelectItem>
-                <SelectItem value="paused">Paused</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
+                <SelectItem value="all">{t("All Status")}</SelectItem>
+                <SelectItem value="active">{t("Active")}</SelectItem>
+                <SelectItem value="scheduled">{t("Scheduled")}</SelectItem>
+                <SelectItem value="paused">{t("Paused")}</SelectItem>
+                <SelectItem value="expired">{t("Expired")}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Type" />
+                <SelectValue placeholder={t("Type")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="percentage">Percentage</SelectItem>
-                <SelectItem value="fixed_amount">Fixed Amount</SelectItem>
-                <SelectItem value="bogo_x_for_y">BOGO</SelectItem>
-                <SelectItem value="tiered">Tiered</SelectItem>
-                <SelectItem value="bundle">Bundle</SelectItem>
-                <SelectItem value="volume">Volume</SelectItem>
-                <SelectItem value="free_shipping">Free Shipping</SelectItem>
-                <SelectItem value="clearance">Clearance</SelectItem>
-                <SelectItem value="flash_sale">Flash Sale</SelectItem>
+                <SelectItem value="all">{t("All Types")}</SelectItem>
+                <SelectItem value="percentage">{t("Percentage")}</SelectItem>
+                <SelectItem value="fixed_amount">{t("Fixed Amount")}</SelectItem>
+                <SelectItem value="bogo_x_for_y">{t("BOGO")}</SelectItem>
+                <SelectItem value="tiered">{t("Tiered")}</SelectItem>
+                <SelectItem value="bundle">{t("Bundle")}</SelectItem>
+                <SelectItem value="volume">{t("Volume")}</SelectItem>
+                <SelectItem value="free_shipping">{t("Free Shipping")}</SelectItem>
+                <SelectItem value="clearance">{t("Clearance")}</SelectItem>
+                <SelectItem value="flash_sale">{t("Flash Sale")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -526,28 +528,73 @@ const Discounts = () => {
       {/* Discounts Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Discount Codes ({filteredDiscounts.length})</CardTitle>
+          <CardTitle>{t("Discount Codes")} ({filteredDiscounts.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8">Loading...</div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("Code/Name")}</TableHead>
+                  <TableHead>{t("Type")}</TableHead>
+                  <TableHead>{t("Value")}</TableHead>
+                  <TableHead>{t("Scope")}</TableHead>
+                  <TableHead>{t("Usage")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead>{t("Banner")}</TableHead>
+                  <TableHead>{t("Valid Period")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-2 w-full" />
+                      </div>
+                    </TableCell>
+                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-12" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           ) : filteredDiscounts.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No discounts found. Create your first discount to get started.
+              {t("No discounts found. Create your first discount to get started.")}
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Code/Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead>Scope</TableHead>
-                  <TableHead>Usage</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Banner</TableHead>
-                  <TableHead>Valid Period</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t("Code/Name")}</TableHead>
+                  <TableHead>{t("Type")}</TableHead>
+                  <TableHead>{t("Value")}</TableHead>
+                  <TableHead>{t("Scope")}</TableHead>
+                  <TableHead>{t("Usage")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead>{t("Banner")}</TableHead>
+                  <TableHead>{t("Valid Period")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -610,11 +657,11 @@ const Discounts = () => {
                             disabled={discount.status !== "active"}
                           />
                           <span className="text-xs text-muted-foreground">
-                            {discount.show_in_banner ? "Shown" : "Hidden"}
+                            {discount.show_in_banner ? t("Shown") : t("Hidden")}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground">N/A</span>
+                        <span className="text-xs text-muted-foreground">{t("N/A")}</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -622,7 +669,7 @@ const Discounts = () => {
                         <div>{format(new Date(discount.start_date), "MMM dd, yyyy")}</div>
                         {discount.end_date && (
                           <div className="text-muted-foreground">
-                            to {format(new Date(discount.end_date), "MMM dd, yyyy")}
+                            {t("to")} {format(new Date(discount.end_date), "MMM dd, yyyy")}
                           </div>
                         )}
                       </div>
@@ -692,7 +739,8 @@ const Discounts = () => {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create New Discount</DialogTitle>
+            <DialogTitle>{t("Create New Discount")}</DialogTitle>
+            <DialogDescription>{t("Create a new discount code or promotion")}</DialogDescription>
           </DialogHeader>
           <DiscountForm
             onSubmit={handleCreateDiscount}
@@ -705,7 +753,8 @@ const Discounts = () => {
       <Dialog open={!!editingDiscount} onOpenChange={() => setEditingDiscount(null)}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Discount</DialogTitle>
+            <DialogTitle>{t("Edit Discount")}</DialogTitle>
+            <DialogDescription>{t("Update discount details and settings")}</DialogDescription>
           </DialogHeader>
           {editingDiscount && (
             <DiscountForm
@@ -734,7 +783,8 @@ const Discounts = () => {
       <Dialog open={!!previewDiscount} onOpenChange={() => setPreviewDiscount(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Discount Details</DialogTitle>
+            <DialogTitle>{t("Discount Details")}</DialogTitle>
+            <DialogDescription>{t("View detailed information about this discount")}</DialogDescription>
           </DialogHeader>
           {previewDiscount && (
             <div className="space-y-6">
@@ -743,7 +793,7 @@ const Discounts = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     {previewDiscount.is_automatic ? (
-                      <Badge variant="secondary">AUTOMATIC</Badge>
+                      <Badge variant="secondary">{t("AUTOMATIC")}</Badge>
                     ) : (
                       <Badge variant="outline" className="font-mono">{previewDiscount.code}</Badge>
                     )}
@@ -769,12 +819,12 @@ const Discounts = () => {
               {/* Basic Info */}
               <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
                 <div>
-                  <p className="text-sm text-muted-foreground">Scope</p>
+                  <p className="text-sm text-muted-foreground">{t("Scope")}</p>
                   <p className="font-medium capitalize">{previewDiscount.scope.replace("_", " ")}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Application</p>
-                  <p className="font-medium">{previewDiscount.is_automatic ? "Automatic" : "Coupon Code"}</p>
+                  <p className="text-sm text-muted-foreground">{t("Application")}</p>
+                  <p className="font-medium">{previewDiscount.is_automatic ? t("Automatic") : t("Coupon Code")}</p>
                 </div>
               </div>
 
@@ -782,7 +832,7 @@ const Discounts = () => {
               <div className="grid grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="pt-4">
-                    <p className="text-sm text-muted-foreground">Total Uses</p>
+                    <p className="text-sm text-muted-foreground">{t("Total Uses")}</p>
                     <p className="text-2xl font-bold">
                       {previewDiscount.total_uses}
                       {previewDiscount.global_usage_limit && ` / ${previewDiscount.global_usage_limit}`}
@@ -791,15 +841,15 @@ const Discounts = () => {
                 </Card>
                 <Card>
                   <CardContent className="pt-4">
-                    <p className="text-sm text-muted-foreground">Revenue Impact</p>
+                    <p className="text-sm text-muted-foreground">{t("Revenue Impact")}</p>
                     <p className="text-2xl font-bold">{formatPrice(previewDiscount.total_revenue)}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-4">
-                    <p className="text-sm text-muted-foreground">Per Customer</p>
+                    <p className="text-sm text-muted-foreground">{t("Per Customer")}</p>
                     <p className="text-2xl font-bold">
-                      {previewDiscount.per_customer_limit || "Unlimited"}
+                      {previewDiscount.per_customer_limit || t("Unlimited")}
                     </p>
                   </CardContent>
                 </Card>
@@ -807,27 +857,27 @@ const Discounts = () => {
 
               {/* Rules */}
               <div>
-                <h4 className="font-semibold mb-3">Eligibility Rules</h4>
+                <h4 className="font-semibold mb-3">{t("Eligibility Rules")}</h4>
                 <div className="space-y-2">
                   {previewDiscount.min_cart_subtotal > 0 && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Badge variant="outline">Min. Cart</Badge>
+                      <Badge variant="outline">{t("Min. Cart")}</Badge>
                       <span>{formatPrice(previewDiscount.min_cart_subtotal)}</span>
                     </div>
                   )}
                   {previewDiscount.first_order_only && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Badge variant="outline">First Order Only</Badge>
+                      <Badge variant="outline">{t("First Order Only")}</Badge>
                     </div>
                   )}
                   {previewDiscount.logged_in_only && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Badge variant="outline">Logged-in Users Only</Badge>
+                      <Badge variant="outline">{t("Logged-in Users Only")}</Badge>
                     </div>
                   )}
                   {previewDiscount.is_stackable && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Badge variant="outline">Stackable</Badge>
+                      <Badge variant="outline">{t("Stackable")}</Badge>
                     </div>
                   )}
                 </div>
@@ -835,15 +885,15 @@ const Discounts = () => {
 
               {/* Schedule */}
               <div>
-                <h4 className="font-semibold mb-3">Schedule</h4>
+                <h4 className="font-semibold mb-3">{t("Schedule")}</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Start Date</p>
+                    <p className="text-sm text-muted-foreground">{t("Start Date")}</p>
                     <p className="font-medium">{format(new Date(previewDiscount.start_date), "PPP")}</p>
                   </div>
                   {previewDiscount.end_date && (
                     <div>
-                      <p className="text-sm text-muted-foreground">End Date</p>
+                      <p className="text-sm text-muted-foreground">{t("End Date")}</p>
                       <p className="font-medium">{format(new Date(previewDiscount.end_date), "PPP")}</p>
                     </div>
                   )}
@@ -852,7 +902,7 @@ const Discounts = () => {
 
               {previewDiscount.internal_notes && (
                 <div>
-                  <h4 className="font-semibold mb-2">Internal Notes</h4>
+                  <h4 className="font-semibold mb-2">{t("Internal Notes")}</h4>
                   <p className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
                     {previewDiscount.internal_notes}
                   </p>

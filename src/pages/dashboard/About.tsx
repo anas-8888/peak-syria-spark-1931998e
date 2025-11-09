@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const iconOptions = ["Shield", "Award", "Users", "TrendingUp"];
@@ -99,46 +100,83 @@ const AboutManagement = () => {
     updateMutation.mutate();
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8 min-h-[400px]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="p-8 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">About Page Management</h1>
+        <h1 className="text-3xl font-bold mb-2">{t("About Page Management")}</h1>
         <p className="text-muted-foreground">
-          Customize the content displayed on the About page
+          {t("Customize the content displayed on the About page")}
         </p>
       </div>
 
+      {isLoading ? (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-64 mt-2" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-48 mt-2" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-56 mt-2" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-64 w-full" />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-48 mt-2" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </CardContent>
+          </Card>
+          <Skeleton className="h-12 w-40 ml-auto" />
+        </div>
+      ) : (
+        <>
       {/* Hero Section */}
       <Card>
           <CardHeader>
-            <CardTitle>Hero Section</CardTitle>
-            <CardDescription>The main banner at the top of the About page</CardDescription>
+            <CardTitle>{t("Hero Section")}</CardTitle>
+            <CardDescription>{t("The main banner at the top of the About page")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="heroTitle">Hero Title</Label>
+              <Label htmlFor="heroTitle">{t("Hero Title")}</Label>
               <Input
                 id="heroTitle"
                 value={heroTitle}
                 onChange={(e) => setHeroTitle(e.target.value)}
-                placeholder="About PEAK Syria"
+                placeholder={t("About PEAK Syria")}
               />
             </div>
             <div>
-              <Label htmlFor="heroSubtitle">Hero Subtitle</Label>
+              <Label htmlFor="heroSubtitle">{t("Hero Subtitle")}</Label>
               <Textarea
                 id="heroSubtitle"
                 value={heroSubtitle}
                 onChange={(e) => setHeroSubtitle(e.target.value)}
-                placeholder="The official and exclusive distributor..."
+                placeholder={t("The official and exclusive distributor...")}
                 rows={2}
               />
             </div>
@@ -148,31 +186,31 @@ const AboutManagement = () => {
         {/* Story Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Our Story Section</CardTitle>
-            <CardDescription>Tell your company's story</CardDescription>
+            <CardTitle>{t("Our Story Section")}</CardTitle>
+            <CardDescription>{t("Tell your company's story")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="storyTitle">Story Title</Label>
+              <Label htmlFor="storyTitle">{t("Story Title")}</Label>
               <Input
                 id="storyTitle"
                 value={storyTitle}
                 onChange={(e) => setStoryTitle(e.target.value)}
-                placeholder="Our Story"
+                placeholder={t("Our Story")}
               />
             </div>
             <div>
-              <Label htmlFor="storyContent">Story Content</Label>
+              <Label htmlFor="storyContent">{t("Story Content")}</Label>
               <Textarea
                 id="storyContent"
                 value={storyContent}
                 onChange={(e) => setStoryContent(e.target.value)}
-                placeholder="Your company story..."
+                placeholder={t("Your company story...")}
                 rows={8}
                 className="resize-y"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Use double line breaks to create separate paragraphs
+                {t("Use double line breaks to create separate paragraphs")}
               </p>
             </div>
           </CardContent>
@@ -181,14 +219,14 @@ const AboutManagement = () => {
         {/* Values Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Why Choose Us Section</CardTitle>
-            <CardDescription>Highlight your company values and benefits</CardDescription>
+            <CardTitle>{t("Why Choose Us Section")}</CardTitle>
+            <CardDescription>{t("Highlight your company values and benefits")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {values.map((value, index) => (
               <div key={index} className="p-4 border rounded-lg space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-semibold">Value {index + 1}</h4>
+                  <h4 className="font-semibold">{t("Value")} {index + 1}</h4>
                   <Button
                     type="button"
                     variant="ghost"
@@ -199,7 +237,7 @@ const AboutManagement = () => {
                   </Button>
                 </div>
                 <div>
-                  <Label>Icon</Label>
+                  <Label>{t("Icon")}</Label>
                   <Select
                     value={value.icon}
                     onValueChange={(val) => handleValueChange(index, "icon", val)}
@@ -217,19 +255,19 @@ const AboutManagement = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label>Title</Label>
+                  <Label>{t("Title")}</Label>
                   <Input
                     value={value.title}
                     onChange={(e) => handleValueChange(index, "title", e.target.value)}
-                    placeholder="100% Authentic"
+                    placeholder={t("100% Authentic")}
                   />
                 </div>
                 <div>
-                  <Label>Description</Label>
+                  <Label>{t("Description")}</Label>
                   <Textarea
                     value={value.description}
                     onChange={(e) => handleValueChange(index, "description", e.target.value)}
-                    placeholder="Official distributor ensuring genuine PEAK products"
+                    placeholder={t("Official distributor ensuring genuine PEAK products")}
                     rows={2}
                   />
                 </div>
@@ -237,7 +275,7 @@ const AboutManagement = () => {
             ))}
             <Button type="button" variant="outline" onClick={handleAddValue} className="w-full">
               <Plus className="h-4 w-4 mr-2" />
-              Add Value
+              {t("Add Value")}
             </Button>
           </CardContent>
         </Card>
@@ -245,26 +283,26 @@ const AboutManagement = () => {
         {/* Mission Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Mission Section</CardTitle>
-            <CardDescription>Define your company's mission</CardDescription>
+            <CardTitle>{t("Mission Section")}</CardTitle>
+            <CardDescription>{t("Define your company's mission")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="missionTitle">Mission Title</Label>
+              <Label htmlFor="missionTitle">{t("Mission Title")}</Label>
               <Input
                 id="missionTitle"
                 value={missionTitle}
                 onChange={(e) => setMissionTitle(e.target.value)}
-                placeholder="Our Mission"
+                placeholder={t("Our Mission")}
               />
             </div>
             <div>
-              <Label htmlFor="missionContent">Mission Content</Label>
+              <Label htmlFor="missionContent">{t("Mission Content")}</Label>
               <Textarea
                 id="missionContent"
                 value={missionContent}
                 onChange={(e) => setMissionContent(e.target.value)}
-                placeholder="Your mission statement..."
+                placeholder={t("Your mission statement...")}
                 rows={4}
               />
             </div>
@@ -277,16 +315,11 @@ const AboutManagement = () => {
           size="lg"
           disabled={updateMutation.isPending}
         >
-          {updateMutation.isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            "Save Changes"
-          )}
+          {t("Save All Changes")}
         </Button>
       </div>
+        </>
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, ReactNode, useMemo } from "react";
+import { useLanguage } from "./LanguageContext";
 
 interface CurrencyContextType {
   formatPrice: (price: number) => string;
@@ -7,12 +8,25 @@ interface CurrencyContextType {
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
 export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
-  const formatPrice = (price: number): string => {
-    return `$${price.toLocaleString()}`;
-  };
+  const { t } = useLanguage();
+  
+  const formatPrice = useMemo(() => {
+    return (price: number): string => {
+      // Format number with commas for thousands, remove .00 if it's a whole number
+      const formatted = price.toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      });
+      // Remove .00 if present
+      const cleaned = formatted.replace(/\.00$/, '');
+      return `${cleaned} ${t("s.p")}`;
+    };
+  }, [t]);
+
+  const value = useMemo(() => ({ formatPrice }), [formatPrice]);
 
   return (
-    <CurrencyContext.Provider value={{ formatPrice }}>
+    <CurrencyContext.Provider value={value}>
       {children}
     </CurrencyContext.Provider>
   );

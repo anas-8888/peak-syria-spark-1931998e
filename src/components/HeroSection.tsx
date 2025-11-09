@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { preloadImage, getOptimizedImageUrl } from "@/utils/imageCache";
 
 const HeroSection = () => {
   const { t } = useLanguage();
@@ -29,15 +30,34 @@ const HeroSection = () => {
         console.error("Error fetching hero slides:", error);
         throw error;
       }
-      console.log("Fetched hero slides:", data);
       return data;
     },
-    staleTime: 1000 * 30, // Consider data stale after 30 seconds
-    refetchOnWindowFocus: true, // Refetch when user returns to tab
-    refetchOnMount: true, // Refetch when component mounts
+    staleTime: 1000 * 60 * 10, // Cache for 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch on focus to prevent flickering
+    refetchOnMount: false, // Don't refetch if data is fresh
   });
 
   const slides = dbSlides || [];
+
+  // Preload next slide images for better performance
+  useEffect(() => {
+    if (slides.length > 0) {
+      // Preload current and next slide images
+      const currentSlideImage = slides[currentSlide]?.image_url;
+      const nextSlideImage = slides[(currentSlide + 1) % slides.length]?.image_url;
+      
+      if (currentSlideImage) {
+        preloadImage(currentSlideImage).catch(() => {
+          // Silently fail - image will load normally
+        });
+      }
+      if (nextSlideImage && nextSlideImage !== currentSlideImage) {
+        preloadImage(nextSlideImage).catch(() => {
+          // Silently fail - image will load normally
+        });
+      }
+    }
+  }, [slides, currentSlide]);
 
   useEffect(() => {
     if (slides.length === 0 || isHovering) {
@@ -153,12 +173,24 @@ const HeroSection = () => {
         >
           <div className="absolute inset-0">
             <img
-              src={slide.image_url}
+              src={getOptimizedImageUrl(slide.image_url, {
+                width: 1920,
+                quality: 85,
+                format: 'webp'
+              })}
               alt={t(slide.title)}
               loading={index === 0 ? "eager" : "lazy"}
-              fetchPriority={index === 0 ? "high" : "auto"}
+              decoding="async"
+              width={1920}
+              height={1080}
               className="absolute inset-0 w-full h-full object-cover"
               style={{ objectPosition: "center center" }}
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                if (target.src !== '/placeholder.svg') {
+                  target.src = '/placeholder.svg';
+                }
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
           </div>

@@ -6,9 +6,13 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export default function ProductVariants() {
   const { productId } = useParams<{ productId: string }>();
+  const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', productId],
@@ -38,18 +42,11 @@ export default function ProductVariants() {
     enabled: !!productId,
   });
 
-  if (isLoading) {
-    return (
-      <div className="p-8">
-        <div className="text-center">Loading...</div>
-      </div>
-    );
-  }
 
   if (!product) {
     return (
       <div className="p-8">
-        <div className="text-center">Product not found</div>
+        <div className="text-center">{t("Product not found")}</div>
       </div>
     );
   }
@@ -61,35 +58,35 @@ export default function ProductVariants() {
           <Link to="/dashboard/products">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Products
+              {t("Back to Products")}
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold mt-4">Manage Product Variants</h1>
+          <h1 className="text-3xl font-bold mt-4">{t("Manage Product Variants")}</h1>
           <p className="text-muted-foreground mt-2">
-            Product: {product.name}
+            {t("Product")}: {product.name}
           </p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Product Information</CardTitle>
+          <CardTitle>{t("Product Information")}</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-muted-foreground">Name</p>
+            <p className="text-sm text-muted-foreground">{t("Name")}</p>
             <p className="font-medium">{product.name}</p>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Category</p>
+            <p className="text-sm text-muted-foreground">{t("Category")}</p>
             <p className="font-medium">{product.category}</p>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Base Price</p>
-            <p className="font-medium">${product.price}</p>
+            <p className="text-sm text-muted-foreground">{t("Base Price")}</p>
+            <p className="font-medium">{formatPrice(product.price)}</p>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Stock</p>
+            <p className="text-sm text-muted-foreground">{t("Stock")}</p>
             <p className="font-medium">{product.stock_quantity}</p>
           </div>
         </CardContent>

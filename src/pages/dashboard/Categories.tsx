@@ -44,7 +44,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import PercentageLoader from "@/components/PercentageLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Category {
   id: string;
@@ -359,9 +359,6 @@ const Categories = () => {
     return allCategories.filter((c) => !excludedIds.has(c.id));
   };
 
-  if (isLoading) {
-    return <PercentageLoader message="Loading categories..." />;
-  }
 
   return (
     <div className="p-8 space-y-6">
@@ -370,10 +367,10 @@ const Categories = () => {
         <div>
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
             <FolderTree className="h-8 w-8" />
-            Category Management
+            {t("Category Management")}
           </h1>
           <p className="text-muted-foreground">
-            Manage product categories with hierarchical structure
+            {t("Manage product categories with hierarchical structure")}
           </p>
         </div>
         <div className="flex gap-2">
@@ -384,12 +381,12 @@ const Categories = () => {
               disabled={bulkDeleteMutation.isPending}
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete {selectedCategories.length} Selected
+              {t("Delete")} {selectedCategories.length} {t("Selected")}
             </Button>
           )}
           <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
-            Add New Category
+            {t("Add New Category")}
           </Button>
         </div>
       </div>
@@ -401,7 +398,7 @@ const Categories = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search for a category..."
+                placeholder={t("Search for a category...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -409,12 +406,12 @@ const Categories = () => {
             </div>
             <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder={t("Filter by status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="active">Active Only</SelectItem>
-                <SelectItem value="inactive">Inactive Only</SelectItem>
+                <SelectItem value="all">{t("All Categories")}</SelectItem>
+                <SelectItem value="active">{t("Active Only")}</SelectItem>
+                <SelectItem value="inactive">{t("Inactive Only")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -424,12 +421,55 @@ const Categories = () => {
       {/* Categories Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Categories ({categories.length})</CardTitle>
+          <CardTitle>{t("Categories")} ({categories.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {categories.length === 0 ? (
+          {isLoading ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12"></TableHead>
+                  <TableHead className="w-20">{t("Image")}</TableHead>
+                  <TableHead>{t("Name")}</TableHead>
+                  <TableHead>{t("Description")}</TableHead>
+                  <TableHead>{t("Parent Category")}</TableHead>
+                  <TableHead>{t("Children")}</TableHead>
+                  <TableHead>{t("Order")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead>{t("Navbar")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Skeleton className="h-4 w-4" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-12 w-12 rounded-lg" />
+                    </TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : categories.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No categories found
+              {t("No categories found")}
             </div>
           ) : (
             <Table>
@@ -443,15 +483,15 @@ const Categories = () => {
                       className="cursor-pointer"
                     />
                   </TableHead>
-                  <TableHead className="w-20">Image</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Parent Category</TableHead>
-                  <TableHead>Children</TableHead>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Navbar</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="w-20">{t("Image")}</TableHead>
+                  <TableHead>{t("Name")}</TableHead>
+                  <TableHead>{t("Description")}</TableHead>
+                  <TableHead>{t("Parent Category")}</TableHead>
+                  <TableHead>{t("Children")}</TableHead>
+                  <TableHead>{t("Order")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead>{t("Navbar")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -469,12 +509,12 @@ const Categories = () => {
                       {category.image_url ? (
                         <img 
                           src={category.image_url} 
-                          alt={t(category.name)}
+                          alt={category.name}
                           className="w-12 h-12 object-cover rounded-md"
                         />
                       ) : (
                         <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center">
-                          <span className="text-xs text-muted-foreground">No image</span>
+                          <span className="text-xs text-muted-foreground">{t("No image")}</span>
                         </div>
                       )}
                     </TableCell>
@@ -483,11 +523,11 @@ const Categories = () => {
                         className="font-medium cursor-pointer hover:text-primary"
                         onClick={() => openPreviewDialog(category)}
                       >
-                        {t(category.name)}
+                        {category.name}
                       </span>
                     </TableCell>
                     <TableCell className="max-w-xs truncate">
-                      {category.description ? t(category.description) : "-"}
+                      {category.description || "-"}
                     </TableCell>
                     <TableCell>
                       {category.parent_id ? (
@@ -495,7 +535,7 @@ const Categories = () => {
                           {getCategoryHierarchy(category.parent_id)}
                         </span>
                       ) : (
-                        <Badge variant="outline">Root</Badge>
+                        <Badge variant="outline">{t("Root")}</Badge>
                       )}
                     </TableCell>
                     <TableCell>
@@ -506,7 +546,7 @@ const Categories = () => {
                     <TableCell>{category.display_order}</TableCell>
                     <TableCell>
                       <Badge variant={category.is_active ? "default" : "secondary"}>
-                        {category.is_active ? "Active" : "Inactive"}
+                        {category.is_active ? t("Active") : t("Inactive")}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -521,9 +561,9 @@ const Categories = () => {
                             
                             if (error) throw error;
                             queryClient.invalidateQueries({ queryKey: ["categories"] });
-                            toast.success(`Category ${checked ? "added to" : "removed from"} navbar`);
+                            toast.success(t(`Category ${checked ? "added to" : "removed from"} navbar`));
                           } catch (error: any) {
-                            toast.error("Failed to update navbar setting: " + error.message);
+                            toast.error(t("Failed to update navbar setting: ") + error.message);
                           }
                         }}
                       />
@@ -534,7 +574,7 @@ const Categories = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => openPreviewDialog(category)}
-                          title="Preview"
+                          title={t("Preview")}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -577,18 +617,18 @@ const Categories = () => {
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>
-                {selectedCategory ? "Edit Category" : "Add Category"}
+                {selectedCategory ? t("Edit Category") : t("Add Category")}
               </DialogTitle>
               <DialogDescription>
                 {selectedCategory
-                  ? "Update the category details"
-                  : "Create a new category"}
+                  ? t("Update the category details")
+                  : t("Create a new category")}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
               <div>
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">{t("Name")} *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -600,7 +640,7 @@ const Categories = () => {
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t("Description")}</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -612,7 +652,7 @@ const Categories = () => {
               </div>
 
               <div>
-                <Label htmlFor="category-image">Category Image</Label>
+                <Label htmlFor="category-image">{t("Category Image")}</Label>
                 <Input
                   id="category-image"
                   type="file"
@@ -624,7 +664,7 @@ const Categories = () => {
                   <div className="mt-2">
                     <img 
                       src={imagePreview} 
-                      alt="Preview" 
+                      alt={t("Preview")} 
                       className="w-32 h-32 object-cover rounded-md border"
                     />
                   </div>
@@ -632,7 +672,7 @@ const Categories = () => {
               </div>
 
               <div>
-                <Label htmlFor="parent">Parent Category</Label>
+                <Label htmlFor="parent">{t("Parent Category")}</Label>
                 <Select
                   value={formData.parent_id || "none"}
                   onValueChange={(value) =>
@@ -640,10 +680,10 @@ const Categories = () => {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="None (Root Category)" />
+                    <SelectValue placeholder={t("None (Root Category)")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None (Root Category)</SelectItem>
+                    <SelectItem value="none">{t("None (Root Category)")}</SelectItem>
                     {getAvailableParents().map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         {getCategoryHierarchy(cat.id)}
@@ -654,7 +694,7 @@ const Categories = () => {
               </div>
 
               <div>
-                <Label htmlFor="order">Display Order</Label>
+                <Label htmlFor="order">{t("Display Order")}</Label>
                 <Input
                   id="order"
                   type="number"
@@ -676,7 +716,7 @@ const Categories = () => {
                     setFormData({ ...formData, is_active: checked })
                   }
                 />
-                <Label htmlFor="active">Active</Label>
+                <Label htmlFor="active">{t("Active")}</Label>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -687,7 +727,7 @@ const Categories = () => {
                     setFormData({ ...formData, show_in_navbar: checked })
                   }
                 />
-                <Label htmlFor="show-navbar">Show in Navbar</Label>
+                <Label htmlFor="show-navbar">{t("Show in Navbar")}</Label>
               </div>
             </div>
 
@@ -701,10 +741,10 @@ const Categories = () => {
                   resetForm();
                 }}
               >
-                Cancel
+                {t("Cancel")}
               </Button>
               <Button type="submit">
-                {selectedCategory ? "Update" : "Create"}
+                {selectedCategory ? t("Update") : t("Create")}
               </Button>
             </DialogFooter>
           </form>
@@ -715,44 +755,44 @@ const Categories = () => {
       <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Category Preview</DialogTitle>
+            <DialogTitle>{t("Category Preview")}</DialogTitle>
           </DialogHeader>
           {selectedCategory && (
             <div className="space-y-4">
               <div>
-                <Label className="text-muted-foreground">Name</Label>
-                <p className="text-lg font-semibold">{t(selectedCategory.name)}</p>
+                <Label className="text-muted-foreground">{t("Name")}</Label>
+                <p className="text-lg font-semibold">{selectedCategory.name}</p>
               </div>
               
               <div>
-                <Label className="text-muted-foreground">Description</Label>
-                <p className="text-sm">{selectedCategory.description ? t(selectedCategory.description) : t("No description")}</p>
+                <Label className="text-muted-foreground">{t("Description")}</Label>
+                <p className="text-sm">{selectedCategory.description || t("No description")}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-muted-foreground">Parent Category</Label>
+                  <Label className="text-muted-foreground">{t("Parent Category")}</Label>
                   {selectedCategory.parent_id ? (
                     <p className="font-medium">{getCategoryHierarchy(selectedCategory.parent_id)}</p>
                   ) : (
-                    <Badge variant="outline">Root Category</Badge>
+                    <Badge variant="outline">{t("Root Category")}</Badge>
                   )}
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Subcategories</Label>
-                  <p className="font-medium">{getChildrenCount(selectedCategory.id)} children</p>
+                  <Label className="text-muted-foreground">{t("Subcategories")}</Label>
+                  <p className="font-medium">{getChildrenCount(selectedCategory.id)} {t("children")}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-muted-foreground">Display Order</Label>
+                  <Label className="text-muted-foreground">{t("Display Order")}</Label>
                   <p className="font-medium">{selectedCategory.display_order}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Status</Label>
+                  <Label className="text-muted-foreground">{t("Status")}</Label>
                   <Badge variant={selectedCategory.is_active ? "default" : "secondary"}>
-                    {selectedCategory.is_active ? "Active" : "Inactive"}
+                    {selectedCategory.is_active ? t("Active") : t("Inactive")}
                   </Badge>
                 </div>
               </div>
@@ -760,13 +800,13 @@ const Categories = () => {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>
-              Close
+              {t("Close")}
             </Button>
             <Button onClick={() => {
               setIsPreviewDialogOpen(false);
               if (selectedCategory) handleEdit(selectedCategory);
             }}>
-              Edit Category
+              {t("Edit Category")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -776,16 +816,15 @@ const Categories = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("Are you sure?")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this category and all its subcategories.
-              This action cannot be undone.
+              {t("This will permanently delete this category and all its subcategories. This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90">
-              Delete
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -795,19 +834,19 @@ const Categories = () => {
       <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selectedCategories.length} categories?</AlertDialogTitle>
+            <AlertDialogTitle>{t("Delete")} {selectedCategories.length} {t("categories?")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete {selectedCategories.length} 
-              {selectedCategories.length === 1 ? " category" : " categories"} and all their subcategories from the database.
+              {t("This action cannot be undone. This will permanently delete")} {selectedCategories.length} 
+              {selectedCategories.length === 1 ? ` ${t("category")}` : ` ${t("categories")}`} {t("and all their subcategories from the database.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmBulkDelete}
               className="bg-destructive hover:bg-destructive/90"
             >
-              Delete All
+              {t("Delete All")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

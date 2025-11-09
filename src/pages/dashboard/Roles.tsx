@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -81,7 +82,7 @@ const Roles = () => {
   };
 
   // Fetch all permissions
-  const { data: allPermissions = [] } = useQuery({
+  const { data: allPermissions = [], isLoading: permissionsLoading } = useQuery({
     queryKey: ["permissions"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -330,11 +331,11 @@ const Roles = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Role Management</h1>
-          <p className="text-muted-foreground">Manage roles and permissions</p>
+          <h1 className="text-3xl font-bold mb-2">{t("Role Management")}</h1>
+          <p className="text-muted-foreground">{t("Manage roles and permissions")}</p>
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Add Role
+          <Plus className="h-4 w-4 mr-2" /> {t("Add Role")}
         </Button>
       </div>
 
@@ -347,8 +348,12 @@ const Roles = () => {
                 <Shield className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Roles</p>
-                <p className="text-2xl font-bold">{roles.length}</p>
+                <p className="text-sm text-muted-foreground">{t("Total Roles")}</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-16 mt-1" />
+                ) : (
+                  <p className="text-2xl font-bold">{roles.length}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -360,8 +365,12 @@ const Roles = () => {
                 <Shield className="h-6 w-6 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Permissions</p>
-                <p className="text-2xl font-bold">{allPermissions.length}</p>
+                <p className="text-sm text-muted-foreground">{t("Total Permissions")}</p>
+                {permissionsLoading ? (
+                  <Skeleton className="h-8 w-16 mt-1" />
+                ) : (
+                  <p className="text-2xl font-bold">{allPermissions.length}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -373,8 +382,12 @@ const Roles = () => {
                 <Shield className="h-6 w-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Permission Categories</p>
-                <p className="text-2xl font-bold">{Object.keys(permissionsByCategory).length}</p>
+                <p className="text-sm text-muted-foreground">{t("Permission Categories")}</p>
+                {permissionsLoading ? (
+                  <Skeleton className="h-8 w-16 mt-1" />
+                ) : (
+                  <p className="text-2xl font-bold">{Object.keys(permissionsByCategory).length}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -384,25 +397,49 @@ const Roles = () => {
       {/* Roles Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Roles ({roles.length})</CardTitle>
+          <CardTitle>{t("Roles")} ({roles.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading roles...
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("Name")}</TableHead>
+                  <TableHead>{t("Description")}</TableHead>
+                  <TableHead>{t("Users")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           ) : roles.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No roles found
+              {t("No roles found")}
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Users</TableHead>
-                  <TableHead>Permissions</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t("Role")}</TableHead>
+                  <TableHead>{t("Users")}</TableHead>
+                  <TableHead>{t("Permissions")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -428,7 +465,7 @@ const Roles = () => {
                         ))}
                         {((role.permissions?.length ?? 0) > 3) && (
                           <Badge variant="outline" className="text-xs">
-                            +{(role.permissions?.length ?? 0) - 3} more
+                            +{(role.permissions?.length ?? 0) - 3} {t("more")}
                           </Badge>
                         )}
                       </div>
@@ -439,7 +476,7 @@ const Roles = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEditRole(role)}
-                          aria-label="Edit permissions"
+                          aria-label={t("Edit permissions")}
                         >
                           <Shield className="h-4 w-4" />
                         </Button>
@@ -453,7 +490,7 @@ const Roles = () => {
                             setIsRenameDialogOpen(true);
                           }}
                         >
-                          Rename
+                          {t("Rename")}
                         </Button>
                         <Button
                           variant="ghost"
@@ -463,7 +500,7 @@ const Roles = () => {
                             setRoleToDelete({ id: role.id, name: role.name, created_at: '' });
                             setDeleteDialogOpen(true);
                           }}
-                          aria-label="Delete role"
+                          aria-label={t("Delete role")}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -480,34 +517,51 @@ const Roles = () => {
       {/* Permissions Box */}
       <Card>
         <CardHeader>
-          <CardTitle>Permissions ({allPermissions.length})</CardTitle>
+          <CardTitle>{t("Permissions")} ({allPermissions.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {Object.entries(permissionsByCategory).map(([category, permissions]) => (
-              <div key={category} className="border rounded-lg overflow-hidden">
-                <div 
-                  className="flex items-center justify-between p-3 bg-muted/50 cursor-pointer hover:bg-muted transition-colors"
-                  onClick={() => toggleCategory(category)}
-                >
-                  <span className="font-medium capitalize">{category}</span>
-                  <Badge variant="secondary">{permissions.length} permissions</Badge>
-                </div>
-                {expandedCategories.includes(category) && (
-                  <div className="p-3 space-y-2 border-t">
-                    {permissions.map((perm) => (
-                      <div key={perm.id} className="flex flex-col gap-1">
-                        <span className="text-sm font-medium">{perm.name}</span>
-                        {perm.description && (
-                          <span className="text-xs text-muted-foreground">{perm.description}</span>
-                        )}
-                      </div>
-                    ))}
+          {permissionsLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="border rounded-lg overflow-hidden">
+                  <div className="flex items-center justify-between p-3 bg-muted/50">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-5 w-24" />
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
+                </div>
+              ))}
+            </div>
+          ) : Object.keys(permissionsByCategory).length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {t("No permissions found")}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {Object.entries(permissionsByCategory).map(([category, permissions]) => (
+                <div key={category} className="border rounded-lg overflow-hidden">
+                  <div 
+                    className="flex items-center justify-between p-3 bg-muted/50 cursor-pointer hover:bg-muted transition-colors"
+                    onClick={() => toggleCategory(category)}
+                  >
+                    <span className="font-medium capitalize">{category}</span>
+                    <Badge variant="secondary">{permissions.length} {t("permissions")}</Badge>
+                  </div>
+                  {expandedCategories.includes(category) && (
+                    <div className="p-3 space-y-2 border-t">
+                      {permissions.map((perm) => (
+                        <div key={perm.id} className="flex flex-col gap-1">
+                          <span className="text-sm font-medium">{perm.name}</span>
+                          {perm.description && (
+                            <span className="text-xs text-muted-foreground">{perm.description}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -515,9 +569,9 @@ const Roles = () => {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Role Permissions</DialogTitle>
+            <DialogTitle>{t("Edit Role Permissions")}</DialogTitle>
             <DialogDescription>
-              Select permissions for the <span className="font-semibold capitalize">{selectedRole?.name}</span> role
+              {t("Select permissions for the")} <span className="font-semibold capitalize">{selectedRole?.name}</span> {t("role")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
@@ -571,10 +625,10 @@ const Roles = () => {
                 setSelectedPermissions([]);
               }}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={handleUpdatePermissions} disabled={updatePermissionsMutation.isPending}>
-              {updatePermissionsMutation.isPending ? "Updating..." : "Update Permissions"}
+              {updatePermissionsMutation.isPending ? t("Updating...") : t("Update Permissions")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -590,21 +644,21 @@ const Roles = () => {
       }}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add Role</DialogTitle>
-            <DialogDescription>Create a new role and assign permissions</DialogDescription>
+            <DialogTitle>{t("Add Role")}</DialogTitle>
+            <DialogDescription>{t("Create a new role and assign permissions")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="role-name">Role name</Label>
+              <Label htmlFor="role-name">{t("Role name")}</Label>
               <Input 
                 id="role-name" 
                 value={newRoleName} 
                 onChange={(e) => setNewRoleName(e.target.value)} 
-                placeholder="e.g. manager" 
+                placeholder={t("e.g. manager")} 
               />
             </div>
             <div className="space-y-4">
-              <Label>Permissions</Label>
+              <Label>{t("Permissions")}</Label>
               {Object.entries(permissionsByCategory).map(([category, permissions]) => {
                 const categoryPermIds = permissions.map((p) => p.id);
                 const allCategorySelected = categoryPermIds.every((id) => selectedPermissions.includes(id));
@@ -648,12 +702,12 @@ const Roles = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>{t("Cancel")}</Button>
             <Button 
               onClick={() => createRoleMutation.mutate({ name: newRoleName, permissionIds: selectedPermissions })} 
               disabled={createRoleMutation.isPending || !newRoleName.trim()}
             >
-              {createRoleMutation.isPending ? "Creating..." : "Create Role"}
+              {createRoleMutation.isPending ? t("Creating...") : t("Create Role")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -663,19 +717,19 @@ const Roles = () => {
       <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Rename Role</DialogTitle>
-            <DialogDescription>Change the role name</DialogDescription>
+            <DialogTitle>{t("Rename Role")}</DialogTitle>
+            <DialogDescription>{t("Change the role name")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="rename-role">New name</Label>
+              <Label htmlFor="rename-role">{t("New name")}</Label>
               <Input id="rename-role" value={renameValue} onChange={(e) => setRenameValue(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRenameDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setIsRenameDialogOpen(false)}>{t("Cancel")}</Button>
             <Button onClick={() => selectedRole && renameRoleMutation.mutate({ id: selectedRole.id, name: renameValue })} disabled={renameRoleMutation.isPending || (selectedRole ? reservedRoleNames.includes(selectedRole.name.toLowerCase()) : false)}>
-              {renameRoleMutation.isPending ? "Saving..." : "Save"}
+              {renameRoleMutation.isPending ? t("Saving...") : t("Save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -685,19 +739,19 @@ const Roles = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Role</AlertDialogTitle>
+            <AlertDialogTitle>{t("Delete Role")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the role "{roleToDelete?.name}"? This action cannot be undone.
-              Users with this role will need to be reassigned.
+              {t("Are you sure you want to delete the role")} "{roleToDelete?.name}"? {t("This action cannot be undone.")}
+              {" "}{t("Users with this role will need to be reassigned.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => roleToDelete && deleteRoleMutation.mutate(roleToDelete.id)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteRoleMutation.isPending ? "Deleting..." : "Delete"}
+              {deleteRoleMutation.isPending ? t("Deleting...") : t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

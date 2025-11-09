@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -24,6 +25,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Plus, Edit, Trash2, Image as ImageIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type HeroSlide = {
   id: string;
@@ -81,13 +83,30 @@ const HeroSlides = () => {
   // Upload image mutation
   const uploadImageMutation = useMutation({
     mutationFn: async (file: File) => {
-      const fileExt = file.name.split(".").pop();
+      // Import compression utility dynamically
+      const { compressImageForUseCase, needsCompression } = await import("@/utils/imageCompression");
+      
+      // Compress image if needed
+      let fileToUpload = file;
+      if (needsCompression(file)) {
+        try {
+          const compressedBlob = await compressImageForUseCase(file, 'hero', 0.85);
+          fileToUpload = new File([compressedBlob], file.name, {
+            type: compressedBlob.type || file.type,
+            lastModified: Date.now()
+          });
+        } catch (error) {
+          console.warn('Failed to compress image, using original:', error);
+        }
+      }
+      
+      const fileExt = fileToUpload.name.split(".").pop() || 'jpg';
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `hero/${fileName}`;
 
       const { error: uploadError, data } = await supabase.storage
         .from("product-images")
-        .upload(filePath, file);
+        .upload(filePath, fileToUpload);
 
       if (uploadError) throw uploadError;
 
@@ -196,9 +215,9 @@ const HeroSlides = () => {
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Hero Slides</h1>
+          <h1 className="text-3xl font-bold">{t("Hero Slides")}</h1>
           <p className="text-muted-foreground mt-1">
-            Manage hero section slides with product flags
+            {t("Manage hero section slides with product flags")}
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -208,59 +227,60 @@ const HeroSlides = () => {
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Add Slide
+              {t("Add Slide")}
             </Button>
           </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingSlide ? "Edit Slide" : "Create New Slide"}</DialogTitle>
+                <DialogTitle>{editingSlide ? t("Edit Slide") : t("Create New Slide")}</DialogTitle>
+                <DialogDescription>{editingSlide ? t("Update slide details") : t("Create a new hero carousel slide")}</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="flag-name">Flag Name *</Label>
+                  <Label htmlFor="flag-name">{t("Flag Name")} *</Label>
                   <Input
                     id="flag-name"
                     value={slideForm.flag_name}
                     onChange={(e) => setSlideForm({ ...slideForm, flag_name: e.target.value })}
-                    placeholder="e.g. New Arrival, Offer, Best Seller"
+                    placeholder={t("e.g. New Arrival, Offer, Best Seller")}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Common examples: New Arrival, Offer, Best Seller, Limited Edition
+                    {t("Common examples: New Arrival, Offer, Best Seller, Limited Edition")}
                   </p>
                 </div>
 
                 <div>
-                  <Label htmlFor="title">Title *</Label>
+                  <Label htmlFor="title">{t("Title")} *</Label>
                   <Input
                     id="title"
                     value={slideForm.title}
                     onChange={(e) => setSlideForm({ ...slideForm, title: e.target.value })}
-                    placeholder="Enter slide title"
+                    placeholder={t("Enter slide title")}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="subtitle">Subtitle *</Label>
+                  <Label htmlFor="subtitle">{t("Subtitle")} *</Label>
                   <Input
                     id="subtitle"
                     value={slideForm.subtitle}
                     onChange={(e) => setSlideForm({ ...slideForm, subtitle: e.target.value })}
-                    placeholder="Enter slide subtitle"
+                    placeholder={t("Enter slide subtitle")}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="button-text">Button Text *</Label>
+                  <Label htmlFor="button-text">{t("Button Text")} *</Label>
                   <Input
                     id="button-text"
                     value={slideForm.button_text}
                     onChange={(e) => setSlideForm({ ...slideForm, button_text: e.target.value })}
-                    placeholder="Enter button text"
+                    placeholder={t("Enter button text")}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="button-url">Button URL *</Label>
+                  <Label htmlFor="button-url">{t("Button URL")} *</Label>
                   <Input
                     id="button-url"
                     value={slideForm.button_url}
@@ -270,7 +290,7 @@ const HeroSlides = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="display-order">Display Order *</Label>
+                  <Label htmlFor="display-order">{t("Display Order")} *</Label>
                   <Input
                     id="display-order"
                     type="number"
@@ -280,9 +300,9 @@ const HeroSlides = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="image">Slide Image *</Label>
+                  <Label htmlFor="image">{t("Slide Image")} *</Label>
                   <p className="text-xs text-muted-foreground mb-2">
-                    Recommended size: 1920x1080px (16:9 aspect ratio) for best results
+                    {t("Recommended size: 1920x1080px (16:9 aspect ratio) for best results")}
                   </p>
                   
                   {/* Show current image if exists */}
@@ -290,7 +310,7 @@ const HeroSlides = () => {
                     <div className="mb-3 relative inline-block">
                       <img 
                         src={slideForm.image_url} 
-                        alt="Current slide" 
+                        alt={t("Current slide")} 
                         className="w-full max-w-md h-40 object-cover rounded-lg border"
                       />
                       <Button
@@ -301,7 +321,7 @@ const HeroSlides = () => {
                         onClick={() => setSlideForm({ ...slideForm, image_url: "" })}
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
-                        Remove Image
+                        {t("Remove Image")}
                       </Button>
                     </div>
                   )}
@@ -326,7 +346,7 @@ const HeroSlides = () => {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="is-active">Active</Label>
+                  <Label htmlFor="is-active">{t("Active")}</Label>
                   <Switch
                     id="is-active"
                     checked={slideForm.is_active}
@@ -336,9 +356,9 @@ const HeroSlides = () => {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="show-in-navbar">Show in Navbar</Label>
+                    <Label htmlFor="show-in-navbar">{t("Show in Navbar")}</Label>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Display this flag as a navigation link
+                      {t("Display this flag as a navigation link")}
                     </p>
                   </div>
                   <Switch
@@ -356,7 +376,7 @@ const HeroSlides = () => {
                       resetForm();
                     }}
                   >
-                    Cancel
+                    {t("Cancel")}
                   </Button>
                   <Button
                     onClick={() => saveSlide.mutate(slideForm)}
@@ -370,7 +390,7 @@ const HeroSlides = () => {
                       saveSlide.isPending
                     }
                   >
-                    {saveSlide.isPending ? "Saving..." : editingSlide ? "Update" : "Create"}
+                    {saveSlide.isPending ? t("Saving...") : editingSlide ? t("Update") : t("Create")}
                   </Button>
                 </div>
               </div>
@@ -380,23 +400,60 @@ const HeroSlides = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>All Hero Slides</CardTitle>
+          <CardTitle>{t("All Hero Slides")}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p>Loading slides...</p>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("Image")}</TableHead>
+                  <TableHead>{t("Order")}</TableHead>
+                  <TableHead>{t("Flag")}</TableHead>
+                  <TableHead>{t("Title")}</TableHead>
+                  <TableHead>{t("Button Text")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead>{t("In Navbar")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-20 w-32 rounded-lg" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-12" /></TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : slides.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {t("No slides found")}
+            </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Flag</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Button Text</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>In Navbar</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t("Image")}</TableHead>
+                  <TableHead>{t("Order")}</TableHead>
+                  <TableHead>{t("Flag")}</TableHead>
+                  <TableHead>{t("Title")}</TableHead>
+                  <TableHead>{t("Button Text")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead>{t("In Navbar")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -411,7 +468,7 @@ const HeroSlides = () => {
                         />
                       ) : (
                         <div className="w-20 h-12 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
-                          No image
+                          {t("No image")}
                         </div>
                       )}
                     </TableCell>
@@ -427,14 +484,14 @@ const HeroSlides = () => {
                       <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
                         slide.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
                       }`}>
-                        {slide.is_active ? "Active" : "Inactive"}
+                        {slide.is_active ? t("Active") : t("Inactive")}
                       </span>
                     </TableCell>
                     <TableCell>
                       <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
                         slide.show_in_navbar ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
                       }`}>
-                        {slide.show_in_navbar ? "Yes" : "No"}
+                        {slide.show_in_navbar ? t("Yes") : t("No")}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -467,19 +524,19 @@ const HeroSlides = () => {
       <Dialog open={!!deletingSlideId} onOpenChange={() => setDeletingSlideId(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogTitle>{t("Confirm Deletion")}</DialogTitle>
+            <DialogDescription>{t("Are you sure you want to delete this slide? This action cannot be undone.")}</DialogDescription>
           </DialogHeader>
-          <p>Are you sure you want to delete this slide? This action cannot be undone.</p>
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setDeletingSlideId(null)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={() => deletingSlideId && deleteSlide.mutate(deletingSlideId)}
               disabled={deleteSlide.isPending}
             >
-              {deleteSlide.isPending ? "Deleting..." : "Delete"}
+              {deleteSlide.isPending ? t("Deleting...") : t("Delete")}
             </Button>
           </div>
         </DialogContent>
