@@ -6,121 +6,146 @@ import peakLogo from "@/assets/peak-logo-new.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePermissions } from "@/hooks/usePermissions";
+// Menu items with their required permissions
 const menuItems = [{
   title: "Overview",
   path: "/dashboard",
   icon: LayoutDashboard,
-  end: true
+  end: true,
+  permission: "view_overview"
 }, {
   title: "Analytics",
   path: "/dashboard/analytics",
   icon: BarChart3,
-  end: false
+  end: false,
+  permission: "view_analytics"
 }, {
   title: "Roles",
   path: "/dashboard/roles",
   icon: Shield,
-  end: false
+  end: false,
+  permission: "view_roles"
 }, {
 title: "Users",
 path: "/dashboard/users",
 icon: Users,
-end: false
+end: false,
+permission: "view_users"
 }, {
   title: "Categories",
   path: "/dashboard/categories",
   icon: FolderTree,
-  end: false
+  end: false,
+  permission: "view_categories"
 }, {
   title: "Colors",
   path: "/dashboard/colors",
   icon: Palette,
-  end: false
+  end: false,
+  permission: "view_colors"
 }, {
   title: "Regions",
   path: "/dashboard/regions",
   icon: MapPin,
-  end: false
+  end: false,
+  permission: "view_regions"
 }, {
   title: "Products",
   path: "/dashboard/products",
   icon: Package,
-  end: false
+  end: false,
+  permission: "view_products"
 }, {
   title: "Discounts",
   path: "/dashboard/discounts",
   icon: Tag,
-  end: false
+  end: false,
+  permission: "view_discounts"
 }, {
   title: "Shipping",
   path: "/dashboard/shipping",
   icon: Truck,
-  end: false
+  end: false,
+  permission: "view_shipping"
 }, {
   title: "Orders",
   path: "/dashboard/orders",
   icon: ShoppingBag,
-  end: false
+  end: false,
+  permission: "view_orders"
 }, {
   title: "Payments",
   path: "/dashboard/payments",
   icon: CreditCard,
-  end: false
+  end: false,
+  permission: "view_payments"
 }, {
   title: "Payment Methods",
   path: "/dashboard/payment-methods",
   icon: CreditCard,
-  end: false
+  end: false,
+  permission: "view_payment_methods"
 }, {
   title: "Reviews",
   path: "/dashboard/reviews",
   icon: Star,
-  end: false
+  end: false,
+  permission: "view_reviews"
 }, {
   title: "Messages",
   path: "/dashboard/messages",
   icon: Mail,
-  end: false
+  end: false,
+  permission: "view_messages"
 }, {
   title: "Marketing",
   path: "/dashboard/marketing",
   icon: Megaphone,
-  end: false
+  end: false,
+  permission: "view_marketing"
 }, {
   title: "Hero Slides",
   path: "/dashboard/hero-slides",
   icon: Image,
-  end: false
+  end: false,
+  permission: "view_hero_slides"
 }, {
   title: "Banners",
   path: "/dashboard/banners",
   icon: LayoutGrid,
-  end: false
+  end: false,
+  permission: "view_banners"
 }, {
   title: "Product Showcase",
   path: "/dashboard/showcase",
   icon: Presentation,
-  end: false
+  end: false,
+  permission: "view_showcase"
 }, {
   title: "About Page",
   path: "/dashboard/about",
   icon: FileText,
-  end: false
+  end: false,
+  permission: "view_about"
 },   {
     title: "Legal Pages",
     path: "/dashboard/legal-pages",
     icon: FileText,
-    end: false
+    end: false,
+    permission: "view_legal_pages"
   }, {
     title: "Translations",
     path: "/dashboard/translations",
     icon: Languages,
-    end: false
+    end: false,
+    permission: "view_translations"
   }, {
   title: "Settings",
   path: "/dashboard/settings",
   icon: Settings,
-  end: false
+  end: false,
+  permission: "manage_settings"
 }];
 const DashboardSidebar = () => {
   const { t, language, setLanguage } = useLanguage();
@@ -130,6 +155,7 @@ const DashboardSidebar = () => {
   const {
     signOut
   } = useAuth();
+  const { hasPermission } = usePermissions();
   const handleLogout = async () => {
     try {
       await signOut();
@@ -187,6 +213,10 @@ const DashboardSidebar = () => {
 
           {menuItems.map(item => {
           const Icon = item.icon;
+          // Check if user has permission for this menu item
+          if (item.permission && !hasPermission(item.permission)) {
+            return null;
+          }
           return <NavLink key={item.path} to={item.path} end={item.end} onClick={() => setMobileOpen(false)} className={({
             isActive
           }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}>

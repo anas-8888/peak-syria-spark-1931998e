@@ -45,6 +45,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface Category {
   id: string;
@@ -59,6 +60,7 @@ interface Category {
 
 const Categories = () => {
   const { t } = useLanguage();
+  const { hasPermission } = usePermissions();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
@@ -126,6 +128,10 @@ const Categories = () => {
   // Add mutation
   const addMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      // Check permission
+      if (!hasPermission('create_categories')) {
+        throw new Error("You don't have permission to create categories");
+      }
       let finalImageUrl = data.image_url;
 
       // Upload image if provided
@@ -171,6 +177,10 @@ const Categories = () => {
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: async (data: typeof formData & { id: string }) => {
+      // Check permission
+      if (!hasPermission('edit_categories')) {
+        throw new Error("You don't have permission to edit categories");
+      }
       let finalImageUrl = data.image_url;
 
       // Upload new image if provided
@@ -219,6 +229,10 @@ const Categories = () => {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      // Check permission
+      if (!hasPermission('delete_categories')) {
+        throw new Error("You don't have permission to delete categories");
+      }
       const { error } = await supabase.from("categories").delete().eq("id", id);
       if (error) throw error;
     },
@@ -234,6 +248,10 @@ const Categories = () => {
   // Bulk delete mutation
   const bulkDeleteMutation = useMutation({
     mutationFn: async (ids: string[]) => {
+      // Check permission
+      if (!hasPermission('delete_categories')) {
+        throw new Error("You don't have permission to delete categories");
+      }
       const { error } = await supabase.from("categories").delete().in("id", ids);
       if (error) throw error;
     },
@@ -374,7 +392,7 @@ const Categories = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          {selectedCategories.length > 0 && (
+          {hasPermission('delete_categories') && selectedCategories.length > 0 && (
             <Button 
               variant="destructive" 
               onClick={handleBulkDelete}
@@ -384,10 +402,12 @@ const Categories = () => {
               {t("Delete")} {selectedCategories.length} {t("Selected")}
             </Button>
           )}
-          <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            {t("Add New Category")}
-          </Button>
+          {hasPermission('create_categories') && (
+            <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" />
+              {t("Add New Category")}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -570,28 +590,34 @@ const Categories = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openPreviewDialog(category)}
-                          title={t("Preview")}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(category)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteClick(category.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        {hasPermission('view_categories') && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openPreviewDialog(category)}
+                            title={t("Preview")}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {hasPermission('edit_categories') && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(category)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {hasPermission('delete_categories') && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteClick(category.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

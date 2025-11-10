@@ -22,6 +22,7 @@ import { ProductImageManager } from "@/components/ProductImageManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ColorImageSelector } from "@/components/ColorImageSelector";
 import ProductVariantManager, { ProductVariantManagerHandle } from "@/components/ProductVariantManager";
+import { usePermissions } from "@/hooks/usePermissions";
 type Product = {
   id: string;
   name: string;
@@ -61,6 +62,7 @@ type Category = {
 const Products = () => {
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
+  const { hasPermission } = usePermissions();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -197,6 +199,10 @@ const Products = () => {
   // Add product mutation
   const addProductMutation = useMutation({
     mutationFn: async (newProduct: typeof formData) => {
+      // Check permission
+      if (!hasPermission('create_products')) {
+        throw new Error("You don't have permission to create products");
+      }
       // Generate SKU
       const timestamp = Date.now().toString(36);
       const random = Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -282,6 +288,10 @@ const Products = () => {
       id: string;
       updates: typeof formData;
     }) => {
+      // Check permission
+      if (!hasPermission('edit_products')) {
+        throw new Error("You don't have permission to edit products");
+      }
       const {
         error
       } = await supabase.from("products").update({
@@ -349,6 +359,10 @@ const Products = () => {
   // Delete product mutation
   const deleteProductMutation = useMutation({
     mutationFn: async (id: string) => {
+      // Check permission
+      if (!hasPermission('delete_products')) {
+        throw new Error("You don't have permission to delete products");
+      }
       const {
         error
       } = await supabase.from("products").delete().eq("id", id);
@@ -867,18 +881,26 @@ const Products = () => {
                               title={product.is_active ? t("Deactivate") : t("Activate")}
                             />
                           </div>
-                          <Button variant="ghost" size="icon" onClick={() => openPreviewDialog(product)} title={t("Preview")}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(product)} title={t("Edit")}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => openCopyDialog(product)} title={t("Copy Product")}>
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDeleteProductId(product.id)} title={t("Delete")}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+                          {hasPermission('view_products') && (
+                            <Button variant="ghost" size="icon" onClick={() => openPreviewDialog(product)} title={t("Preview")}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {hasPermission('edit_products') && (
+                            <Button variant="ghost" size="icon" onClick={() => openEditDialog(product)} title={t("Edit")}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {hasPermission('create_products') && (
+                            <Button variant="ghost" size="icon" onClick={() => openCopyDialog(product)} title={t("Copy Product")}>
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {hasPermission('delete_products') && (
+                            <Button variant="ghost" size="icon" onClick={() => setDeleteProductId(product.id)} title={t("Delete")}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>;

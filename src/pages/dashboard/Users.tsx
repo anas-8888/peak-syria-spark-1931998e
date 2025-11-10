@@ -47,6 +47,7 @@ import {
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface Customer {
   id: string;
@@ -67,10 +68,11 @@ const Users = () => {
   const { user: currentUser } = useAuth();
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
+  const { hasPermission } = usePermissions();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
-  // Fetch all roles for the filter
+  // Fetch all roles for the filter (exclude customer role for creating users)
   const { data: roles = [] } = useQuery({
     queryKey: ["roles"],
     queryFn: async () => {
@@ -83,6 +85,9 @@ const Users = () => {
       return data;
     },
   });
+
+  // Filter out customer role for user creation
+  const adminRoles = roles.filter((role: any) => role.name?.toLowerCase() !== 'customer');
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -105,6 +110,7 @@ const Users = () => {
     email: "",
     password: "",
     full_name: "",
+    phone: "",
     role_id: "",
   });
 
@@ -208,7 +214,7 @@ const Users = () => {
   };
 
   const resetNewUserForm = () => {
-    setNewUserData({ email: "", password: "", full_name: "", role_id: "" });
+    setNewUserData({ email: "", password: "", full_name: "", phone: "", role_id: "" });
     setIsAddUserDialogOpen(false);
   };
 
@@ -230,6 +236,12 @@ const Users = () => {
   };
 
   const handleDeleteClick = (id: string, customer: Customer) => {
+    // Check permission
+    if (!hasPermission('delete_users')) {
+      toast.error(t("You don't have permission to delete users"));
+      return;
+    }
+
     // Prevent deleting yourself
     if (currentUser && id === currentUser.id) {
       toast.error(t("Cannot delete your own account"));
@@ -256,15 +268,50 @@ const Users = () => {
 
   const handleUpdateCustomer = () => {
     if (!selectedCustomer) return;
-    updateMutation.mutate({
-      id: selectedCustomer.id,
-      updates: formData,
-    });
+    
+    // Check permission
+    if (!hasPermission('edit_users')) {
+      toast.error(t("You don't have permission to edit users"));
+      return;
+    }
+    
+    // Remove email from updates - email cannot be modified
+    const { email, ...updatesWithoutEmail } = formData;
+    
+    // Prevent admin from modifying their own role
+    if (currentUser && selectedCustomer.id === currentUser.id) {
+      const { role_id, ...updatesWithoutRole } = updatesWithoutEmail;
+      updateMutation.mutate({
+        id: selectedCustomer.id,
+        updates: updatesWithoutRole,
+      });
+    } else {
+      updateMutation.mutate({
+        id: selectedCustomer.id,
+        updates: updatesWithoutEmail,
+      });
+    }
   };
 
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (data: typeof newUserData) => {
+      console.log("Creating user with data:", { ...data, password: "***" });
+      
+      // Check if user has permission to create users
+      if (!hasPermission('create_users')) {
+        throw new Error("You don't have permission to create users");
+      }
+
+      // Validate that role is not customer
+      const selectedRole = roles.find((r: any) => r.id === data.role_id);
+      if (!selectedRole) {
+        throw new Error("Selected role not found");
+      }
+      if (selectedRole.name?.toLowerCase() === 'customer') {
+        throw new Error("Cannot create customer accounts. Only admin roles are allowed.");
+      }
+
       // Validate password strength
       if (data.password.length < 12) {
         throw new Error("Password must be at least 12 characters long");
@@ -281,6 +328,8 @@ const Users = () => {
       if (!/[^A-Za-z0-9]/.test(data.password)) {
         throw new Error("Password must contain at least one special character");
       }
+      
+      console.log("Password validation passed");
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
@@ -289,16 +338,20 @@ const Users = () => {
           data: {
             full_name: data.full_name,
           },
+          emailRedirectTo: undefined, // Prevent any redirect
         },
       });
 
       if (authError) throw authError;
       if (!authData.user) throw new Error("Failed to create user");
 
-      // Update the profile with role_id
+      // Update the profile with role_id and phone
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({ role_id: data.role_id })
+        .update({ 
+          role_id: data.role_id,
+          phone: data.phone || null
+        })
         .eq("id", authData.user.id);
 
       if (profileError) throw profileError;
@@ -309,7 +362,8 @@ const Users = () => {
       resetNewUserForm();
     },
     onError: (error: any) => {
-      toast.error(t("Failed to create user"), { description: error.message });
+      console.error("Create user error:", error);
+      toast.error(t("Failed to create user"), { description: error.message || error.toString() });
     },
   });
 
@@ -347,7 +401,15 @@ const Users = () => {
           <h1 className="text-3xl font-bold mb-2">{t("User Management")}</h1>
           <p className="text-muted-foreground">{t("View and manage all users")}</p>
         </div>
-        <Button onClick={() => setIsAddUserDialogOpen(true)}>
+        <Button 
+          onClick={() => {
+            if (!hasPermission('create_users')) {
+              toast.error(t("You don't have permission to create users"));
+              return;
+            }
+            setIsAddUserDialogOpen(true);
+          }}
+        >
           <Plus className="h-4 w-4 mr-2" /> {t("Add User")}
         </Button>
       </div>
@@ -564,38 +626,44 @@ const Users = () => {
                     <TableCell>{new Date(customer.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => handleViewCustomer(customer)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => handleEditCustomer(customer)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          disabled={
-                            (currentUser && customer.id === currentUser.id) ||
-                            customer.role?.name?.toLowerCase() === 'super admin'
-                          }
-                          onClick={() => handleDeleteClick(customer.id, customer)}
-                          title={
-                            currentUser && customer.id === currentUser.id
-                              ? t("Cannot delete your own account")
-                              : customer.role?.name?.toLowerCase() === 'super admin'
-                              ? t("Cannot delete super admin accounts")
-                              : t("Delete user")
-                          }
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        {hasPermission('view_users') && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleViewCustomer(customer)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {hasPermission('edit_users') && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleEditCustomer(customer)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {hasPermission('delete_users') && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            disabled={
+                              (currentUser && customer.id === currentUser.id) ||
+                              customer.role?.name?.toLowerCase() === 'super admin'
+                            }
+                            onClick={() => handleDeleteClick(customer.id, customer)}
+                            title={
+                              currentUser && customer.id === currentUser.id
+                                ? t("Cannot delete your own account")
+                                : customer.role?.name?.toLowerCase() === 'super admin'
+                                ? t("Cannot delete super admin accounts")
+                                : t("Delete user")
+                            }
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -723,9 +791,13 @@ const Users = () => {
                 id="edit-email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                disabled
+                className="bg-muted cursor-not-allowed"
                 placeholder={t("Enter email")}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("Email cannot be modified")}
+              </p>
             </div>
             <div>
               <Label htmlFor="edit-phone">{t("Phone")}</Label>
@@ -750,18 +822,24 @@ const Users = () => {
               <Select 
                 value={formData.role_id} 
                 onValueChange={(value) => setFormData({ ...formData, role_id: value })}
+                disabled={currentUser && selectedCustomer?.id === currentUser.id}
               >
-                <SelectTrigger id="edit-role">
+                <SelectTrigger id="edit-role" className={currentUser && selectedCustomer?.id === currentUser.id ? "bg-muted cursor-not-allowed" : ""}>
                   <SelectValue placeholder={t("Select role")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {roles.map((r: any) => (
+                  {adminRoles.map((r: any) => (
                     <SelectItem key={r.id} value={r.id} className="capitalize">
                       {r.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {currentUser && selectedCustomer?.id === currentUser.id && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t("You cannot modify your own role")}
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -829,6 +907,9 @@ const Users = () => {
                 onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
                 placeholder="••••••••"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("Password must be at least 12 characters and contain uppercase, lowercase, number, and special character")}
+              </p>
             </div>
             <div>
               <Label htmlFor="new-full-name">{t("Full Name")}</Label>
@@ -837,6 +918,16 @@ const Users = () => {
                 value={newUserData.full_name}
                 onChange={(e) => setNewUserData({ ...newUserData, full_name: e.target.value })}
                 placeholder={t("John Doe")}
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-phone">{t("Phone")}</Label>
+              <Input
+                id="new-phone"
+                type="tel"
+                value={newUserData.phone}
+                onChange={(e) => setNewUserData({ ...newUserData, phone: e.target.value })}
+                placeholder={t("+963 999 999 999")}
               />
             </div>
             <div>
@@ -849,13 +940,16 @@ const Users = () => {
                   <SelectValue placeholder={t("Select a role")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {roles.map((role: any) => (
+                  {adminRoles.map((role: any) => (
                     <SelectItem key={role.id} value={role.id} className="capitalize">
                       {role.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("Only admin roles can be assigned. Customer accounts cannot be created here.")}
+              </p>
             </div>
           </div>
           <DialogFooter>
@@ -863,13 +957,15 @@ const Users = () => {
               {t("Cancel")}
             </Button>
             <Button
-              onClick={() => createUserMutation.mutate(newUserData)}
-              disabled={
-                createUserMutation.isPending ||
-                !newUserData.email ||
-                !newUserData.password ||
-                !newUserData.role_id
-              }
+              onClick={() => {
+                console.log("Create User clicked", newUserData);
+                if (!newUserData.email || !newUserData.password || !newUserData.role_id) {
+                  toast.error(t("Please fill in all required fields"));
+                  return;
+                }
+                createUserMutation.mutate(newUserData);
+              }}
+              disabled={createUserMutation.isPending}
             >
               {createUserMutation.isPending ? t("Creating...") : t("Create User")}
             </Button>

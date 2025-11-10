@@ -35,6 +35,7 @@ import { toast } from "sonner";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import OrderLocationMap from "@/components/OrderLocationMap";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type OrderWithDetails = {
   id: string;
@@ -111,6 +112,7 @@ const statusVariants = {
 const Orders = () => {
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
+  const { hasPermission } = usePermissions();
   const queryClient = useQueryClient();
   
 const statusLabels = {
@@ -305,6 +307,10 @@ const statusLabels = {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
+      // Check permission
+      if (!hasPermission('edit_orders')) {
+        throw new Error("You don't have permission to edit orders");
+      }
       const { error } = await supabase
         .from("orders")
         .update({ status })
@@ -324,6 +330,10 @@ const statusLabels = {
 
   const approveCancellationMutation = useMutation({
     mutationFn: async (orderId: string) => {
+      // Check permission
+      if (!hasPermission('edit_orders')) {
+        throw new Error("You don't have permission to edit orders");
+      }
       const { error } = await supabase
         .from("orders")
         .update({ 
@@ -346,6 +356,10 @@ const statusLabels = {
 
   const rejectCancellationMutation = useMutation({
     mutationFn: async (orderId: string) => {
+      // Check permission
+      if (!hasPermission('edit_orders')) {
+        throw new Error("You don't have permission to edit orders");
+      }
       const { error } = await supabase
         .from("orders")
         .update({ 
@@ -539,27 +553,31 @@ const statusLabels = {
                       <TableCell>{format(new Date(order.created_at), "yyyy/MM/dd")}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setDetailsDialogOpen(true);
-                            }}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setNewStatus(order.status);
-                              setStatusDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          {hasPermission('view_orders') && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setDetailsDialogOpen(true);
+                              }}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {hasPermission('edit_orders') && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setNewStatus(order.status);
+                                setStatusDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

@@ -500,7 +500,8 @@ const Shipping = () => {
                     placeholder={t("2-3 days")}
                   />
                 </div>
-                <div>
+                {/* Additional Details field hidden */}
+                {/* <div>
                   <Label>{t("Additional Details")}</Label>
                   <Textarea
                     value={carrierForm.details}
@@ -508,7 +509,7 @@ const Shipping = () => {
                     placeholder={t("Payment account details, contact info, etc.")}
                     rows={3}
                   />
-                </div>
+                </div> */}
                 <div>
                   <Label>{t("Display Order")}</Label>
                   <Input

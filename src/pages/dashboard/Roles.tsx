@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Pencil, Trash2, Plus } from "lucide-react";
+import { Shield, Pencil, Trash2, Plus, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface Permission {
   id: string;
@@ -60,6 +61,7 @@ interface RoleWithPermissions {
 
 const Roles = () => {
   const { t } = useLanguage();
+  const { hasPermission } = usePermissions();
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -71,6 +73,7 @@ const Roles = () => {
   const [newRoleName, setNewRoleName] = useState("");
   const [renameValue, setRenameValue] = useState("");
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+  const [isAddingPermissions, setIsAddingPermissions] = useState(false);
   const reservedRoleNames = ["super admin", "customer"];
 
   const toggleCategory = (category: string) => {
@@ -161,6 +164,10 @@ const Roles = () => {
   // Create role mutation
   const createRoleMutation = useMutation({
     mutationFn: async (data: { name: string; permissionIds: string[] }) => {
+      // Check permission
+      if (!hasPermission('create_roles')) {
+        throw new Error("You don't have permission to create roles");
+      }
       const cleaned = data.name.trim();
       if (!cleaned) throw new Error("Role name is required");
       if (reservedRoleNames.includes(cleaned.toLowerCase())) {
@@ -205,6 +212,10 @@ const Roles = () => {
   // Rename role mutation
   const renameRoleMutation = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      // Check permission
+      if (!hasPermission('edit_roles')) {
+        throw new Error("You don't have permission to edit roles");
+      }
       const cleaned = name.trim();
       if (!cleaned) throw new Error("Role name is required");
       if (reservedRoleNames.includes(cleaned.toLowerCase())) {
@@ -228,12 +239,61 @@ const Roles = () => {
   // Delete role mutation
   const deleteRoleMutation = useMutation({
     mutationFn: async (roleId: string) => {
-      const { error } = await supabase.from("roles").delete().eq("id", roleId);
-      if (error) throw error;
+      // Check permission
+      if (!hasPermission('delete_roles')) {
+        throw new Error("You don't have permission to delete roles");
+      }
+      // Step 1: Delete all role_permissions for this role first
+      const { error: deletePermsError } = await supabase
+        .from("role_permissions")
+        .delete()
+        .eq("role_id", roleId);
+
+      if (deletePermsError) throw deletePermsError;
+
+      // Step 2: Get all users with this role
+      const { data: usersWithRole, error: fetchError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("role_id", roleId);
+
+      if (fetchError) throw fetchError;
+
+      // Step 3: Delete all users (profiles) with this role
+      let deletedUsersCount = 0;
+      if (usersWithRole && usersWithRole.length > 0) {
+        const userIds = usersWithRole.map(user => user.id);
+        
+        // Delete profiles (this will cascade to auth.users if foreign key is set up)
+        const { error: deleteUsersError } = await supabase
+          .from("profiles")
+          .delete()
+          .in("id", userIds);
+
+        if (deleteUsersError) throw deleteUsersError;
+        
+        deletedUsersCount = usersWithRole.length;
+      }
+
+      // Step 4: Finally delete the role (now safe since no references exist)
+      const { error: deleteRoleError } = await supabase
+        .from("roles")
+        .delete()
+        .eq("id", roleId);
+
+      if (deleteRoleError) throw deleteRoleError;
+
+      return { deletedUsersCount };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["roles"] });
-      toast.success(t("Role deleted successfully"));
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      const userCount = result?.deletedUsersCount || 0;
+      if (userCount > 0) {
+        toast.success(t("Role and") + ` ${userCount} ` + t("associated user(s) deleted successfully"));
+      } else {
+        toast.success(t("Role deleted successfully"));
+      }
       setDeleteDialogOpen(false);
       setRoleToDelete(null);
     },
@@ -245,6 +305,17 @@ const Roles = () => {
   // Update role permissions mutation
   const updatePermissionsMutation = useMutation({
     mutationFn: async (data: { roleId: string; permissionIds: string[] }) => {
+      // Check permission
+      if (!hasPermission('manage_role_permissions')) {
+        throw new Error("You don't have permission to manage role permissions");
+      }
+      
+      // Prevent editing super admin role permissions
+      const role = roles.find((r: RoleWithPermissions) => r.id === data.roleId);
+      if (role && role.name.toLowerCase() === 'super admin') {
+        throw new Error("Cannot modify super admin role permissions");
+      }
+      
       // Delete existing permissions for this role
       const { error: deleteError } = await supabase
         .from("role_permissions")
@@ -282,6 +353,11 @@ const Roles = () => {
   });
 
   const handleEditRole = (role: RoleWithPermissions) => {
+    // Prevent editing super admin role permissions
+    if (role.name.toLowerCase() === 'super admin') {
+      toast.error(t("Cannot modify super admin role permissions"));
+      return;
+    }
     setSelectedRole({ id: role.id, name: role.name, created_at: '' });
     setSelectedPermissions(role.permissions.map((p) => p.id));
     setIsEditDialogOpen(true);
@@ -289,6 +365,13 @@ const Roles = () => {
 
   const handleUpdatePermissions = () => {
     if (!selectedRole) return;
+    
+    // Prevent editing super admin role permissions
+    if (selectedRole.name.toLowerCase() === 'super admin') {
+      toast.error(t("Cannot modify super admin role permissions"));
+      return;
+    }
+    
     updatePermissionsMutation.mutate({
       roleId: selectedRole.id,
       permissionIds: selectedPermissions,
@@ -317,6 +400,222 @@ const Roles = () => {
     }
   };
 
+  // Add all permissions mutation
+  const addAllPermissionsMutation = useMutation({
+    mutationFn: async () => {
+      const allPermissionsToAdd = [
+        // Overview & Analytics
+        { name: 'view_overview', description: 'View dashboard overview', category: 'Overview' },
+        { name: 'view_analytics', description: 'View analytics dashboard', category: 'Analytics' },
+        { name: 'export_analytics', description: 'Export analytics data', category: 'Analytics' },
+        // Users Management
+        { name: 'view_users', description: 'View users list', category: 'Users' },
+        { name: 'create_users', description: 'Create new users', category: 'Users' },
+        { name: 'edit_users', description: 'Edit user information', category: 'Users' },
+        { name: 'delete_users', description: 'Delete users', category: 'Users' },
+        { name: 'manage_user_roles', description: 'Assign roles to users', category: 'Users' },
+        // Roles Management
+        { name: 'view_roles', description: 'View roles list', category: 'Roles' },
+        { name: 'create_roles', description: 'Create new roles', category: 'Roles' },
+        { name: 'edit_roles', description: 'Edit role information', category: 'Roles' },
+        { name: 'delete_roles', description: 'Delete roles', category: 'Roles' },
+        { name: 'manage_role_permissions', description: 'Manage role permissions', category: 'Roles' },
+        // Products Management
+        { name: 'view_products', description: 'View products list', category: 'Products' },
+        { name: 'create_products', description: 'Create new products', category: 'Products' },
+        { name: 'edit_products', description: 'Edit product information', category: 'Products' },
+        { name: 'delete_products', description: 'Delete products', category: 'Products' },
+        { name: 'manage_product_variants', description: 'Manage product variants', category: 'Products' },
+        { name: 'manage_product_images', description: 'Manage product images', category: 'Products' },
+        // Categories Management
+        { name: 'view_categories', description: 'View categories list', category: 'Categories' },
+        { name: 'create_categories', description: 'Create new categories', category: 'Categories' },
+        { name: 'edit_categories', description: 'Edit category information', category: 'Categories' },
+        { name: 'delete_categories', description: 'Delete categories', category: 'Categories' },
+        // Colors Management
+        { name: 'view_colors', description: 'View colors list', category: 'Colors' },
+        { name: 'create_colors', description: 'Create new colors', category: 'Colors' },
+        { name: 'edit_colors', description: 'Edit color information', category: 'Colors' },
+        { name: 'delete_colors', description: 'Delete colors', category: 'Colors' },
+        // Regions Management
+        { name: 'view_regions', description: 'View regions list', category: 'Regions' },
+        { name: 'create_regions', description: 'Create new regions', category: 'Regions' },
+        { name: 'edit_regions', description: 'Edit region information', category: 'Regions' },
+        { name: 'delete_regions', description: 'Delete regions', category: 'Regions' },
+        // Orders Management
+        { name: 'view_orders', description: 'View orders list', category: 'Orders' },
+        { name: 'view_order_details', description: 'View order details', category: 'Orders' },
+        { name: 'edit_orders', description: 'Edit order status', category: 'Orders' },
+        { name: 'delete_orders', description: 'Delete orders', category: 'Orders' },
+        { name: 'update_order_status', description: 'Update order status', category: 'Orders' },
+        { name: 'cancel_orders', description: 'Cancel orders', category: 'Orders' },
+        // Payments Management
+        { name: 'view_payments', description: 'View payments list', category: 'Payments' },
+        { name: 'view_payment_details', description: 'View payment details', category: 'Payments' },
+        { name: 'process_payments', description: 'Process payments', category: 'Payments' },
+        { name: 'refund_payments', description: 'Refund payments', category: 'Payments' },
+        // Payment Methods Management
+        { name: 'view_payment_methods', description: 'View payment methods list', category: 'Payment Methods' },
+        { name: 'create_payment_methods', description: 'Create new payment methods', category: 'Payment Methods' },
+        { name: 'edit_payment_methods', description: 'Edit payment method information', category: 'Payment Methods' },
+        { name: 'delete_payment_methods', description: 'Delete payment methods', category: 'Payment Methods' },
+        // Shipping Management
+        { name: 'view_shipping_carriers', description: 'View shipping carriers list', category: 'Shipping' },
+        { name: 'create_shipping_carriers', description: 'Create new shipping carriers', category: 'Shipping' },
+        { name: 'edit_shipping_carriers', description: 'Edit shipping carrier information', category: 'Shipping' },
+        { name: 'delete_shipping_carriers', description: 'Delete shipping carriers', category: 'Shipping' },
+        { name: 'manage_shipping_regions', description: 'Manage shipping region costs', category: 'Shipping' },
+        // Discounts Management
+        { name: 'view_discounts', description: 'View discounts list', category: 'Discounts' },
+        { name: 'create_discounts', description: 'Create new discounts', category: 'Discounts' },
+        { name: 'edit_discounts', description: 'Edit discount information', category: 'Discounts' },
+        { name: 'delete_discounts', description: 'Delete discounts', category: 'Discounts' },
+        // Reviews Management
+        { name: 'view_reviews', description: 'View reviews list', category: 'Reviews' },
+        { name: 'edit_reviews', description: 'Edit review information', category: 'Reviews' },
+        { name: 'delete_reviews', description: 'Delete reviews', category: 'Reviews' },
+        { name: 'approve_reviews', description: 'Approve reviews', category: 'Reviews' },
+        // Messages Management
+        { name: 'view_messages', description: 'View messages list', category: 'Messages' },
+        { name: 'view_message_details', description: 'View message details', category: 'Messages' },
+        { name: 'reply_messages', description: 'Reply to messages', category: 'Messages' },
+        { name: 'delete_messages', description: 'Delete messages', category: 'Messages' },
+        // Marketing Management
+        { name: 'view_marketing', description: 'View marketing content', category: 'Marketing' },
+        { name: 'create_marketing', description: 'Create marketing content', category: 'Marketing' },
+        { name: 'edit_marketing', description: 'Edit marketing content', category: 'Marketing' },
+        { name: 'delete_marketing', description: 'Delete marketing content', category: 'Marketing' },
+        // Hero Slides Management
+        { name: 'view_hero_slides', description: 'View hero slides list', category: 'Hero Slides' },
+        { name: 'create_hero_slides', description: 'Create new hero slides', category: 'Hero Slides' },
+        { name: 'edit_hero_slides', description: 'Edit hero slide information', category: 'Hero Slides' },
+        { name: 'delete_hero_slides', description: 'Delete hero slides', category: 'Hero Slides' },
+        // Banners Management
+        { name: 'view_banners', description: 'View banners list', category: 'Banners' },
+        { name: 'create_banners', description: 'Create new banners', category: 'Banners' },
+        { name: 'edit_banners', description: 'Edit banner information', category: 'Banners' },
+        { name: 'delete_banners', description: 'Delete banners', category: 'Banners' },
+        // Product Showcase Management
+        { name: 'view_showcase', description: 'View product showcase', category: 'Product Showcase' },
+        { name: 'create_showcase', description: 'Create product showcase', category: 'Product Showcase' },
+        { name: 'edit_showcase', description: 'Edit product showcase', category: 'Product Showcase' },
+        { name: 'delete_showcase', description: 'Delete product showcase', category: 'Product Showcase' },
+        // About Page Management
+        { name: 'view_about', description: 'View about page content', category: 'About Page' },
+        { name: 'edit_about', description: 'Edit about page content', category: 'About Page' },
+        // Legal Pages Management
+        { name: 'view_legal_pages', description: 'View legal pages', category: 'Legal Pages' },
+        { name: 'create_legal_pages', description: 'Create legal pages', category: 'Legal Pages' },
+        { name: 'edit_legal_pages', description: 'Edit legal pages', category: 'Legal Pages' },
+        { name: 'delete_legal_pages', description: 'Delete legal pages', category: 'Legal Pages' },
+        // Translations Management
+        { name: 'view_translations', description: 'View translations list', category: 'Translations' },
+        { name: 'create_translations', description: 'Create new translations', category: 'Translations' },
+        { name: 'edit_translations', description: 'Edit translations', category: 'Translations' },
+        { name: 'delete_translations', description: 'Delete translations', category: 'Translations' },
+        { name: 'translate_all', description: 'Translate all untranslated items', category: 'Translations' },
+        // Settings Management
+        { name: 'view_settings', description: 'View application settings', category: 'Settings' },
+        { name: 'edit_settings', description: 'Edit application settings', category: 'Settings' },
+        { name: 'manage_settings', description: 'Manage application settings', category: 'Settings' },
+      ];
+
+      // Insert permissions one by one to handle duplicates gracefully
+      let addedCount = 0;
+      let skippedCount = 0;
+      
+      for (const perm of allPermissionsToAdd) {
+        const { error: insertError } = await supabase
+          .from('permissions')
+          .insert(perm)
+          .select()
+          .single();
+
+        if (insertError) {
+          // Check if it's a duplicate error (permission already exists)
+          const isDuplicate = insertError.code === '23505' || 
+                             insertError.message?.toLowerCase().includes('duplicate') ||
+                             insertError.message?.toLowerCase().includes('unique');
+          
+          if (isDuplicate) {
+            skippedCount++;
+            continue; // Skip duplicates
+          } else {
+            throw insertError; // Throw other errors
+          }
+        } else {
+          addedCount++;
+        }
+      }
+
+      // Grant all permissions to super admin role
+      const { data: rolesData } = await supabase
+        .from('roles')
+        .select('id, name');
+      
+      const superAdminRole = rolesData?.find(r => r.name.toLowerCase() === 'super admin');
+
+      if (superAdminRole) {
+        const { data: allPerms } = await supabase
+          .from('permissions')
+          .select('id');
+
+        if (allPerms && allPerms.length > 0) {
+          const rolePermissions = allPerms.map(perm => ({
+            role_id: superAdminRole.id,
+            permission_id: perm.id,
+          }));
+
+          // Insert role permissions one by one to handle duplicates
+          for (const rp of rolePermissions) {
+            const { error: rolePermError } = await supabase
+              .from('role_permissions')
+              .insert(rp)
+              .select()
+              .single();
+
+            // Ignore duplicate key errors (permission already assigned)
+            if (rolePermError) {
+              const isDuplicate = rolePermError.code === '23505' || 
+                                 rolePermError.message?.toLowerCase().includes('duplicate') ||
+                                 rolePermError.message?.toLowerCase().includes('unique');
+              
+              if (!isDuplicate) {
+                throw rolePermError; // Throw other errors
+              }
+            }
+          }
+        }
+      }
+
+      // Return counts for success message
+      return { addedCount, skippedCount };
+    },
+    onSuccess: (result: any) => {
+      queryClient.invalidateQueries({ queryKey: ["permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["roles"] });
+      const added = result?.addedCount || 0;
+      const skipped = result?.skippedCount || 0;
+      if (added > 0) {
+        toast.success(t("Permissions added successfully") + `: ${added} ${t("added")}, ${skipped} ${t("already existed")}`);
+      } else {
+        toast.info(t("All permissions already exist"));
+      }
+      setIsAddingPermissions(false);
+    },
+    onError: (error: any) => {
+      toast.error(t("Failed to add permissions"), { description: error.message });
+      setIsAddingPermissions(false);
+    },
+  });
+
+  const handleAddAllPermissions = () => {
+    if (confirm(t("Are you sure you want to add all permissions? This will add all missing permissions to the database."))) {
+      setIsAddingPermissions(true);
+      addAllPermissionsMutation.mutate();
+    }
+  };
+
   // Group permissions by category
   const permissionsByCategory = allPermissions.reduce((acc, perm) => {
     if (!acc[perm.category]) {
@@ -334,9 +633,25 @@ const Roles = () => {
           <h1 className="text-3xl font-bold mb-2">{t("Role Management")}</h1>
           <p className="text-muted-foreground">{t("Manage roles and permissions")}</p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> {t("Add Role")}
-        </Button>
+        <div className="flex gap-2">
+          {hasPermission('manage_role_permissions') && (
+            <Button 
+              variant="outline" 
+              onClick={handleAddAllPermissions}
+              disabled={isAddingPermissions || addAllPermissionsMutation.isPending}
+            >
+              <Download className="h-4 w-4 mr-2" /> 
+              {isAddingPermissions || addAllPermissionsMutation.isPending 
+                ? t("Adding...") 
+                : t("Add All Permissions")}
+            </Button>
+          )}
+          {hasPermission('create_roles') && (
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" /> {t("Add Role")}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats */}
@@ -472,38 +787,44 @@ const Roles = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEditRole(role)}
-                          aria-label={t("Edit permissions")}
-                        >
-                          <Shield className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          disabled={reservedRoleNames.includes(role.name.toLowerCase())}
-                          onClick={() => {
-                            setSelectedRole({ id: role.id, name: role.name, created_at: '' });
-                            setRenameValue(role.name);
-                            setIsRenameDialogOpen(true);
-                          }}
-                        >
-                          {t("Rename")}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          disabled={reservedRoleNames.includes(role.name.toLowerCase())}
-                          onClick={() => {
-                            setRoleToDelete({ id: role.id, name: role.name, created_at: '' });
-                            setDeleteDialogOpen(true);
-                          }}
-                          aria-label={t("Delete role")}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {hasPermission('manage_role_permissions') && role.name.toLowerCase() !== 'super admin' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEditRole(role)}
+                            aria-label={t("Edit permissions")}
+                          >
+                            <Shield className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {hasPermission('edit_roles') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={reservedRoleNames.includes(role.name.toLowerCase())}
+                            onClick={() => {
+                              setSelectedRole({ id: role.id, name: role.name, created_at: '' });
+                              setRenameValue(role.name);
+                              setIsRenameDialogOpen(true);
+                            }}
+                          >
+                            {t("Rename")}
+                          </Button>
+                        )}
+                        {hasPermission('delete_roles') && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled={reservedRoleNames.includes(role.name.toLowerCase())}
+                            onClick={() => {
+                              setRoleToDelete({ id: role.id, name: role.name, created_at: '' });
+                              setDeleteDialogOpen(true);
+                            }}
+                            aria-label={t("Delete role")}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -742,7 +1063,7 @@ const Roles = () => {
             <AlertDialogTitle>{t("Delete Role")}</AlertDialogTitle>
             <AlertDialogDescription>
               {t("Are you sure you want to delete the role")} "{roleToDelete?.name}"? {t("This action cannot be undone.")}
-              {" "}{t("Users with this role will need to be reassigned.")}
+              {" "}{t("All users with this role will also be deleted permanently.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
