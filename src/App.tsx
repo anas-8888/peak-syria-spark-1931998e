@@ -78,8 +78,8 @@ const queryClient = new QueryClient({
       refetchOnMount: false,
       // Refetch on reconnect if data is stale
       refetchOnReconnect: true,
-      // Keep previous data while fetching new data
-      keepPreviousData: true,
+      // Keep previous data while fetching new data (v5 renamed from keepPreviousData)
+      placeholderData: (previousData: any) => previousData,
     },
     mutations: {
       // Retry failed mutations once

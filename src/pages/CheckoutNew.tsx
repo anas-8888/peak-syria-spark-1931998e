@@ -272,7 +272,9 @@ export default function CheckoutNew() {
                     setDiscountAmount(discount.amount);
                     setAutoDiscountsDisabled(true);
                   } catch (e) {
-                    console.error("Error loading manual discount:", e);
+                    if (import.meta.env.DEV) {
+                      console.error("Error loading manual discount:", e);
+                    }
                   }
                 }
               }
@@ -381,14 +383,18 @@ export default function CheckoutNew() {
               toast.success(t("Location detected successfully!"));
             }
           } catch (error) {
-            console.error("Error getting location details:", error);
+            if (import.meta.env.DEV) {
+              console.error("Error getting location details:", error);
+            }
             toast.error(t("Could not get location details"));
           } finally {
             setLoadingLocation(false);
           }
         },
         (error) => {
-          console.error("Error getting location:", error);
+          if (import.meta.env.DEV) {
+            console.error("Error getting location:", error);
+          }
           toast.error(t("Could not access your location"));
           setLoadingLocation(false);
         }
@@ -424,7 +430,9 @@ export default function CheckoutNew() {
             setDiscountAmount(amount);
             return;
           } catch (e) {
-            console.error("Error parsing saved cart discounts:", e);
+            if (import.meta.env.DEV) {
+              console.error("Error parsing saved cart discounts:", e);
+            }
           }
         }
       }
@@ -441,7 +449,9 @@ export default function CheckoutNew() {
           setDiscountAmount(amount);
           return;
         } catch (e) {
-          console.error("Error parsing saved cart discounts:", e);
+          if (import.meta.env.DEV) {
+            console.error("Error parsing saved cart discounts:", e);
+          }
         }
       }
       
@@ -455,7 +465,9 @@ export default function CheckoutNew() {
           setAutoDiscountsDisabled(true);
           return;
         } catch (e) {
-          console.error("Error parsing saved cart discount:", e);
+          if (import.meta.env.DEV) {
+            console.error("Error parsing saved cart discount:", e);
+          }
         }
       }
 
@@ -569,7 +581,9 @@ export default function CheckoutNew() {
         setDiscountAmount(totalDiscount);
       }
     } catch (error) {
-      console.error("Error checking auto discounts:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error checking auto discounts:", error);
+      }
     }
   };
 

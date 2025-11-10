@@ -60,7 +60,9 @@ const Profile = () => {
       if (error) throw error;
       if (data) setRegions(data);
     } catch (error: any) {
-      console.error("Error loading regions:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error loading regions:", error);
+      }
     }
   };
 
@@ -99,18 +101,13 @@ const Profile = () => {
         setAvatarUrl(avatarUrlToUse);
         setRegionId(data.region_id || "");
         
-        // Auto-update profile with Google data if empty
+        // Pre-fill form with Google data if profile is empty, but don't auto-save
+        // User can review and save explicitly
         if (!data.full_name && googleName) {
-          await supabase
-            .from("profiles")
-            .update({ full_name: googleName })
-            .eq("id", user?.id);
+          setFullName(googleName);
         }
         if (!data.avatar_url && googleAvatar) {
-          await supabase
-            .from("profiles")
-            .update({ avatar_url: googleAvatar })
-            .eq("id", user?.id);
+          setAvatarUrl(googleAvatar);
         }
       }
     } catch (error: any) {
@@ -228,14 +225,18 @@ const Profile = () => {
               }
             }
           } catch (error) {
-            console.error("Error getting location details:", error);
+            if (import.meta.env.DEV) {
+              console.error("Error getting location details:", error);
+            }
             toast.error(t("Could not get location details"));
           } finally {
             setLoadingLocation(false);
           }
         },
         (error) => {
-          console.error("Error getting location:", error);
+          if (import.meta.env.DEV) {
+            console.error("Error getting location:", error);
+          }
           toast.error(t("Could not access your location"));
           setLoadingLocation(false);
         }
