@@ -61,21 +61,96 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     }
     
     async function fetchTranslations() {
-      const { data, error } = await supabase
-        .from("translations")
-        .select("english_key, arabic_value")
-        .order("english_key", { ascending: true });
+      try {
+        // Fetch all translations in batches (Supabase has 1000 row limit)
+        let allData: Array<{ english_key: string; arabic_value: string }> = [];
+        let from = 0;
+        const batchSize = 1000;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from("translations")
+            .select("english_key, arabic_value")
+            .order("english_key", { ascending: true })
+            .range(from, from + batchSize - 1);
+          
+          if (error) throw error;
+          
+          if (data && data.length > 0) {
+            allData = [...allData, ...data];
+            from += batchSize;
+            hasMore = data.length === batchSize;
+          } else {
+            hasMore = false;
+          }
+        }
+        
+        const translationsMap: Translations = {};
+        allData.forEach((item) => {
+          translationsMap[item.english_key] = item.arabic_value;
+        });
+        
+        setTranslations(translationsMap);
+        
+        // Cache translations for 24 hours
+        try {
+          localStorage.setItem('translations-cache', JSON.stringify({
+            data: translationsMap,
+            timestamp: Date.now(),
+          }));
+        } catch (e) {
+          // Ignore cache errors
+        }
+      } catch (error) {
+        console.error("Error fetching translations:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  }, []);
+
+  // Refresh translations (exposed to context)
+  const refreshTranslations = useCallback(async () => {
+    try {
+      // Clear cache to force fresh fetch
+      localStorage.removeItem('translations-cache');
       
-      if (error) throw error;
+      // Fetch all translations in batches (Supabase has 1000 row limit)
+      let allData: Array<{ english_key: string; arabic_value: string }> = [];
+      let from = 0;
+      const batchSize = 1000;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from("translations")
+          .select("english_key, arabic_value")
+          .order("english_key", { ascending: true })
+          .range(from, from + batchSize - 1);
+        
+        if (error) {
+          console.error("Error refreshing translations:", error);
+          return;
+        }
+        
+        if (data && data.length > 0) {
+          allData = [...allData, ...data];
+          from += batchSize;
+          hasMore = data.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
       
       const translationsMap: Translations = {};
-      data?.forEach((item) => {
+      allData.forEach((item) => {
         translationsMap[item.english_key] = item.arabic_value;
       });
       
       setTranslations(translationsMap);
       
-      // Cache translations for 24 hours
+      // Update cache
       try {
         localStorage.setItem('translations-cache', JSON.stringify({
           data: translationsMap,
@@ -84,22 +159,16 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
       } catch (e) {
         // Ignore cache errors
       }
-      
-      setIsLoading(false);
+    } catch (error) {
+      console.error("Error refreshing translations:", error);
     }
   }, []);
 
-  // Refresh translations (exposed to context)
-  const refreshTranslations = useCallback(async () => {
-    // Force reload by setting loading state first
-    setIsLoading(true);
-    await loadTranslations();
-  }, [loadTranslations]);
-
-  // Initial load
+  // Initial load - only once on mount
   useEffect(() => {
     loadTranslations();
-  }, [loadTranslations]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array to run only once
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -139,8 +208,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
       const keysToActuallyInsert = keysToInsert.filter(key => !existingKeys.has(key));
 
       if (keysToActuallyInsert.length === 0) {
-        // All keys already exist and are translated, just reload
-        await loadTranslations();
+        // All keys already exist, no need to reload
         return;
       }
 
@@ -166,8 +234,8 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       
-      // Always reload translations to get the latest state
-      await loadTranslations();
+      // Update translations map directly without full reload to avoid loops
+      // The new keys will be picked up on next page load or manual refresh
     } catch (error) {
       console.error("Error batch inserting translations:", error);
     }
@@ -224,8 +292,13 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
                           currentTranslations[englishText] !== englishText;
     
     // Only track as missing if it doesn't exist or is not translated
+    // But skip tracking if we're in the translations management page to avoid loops
     if (!hasTranslation && !isLoading) {
-      trackMissingTranslation(englishText);
+      // Check if we're on translations page (avoid tracking there)
+      const isTranslationsPage = window.location.pathname.includes('/dashboard/translations');
+      if (!isTranslationsPage) {
+        trackMissingTranslation(englishText);
+      }
     }
     
     // If English, return as-is

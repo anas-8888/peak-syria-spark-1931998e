@@ -110,14 +110,14 @@ const Orders = () => {
   const { formatPrice } = useCurrency();
   const queryClient = useQueryClient();
   
-  const statusLabels = {
+const statusLabels = {
     delivered: t("Delivered"),
     shipped: t("In Transit"),
     pending: t("Pending"),
     processing: t("Processing"),
     cancelled: t("Cancelled"),
-  };
-  
+};
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<OrderWithDetails | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
@@ -568,7 +568,7 @@ const Orders = () => {
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4 pt-4 border-t">
                 <div className="text-sm text-muted-foreground">
-                  Page {currentPage} of {totalPages} ({paginatedData?.total || 0} total orders)
+                    {t("Page")} {currentPage} {t("of")} {totalPages} ({paginatedData?.total || 0} {t("total orders")})
                 </div>
                 <div className="flex gap-2">
                   <Button

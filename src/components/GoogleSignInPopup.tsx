@@ -1,4 +1,5 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -37,7 +38,11 @@ const GoogleSignInPopup = ({ open, onOpenChange }: GoogleSignInPopupProps) => {
       
       {/* Popup Dialog */}
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[400px] sm:h-[450px] p-0 overflow-hidden border-2 border-primary/20 shadow-2xl animate-scale-in z-[101]">
+        <DialogContent className="sm:max-w-[400px] sm:max-h-[90vh] p-0 overflow-y-auto border-2 border-primary/20 shadow-2xl animate-scale-in z-[101]">
+          <VisuallyHidden>
+            <DialogTitle>{t("Welcome to PEAK Syria")}</DialogTitle>
+            <DialogDescription>{t("Sign in to access exclusive products, track orders, and enjoy personalized shopping")}</DialogDescription>
+          </VisuallyHidden>
           {/* Header with gradient */}
           <div className="bg-gradient-to-r from-primary via-red-500 to-primary p-8 text-center">
             <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-3 w-fit mx-auto mb-4 shadow-xl">
@@ -50,7 +55,7 @@ const GoogleSignInPopup = ({ open, onOpenChange }: GoogleSignInPopupProps) => {
           </div>
 
           {/* Content */}
-          <div className="p-8 space-y-6">
+          <div className="p-8 space-y-6 pb-8">
             <p className="text-center text-muted-foreground text-sm leading-relaxed">
               {t("Sign in to access exclusive products, track orders, and enjoy personalized shopping")}
             </p>
@@ -82,7 +87,7 @@ const GoogleSignInPopup = ({ open, onOpenChange }: GoogleSignInPopupProps) => {
               <span className="text-lg font-semibold">{t("Continue with Google")}</span>
             </Button>
 
-            <p className="text-xs text-center text-muted-foreground mt-4 px-2">
+            <p className="text-xs text-center text-muted-foreground mt-4 px-2 pb-2">
               {t("By signing in, you agree to our")}{" "}
               <a href="/terms" className="text-primary hover:underline">{t("Terms")}</a> {t("and")}{" "}
               <a href="/privacy" className="text-primary hover:underline">{t("Privacy Policy")}</a>

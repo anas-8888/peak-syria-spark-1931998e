@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Search, Save, Languages, Filter, CheckCircle2, AlertCircle, Trash2, Sparkles } from "lucide-react";
+import { Search, Save, Languages, Filter, CheckCircle2, AlertCircle, Trash2, Sparkles, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -31,20 +32,40 @@ const Translations = () => {
   const [pendingChanges, setPendingChanges] = useState<Record<string, string>>({});
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationProgress, setTranslationProgress] = useState({ current: 0, total: 0 });
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newTranslation, setNewTranslation] = useState({ english: "", arabic: "" });
   const queryClient = useQueryClient();
   const { t, refreshTranslations } = useLanguage();
 
-  // Fetch translations from database
+  // Fetch translations from database (fetch all, not just 1000)
   const { data: translations = [], isLoading } = useQuery({
     queryKey: ["translations"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("translations")
-        .select("*")
-        .order("english_key", { ascending: true });
+      let allTranslations: Translation[] = [];
+      let from = 0;
+      const batchSize = 1000; // Supabase default limit
+      let hasMore = true;
+
+      // Fetch all translations in batches
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from("translations")
+          .select("*")
+          .order("english_key", { ascending: true })
+          .range(from, from + batchSize - 1);
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allTranslations = [...allTranslations, ...data];
+          from += batchSize;
+          hasMore = data.length === batchSize; // If we got less than batchSize, we're done
+        } else {
+          hasMore = false;
+        }
+      }
       
-      if (error) throw error;
-      return data as Translation[];
+      return allTranslations;
     },
   });
 
@@ -131,6 +152,232 @@ const Translations = () => {
     },
   });
 
+  // Add new translation mutation - completely rebuilt logic
+  const addTranslationMutation = useMutation({
+    mutationFn: async (data: { english_key: string; arabic_value: string }) => {
+      // Step 1: Normalize the English key (trim and normalize whitespace)
+      const normalizedKey = data.english_key.trim().replace(/\s+/g, ' ');
+      const normalizedArabic = data.arabic_value.trim();
+      
+      // Step 2: Validate inputs
+      if (!normalizedKey) {
+        throw new Error(t("English text is required"));
+      }
+      if (!normalizedArabic) {
+        throw new Error(t("Arabic translation is required"));
+      }
+
+      // Step 3: Check if key already exists in database
+      // First check in cache (faster) - exact match after normalization
+      const existingInCache = translations.find(t => {
+        const existingKey = t.english_key.trim().replace(/\s+/g, ' ');
+        return existingKey === normalizedKey; // Exact match (case-sensitive after normalization)
+      });
+
+      if (existingInCache) {
+        const conflictError: any = new Error(
+          t("This English key already exists") + `: "${existingInCache.english_key}"`
+        );
+        conflictError.code = '23505';
+        conflictError.existingKey = existingInCache.english_key;
+        throw conflictError;
+      }
+
+      // Step 4: Double-check in database - use exact match (case-sensitive)
+      const { data: existingTranslations, error: fetchError } = await supabase
+        .from("translations")
+        .select("english_key")
+        .eq("english_key", normalizedKey); // Exact match, case-sensitive
+
+      if (fetchError) {
+        console.error("Error checking existing translations:", fetchError);
+        throw new Error(t("Failed to check existing translations") + ": " + fetchError.message);
+      }
+
+      // Step 5: Check if key exists in database (exact match)
+      if (existingTranslations && existingTranslations.length > 0) {
+        const exactMatch = existingTranslations[0]; // Should be exact match
+        
+        if (exactMatch) {
+          const conflictError: any = new Error(
+            t("This English key already exists") + `: "${exactMatch.english_key}"`
+          );
+          conflictError.code = '23505';
+          conflictError.existingKey = exactMatch.english_key;
+          throw conflictError;
+        }
+      }
+
+      // Step 6: Insert the new translation (key doesn't exist, safe to insert)
+      const { data: result, error: insertError } = await supabase
+        .from("translations")
+        .insert({
+          english_key: normalizedKey,
+          arabic_value: normalizedArabic,
+          is_auto_detected: false,
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      
+      if (insertError) {
+        // Handle any unexpected errors during insert
+        const errorCode = insertError.code?.toString() || '';
+        const errorMessage = (insertError.message || '').toLowerCase();
+        
+        // If it's a duplicate error (shouldn't happen after our checks, but handle it anyway)
+        if (errorCode === '23505' || 
+            errorCode === 'PGRST116' || 
+            errorMessage.includes('duplicate') || 
+            errorMessage.includes('unique constraint') ||
+            errorMessage.includes('unique') ||
+            errorMessage.includes('already exists')) {
+          const conflictError: any = new Error(t("This English key already exists"));
+          conflictError.code = '23505';
+          conflictError.existingKey = normalizedKey;
+          throw conflictError;
+        }
+        
+        // Other errors
+        throw new Error(t("Failed to insert translation") + ": " + insertError.message);
+      }
+
+      return result;
+    },
+    onSuccess: async (newTranslationData) => {
+      // Step 7: Update the query cache optimistically
+      queryClient.setQueryData(["translations"], (oldData: Translation[] | undefined) => {
+        if (!oldData) return [newTranslationData];
+        
+        // Add the new translation and sort by english_key
+        const updated = [...oldData, newTranslationData].sort((a, b) => 
+          a.english_key.localeCompare(b.english_key)
+        );
+        
+        return updated;
+      });
+
+      // Step 8: Invalidate and refetch to ensure consistency
+      await queryClient.invalidateQueries({ queryKey: ["translations"] });
+      
+      // Step 9: Close dialog and reset form
+      setIsAddDialogOpen(false);
+      setNewTranslation({ english: "", arabic: "" });
+      
+      // Step 10: Show success message
+      toast.success(t("Translation added successfully"));
+    },
+    onError: (error: any) => {
+      // Handle errors with clear messages
+      const errorCode = error.code?.toString() || '';
+      const errorMessage = (error.message || '').toLowerCase();
+      
+      if (errorCode === '23505' || 
+          errorMessage.includes('already exists') || 
+          errorMessage.includes('duplicate') || 
+          errorMessage.includes('unique constraint') ||
+          errorMessage.includes('unique')) {
+        const existingKey = error.existingKey || newTranslation.english.trim();
+        
+        // Find the existing translation in cache
+        const existingTranslation = translations.find(t => {
+          const tKey = t.english_key.trim().replace(/\s+/g, ' ');
+          return tKey === existingKey;
+        });
+        
+        if (existingTranslation) {
+          // Close the add dialog
+          setIsAddDialogOpen(false);
+          
+          // Clear search and filter to show all translations
+          setSearchTerm("");
+          setFilter("all");
+          
+          // Wait for DOM to update, then scroll to the existing translation
+          setTimeout(() => {
+            const element = document.getElementById(`translation-${existingTranslation.id}`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // Highlight the row briefly
+              element.classList.add('bg-yellow-100', 'dark:bg-yellow-900');
+              setTimeout(() => {
+                element.classList.remove('bg-yellow-100', 'dark:bg-yellow-900');
+              }, 2000);
+            } else {
+              // If element not found, search for it
+              setSearchTerm(existingKey);
+            }
+          }, 300);
+          
+          toast.info(
+            t("This English key already exists") + 
+            `: "${existingKey}". ` + 
+            t("Scrolled to existing translation. You can edit it directly.")
+          );
+        } else {
+          // If not found in cache, refresh data and set search term
+          setIsAddDialogOpen(false);
+          
+          // Refresh translations from database
+          queryClient.invalidateQueries({ queryKey: ["translations"] });
+          
+          // Wait a bit for data to load, then search
+          setTimeout(() => {
+            setSearchTerm(existingKey);
+            setFilter("all");
+            
+            // Try to find it again after refresh
+            setTimeout(() => {
+              const refreshedTranslations = queryClient.getQueryData<Translation[]>(["translations"]) || [];
+              const found = refreshedTranslations.find(t => {
+                const tKey = t.english_key.trim().replace(/\s+/g, ' ');
+                return tKey === existingKey;
+              });
+              
+              if (found) {
+                const element = document.getElementById(`translation-${found.id}`);
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  element.classList.add('bg-yellow-100', 'dark:bg-yellow-900');
+                  setTimeout(() => {
+                    element.classList.remove('bg-yellow-100', 'dark:bg-yellow-900');
+                  }, 2000);
+                }
+              }
+            }, 500);
+          }, 100);
+          
+          toast.info(
+            t("This English key already exists") + 
+            `: "${existingKey}". ` + 
+            t("Refreshing list and searching...")
+          );
+        }
+      } else {
+        const errorMsg = t("Failed to add translation") + ": " + (error.message || String(error));
+        toast.error(errorMsg);
+      }
+    },
+  });
+
+  const handleAddTranslation = () => {
+    // Validate inputs before mutation
+    if (!newTranslation.english.trim()) {
+      toast.error(t("English text is required"));
+      return;
+    }
+    if (!newTranslation.arabic.trim()) {
+      toast.error(t("Arabic translation is required"));
+      return;
+    }
+    
+    // Trigger the mutation
+    addTranslationMutation.mutate({
+      english_key: newTranslation.english.trim(),
+      arabic_value: newTranslation.arabic.trim(),
+    });
+  };
+
   const isTranslated = (translation: Translation): boolean => {
     return !!(translation.arabic_value && 
               translation.arabic_value.trim() && 
@@ -147,11 +394,17 @@ const Translations = () => {
     }
     
     if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter((t) =>
-        t.english_key.toLowerCase().includes(searchLower) ||
-        t.arabic_value.toLowerCase().includes(searchLower)
-      );
+      const searchLower = searchTerm.toLowerCase().trim();
+      const searchNormalized = searchTerm.trim().replace(/\s+/g, ' ');
+      filtered = filtered.filter((t) => {
+        const englishKey = t.english_key.toLowerCase().trim();
+        const englishKeyNormalized = t.english_key.trim().replace(/\s+/g, ' ');
+        const arabicValue = t.arabic_value.toLowerCase().trim();
+        
+        return englishKey.includes(searchLower) ||
+               englishKeyNormalized === searchNormalized ||
+               arabicValue.includes(searchLower);
+      });
     }
     
     return filtered;
@@ -348,14 +601,20 @@ const Translations = () => {
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-          <Languages className="h-8 w-8" />
-          {t("Translations Management")}
-        </h1>
-        <p className="text-muted-foreground">
-          {t("All website text is automatically tracked. Translate any text from English to Arabic.")}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+            <Languages className="h-8 w-8" />
+            {t("Translations Management")}
+          </h1>
+          <p className="text-muted-foreground">
+            {t("All website text is automatically tracked. Translate any text from English to Arabic.")}
+          </p>
+        </div>
+        <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          {t("Add Translation")}
+        </Button>
       </div>
 
       {/* Stats */}
@@ -508,7 +767,7 @@ const Translations = () => {
               </p>
             ) : (
               filteredTranslations.map((translation) => (
-                <Card key={translation.id} className="p-4">
+                <Card key={translation.id} id={`translation-${translation.id}`} className="p-4">
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-2">
@@ -565,6 +824,65 @@ const Translations = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Add Translation Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t("Add New Translation")}</DialogTitle>
+            <DialogDescription>
+              {t("Add a new translation pair. The English key must be unique.")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="english-key">{t("English Text")} *</Label>
+              <Input
+                id="english-key"
+                placeholder={t("Enter English text...")}
+                value={newTranslation.english}
+                onChange={(e) => setNewTranslation({ ...newTranslation, english: e.target.value })}
+                disabled={addTranslationMutation.isPending}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="arabic-value">{t("Arabic Translation")} *</Label>
+              <Textarea
+                id="arabic-value"
+                placeholder={t("Enter Arabic translation...")}
+                value={newTranslation.arabic}
+                onChange={(e) => setNewTranslation({ ...newTranslation, arabic: e.target.value })}
+                dir="rtl"
+                rows={4}
+                disabled={addTranslationMutation.isPending}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAddDialogOpen(false);
+                setNewTranslation({ english: "", arabic: "" });
+              }}
+              disabled={addTranslationMutation.isPending}
+            >
+              {t("Cancel")}
+            </Button>
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAddTranslation();
+              }}
+              disabled={addTranslationMutation.isPending || !newTranslation.english.trim() || !newTranslation.arabic.trim()}
+            >
+              {addTranslationMutation.isPending ? t("Adding...") : t("Add Translation")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

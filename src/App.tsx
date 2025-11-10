@@ -57,7 +57,7 @@ import Refund from "./pages/Refund";
 import LegalPages from "./pages/dashboard/LegalPages";
 import Translations from "./pages/dashboard/Translations";
 import ScrollToTop from "./components/ScrollToTop";
-import LanguageToggle from "./components/LanguageToggle";
+import LanguageToggleFloating from "./components/LanguageToggleFloating";
 
 // Configure QueryClient with optimal cache settings for maximum caching
 const queryClient = new QueryClient({
@@ -107,10 +107,8 @@ function App() {
                     <TooltipProvider>
                       <Toaster />
                       <Sonner />
-                      {/* Language Toggle Button - Available on all pages */}
-                      <div className="fixed bottom-20 left-4 z-50">
-                        <LanguageToggle />
-                      </div>
+                      {/* Language Toggle Button - Available on all pages except dashboard */}
+                      <LanguageToggleFloating />
                       <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/products" element={<ProductsEnhanced />} />

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -9,10 +10,19 @@ import {
   DollarSign,
   ArrowUpRight,
   ArrowDownRight,
+  Calendar as CalendarIcon,
+  Filter,
+  Download,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, subDays, subMonths, subYears, startOfDay, endOfDay } from "date-fns";
+import { exportToExcel } from "@/utils/exportToExcel";
 import {
   LineChart,
   Line,
@@ -29,9 +39,26 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+type DateRange = {
+  from: Date | null;
+  to: Date | null;
+};
+
+type PeriodOption = 
+  | "7days" 
+  | "30days" 
+  | "3months" 
+  | "6months" 
+  | "1year" 
+  | "2years" 
+  | "all" 
+  | "custom";
+
 const Overview = () => {
   const { formatPrice } = useCurrency();
   const { t } = useLanguage();
+  const [period, setPeriod] = useState<PeriodOption>("all");
+  const [dateRange, setDateRange] = useState<DateRange>({ from: null, to: null });
   // Fetch completed payments first
   const { data: completedPayments = [], isLoading: paymentsLoading } = useQuery({
     queryKey: ["dashboard-completed-payments"],
@@ -145,68 +172,215 @@ const Overview = () => {
     enabled: !!completedPayments,
   });
 
-  // Calculate statistics using only completed payments
-  const totalRevenue = completedPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-  const totalOrders = orders.length;
-  
-  // Calculate this month's data - using completed payments
-  const now = new Date();
-  const thisMonthPayments = completedPayments.filter(payment => {
+  // Calculate date range based on selected period
+  const getDateRange = (): { start: Date | null; end: Date | null } => {
+    const now = new Date();
+    const end = endOfDay(now);
+    
+    switch (period) {
+      case "7days":
+        return { start: startOfDay(subDays(now, 7)), end };
+      case "30days":
+        return { start: startOfDay(subDays(now, 30)), end };
+      case "3months":
+        return { start: startOfDay(subMonths(now, 3)), end };
+      case "6months":
+        return { start: startOfDay(subMonths(now, 6)), end };
+      case "1year":
+        return { start: startOfDay(subYears(now, 1)), end };
+      case "2years":
+        return { start: startOfDay(subYears(now, 2)), end };
+      case "custom":
+        return { 
+          start: dateRange.from ? startOfDay(dateRange.from) : null, 
+          end: dateRange.to ? endOfDay(dateRange.to) : null 
+        };
+      case "all":
+      default:
+        return { start: null, end: null };
+    }
+  };
+
+  const { start: filterStart, end: filterEnd } = getDateRange();
+
+  // Filter completed payments by date range
+  const filteredPayments = completedPayments.filter(payment => {
+    if (!filterStart || !filterEnd) return true;
     const paymentDate = new Date(payment.created_at);
-    return paymentDate.getMonth() === now.getMonth() && paymentDate.getFullYear() === now.getFullYear();
+    return paymentDate >= filterStart && paymentDate <= filterEnd;
   });
-  const thisMonthRevenue = thisMonthPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+
+  // Filter orders by date range
+  const filteredOrders = orders.filter(order => {
+    if (!filterStart || !filterEnd) return true;
+    const orderDate = new Date(order.created_at);
+    return orderDate >= filterStart && orderDate <= filterEnd;
+  });
+
+  // Calculate statistics using filtered data
+  const totalRevenue = filteredPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const totalOrders = filteredOrders.length;
   
-  // Get orders for this month (from completed payments)
-  const thisMonthOrderIds = thisMonthPayments.map(p => p.order_id);
-  const thisMonthOrders = orders.filter(order => thisMonthOrderIds.includes(order.id));
-  
-  // Calculate last month's data for comparison - using completed payments
-  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthPayments = completedPayments.filter(payment => {
+  // Calculate comparison period (previous period of same length)
+  const getComparisonPeriod = (): { start: Date | null; end: Date | null } => {
+    if (!filterStart || !filterEnd) {
+      // Default to last month vs this month
+      const now = new Date();
+      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+      return { start: lastMonthStart, end: lastMonthEnd };
+    }
+    
+    const periodLength = filterEnd.getTime() - filterStart.getTime();
+    const comparisonEnd = new Date(filterStart.getTime() - 1);
+    const comparisonStart = new Date(comparisonEnd.getTime() - periodLength);
+    
+    return { start: comparisonStart, end: comparisonEnd };
+  };
+
+  const { start: comparisonStart, end: comparisonEnd } = getComparisonPeriod();
+
+  // Calculate current period data
+  const thisPeriodPayments = filteredPayments;
+  const thisPeriodRevenue = thisPeriodPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const thisPeriodOrders = filteredOrders;
+
+  // Calculate comparison period data
+  const comparisonPayments = completedPayments.filter(payment => {
+    if (!comparisonStart || !comparisonEnd) return false;
     const paymentDate = new Date(payment.created_at);
-    return paymentDate.getMonth() === lastMonth.getMonth() && paymentDate.getFullYear() === lastMonth.getFullYear();
+    return paymentDate >= comparisonStart && paymentDate <= comparisonEnd;
   });
-  const lastMonthRevenue = lastMonthPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-  
-  // Get orders for last month (from completed payments)
-  const lastMonthOrderIds = lastMonthPayments.map(p => p.order_id);
-  const lastMonthOrders = orders.filter(order => lastMonthOrderIds.includes(order.id));
+  const comparisonRevenue = comparisonPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const comparisonOrderIds = comparisonPayments.map(p => p.order_id);
+  const comparisonOrders = orders.filter(order => comparisonOrderIds.includes(order.id));
   
   // Calculate changes
-  const revenueChange = lastMonthRevenue > 0 
-    ? (((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(1)
+  const revenueChange = comparisonRevenue > 0 
+    ? (((thisPeriodRevenue - comparisonRevenue) / comparisonRevenue) * 100).toFixed(1)
     : "0";
-  const ordersChange = lastMonthOrders.length > 0
-    ? (((thisMonthOrders.length - lastMonthOrders.length) / lastMonthOrders.length) * 100).toFixed(1)
+  const ordersChange = comparisonOrders.length > 0
+    ? (((thisPeriodOrders.length - comparisonOrders.length) / comparisonOrders.length) * 100).toFixed(1)
     : "0";
   const growthRate = revenueChange;
 
-  // Prepare monthly data for charts (last 6 months) - using completed payments
-  const monthlyData = [];
-  for (let i = 5; i >= 0; i--) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
-    const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  // Prepare chart data based on period
+  const getChartData = () => {
+    if (!filterStart || !filterEnd) {
+      // Default: last 6 months
+      const monthlyData = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+        const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        
+        const monthPayments = filteredPayments.filter(payment => {
+          const paymentDate = new Date(payment.created_at);
+          return paymentDate >= monthStart && paymentDate <= monthEnd;
+        });
+        
+        const monthRevenue = monthPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+        const monthOrderIds = monthPayments.map(p => p.order_id);
+        const monthOrders = filteredOrders.filter(order => monthOrderIds.includes(order.id));
+        
+        monthlyData.push({
+          month: date.toLocaleDateString('en-US', { month: 'short' }),
+          revenue: monthRevenue,
+          orders: monthOrders.length,
+        });
+      }
+      return monthlyData;
+    }
+
+    // For custom ranges, group by appropriate interval
+    const daysDiff = Math.ceil((filterEnd.getTime() - filterStart.getTime()) / (1000 * 60 * 60 * 24));
     
-    // Get completed payments for this month
-    const monthPayments = completedPayments.filter(payment => {
-      const paymentDate = new Date(payment.created_at);
-      return paymentDate >= monthStart && paymentDate <= monthEnd;
-    });
-    
-    const monthRevenue = monthPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-    
-    // Get orders for this month (from completed payments)
-    const monthOrderIds = monthPayments.map(p => p.order_id);
-    const monthOrders = orders.filter(order => monthOrderIds.includes(order.id));
-    
-    monthlyData.push({
-      month: date.toLocaleDateString('en-US', { month: 'short' }),
-      revenue: monthRevenue,
-      orders: monthOrders.length,
-    });
-  }
+    if (daysDiff <= 30) {
+      // Daily grouping for periods <= 30 days
+      const dailyData = [];
+      const currentDate = new Date(filterStart);
+      while (currentDate <= filterEnd) {
+        const dayStart = startOfDay(currentDate);
+        const dayEnd = endOfDay(currentDate);
+        
+        const dayPayments = filteredPayments.filter(payment => {
+          const paymentDate = new Date(payment.created_at);
+          return paymentDate >= dayStart && paymentDate <= dayEnd;
+        });
+        
+        const dayRevenue = dayPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+        const dayOrderIds = dayPayments.map(p => p.order_id);
+        const dayOrders = filteredOrders.filter(order => dayOrderIds.includes(order.id));
+        
+        dailyData.push({
+          month: format(currentDate, 'MMM dd'),
+          revenue: dayRevenue,
+          orders: dayOrders.length,
+        });
+        
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      return dailyData;
+    } else if (daysDiff <= 365) {
+      // Weekly grouping for periods <= 1 year
+      const weeklyData = [];
+      const currentDate = new Date(filterStart);
+      while (currentDate <= filterEnd) {
+        const weekEnd = new Date(currentDate);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        const actualWeekEnd = weekEnd > filterEnd ? filterEnd : weekEnd;
+        
+        const weekPayments = filteredPayments.filter(payment => {
+          const paymentDate = new Date(payment.created_at);
+          return paymentDate >= currentDate && paymentDate <= actualWeekEnd;
+        });
+        
+        const weekRevenue = weekPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+        const weekOrderIds = weekPayments.map(p => p.order_id);
+        const weekOrders = filteredOrders.filter(order => weekOrderIds.includes(order.id));
+        
+        weeklyData.push({
+          month: `${format(currentDate, 'MMM dd')} - ${format(actualWeekEnd, 'MMM dd')}`,
+          revenue: weekRevenue,
+          orders: weekOrders.length,
+        });
+        
+        currentDate.setDate(currentDate.getDate() + 7);
+      }
+      return weeklyData;
+    } else {
+      // Monthly grouping for periods > 1 year
+      const monthlyData = [];
+      const currentDate = new Date(filterStart.getFullYear(), filterStart.getMonth(), 1);
+      while (currentDate <= filterEnd) {
+        const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        const actualMonthEnd = monthEnd > filterEnd ? filterEnd : monthEnd;
+        
+        const monthPayments = filteredPayments.filter(payment => {
+          const paymentDate = new Date(payment.created_at);
+          return paymentDate >= monthStart && paymentDate <= actualMonthEnd;
+        });
+        
+        const monthRevenue = monthPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+        const monthOrderIds = monthPayments.map(p => p.order_id);
+        const monthOrders = filteredOrders.filter(order => monthOrderIds.includes(order.id));
+        
+        monthlyData.push({
+          month: format(currentDate, 'MMM yyyy'),
+          revenue: monthRevenue,
+          orders: monthOrders.length,
+        });
+        
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
+      return monthlyData;
+    }
+  };
+
+  const monthlyData = getChartData();
 
   // Prepare category distribution data
   const categoryColors = ["#EF4444", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"];
@@ -269,9 +443,34 @@ const Overview = () => {
     }
   };
 
+  // Translate order status
+  const translateStatus = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return t('Pending');
+      case 'processing':
+        return t('Processing');
+      case 'delivered':
+        return t('Delivered');
+      case 'cancelled':
+        return t('Cancelled');
+      case 'shipped':
+        return t('Shipped');
+      default:
+        return status;
+    }
+  };
+
   const isLoading = paymentsLoading || ordersLoading || productsCountLoading || categoriesLoading || productsLoading || recentOrdersLoading;
 
-  const recentOrders = recentOrdersData.map((order: any) => {
+  // Filter recent orders by date range
+  const filteredRecentOrdersData = recentOrdersData.filter((order: any) => {
+    if (!filterStart || !filterEnd) return true;
+    const orderDate = new Date(order.created_at);
+    return orderDate >= filterStart && orderDate <= filterEnd;
+  });
+
+  const recentOrders = filteredRecentOrdersData.map((order: any) => {
     const productNames = order.order_items?.map((item: any) => item.products?.name).filter(Boolean) || [];
     const productSummary = productNames.length > 0 
       ? `${productNames[0]}${productNames.length > 1 ? ` +${productNames.length - 1} ${t("more")}` : ''}`
@@ -279,20 +478,118 @@ const Overview = () => {
     
     return {
       id: `#${order.id.slice(0, 8)}`,
-      customer: order.customer_name || order.customer_email || 'Unknown',
+      customer: order.customer_name || order.customer_email || t('Unknown'),
       product: productSummary,
       amount: formatPrice(Number(order.total_amount || 0)),
       status: order.status || 'pending',
+      statusTranslated: translateStatus(order.status || 'pending'),
       statusColor: getStatusColor(order.status),
       date: new Date(order.created_at).toLocaleDateString(),
     };
   });
+
+  // Export to Excel function
+  const handleExport = async () => {
+    const categoryData = categoryDistribution.map(cat => ({
+      name: t(cat.name),
+      value: 0, // We don't have sales value, only percentage
+      percentage: cat.value
+    }));
+
+    await exportToExcel({
+      title: t("Overview Report"),
+      period,
+      dateRange,
+      stats: {
+        totalRevenue,
+        totalOrders,
+        avgOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
+        revenueGrowth: parseFloat(revenueChange),
+        ordersGrowth: parseFloat(ordersChange),
+      },
+      monthlyData: monthlyData.map(item => ({
+        month: item.month,
+        revenue: item.revenue,
+        orders: item.orders,
+      })),
+      categoryData: categoryData.length > 0 ? categoryData : undefined,
+      recentOrders: recentOrders.map(order => ({
+        id: order.id,
+        customer: order.customer,
+        product: order.product,
+        amount: order.amount,
+        status: order.statusTranslated,
+        date: order.date,
+      })),
+      formatPrice,
+      t,
+    });
+  };
   return (
     <div className="p-4 md:p-8 space-y-6 md:space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold mb-2">{t("Overview")}</h1>
-        <p className="text-sm md:text-base text-muted-foreground">{t("Welcome to your PEAK Syria dashboard")}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">{t("Overview")}</h1>
+          <p className="text-sm md:text-base text-muted-foreground">{t("Welcome to your PEAK Syria dashboard")}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={period} onValueChange={(value) => setPeriod(value as PeriodOption)}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder={t("Select Period")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7days">{t("Last 7 Days")}</SelectItem>
+              <SelectItem value="30days">{t("Last 30 Days")}</SelectItem>
+              <SelectItem value="3months">{t("Last 3 Months")}</SelectItem>
+              <SelectItem value="6months">{t("Last 6 Months")}</SelectItem>
+              <SelectItem value="1year">{t("Last Year")}</SelectItem>
+              <SelectItem value="2years">{t("Last 2 Years")}</SelectItem>
+              <SelectItem value="all">{t("All Time")}</SelectItem>
+              <SelectItem value="custom">{t("Custom Range")}</SelectItem>
+            </SelectContent>
+          </Select>
+          {period === "custom" && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
+                      </>
+                    ) : (
+                      format(dateRange.from, "LLL dd, y")
+                    )
+                  ) : (
+                    <span>{t("Pick a date range")}</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange.from || new Date()}
+                  selected={{ from: dateRange.from || undefined, to: dateRange.to || undefined }}
+                  onSelect={(range) => {
+                    setDateRange({
+                      from: range?.from || null,
+                      to: range?.to || null,
+                    });
+                  }}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
+          <Button onClick={handleExport} className="gap-2">
+            <Download className="h-4 w-4" />
+            {t("Export Full Report")}
+          </Button>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -354,7 +651,7 @@ const Overview = () => {
                         )}
                         {stat.change}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">{t("vs last month")}</span>
+                      <span className="text-xs text-muted-foreground">{t("vs previous period")}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -369,7 +666,26 @@ const Overview = () => {
         {/* Revenue Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base md:text-xl">{t("Revenue Trend (6 Months)")}</CardTitle>
+            <CardTitle className="text-base md:text-xl">
+              {period === "all" 
+                ? t("Revenue Trend (All Time)")
+                : period === "custom" && dateRange.from && dateRange.to
+                ? t("Revenue Trend")
+                : period === "7days"
+                ? t("Revenue Trend (7 Days)")
+                : period === "30days"
+                ? t("Revenue Trend (30 Days)")
+                : period === "3months"
+                ? t("Revenue Trend (3 Months)")
+                : period === "6months"
+                ? t("Revenue Trend (6 Months)")
+                : period === "1year"
+                ? t("Revenue Trend (1 Year)")
+                : period === "2years"
+                ? t("Revenue Trend (2 Years)")
+                : t("Revenue Trend")
+              }
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -400,7 +716,26 @@ const Overview = () => {
         {/* Orders Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base md:text-xl">{t("Orders Trend (6 Months)")}</CardTitle>
+            <CardTitle className="text-base md:text-xl">
+              {period === "all" 
+                ? t("Orders Trend (All Time)")
+                : period === "custom" && dateRange.from && dateRange.to
+                ? t("Orders Trend")
+                : period === "7days"
+                ? t("Orders Trend (7 Days)")
+                : period === "30days"
+                ? t("Orders Trend (30 Days)")
+                : period === "3months"
+                ? t("Orders Trend (3 Months)")
+                : period === "6months"
+                ? t("Orders Trend (6 Months)")
+                : period === "1year"
+                ? t("Orders Trend (1 Year)")
+                : period === "2years"
+                ? t("Orders Trend (2 Years)")
+                : t("Orders Trend")
+              }
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -567,7 +902,7 @@ const Overview = () => {
                       className="gap-1"
                     >
                       <div className={`h-2 w-2 rounded-full ${order.statusColor}`} />
-                      {order.status}
+                      {order.statusTranslated}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between text-sm">
