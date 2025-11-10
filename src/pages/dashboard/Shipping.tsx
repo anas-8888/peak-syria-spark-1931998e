@@ -55,6 +55,7 @@ interface ShippingCarrier {
   is_active: boolean;
   display_order: number;
   image_url: string | null;
+  details: string | null;
 }
 
 interface Region {
@@ -93,6 +94,7 @@ const Shipping = () => {
     display_order: "0",
     is_active: true,
     image_url: "",
+    details: "",
   });
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -244,6 +246,7 @@ const Shipping = () => {
       display_order: "0",
       is_active: true,
       image_url: "",
+      details: "",
     });
     setEditingCarrier(null);
   };
@@ -265,6 +268,7 @@ const Shipping = () => {
       display_order: carrier.display_order.toString(),
       is_active: carrier.is_active,
       image_url: carrier.image_url || "",
+      details: carrier.details || "",
     });
     setCarrierDialogOpen(true);
   };
@@ -338,6 +342,7 @@ const Shipping = () => {
       display_order: parseInt(carrierForm.display_order),
       is_active: carrierForm.is_active,
       image_url: carrierForm.image_url || null,
+      details: carrierForm.details || null,
     });
   };
 
@@ -496,6 +501,15 @@ const Shipping = () => {
                   />
                 </div>
                 <div>
+                  <Label>{t("Additional Details")}</Label>
+                  <Textarea
+                    value={carrierForm.details}
+                    onChange={(e) => setCarrierForm({ ...carrierForm, details: e.target.value })}
+                    placeholder={t("Payment account details, contact info, etc.")}
+                    rows={3}
+                  />
+                </div>
+                <div>
                   <Label>{t("Display Order")}</Label>
                   <Input
                     type="number"
@@ -633,17 +647,21 @@ const Shipping = () => {
                 <TableRow>
                   <TableHead>{t("Name")}</TableHead>
                   <TableHead>{t("Description")}</TableHead>
+                  <TableHead>{t("Details")}</TableHead>
                   <TableHead>{t("Delivery Time")}</TableHead>
                   <TableHead>{t("Status")}</TableHead>
                   <TableHead>{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCarriers?.map((carrier) => (
+                 {filteredCarriers?.map((carrier) => (
                 <TableRow key={carrier.id}>
                   <TableCell className="font-medium">{carrier.name}</TableCell>
                   <TableCell className="text-muted-foreground">
                     {carrier.description || "-"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground max-w-xs truncate">
+                    {carrier.details || "-"}
                   </TableCell>
                   <TableCell>{carrier.estimated_days || "-"}</TableCell>
                   <TableCell>

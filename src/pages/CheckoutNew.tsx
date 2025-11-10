@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, CreditCard, MapPin } from "lucide-react";
+import { ArrowLeft, CreditCard, MapPin, Copy } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -52,6 +52,7 @@ interface ShippingCarrier {
   estimated_days: string | null;
   is_active: boolean;
   image_url: string | null;
+  details: string | null;
 }
 
 interface CarrierRegion {
@@ -1186,7 +1187,7 @@ export default function CheckoutNew() {
                                     className="w-12 h-12 object-contain rounded"
                                   />
                                 )}
-                                <div>
+                                <div className="flex-1">
                                   <div className="font-medium">{t(carrier.name)}</div>
                                   {carrier.description && (
                                     <div className="text-sm text-muted-foreground">
@@ -1196,6 +1197,31 @@ export default function CheckoutNew() {
                                   {carrier.estimated_days && (
                                     <div className="text-sm text-muted-foreground">
                                       {t("Delivery")}: {carrier.estimated_days}
+                                    </div>
+                                  )}
+                                  {carrier.details && (
+                                    <div className="mt-2 space-y-1">
+                                      <div className="text-xs font-medium text-muted-foreground">
+                                        {t("Payment Details")}:
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <div className="text-sm bg-muted p-2 rounded flex-1 font-mono">
+                                          {carrier.details}
+                                        </div>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            navigator.clipboard.writeText(carrier.details || "");
+                                            toast.success(t("Details copied to clipboard"));
+                                          }}
+                                          className="shrink-0"
+                                        >
+                                          <Copy className="h-4 w-4" />
+                                        </Button>
+                                      </div>
                                     </div>
                                   )}
                                 </div>

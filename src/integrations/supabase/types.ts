@@ -1616,6 +1616,7 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          details: string | null
           display_order: number
           estimated_days: string | null
           id: string
@@ -1627,6 +1628,7 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          details?: string | null
           display_order?: number
           estimated_days?: string | null
           id?: string
@@ -1638,6 +1640,7 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          details?: string | null
           display_order?: number
           estimated_days?: string | null
           id?: string
