@@ -354,12 +354,21 @@ export default function CheckoutNew() {
     }
   }, [availableCarriers, selectedCarrier, setValue]);
 
+  // State for GPS coordinates
+  const [gpsCoordinates, setGpsCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+
   const handleGetLocation = () => {
     setLoadingLocation(true);
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           try {
+            // Save GPS coordinates
+            setGpsCoordinates({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            });
+            
             // Use reverse geocoding to get location details
             const response = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`
@@ -902,6 +911,8 @@ export default function CheckoutNew() {
           p_shipping_cost: shippingCost,
           p_discount_id: appliedDiscount?.id || null,
           p_discount_amount: discountAmount + (appliedDiscount?.free_shipping ? shippingCost : 0),
+          p_delivery_latitude: gpsCoordinates?.latitude || null,
+          p_delivery_longitude: gpsCoordinates?.longitude || null,
           p_items: cartItems.map((item) => ({
             product_id: item.product_id,
             quantity: item.quantity,

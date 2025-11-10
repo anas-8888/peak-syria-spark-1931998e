@@ -963,6 +963,8 @@ export type Database = {
           customer_name: string | null
           customer_phone: string | null
           delivered_at: string | null
+          delivery_latitude: number | null
+          delivery_longitude: number | null
           id: string
           pending_at: string | null
           processing_at: string | null
@@ -988,6 +990,8 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           delivered_at?: string | null
+          delivery_latitude?: number | null
+          delivery_longitude?: number | null
           id?: string
           pending_at?: string | null
           processing_at?: string | null
@@ -1013,6 +1017,8 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           delivered_at?: string | null
+          delivery_latitude?: number | null
+          delivery_longitude?: number | null
           id?: string
           pending_at?: string | null
           processing_at?: string | null
@@ -1438,6 +1444,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          preferred_language: string | null
           region_id: string | null
           role_id: string
           updated_at: string
@@ -1450,6 +1457,7 @@ export type Database = {
           full_name?: string | null
           id: string
           phone?: string | null
+          preferred_language?: string | null
           region_id?: string | null
           role_id: string
           updated_at?: string
@@ -1462,6 +1470,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          preferred_language?: string | null
           region_id?: string | null
           role_id?: string
           updated_at?: string
@@ -1813,6 +1822,8 @@ export type Database = {
           p_customer_email: string
           p_customer_name: string
           p_customer_phone: string
+          p_delivery_latitude?: number
+          p_delivery_longitude?: number
           p_discount_amount?: number
           p_discount_id?: string
           p_items?: Json

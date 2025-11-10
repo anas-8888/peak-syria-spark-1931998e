@@ -24,10 +24,52 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   const [translations, setTranslations] = useState<Translations>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
   
   const addingRef = useRef<Set<string>>(new Set());
   const pendingKeys = useRef<Set<string>>(new Set());
   const batchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Load user and their preferred language from profile
+  useEffect(() => {
+    const loadUserLanguage = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+        
+        // Load preferred language from profile
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("preferred_language")
+          .eq("id", user.id)
+          .single();
+        
+        if (profile?.preferred_language) {
+          const lang = profile.preferred_language as Language;
+          setLanguageState(lang);
+          localStorage.setItem("language", lang);
+          document.documentElement.lang = lang;
+          document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+        }
+      }
+    };
+    
+    loadUserLanguage();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUserId(session.user.id);
+        loadUserLanguage();
+      } else {
+        setUserId(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   // Load translations from database with caching
   const loadTranslations = useCallback(async () => {
@@ -262,12 +304,24 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     }, 2000);
   }, [batchInsertMissingKeys]);
 
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    localStorage.setItem("language", lang);
-    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
-    document.documentElement.lang = lang;
-  };
+  const setLanguage = useCallback(async (newLanguage: Language) => {
+    setLanguageState(newLanguage);
+    localStorage.setItem("language", newLanguage);
+    document.documentElement.dir = newLanguage === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = newLanguage;
+    
+    // Save to user profile if logged in
+    if (userId) {
+      try {
+        await supabase
+          .from("profiles")
+          .update({ preferred_language: newLanguage })
+          .eq("id", userId);
+      } catch (error) {
+        console.error("Failed to save language preference:", error);
+      }
+    }
+  }, [userId]);
 
   useEffect(() => {
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";

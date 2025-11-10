@@ -34,6 +34,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import OrderLocationMap from "@/components/OrderLocationMap";
 
 type OrderWithDetails = {
   id: string;
@@ -51,6 +52,8 @@ type OrderWithDetails = {
   cancel_status: string | null;
   cancel_date: string | null;
   cancelled_at: string | null;
+  delivery_latitude: number | null;
+  delivery_longitude: number | null;
   itemCount: number;
   order_items: Array<{
     id: string;
@@ -150,6 +153,8 @@ const statusLabels = {
           cancel_status,
           cancel_date,
           cancelled_at,
+          delivery_latitude,
+          delivery_longitude,
           order_items (
             id,
             quantity,
@@ -654,6 +659,18 @@ const statusLabels = {
                   </div>
                 </div>
               </div>
+
+              {/* Delivery Location Map */}
+              {selectedOrder.delivery_latitude && selectedOrder.delivery_longitude && (
+                <div>
+                  <h3 className="font-semibold mb-3">{t("Delivery Location (GPS)")}</h3>
+                  <OrderLocationMap
+                    latitude={selectedOrder.delivery_latitude}
+                    longitude={selectedOrder.delivery_longitude}
+                    address={selectedOrder.shipping_address}
+                  />
+                </div>
+              )}
 
               {/* Order Items */}
               <div>
