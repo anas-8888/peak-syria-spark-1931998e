@@ -339,18 +339,117 @@ const Users = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
-      const { data: result, error } = await supabase.functions.invoke('admin-create-user', {
-        body: {
-          email: data.email,
-          password: data.password,
-          full_name: data.full_name,
-          phone: data.phone,
-          role_id: data.role_id
-        }
-      });
+      try {
+        const { data: result, error } = await supabase.functions.invoke('admin-create-user', {
+          body: {
+            email: data.email,
+            password: data.password,
+            full_name: data.full_name,
+            phone: data.phone,
+            role_id: data.role_id
+          }
+        });
 
-      if (error) throw error;
-      if (result?.error) throw new Error(result.error);
+        // Log full response for debugging
+        console.log("Function response:", { result, error });
+
+        // Check if result contains an error (even if error is null)
+        // Sometimes Supabase populates data even on error
+        if (result?.error) {
+          const errorMsg = result.details 
+            ? `${result.error}: ${JSON.stringify(result.details)}`
+            : result.error;
+          console.error("Function returned error in result:", result);
+          throw new Error(errorMsg);
+        }
+
+        if (error) {
+          console.error("Function invocation error object:", error);
+          
+          // Try to extract error message from various possible locations
+          let errorMessage = error.message || "Failed to create user";
+          
+          // Check if result was populated despite error
+          if (result?.error) {
+            errorMessage = result.error;
+            if (result.details) {
+              errorMessage += `: ${JSON.stringify(result.details)}`;
+            }
+          }
+          // Check error.context - it's a Response object, need to read the body
+          else if (error.context && error.context instanceof Response) {
+            try {
+              // Clone the response to read it (responses can only be read once)
+              const responseClone = error.context.clone();
+              const responseBody = await responseClone.json();
+              console.log("Error response body:", responseBody);
+              
+              if (responseBody?.error) {
+                errorMessage = responseBody.error;
+                if (responseBody.details) {
+                  errorMessage += `: ${JSON.stringify(responseBody.details)}`;
+                }
+              }
+            } catch (e) {
+              console.error("Error parsing error response body:", e);
+              // Try text() if json() fails
+              try {
+                const responseClone = error.context.clone();
+                const text = await responseClone.text();
+                console.log("Error response text:", text);
+                try {
+                  const parsed = JSON.parse(text);
+                  if (parsed?.error) {
+                    errorMessage = parsed.error;
+                    if (parsed.details) {
+                      errorMessage += `: ${JSON.stringify(parsed.details)}`;
+                    }
+                  }
+                } catch (parseError) {
+                  // If it's not JSON, use the text as error message
+                  if (text) {
+                    errorMessage = text;
+                  }
+                }
+              } catch (textError) {
+                console.error("Error reading error response as text:", textError);
+              }
+            }
+          }
+          
+          throw new Error(errorMessage);
+        }
+      } catch (err: any) {
+        console.error("Error in user creation:", err);
+        
+        // If it's already an Error with a message, check if we can get more details
+        if (err instanceof Error) {
+          // Check if error has additional properties we can use
+          const errorObj = err as any;
+          if (errorObj.context?.body?.error) {
+            throw new Error(errorObj.context.body.error);
+          }
+          if (errorObj.response) {
+            try {
+              const responseBody = typeof errorObj.response === 'string'
+                ? JSON.parse(errorObj.response)
+                : errorObj.response;
+              if (responseBody?.error) {
+                throw new Error(responseBody.error);
+              }
+            } catch (e) {
+              // Ignore parsing errors
+            }
+          }
+          throw err;
+        }
+        
+        // Otherwise, try to extract error from response
+        if (err?.context?.body?.error) {
+          throw new Error(err.context.body.error);
+        }
+        throw new Error(err?.message || "Failed to create user");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });

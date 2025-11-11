@@ -51,15 +51,18 @@ Deno.serve(async (req) => {
 
     if (createError) throw createError
 
-    // Create profile with role
+    // Update profile with role (trigger already created it)
+    // Use upsert to handle case where trigger might not have run yet
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
-      .insert({
+      .upsert({
         id: newUser.user.id,
         email,
         full_name,
         phone,
         role_id
+      }, {
+        onConflict: 'id'
       })
 
     if (profileError) {
@@ -73,8 +76,35 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
+    console.error('Error creating user:', error)
+    
+    // Extract error message and details
+    let errorMessage = 'Failed to create user'
+    let errorDetails: any = undefined
+    
+    if (error instanceof Error) {
+      errorMessage = error.message
+      // Check if it's a Supabase error with details
+      if ('details' in error) {
+        errorDetails = (error as any).details
+      }
+      if ('hint' in error) {
+        errorDetails = { ...errorDetails, hint: (error as any).hint }
+      }
+      if ('code' in error) {
+        errorDetails = { ...errorDetails, code: (error as any).code }
+      }
+    } else {
+      errorMessage = String(error)
+    }
+    
+    console.error('Error details:', { errorMessage, errorDetails, error })
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: errorMessage,
+        details: errorDetails 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     )
   }
