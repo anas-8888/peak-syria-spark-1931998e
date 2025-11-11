@@ -188,13 +188,15 @@ const Users = () => {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      // First delete profile
-      const { error: profileError } = await supabase.from("profiles").delete().eq("id", id);
-      if (profileError) throw profileError;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
 
-      // Then delete auth user using admin API
-      const { error: authError } = await supabase.auth.admin.deleteUser(id);
-      if (authError) throw authError;
+      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { user_id: id }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -333,29 +335,22 @@ const Users = () => {
       
       console.log("Password validation passed");
 
-      // Use admin API to create user without logging them in
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: data.email,
-        password: data.password,
-        email_confirm: true, // Auto-confirm email
-        user_metadata: {
+      // Call edge function to create user
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const { data: result, error } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          email: data.email,
+          password: data.password,
           full_name: data.full_name,
-        },
+          phone: data.phone,
+          role_id: data.role_id
+        }
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Failed to create user");
-
-      // Update the profile with role_id and phone
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ 
-          role_id: data.role_id,
-          phone: data.phone || null
-        })
-        .eq("id", authData.user.id);
-
-      if (profileError) throw profileError;
+      if (error) throw error;
+      if (result?.error) throw new Error(result.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
