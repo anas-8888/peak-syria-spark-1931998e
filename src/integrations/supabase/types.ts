@@ -1052,31 +1052,37 @@ export type Database = {
       }
       payment_methods: {
         Row: {
+          additional_data: string | null
           created_at: string
           description: string | null
           display_order: number
           icon: string | null
           id: string
+          image_url: string | null
           is_active: boolean
           name: string
           updated_at: string
         }
         Insert: {
+          additional_data?: string | null
           created_at?: string
           description?: string | null
           display_order?: number
           icon?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           name: string
           updated_at?: string
         }
         Update: {
+          additional_data?: string | null
           created_at?: string
           description?: string | null
           display_order?: number
           icon?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           name?: string
           updated_at?: string

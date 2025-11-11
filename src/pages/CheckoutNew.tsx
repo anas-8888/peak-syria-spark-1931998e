@@ -34,6 +34,8 @@ interface PaymentMethod {
   name: string;
   description: string | null;
   icon: string | null;
+  image_url: string | null;
+  additional_data: string | null;
   is_active: boolean;
   display_order: number;
 }
@@ -1251,22 +1253,53 @@ export default function CheckoutNew() {
                 {paymentMethods && paymentMethods.length > 0 ? (
                   <RadioGroup value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod}>
                     {paymentMethods.map((method) => (
-                      <div key={method.id} className="flex items-center space-x-3 p-4 border rounded-lg">
-                        <RadioGroupItem value={method.id} id={method.id} />
-                        <Label
-                          htmlFor={method.id}
-                          className="flex items-center gap-3 flex-1 cursor-pointer"
-                        >
-                          {IconComponent(method.icon)}
-                          <div>
-                            <div className="font-medium">{t(method.name)}</div>
-                            {method.description && (
-                              <div className="text-sm text-muted-foreground">
-                                {t(method.description)}
-                              </div>
+                      <div key={method.id} className="space-y-3">
+                        <div className="flex items-center space-x-3 p-4 border rounded-lg">
+                          <RadioGroupItem value={method.id} id={method.id} />
+                          <Label
+                            htmlFor={method.id}
+                            className="flex items-center gap-3 flex-1 cursor-pointer"
+                          >
+                            {method.image_url ? (
+                              <img 
+                                src={method.image_url} 
+                                alt={method.name} 
+                                className="h-10 w-10 object-cover rounded"
+                              />
+                            ) : (
+                              IconComponent(method.icon)
                             )}
+                            <div className="flex-1">
+                              <div className="font-medium">{t(method.name)}</div>
+                              {method.description && (
+                                <div className="text-sm text-muted-foreground">
+                                  {t(method.description)}
+                                </div>
+                              )}
+                            </div>
+                          </Label>
+                        </div>
+                        {method.additional_data && selectedPaymentMethod === method.id && (
+                          <div className="ml-9 p-4 bg-muted rounded-lg space-y-2">
+                            <Label className="text-sm font-medium">{t("Payment Details")}</Label>
+                            <div className="flex items-center gap-2">
+                              <code className="flex-1 text-sm bg-background p-2 rounded border overflow-x-auto">
+                                {method.additional_data}
+                              </code>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(method.additional_data || "");
+                                  toast.success(t("Copied to clipboard"));
+                                }}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
-                        </Label>
+                        )}
                       </div>
                     ))}
                   </RadioGroup>

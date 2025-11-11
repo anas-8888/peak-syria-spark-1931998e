@@ -86,8 +86,8 @@ const Users = () => {
     },
   });
 
-  // Filter out customer role for user creation
-  const adminRoles = roles.filter((role: any) => role.name?.toLowerCase() !== 'customer');
+  // Allow all roles for user creation
+  const allRoles = roles;
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -188,15 +188,20 @@ const Users = () => {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("profiles").delete().eq("id", id);
-      if (error) throw error;
+      // First delete profile
+      const { error: profileError } = await supabase.from("profiles").delete().eq("id", id);
+      if (profileError) throw profileError;
+
+      // Then delete auth user using admin API
+      const { error: authError } = await supabase.auth.admin.deleteUser(id);
+      if (authError) throw authError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       toast.success(t("User deleted successfully"));
     },
     onError: (error: any) => {
-      toast.error(t("Failed to delete customer"), {
+      toast.error(t("Failed to delete user"), {
         description: error.message,
       });
     },
@@ -303,13 +308,10 @@ const Users = () => {
         throw new Error("You don't have permission to create users");
       }
 
-      // Validate that role is not customer
+      // Validate that role exists
       const selectedRole = roles.find((r: any) => r.id === data.role_id);
       if (!selectedRole) {
         throw new Error("Selected role not found");
-      }
-      if (selectedRole.name?.toLowerCase() === 'customer') {
-        throw new Error("Cannot create customer accounts. Only admin roles are allowed.");
       }
 
       // Validate password strength
@@ -331,14 +333,13 @@ const Users = () => {
       
       console.log("Password validation passed");
 
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Use admin API to create user without logging them in
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: data.email,
         password: data.password,
-        options: {
-          data: {
-            full_name: data.full_name,
-          },
-          emailRedirectTo: undefined, // Prevent any redirect
+        email_confirm: true, // Auto-confirm email
+        user_metadata: {
+          full_name: data.full_name,
         },
       });
 
@@ -828,7 +829,7 @@ const Users = () => {
                   <SelectValue placeholder={t("Select role")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {adminRoles.map((r: any) => (
+                  {allRoles.map((r: any) => (
                     <SelectItem key={r.id} value={r.id} className="capitalize">
                       {r.name}
                     </SelectItem>
@@ -940,7 +941,7 @@ const Users = () => {
                   <SelectValue placeholder={t("Select a role")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {adminRoles.map((role: any) => (
+                  {allRoles.map((role: any) => (
                     <SelectItem key={role.id} value={role.id} className="capitalize">
                       {role.name}
                     </SelectItem>
@@ -948,7 +949,7 @@ const Users = () => {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground mt-1">
-                {t("Only admin roles can be assigned. Customer accounts cannot be created here.")}
+                {t("Select the role for the new user")}
               </p>
             </div>
           </div>

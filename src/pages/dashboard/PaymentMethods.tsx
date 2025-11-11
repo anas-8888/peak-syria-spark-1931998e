@@ -46,6 +46,8 @@ interface PaymentMethod {
   is_active: boolean;
   display_order: number;
   icon: string | null;
+  image_url: string | null;
+  additional_data: string | null;
   created_at: string;
 }
 
@@ -61,6 +63,8 @@ export default function PaymentMethods() {
     name: "",
     description: "",
     icon: "",
+    image_url: "",
+    additional_data: "",
     display_order: 0,
     is_active: true,
   });
@@ -130,6 +134,8 @@ export default function PaymentMethods() {
       name: "",
       description: "",
       icon: "",
+      image_url: "",
+      additional_data: "",
       display_order: 0,
       is_active: true,
     });
@@ -143,6 +149,8 @@ export default function PaymentMethods() {
       name: method.name,
       description: method.description || "",
       icon: method.icon || "",
+      image_url: method.image_url || "",
+      additional_data: method.additional_data || "",
       display_order: method.display_order,
       is_active: method.is_active,
     });
@@ -262,7 +270,8 @@ export default function PaymentMethods() {
                 <TableRow>
                   <TableHead>{t("Name")}</TableHead>
                   <TableHead>{t("Description")}</TableHead>
-                  <TableHead>{t("Icon")}</TableHead>
+                  <TableHead>{t("Image")}</TableHead>
+                  <TableHead>{t("Additional Data")}</TableHead>
                   <TableHead>{t("Order")}</TableHead>
                   <TableHead>{t("Status")}</TableHead>
                   <TableHead className="text-right">{t("Actions")}</TableHead>
@@ -274,7 +283,8 @@ export default function PaymentMethods() {
                     <TableRow key={i}>
                       <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-10 w-10" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-12" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                       <TableCell>
@@ -287,7 +297,7 @@ export default function PaymentMethods() {
                   ))
                 ) : filteredMethods.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       {t("No payment methods found")}
                     </TableCell>
                   </TableRow>
@@ -299,9 +309,14 @@ export default function PaymentMethods() {
                         {method.description || "-"}
                       </TableCell>
                       <TableCell>
-                        <code className="text-xs bg-muted px-2 py-1 rounded">
-                          {method.icon || "-"}
-                        </code>
+                        {method.image_url ? (
+                          <img src={method.image_url} alt={method.name} className="h-10 w-10 object-cover rounded" />
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="max-w-xs truncate">
+                        {method.additional_data || "-"}
                       </TableCell>
                       <TableCell>{method.display_order}</TableCell>
                       <TableCell>
@@ -372,15 +387,30 @@ export default function PaymentMethods() {
               />
             </div>
             <div>
-              <Label htmlFor="icon">{t("Icon (Lucide Icon Name)")}</Label>
+              <Label htmlFor="image_url">{t("Image URL")}</Label>
               <Input
-                id="icon"
-                value={formData.icon}
-                onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                placeholder={t("e.g., CreditCard, Banknote, Wallet")}
+                id="image_url"
+                value={formData.image_url}
+                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                placeholder={t("Enter image URL")}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                {t("See")} <a href="https://lucide.dev" target="_blank" rel="noopener" className="underline">lucide.dev</a> {t("for available icons")}
+                {t("Upload image to storage and paste URL here")}
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="additional_data">{t("Additional Data")}</Label>
+              <Textarea
+                id="additional_data"
+                value={formData.additional_data}
+                onChange={(e) =>
+                  setFormData({ ...formData, additional_data: e.target.value })
+                }
+                placeholder={t("Payment instructions or account details")}
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("This will be shown to customers with a copy button")}
               </p>
             </div>
             <div>
