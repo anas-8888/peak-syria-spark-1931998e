@@ -234,10 +234,32 @@ const ProductsEnhanced = () => {
     return categoryMatch && colorMatch && sizeMatch && priceMatch;
   });
 
+  // Helper function to get the sorting price for a product
+  const getSortingPrice = (product: Product): number => {
+    // 1. If product has offer_price (discount), use it
+    if (product.offer_price && product.offer_price > 0) {
+      return product.offer_price;
+    }
+    // 2. If product has multiple prices (minPrice), use the minimum
+    if (product.minPrice && product.minPrice > 0) {
+      return product.minPrice;
+    }
+    // 3. Otherwise, use the fixed price
+    return product.price;
+  };
+
   // Apply sorting
   const sortedProducts = [...filteredProducts].sort((a, b) => {
-    if (sortBy === "price-low") return a.price - b.price;
-    if (sortBy === "price-high") return b.price - a.price;
+    if (sortBy === "price-low") {
+      const priceA = getSortingPrice(a);
+      const priceB = getSortingPrice(b);
+      return priceA - priceB;
+    }
+    if (sortBy === "price-high") {
+      const priceA = getSortingPrice(a);
+      const priceB = getSortingPrice(b);
+      return priceB - priceA;
+    }
     if (sortBy === "name") return a.name.localeCompare(b.name);
     if (sortBy === "rating") return b.rating - a.rating;
     return 0;

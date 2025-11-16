@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ type AdminLoginForm = z.infer<typeof adminLoginSchema>;
 
 const AdminLogin = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -57,21 +58,26 @@ const AdminLogin = () => {
         // Block customer role - use generic error message to prevent user enumeration
         if (roleName === "customer") {
           await supabase.auth.signOut();
-          toast.error(t("Authentication Failed"), {
+          toast({
+            title: t("Authentication Failed"),
             description: t("Invalid credentials or insufficient permissions"),
+            variant: "destructive",
           });
           return;
         }
 
-        toast.success(t("Login Successful!"), {
+        toast({
+          title: t("Login Successful!"),
           description: t("Welcome back"),
         });
         navigate("/dashboard");
       }
     } catch (error: any) {
       // Use generic error message to prevent user enumeration
-      toast.error(t("Authentication Failed"), {
+      toast({
+        title: t("Authentication Failed"),
         description: t("Invalid credentials or insufficient permissions"),
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);

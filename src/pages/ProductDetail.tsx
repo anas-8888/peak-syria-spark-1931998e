@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Minus, Plus, ShoppingCart, Heart, Share2, ArrowLeft, Star, Copy, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -55,6 +55,7 @@ const ProductDetail = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
+  const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
@@ -67,6 +68,7 @@ const ProductDetail = () => {
   const [currentPrice, setCurrentPrice] = useState(0);
   const [showSignInPopup, setShowSignInPopup] = useState(false);
   const [isInWishlist, setIsInWishlist] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   const handleImageMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -722,6 +724,8 @@ const ProductDetail = () => {
                 size="lg" 
                 className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold"
                 onClick={async () => {
+                  if (addingToCart) return; // Prevent multiple clicks
+                  
                   if (!user) {
                     setShowSignInPopup(true);
                     return;
@@ -730,29 +734,42 @@ const ProductDetail = () => {
                   // Require variant selection if variants exist
                   if (variants.length > 0) {
                     if (!selectedColorId || !selectedSize) {
-                      toast.error(t("Please select both color and size before adding to cart"));
+                      toast({
+                        title: t("Please select both color and size before adding to cart"),
+                        variant: "destructive",
+                      });
                       return;
                     }
                     if (!selectedVariantId) {
-                      toast.error(t("Selected variant is out of stock"));
+                      toast({
+                        title: t("Selected variant is out of stock"),
+                        variant: "destructive",
+                      });
                       return;
                     }
                     
                     // Validate quantity against variant stock
                     const selectedVariant = availableSizes.find((v: any) => v.id === selectedVariantId);
                     if (selectedVariant && quantity > selectedVariant.stock_quantity) {
-                      toast.error(t("Only") + ` ${selectedVariant.stock_quantity} ` + t("items available for this variant"));
+                      toast({
+                        title: t("Only") + ` ${selectedVariant.stock_quantity} ` + t("items available for this variant"),
+                        variant: "destructive",
+                      });
                       return;
                     }
                   } else {
                     // Validate quantity against product stock for non-variant products
                     if (quantity > product.stock_quantity) {
-                      toast.error(t("Only") + ` ${product.stock_quantity} ` + t("items available"));
+                      toast({
+                        title: t("Only") + ` ${product.stock_quantity} ` + t("items available"),
+                        variant: "destructive",
+                      });
                       return;
                     }
                   }
                   
                   if (id) {
+                    setAddingToCart(true);
                     try {
                       await addToCart({ 
                         productId: id, 
@@ -762,14 +779,24 @@ const ProductDetail = () => {
                         variantId: selectedVariantId || undefined,
                         variantPrice: variants.length > 0 ? currentPrice : undefined,
                       });
-                      toast.success(t("Added") + ` ${quantity} ${product.name} ` + t("to cart"));
-                    } catch (error) {
-                      console.error('Error adding to cart:', error);
-                      toast.error(t("Failed to add to cart"));
+                      
+                      toast({
+                        title: t("Added to Cart") + " 🛒",
+                        description: `${quantity} ${quantity > 1 ? t("items") : t("item")} ${t("of")} ${product.name} ${t("added successfully")}`,
+                      });
+                    } catch (error: any) {
+                      const errorMessage = error?.message || error?.toString() || t("Please try again");
+                      toast({
+                        title: t("Failed to add to cart"),
+                        description: errorMessage,
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setAddingToCart(false);
                     }
                   }
                 }}
-                disabled={(() => {
+                disabled={addingToCart || (() => {
                   if (variants.length > 0) {
                     return !selectedVariantId || availableSizes.find((v: any) => v.id === selectedVariantId)?.stock_quantity === 0;
                   }
@@ -777,13 +804,17 @@ const ProductDetail = () => {
                 })()}
               >
                 <ShoppingCart className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                {(() => {
-                  if (variants.length > 0 && selectedVariantId) {
-                    const variantStock = availableSizes.find((v: any) => v.id === selectedVariantId)?.stock_quantity || 0;
-                    return variantStock > 0 ? t("Add to Cart") : t("Out of Stock");
-                  }
-                  return product.stock_quantity > 0 ? t("Add to Cart") : t("Out of Stock");
-                })()}
+                {addingToCart ? (
+                  t("Adding...")
+                ) : (
+                  (() => {
+                    if (variants.length > 0 && selectedVariantId) {
+                      const variantStock = availableSizes.find((v: any) => v.id === selectedVariantId)?.stock_quantity || 0;
+                      return variantStock > 0 ? t("Add to Cart") : t("Out of Stock");
+                    }
+                    return product.stock_quantity > 0 ? t("Add to Cart") : t("Out of Stock");
+                  })()
+                )}
               </Button>
               <div className="flex gap-2 sm:gap-3">
                 <Button 
@@ -810,7 +841,9 @@ const ProductDetail = () => {
                         if (error) throw error;
                         
                         setIsInWishlist(false);
-                        toast.success(t("Removed from wishlist"));
+                        toast({
+                          title: t("Removed from wishlist"),
+                        });
                       } else {
                         // Add to wishlist
                         const { error } = await supabase
@@ -823,11 +856,16 @@ const ProductDetail = () => {
                         if (error) throw error;
                         
                         setIsInWishlist(true);
-                        toast.success(t("Added to wishlist"));
+                        toast({
+                          title: t("Added to wishlist"),
+                        });
                       }
                     } catch (error) {
                       console.error("Wishlist error:", error);
-                      toast.error(t("Failed to update wishlist"));
+                      toast({
+                        title: t("Failed to update wishlist"),
+                        variant: "destructive",
+                      });
                     }
                   }}
                 >
@@ -850,7 +888,9 @@ const ProductDetail = () => {
                       onClick={() => {
                         const url = window.location.href;
                         navigator.clipboard.writeText(url);
-                        toast.success(t("Link copied to clipboard!"));
+                        toast({
+                          title: t("Link copied to clipboard!"),
+                        });
                       }}
                     >
                       <Copy className="mr-2 h-4 w-4" />

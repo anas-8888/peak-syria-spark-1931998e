@@ -20,10 +20,11 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { OrderCancellationDialog } from "@/components/OrderCancellationDialog";
 import { useLanguage } from "@/contexts/LanguageContext";
+import GoogleSignInPopup from "@/components/GoogleSignInPopup";
 
 type OrderWithDetails = {
   id: string;
@@ -90,15 +91,16 @@ const statusVariants = {
 };
 
 const statusLabels = {
-  delivered: "Delivered",
-  shipped: "In Transit",
-  pending: "Pending",
-  processing: "Processing",
-  cancelled: "Cancelled",
+  delivered: "Delivered", // Will be translated in component
+  shipped: "In Transit", // Will be translated in component
+  pending: "Pending", // Will be translated in component
+  processing: "Processing", // Will be translated in component
+  cancelled: "Cancelled", // Will be translated in component
 };
 
 const OrderTracking = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const { formatPrice } = useCurrency();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -109,6 +111,7 @@ const OrderTracking = () => {
   const [reviewRating, setReviewRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   // Fetch user's orders
   const { data: userOrders, isLoading: ordersLoading } = useQuery({
@@ -230,13 +233,16 @@ const OrderTracking = () => {
       queryClient.invalidateQueries({ queryKey: ["order-details"] });
       queryClient.invalidateQueries({ queryKey: ["user-orders"] });
       queryClient.invalidateQueries({ queryKey: ["latest-order"] });
-      toast.success(t("Thank you for confirming receipt!"), {
+      toast({
+        title: t("Thank you for confirming receipt!"),
         description: t("We hope you enjoy your purchase!"),
       });
     },
     onError: () => {
-      toast.error(t("Failed to confirm receipt"), {
+      toast({
+        title: t("Failed to confirm receipt"),
         description: t("Please try again later."),
+        variant: "destructive",
       });
     },
   });
@@ -263,13 +269,16 @@ const OrderTracking = () => {
       queryClient.invalidateQueries({ queryKey: ["order-review"] });
       setReviewRating(0);
       setReviewComment("");
-      toast.success(t("Thank you for your review!"), {
+      toast({
+        title: t("Thank you for your review!"),
         description: t("Your feedback helps us improve."),
       });
     },
     onError: (error: any) => {
-      toast.error(t("Failed to submit review"), {
+      toast({
+        title: t("Failed to submit review"),
         description: error.message || t("Please try again later."),
+        variant: "destructive",
       });
     },
   });
@@ -315,6 +324,14 @@ const OrderTracking = () => {
         date: order.delivered_at
       },
     ];
+    
+    const translatedStatusLabels: Record<string, string> = {
+      delivered: t("Delivered"),
+      shipped: t("In Transit"),
+      pending: t("Pending"),
+      processing: t("Processing"),
+      cancelled: t("Cancelled"),
+    };
 
     const statusOrder = ["pending", "processing", "shipped", "delivered", "cancelled"];
     const currentIndex = statusOrder.indexOf(order.status);
@@ -338,17 +355,16 @@ const OrderTracking = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <Card className="max-w-md mx-4">
-            <CardContent className="pt-6 text-center">
+        <div className="flex-1 flex items-center justify-center py-12 sm:py-16 md:py-20">
+          <Card className="max-w-md mx-4 my-8 sm:my-12">
+            <CardContent className="pt-6 pb-6 sm:pt-8 sm:pb-8 text-center">
               <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
               <h2 className="text-2xl font-bold mb-2">{t("Track Your Order")}</h2>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-muted-foreground mb-6">
                 {t("Please log in to view your order history and track your orders.")}
               </p>
-              <Link to="/login">
-                <Button>{t("Log In")}</Button>
-              </Link>
+              <Button onClick={() => setLoginModalOpen(true)}>{t("Log In")}</Button>
+              <GoogleSignInPopup open={loginModalOpen} onOpenChange={setLoginModalOpen} />
             </CardContent>
           </Card>
         </div>
@@ -475,7 +491,7 @@ const OrderTracking = () => {
                     {orderDetails.status === "delivered" && !orderDetails.customer_confirmed_receipt && (
                       <div className="mt-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
                         <p className="text-sm font-medium mb-3">
-                          Have you received your order?
+                          {t("Have you received your order?")}
                         </p>
                         <Button
                           onClick={() => confirmReceiptMutation.mutate(orderDetails.id)}
@@ -483,7 +499,7 @@ const OrderTracking = () => {
                           size="sm"
                           className="w-full sm:w-auto"
                         >
-                          {confirmReceiptMutation.isPending ? "Confirming..." : "Confirm Receipt"}
+                          {confirmReceiptMutation.isPending ? t("Confirming...") : t("Confirm Receipt")}
                         </Button>
                       </div>
                     )}
@@ -493,7 +509,7 @@ const OrderTracking = () => {
                         <div className="flex items-center gap-2">
                           <CheckCircle className="h-5 w-5 text-green-600" />
                           <p className="text-sm font-medium text-green-700 dark:text-green-400">
-                            You confirmed receipt on{" "}
+                            {t("You confirmed receipt on")}{" "}
                             {format(new Date(orderDetails.receipt_confirmed_at!), "MMM dd, yyyy 'at' HH:mm")}
                           </p>
                         </div>
@@ -507,7 +523,7 @@ const OrderTracking = () => {
                           <div className="p-4 bg-muted/50 border rounded-lg">
                             <h4 className="font-semibold mb-3 flex items-center gap-2">
                               <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                              Your Review
+                              {t("Your Review")}
                             </h4>
                             <div className="flex gap-1 mb-2">
                               {[1, 2, 3, 4, 5].map((star) => (
@@ -529,11 +545,11 @@ const OrderTracking = () => {
                         ) : (
                           <Card>
                             <CardHeader>
-                              <CardTitle className="text-lg">Rate Your Order</CardTitle>
+                              <CardTitle className="text-lg">{t("Rate Your Order")}</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                               <div>
-                                <label className="block text-sm font-medium mb-2">Your Rating</label>
+                                <label className="block text-sm font-medium mb-2">{t("Your Rating")}</label>
                                 <div className="flex gap-1">
                                   {[1, 2, 3, 4, 5].map((star) => (
                                     <button
@@ -557,11 +573,11 @@ const OrderTracking = () => {
                               </div>
                               <div>
                                 <label htmlFor="review-comment" className="block text-sm font-medium mb-2">
-                                  Your Review
+                                  {t("Your Review")}
                                 </label>
                                 <Textarea
                                   id="review-comment"
-                                  placeholder="Tell us about your experience with this order..."
+                                  placeholder={t("Tell us about your experience with this order...")}
                                   rows={4}
                                   value={reviewComment}
                                   onChange={(e) => setReviewComment(e.target.value)}
@@ -572,7 +588,7 @@ const OrderTracking = () => {
                                 disabled={submitReviewMutation.isPending}
                                 className="w-full"
                               >
-                                {submitReviewMutation.isPending ? "Submitting..." : "Submit Review"}
+                                {submitReviewMutation.isPending ? t("Submitting...") : t("Submit Review")}
                               </Button>
                             </CardContent>
                           </Card>
@@ -587,7 +603,7 @@ const OrderTracking = () => {
                           onClick={() => setCancelDialogOpen(true)}
                           className="w-full sm:w-auto"
                         >
-                          Cancel Order
+                          {t("Cancel Order")}
                         </Button>
                       </div>
                     )}
@@ -595,10 +611,10 @@ const OrderTracking = () => {
                     {orderDetails.cancel_status === "pending" && (
                       <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                         <p className="text-sm font-medium">
-                          Cancellation request pending admin approval
+                          {t("Cancellation request pending admin approval")}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Reason: {orderDetails.cancel_reason}
+                          {t("Reason")}: {orderDetails.cancel_reason}
                         </p>
                       </div>
                     )}
@@ -606,7 +622,7 @@ const OrderTracking = () => {
                     {orderDetails.status === "cancelled" && (
                       <div className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
                         <p className="text-sm text-destructive font-medium">
-                          This order has been cancelled. Please contact support if you have any questions.
+                          {t("This order has been cancelled. Please contact support if you have any questions.")}
                         </p>
                       </div>
                     )}
@@ -616,36 +632,36 @@ const OrderTracking = () => {
                 {/* Shipping Information */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Shipping Information</CardTitle>
+                    <CardTitle>{t("Shipping Information")}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <p className="text-sm text-muted-foreground">Delivery Address</p>
+                      <p className="text-sm text-muted-foreground">{t("Delivery Address")}</p>
                       <p className="font-medium">{orderDetails.shipping_address}</p>
                     </div>
                     {orderDetails.regions && (
                       <div>
-                        <p className="text-sm text-muted-foreground">Region</p>
+                        <p className="text-sm text-muted-foreground">{t("Region")}</p>
                         <p className="font-medium">{orderDetails.regions.name}</p>
                       </div>
                     )}
                     {orderDetails.shipping_carriers && (
                       <div>
-                        <p className="text-sm text-muted-foreground">Shipping Carrier</p>
+                        <p className="text-sm text-muted-foreground">{t("Shipping Carrier")}</p>
                         <div className="flex items-center gap-2">
                           {orderDetails.shipping_carriers.image_url && (
                             <img
                               src={orderDetails.shipping_carriers.image_url}
-                              alt=""
+                              alt={t(orderDetails.shipping_carriers.name)}
                               className="h-6 w-6 object-contain"
                             />
                           )}
-                          <p className="font-medium">{orderDetails.shipping_carriers.name}</p>
+                          <p className="font-medium">{t(orderDetails.shipping_carriers.name)}</p>
                         </div>
                       </div>
                     )}
                     <div>
-                      <p className="text-sm text-muted-foreground">Contact</p>
+                      <p className="text-sm text-muted-foreground">{t("Contact")}</p>
                       <p className="font-medium">{orderDetails.customer_phone}</p>
                     </div>
                   </CardContent>
@@ -654,7 +670,7 @@ const OrderTracking = () => {
                 {/* Order Items */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Order Items</CardTitle>
+                    <CardTitle>{t("Order Items")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -683,19 +699,19 @@ const OrderTracking = () => {
                               <h4 className="font-semibold">{t(item.products.name)}</h4>
                               {(item.selected_color || item.selected_size) && (
                                 <p className="text-sm text-muted-foreground">
-                                  {item.selected_color && <span>Color: {item.selected_color}</span>}
+                                  {item.selected_color && <span>{t("Color")}: {item.selected_color}</span>}
                                   {item.selected_color && item.selected_size && <span> • </span>}
-                                  {item.selected_size && <span>Size: {item.selected_size}</span>}
+                                  {item.selected_size && <span>{t("Size")}: {item.selected_size}</span>}
                                 </p>
                               )}
                               <p className="text-sm text-muted-foreground">
-                                Quantity: {item.quantity}
+                                {t("Quantity")}: {item.quantity}
                               </p>
                             </div>
                             <div className="text-right">
                               <p className="font-semibold">{formatPrice(item.price * item.quantity)}</p>
                               <p className="text-sm text-muted-foreground">
-                                {formatPrice(item.price)} each
+                                {formatPrice(item.price)} {t("each")}
                               </p>
                             </div>
                           </div>
@@ -708,7 +724,7 @@ const OrderTracking = () => {
                     {/* Order Summary */}
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Subtotal</span>
+                        <span className="text-muted-foreground">{t("Subtotal")}</span>
                         <span>{formatPrice(orderDetails.total_amount - orderDetails.shipping_cost + ((orderDetails as any).discount_usages?.reduce((sum: number, du: any) => sum + Number(du.discount_amount), 0) || 0))}</span>
                       </div>
                       {(orderDetails as any).discount_usages && (orderDetails as any).discount_usages.length > 0 && (
@@ -716,9 +732,9 @@ const OrderTracking = () => {
                           {(orderDetails as any).discount_usages.map((usage: any) => (
                             <div key={usage.id} className="flex justify-between text-sm text-green-600">
                               <span>
-                                Discount: {usage.discounts.name}
+                                {t("Discount")}: {usage.discounts.name}
                                 {usage.discounts.code && ` (${usage.discounts.code})`}
-                                {usage.discounts.type === 'free_shipping' && ' - Free Shipping'}
+                                {usage.discounts.type === 'free_shipping' && ` - ${t("Free Shipping")}`}
                               </span>
                               <span className="font-medium">-{formatPrice(usage.discount_amount)}</span>
                             </div>
@@ -726,12 +742,12 @@ const OrderTracking = () => {
                         </div>
                       )}
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Shipping</span>
+                        <span className="text-muted-foreground">{t("Shipping")}</span>
                         <span>{formatPrice(orderDetails.shipping_cost)}</span>
                       </div>
                       <Separator />
                       <div className="flex justify-between font-bold text-lg">
-                        <span>Total</span>
+                        <span>{t("Total")}</span>
                         <span className="text-primary">{formatPrice(orderDetails.total_amount)}</span>
                       </div>
                     </div>
@@ -741,23 +757,23 @@ const OrderTracking = () => {
                 {/* Customer Information */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Customer Information</CardTitle>
+                    <CardTitle>{t("Customer Information")}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div>
-                      <p className="text-sm text-muted-foreground">Name</p>
+                      <p className="text-sm text-muted-foreground">{t("Name")}</p>
                       <p className="font-medium">{orderDetails.customer_name}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Email</p>
+                      <p className="text-sm text-muted-foreground">{t("Email")}</p>
                       <p className="font-medium">{orderDetails.customer_email}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Phone</p>
+                      <p className="text-sm text-muted-foreground">{t("Phone")}</p>
                       <p className="font-medium">{orderDetails.customer_phone}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Order Date</p>
+                      <p className="text-sm text-muted-foreground">{t("Order Date")}</p>
                       <p className="font-medium">
                         {format(new Date(orderDetails.created_at), "MMMM dd, yyyy 'at' HH:mm")}
                       </p>
@@ -769,7 +785,7 @@ const OrderTracking = () => {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground">Order not found</p>
+                  <p className="text-muted-foreground">{t("Order not found")}</p>
                 </CardContent>
               </Card>
             )}
@@ -778,12 +794,12 @@ const OrderTracking = () => {
           <Card>
             <CardContent className="py-12 text-center">
               <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h2 className="text-2xl font-bold mb-2">No Orders Yet</h2>
+              <h2 className="text-2xl font-bold mb-2">{t("No Orders Yet")}</h2>
               <p className="text-muted-foreground mb-4">
-                You haven't placed any orders yet. Start shopping to see your orders here!
+                {t("You haven't placed any orders yet. Start shopping to see your orders here!")}
               </p>
               <Link to="/">
-                <Button>Start Shopping</Button>
+                <Button>{t("Start Shopping")}</Button>
               </Link>
             </CardContent>
           </Card>

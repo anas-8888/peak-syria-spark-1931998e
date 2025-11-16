@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageCircle, Phone, Mail, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { ContactSchema, type ContactFormData } from "@/lib/validationSchemas";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Contact = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const form = useForm<ContactFormData>({
     resolver: zodResolver(ContactSchema),
     defaultValues: {
@@ -51,14 +52,17 @@ const Contact = () => {
 
       if (error) throw error;
 
-      toast.success(t("✅ Your message has been sent."), {
+      toast({
+        title: t("✅ Your message has been sent."),
         description: t("We'll get back to you as soon as possible!")
       });
       
       form.reset();
     } catch (error) {
-      toast.error(t("Failed to send message"), {
-        description: t("Please try again later.")
+      toast({
+        title: t("Failed to send message"),
+        description: t("Please try again later."),
+        variant: "destructive",
       });
     }
   };
@@ -222,20 +226,77 @@ const Contact = () => {
                 </div>
               )}
 
-              {storeSettings?.physical_address && (
-                <div className="flex items-start gap-3 sm:gap-4 bg-card p-4 sm:p-6 rounded-lg hover:shadow-md transition-shadow">
-                  <div className="bg-primary/10 p-2 sm:p-3 rounded-full flex-shrink-0">
-                    <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              {(() => {
+                // Parse physical_address - could be JSON array or plain string
+                if (!storeSettings?.physical_address) {
+                  return null;
+                }
+
+                let addresses: string[] = [];
+                const rawAddress = storeSettings.physical_address;
+                
+                // Debug log (remove in production)
+                if (import.meta.env.DEV) {
+                  console.log("Raw physical_address:", rawAddress);
+                }
+
+                try {
+                  // Try to parse as JSON first
+                  const parsed = JSON.parse(rawAddress);
+                  if (Array.isArray(parsed)) {
+                    // Filter out empty strings and null values
+                    addresses = parsed.filter((addr: any) => 
+                      addr !== null && 
+                      addr !== undefined && 
+                      typeof addr === 'string' && 
+                      addr.trim().length > 0
+                    );
+                  } else if (typeof parsed === 'string' && parsed.trim().length > 0) {
+                    addresses = [parsed];
+                  }
+                } catch (e) {
+                  // If parsing fails, treat as plain string
+                  if (typeof rawAddress === 'string' && rawAddress.trim().length > 0) {
+                    addresses = [rawAddress];
+                  }
+                  if (import.meta.env.DEV) {
+                    console.log("Failed to parse JSON, treating as string:", e);
+                  }
+                }
+
+                // Debug log
+                if (import.meta.env.DEV) {
+                  console.log("Parsed addresses:", addresses);
+                }
+
+                // Only render if we have valid addresses
+                if (addresses.length === 0) {
+                  return null;
+                }
+
+                return (
+                  <div className="space-y-3">
+                    {addresses.map((address, index) => (
+                      <div key={index} className="flex items-start gap-3 sm:gap-4 bg-card p-4 sm:p-6 rounded-lg hover:shadow-md transition-shadow">
+                        <div className="bg-primary/10 p-2 sm:p-3 rounded-full flex-shrink-0">
+                          <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold mb-1 text-sm sm:text-base">
+                            {addresses.length > 1 ? `${t("Location")} ${index + 1}` : t("Location")}
+                          </h3>
+                          <p className="text-muted-foreground text-sm sm:text-base">{address}</p>
+                          {storeSettings.location_description && index === 0 && (
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                              {storeSettings.location_description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div>
-                    <h3 className="font-semibold mb-1 text-sm sm:text-base">{t("Location")}</h3>
-                    <p className="text-muted-foreground text-sm sm:text-base">{storeSettings.physical_address}</p>
-                    {storeSettings.location_description && (
-                      <p className="text-xs sm:text-sm text-muted-foreground">{storeSettings.location_description}</p>
-                    )}
-                  </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           </div>
         </div>

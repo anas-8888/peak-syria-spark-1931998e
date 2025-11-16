@@ -11,29 +11,29 @@ const getStatusConfig = (t: (text: string) => string) => ({
   pending: {
     icon: Clock,
     label: t("Processing"),
-    bgColor: "bg-yellow-500/10",
-    borderColor: "border-yellow-500/20",
+    bgColor: "bg-yellow-50 dark:bg-yellow-950",
+    borderColor: "border-yellow-500/30",
     textColor: "text-yellow-700 dark:text-yellow-400",
   },
   processing: {
     icon: Package,
     label: t("Processing"),
-    bgColor: "bg-blue-500/10",
-    borderColor: "border-blue-500/20",
+    bgColor: "bg-blue-50 dark:bg-blue-950",
+    borderColor: "border-blue-500/30",
     textColor: "text-blue-700 dark:text-blue-400",
   },
   shipped: {
     icon: Truck,
     label: t("Shipped"),
-    bgColor: "bg-purple-500/10",
-    borderColor: "border-purple-500/20",
+    bgColor: "bg-purple-50 dark:bg-purple-950",
+    borderColor: "border-purple-500/30",
     textColor: "text-purple-700 dark:text-purple-400",
   },
   delivered: {
     icon: CheckCircle,
     label: t("Delivered"),
-    bgColor: "bg-green-500/10",
-    borderColor: "border-green-500/20",
+    bgColor: "bg-green-50 dark:bg-green-950",
+    borderColor: "border-green-500/30",
     textColor: "text-green-700 dark:text-green-400",
   },
 });
@@ -78,10 +78,10 @@ export const OrderStatusBanner = () => {
   const Icon = config.icon;
 
   return (
-    <div className={`fixed bottom-4 right-4 z-50 w-64 shadow-lg rounded-lg border ${config.borderColor} ${config.bgColor} backdrop-blur-sm`}>
+    <div className={`fixed bottom-4 right-4 z-50 w-64 shadow-lg rounded-lg border ${config.borderColor} ${config.bgColor}`}>
       <div className="p-3">
         <div className="flex items-start gap-2 mb-2">
-          <div className={`flex-shrink-0 p-1.5 rounded-full ${config.bgColor}`}>
+          <div className={`flex-shrink-0 p-1.5 rounded-full ${config.bgColor} bg-opacity-100`}>
             <Icon className={`h-4 w-4 ${config.textColor}`} />
           </div>
           <div className="flex-1 min-w-0">

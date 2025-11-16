@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -27,6 +27,7 @@ type Color = {
 
 const Colors = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -74,13 +75,18 @@ const Colors = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["colors"] });
-      toast.success(t("Color added successfully"));
+      toast({
+        title: t("Color added successfully"),
+        variant: "default",
+      });
       setIsAddDialogOpen(false);
       resetForm();
     },
     onError: (error: any) => {
-      toast.error(t("Failed to add color"), {
-        description: error.message
+      toast({
+        title: t("Failed to add color"),
+        description: error.message,
+        variant: "destructive",
       });
     }
   });
@@ -102,14 +108,19 @@ const Colors = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["colors"] });
-      toast.success(t("Color updated successfully"));
+      toast({
+        title: t("Color updated successfully"),
+        variant: "default",
+      });
       setIsEditDialogOpen(false);
       setSelectedColor(null);
       resetForm();
     },
     onError: (error: any) => {
-      toast.error(t("Failed to update color"), {
-        description: error.message
+      toast({
+        title: t("Failed to update color"),
+        description: error.message,
+        variant: "destructive",
       });
     }
   });
@@ -117,6 +128,33 @@ const Colors = () => {
   // Delete color mutation
   const deleteColorMutation = useMutation({
     mutationFn: async (id: string) => {
+      // First, check if there are any products using this color
+      const { data: productColors, error: checkError } = await supabase
+        .from("product_colors")
+        .select("id")
+        .eq("color_id", id)
+        .limit(1);
+      
+      if (checkError) throw checkError;
+      
+      if (productColors && productColors.length > 0) {
+        throw new Error("Cannot delete color: There are products associated with this color");
+      }
+      
+      // Also check product_variants table
+      const { data: variants, error: variantError } = await supabase
+        .from("product_variants")
+        .select("id")
+        .eq("color_id", id)
+        .limit(1);
+      
+      if (variantError) throw variantError;
+      
+      if (variants && variants.length > 0) {
+        throw new Error("Cannot delete color: There are product variants associated with this color");
+      }
+      
+      // If no products are using this color, proceed with deletion
       const { error } = await supabase
         .from("colors")
         .delete()
@@ -126,13 +164,27 @@ const Colors = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["colors"] });
-      toast.success(t("Color deleted successfully"));
+      toast({
+        title: t("Color deleted successfully"),
+        variant: "default",
+      });
       setDeleteColorId(null);
     },
     onError: (error: any) => {
-      toast.error(t("Failed to delete color"), {
-        description: error.message
-      });
+      const errorMessage = error.message || t("Failed to delete color");
+      if (errorMessage.includes("products associated") || errorMessage.includes("variants associated")) {
+        toast({
+          title: t("Cannot delete color"),
+          description: t("This color is being used by one or more products. Please remove it from all products before deleting."),
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: t("Failed to delete color"),
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     }
   });
 
@@ -151,7 +203,10 @@ const Colors = () => {
 
   const handleAddColor = () => {
     if (!formData.name || !formData.hex_code) {
-      toast.error(t("Please fill in all required fields"));
+      toast({
+        title: t("Please fill in all required fields"),
+        variant: "destructive",
+      });
       return;
     }
     addColorMutation.mutate(formData);
@@ -159,7 +214,10 @@ const Colors = () => {
 
   const handleEditColor = () => {
     if (!selectedColor || !formData.name || !formData.hex_code) {
-      toast.error(t("Please fill in all required fields"));
+      toast({
+        title: t("Please fill in all required fields"),
+        variant: "destructive",
+      });
       return;
     }
     updateColorMutation.mutate({ id: selectedColor.id, updates: formData });
@@ -447,7 +505,7 @@ const Colors = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>{t("Are you sure?")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("This will permanently delete this color. Products using this color will not be affected.")}
+              {t("This will permanently delete this color. If this color is used by any products, deletion will be prevented.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

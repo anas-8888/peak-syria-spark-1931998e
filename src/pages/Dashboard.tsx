@@ -2,13 +2,14 @@ import { useEffect, useRef } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Loader2 } from "lucide-react";
 import DashboardSidebar from "@/components/DashboardSidebar";
 
 const Dashboard = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminCheck();
@@ -29,13 +30,17 @@ const Dashboard = () => {
       previousIsAdminRef.current = currentIsAdmin;
       
       if (!user) {
-        toast.error(t("Authentication Required"), {
+        toast({
+          title: t("Authentication Required"),
           description: t("Please login to access the dashboard"),
+          variant: "destructive",
         });
         navigate("/admin-login");
       } else if (!isAdmin) {
-        toast.error(t("Access Denied"), {
+        toast({
+          title: t("Access Denied"),
           description: t("You don't have admin privileges"),
+          variant: "destructive",
         });
         navigate("/");
       }
@@ -53,9 +58,28 @@ const Dashboard = () => {
     }
   }, [user?.id, isAdmin, authLoading, adminLoading, navigate, t, user]);
 
-  // Return null until verification completes - don't render anything
-  if (authLoading || adminLoading || !user || !isAdmin) {
-    return null;
+  // Show loading spinner while checking authentication and admin status
+  if (authLoading || adminLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">{t("Loading dashboard...")}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated or not admin (handled in useEffect)
+  if (!user || !isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">{t("Verifying access...")}</p>
+        </div>
+      </div>
+    );
   }
   return (
     <div className="min-h-screen flex w-full bg-background">

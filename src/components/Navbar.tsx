@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Menu, X, Search as SearchIcon, LogOut, User, LayoutDashboard, Heart } from "lucide-react";
+import { ShoppingCart, Menu, X, Search as SearchIcon, LogOut, User, LayoutDashboard, Heart, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,6 +26,34 @@ const Navbar = () => {
   } = useCart();
   const [fullName, setFullName] = useState("");
   const [userRole, setUserRole] = useState("");
+
+  // Check for pending orders (same logic as OrderStatusBanner)
+  const { data: latestOrder } = useQuery({
+    queryKey: ["latest-order", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("orders")
+        .select("id, status, customer_confirmed_receipt, created_at, total_amount")
+        .eq("user_id", user.id)
+        .eq("customer_confirmed_receipt", false)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Check if there's a pending order (same conditions as OrderStatusBanner)
+  const hasPendingOrder = !!(
+    user && 
+    latestOrder && 
+    !latestOrder.customer_confirmed_receipt && 
+    latestOrder.status !== "cancelled"
+  );
 
   // Fetch hero slides that should show in navbar
   const {
@@ -181,21 +209,37 @@ const Navbar = () => {
             {user ? <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="gap-2 rounded-full px-3 py-2 h-auto hover:bg-accent/50 transition-all duration-300 hover:scale-105">
-                    <Avatar className="h-8 w-8 border-2 border-primary/20">
-                      <AvatarImage 
-                        src={avatarUrl} 
-                        alt={fullName}
-                        loading="lazy"
-                        decoding="async"
-                        onError={(e) => {
-                          const target = e.currentTarget as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                      {!avatarUrl && <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold text-sm">
-                          {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
-                        </AvatarFallback>}
-                    </Avatar>
+                    <div className="relative">
+                      <Avatar className={`h-8 w-8 border-2 transition-all duration-300 ${
+                        hasPendingOrder 
+                          ? "border-blue-500/60 animate-pulse shadow-lg shadow-blue-500/30" 
+                          : "border-primary/20"
+                      }`}>
+                        <AvatarImage 
+                          src={avatarUrl} 
+                          alt={fullName}
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => {
+                            const target = e.currentTarget as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                        {!avatarUrl && <AvatarFallback className={`font-bold text-sm ${
+                          hasPendingOrder 
+                            ? "bg-gradient-to-r from-blue-500 to-blue-600" 
+                            : "bg-gradient-to-r from-primary to-red-500"
+                        } text-white`}>
+                            {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                          </AvatarFallback>}
+                      </Avatar>
+                      {hasPendingOrder && (
+                        <span className="absolute -top-1 -right-1 h-3 w-3 bg-blue-500 rounded-full border-2 border-background animate-ping"></span>
+                      )}
+                      {hasPendingOrder && (
+                        <span className="absolute -top-1 -right-1 h-3 w-3 bg-blue-500 rounded-full border-2 border-background"></span>
+                      )}
+                    </div>
                     <span className="font-semibold hidden xl:inline-block">
                       {fullName || user.email?.split('@')[0]}
                     </span>
@@ -223,6 +267,25 @@ const Navbar = () => {
                     <Link to="/wishlist" className="cursor-pointer">
                       <Heart className="mr-2 h-4 w-4" />
                       {t("My Wishlist")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link 
+                      to="/order-tracking" 
+                      className={`cursor-pointer relative ${
+                        hasPendingOrder 
+                          ? "bg-blue-500/10 text-blue-700 dark:text-blue-400 font-semibold" 
+                          : ""
+                      }`}
+                    >
+                      <Package className={`mr-2 h-4 w-4 ${hasPendingOrder ? "animate-pulse" : ""}`} />
+                      {t("Track My Orders")}
+                      {hasPendingOrder && (
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 h-2 w-2 bg-blue-500 rounded-full animate-ping"></span>
+                      )}
+                      {hasPendingOrder && (
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 h-2 w-2 bg-blue-500 rounded-full"></span>
+                      )}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -263,21 +326,37 @@ const Navbar = () => {
             <div className="flex flex-col items-center justify-center gap-2 pt-2 border-t mt-1.5">
               {user ? <div className="flex flex-col gap-1.5 w-full px-3">
                   <div className="flex items-center justify-center gap-1.5 p-1.5 bg-accent/50 rounded-full">
-                    <Avatar className="h-6 w-6 sm:h-7 sm:w-7 border border-primary/20">
-                      <AvatarImage 
-                        src={avatarUrl} 
-                        alt={fullName}
-                        loading="lazy"
-                        decoding="async"
-                        onError={(e) => {
-                          const target = e.currentTarget as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                      {!avatarUrl && <AvatarFallback className="bg-gradient-to-r from-primary to-red-500 text-white font-bold text-[10px] sm:text-xs">
-                          {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
-                        </AvatarFallback>}
-                    </Avatar>
+                    <div className="relative">
+                      <Avatar className={`h-6 w-6 sm:h-7 sm:w-7 border transition-all duration-300 ${
+                        hasPendingOrder 
+                          ? "border-blue-500/60 animate-pulse shadow-lg shadow-blue-500/30" 
+                          : "border-primary/20"
+                      }`}>
+                        <AvatarImage 
+                          src={avatarUrl} 
+                          alt={fullName}
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => {
+                            const target = e.currentTarget as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                        {!avatarUrl && <AvatarFallback className={`font-bold text-[10px] sm:text-xs ${
+                          hasPendingOrder 
+                            ? "bg-gradient-to-r from-blue-500 to-blue-600" 
+                            : "bg-gradient-to-r from-primary to-red-500"
+                        } text-white`}>
+                            {fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                          </AvatarFallback>}
+                      </Avatar>
+                      {hasPendingOrder && (
+                        <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-blue-500 rounded-full border-2 border-background animate-ping"></span>
+                      )}
+                      {hasPendingOrder && (
+                        <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-blue-500 rounded-full border-2 border-background"></span>
+                      )}
+                    </div>
                     <span className="font-semibold text-[10px] sm:text-xs">
                       {fullName || user.email?.split('@')[0]}
                     </span>
@@ -298,6 +377,26 @@ const Navbar = () => {
                     <Button variant="outline" size="sm" className="gap-1.5 w-full rounded-full border hover:bg-accent/50 font-semibold h-7 sm:h-7 text-[10px] sm:text-xs transition-all">
                       <Heart className="h-3 w-3" />
                       {t("My Wishlist")}
+                    </Button>
+                  </Link>
+                  <Link to="/order-tracking" className="w-full">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className={`gap-1.5 w-full rounded-full border hover:bg-accent/50 font-semibold h-7 sm:h-7 text-[10px] sm:text-xs transition-all relative ${
+                        hasPendingOrder 
+                          ? "bg-blue-500/10 border-blue-500/30 text-blue-700 dark:text-blue-400 animate-pulse" 
+                          : ""
+                      }`}
+                    >
+                      <Package className={`h-3 w-3 ${hasPendingOrder ? "animate-pulse" : ""}`} />
+                      {t("Track My Orders")}
+                      {hasPendingOrder && (
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 h-2 w-2 bg-blue-500 rounded-full animate-ping"></span>
+                      )}
+                      {hasPendingOrder && (
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 h-2 w-2 bg-blue-500 rounded-full"></span>
+                      )}
                     </Button>
                   </Link>
                   <Button variant="outline" size="sm" onClick={() => signOut()} className="gap-1.5 w-full rounded-full border hover:bg-accent/50 font-semibold text-red-600 hover:text-red-600 h-7 sm:h-7 text-[10px] sm:text-xs transition-all">

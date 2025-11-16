@@ -15,13 +15,14 @@ const ProfileCompletionCheck = ({ children }: { children: React.ReactNode }) => 
         try {
           const { data: profile, error } = await supabase
             .from("profiles")
-            .select("phone")
+            .select("phone, address, region_id")
             .eq("id", user.id)
             .single();
 
           if (error) throw error;
 
           // If phone is empty, redirect to profile to complete it
+          // Phone is required for placing orders
           if (!profile?.phone || profile.phone.trim() === "") {
             navigate("/profile", { replace: true });
           }

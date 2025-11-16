@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Languages } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const LanguageToggle = () => {
@@ -9,17 +8,29 @@ const LanguageToggle = () => {
     setLanguage(language === "en" ? "ar" : "en");
   };
 
+  // Show the language that will be switched TO (not current)
+  const targetLanguage = language === "en" ? "ar" : "en";
+  const targetFlag = targetLanguage === "ar" 
+    ? "https://flagcdn.com/16x12/sy.png" 
+    : "https://flagcdn.com/16x12/us.png";
+  const targetText = targetLanguage === "ar" ? "العربية" : "English";
+  const targetTextShort = targetLanguage === "ar" ? "AR" : "EN";
+
   return (
     <Button
       variant="outline"
       size="sm"
       onClick={toggleLanguage}
-      className="gap-1.5 h-8 px-2 text-xs"
+      className="h-8 px-2 text-xs flex items-center gap-1"
       aria-label="Toggle language"
     >
-      <Languages className="h-3.5 w-3.5" />
-      <span className="hidden sm:inline text-xs">{language === "en" ? "العربية" : "English"}</span>
-      <span className="sm:hidden text-xs">{language === "en" ? "AR" : "EN"}</span>
+      <img 
+        src={targetFlag} 
+        alt={targetLanguage === "ar" ? "Syria" : "United States"} 
+        className="h-3 w-4 object-cover rounded-sm flex-shrink-0"
+      />
+      <span className="hidden sm:inline text-xs">{targetText}</span>
+      <span className="sm:hidden text-xs">{targetTextShort}</span>
     </Button>
   );
 };

@@ -16,7 +16,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import * as LucideIcons from "lucide-react";
@@ -65,6 +65,7 @@ interface CarrierRegion {
 
 export default function CheckoutNew() {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { cartItems, cartTotal, clearCart, loading: cartLoading } = useCart();
@@ -200,7 +201,10 @@ export default function CheckoutNew() {
     }
 
     if (!user) {
-      toast.error(t("Please log in to checkout"));
+      toast({
+        title: t("Please log in to checkout"),
+        variant: "destructive",
+      });
       navigate("/login");
       return;
     }
@@ -249,7 +253,9 @@ export default function CheckoutNew() {
                 if (cartItems.length > 0) {
                   validateDiscount(parsed.discountCode, true).then((result) => {
                     if (result.is_valid) {
-                      toast.success(t("Previously applied discount restored"));
+                      toast({
+                        title: t("Previously applied discount restored"),
+                      });
                     }
                   });
                 }
@@ -398,7 +404,10 @@ export default function CheckoutNew() {
             if (import.meta.env.DEV) {
               console.error("Error getting location details:", error);
             }
-            toast.error(t("Could not get location details"));
+            toast({
+              title: t("Could not get location details"),
+              variant: "destructive",
+            });
           } finally {
             setLoadingLocation(false);
           }
@@ -407,12 +416,18 @@ export default function CheckoutNew() {
           if (import.meta.env.DEV) {
             console.error("Error getting location:", error);
           }
-          toast.error(t("Could not access your location"));
+          toast({
+            title: t("Could not access your location"),
+            variant: "destructive",
+          });
           setLoadingLocation(false);
         }
       );
     } else {
-      toast.error(t("Geolocation is not supported by your browser"));
+      toast({
+        title: t("Geolocation is not supported by your browser"),
+        variant: "destructive",
+      });
       setLoadingLocation(false);
     }
   };
@@ -749,7 +764,10 @@ export default function CheckoutNew() {
       }
     } catch (error: any) {
       if (!silent) {
-        toast.error(error.message || t("Error validating discount"));
+        toast({
+          title: error.message || t("Error validating discount"),
+          variant: "destructive",
+        });
       }
       return { is_valid: false };
     }
@@ -757,7 +775,10 @@ export default function CheckoutNew() {
 
   const handleApplyDiscount = async () => {
     if (!discountCode.trim()) {
-      toast.error(t("Please enter a discount code"));
+      toast({
+        title: t("Please enter a discount code"),
+        variant: "destructive",
+      });
       return;
     }
 
@@ -801,7 +822,9 @@ export default function CheckoutNew() {
     localStorage.removeItem("appliedCartDiscounts");
     localStorage.removeItem("appliedCartDiscountAmount");
     localStorage.removeItem("selectedAutoDiscountId");
-    toast.success(t("Automatic discounts removed. You can now apply a discount code."));
+    toast({
+      title: t("Automatic discounts removed. You can now apply a discount code."),
+    });
   };
 
   const shippingDiscount = appliedDiscount?.free_shipping ? shippingCost : 0;
@@ -814,22 +837,34 @@ export default function CheckoutNew() {
     }
 
     if (!selectedPaymentMethod) {
-      toast.error(t("Please select a payment method"));
+      toast({
+        title: t("Please select a payment method"),
+        variant: "destructive",
+      });
       return;
     }
 
     if (!selectedRegion) {
-      toast.error(t("Please select a region"));
+      toast({
+        title: t("Please select a region"),
+        variant: "destructive",
+      });
       return;
     }
 
     if (!selectedCarrier) {
-      toast.error(t("Please select a shipping method"));
+      toast({
+        title: t("Please select a shipping method"),
+        variant: "destructive",
+      });
       return;
     }
 
     if (cartItems.length === 0) {
-      toast.error(t("Your cart is empty"));
+      toast({
+        title: t("Your cart is empty"),
+        variant: "destructive",
+      });
       return;
     }
 
@@ -882,9 +917,10 @@ export default function CheckoutNew() {
           if (stockError) throw stockError;
 
           if (product.stock_quantity < item.quantity) {
-            toast.error(
-              `${t("Insufficient stock for")} ${product.name}. ${t("Available")}: ${product.stock_quantity}, ${t("Requested")}: ${item.quantity}`
-            );
+            toast({
+              title: `${t("Insufficient stock for")} ${product.name}. ${t("Available")}: ${product.stock_quantity}, ${t("Requested")}: ${item.quantity}`,
+              variant: "destructive",
+            });
             setSubmitting(false);
             return;
           }

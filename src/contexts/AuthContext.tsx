@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "./LanguageContext";
 
 interface AuthContextType {
@@ -25,6 +25,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,17 +49,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         const newUserId = session?.user?.id;
         const newSessionId = session?.access_token;
+        const previousUserId = previousUserIdRef.current;
         
         // Only update state if user or session actually changed
         if (previousUserIdRef.current !== newUserId || previousSessionIdRef.current !== newSessionId) {
           previousUserIdRef.current = newUserId;
           previousSessionIdRef.current = newSessionId;
-        setSession(session);
-        setUser(session?.user ?? null);
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          // Show toast on sign in/out (only after initialization to avoid showing on page load)
+          if (hasInitializedRef.current) {
+            if (event === 'SIGNED_IN' && newUserId && !previousUserId) {
+              toast({
+                title: t("Welcome Back! 👋"),
+                description: t("You have successfully signed in"),
+              });
+            } else if (event === 'SIGNED_OUT' && previousUserId && !newUserId) {
+              toast({
+                title: t("Signed Out Successfully! 👋"),
+                description: t("See you next time!"),
+              });
+            }
+          }
         }
         
         if (hasInitializedRef.current) {
-        setLoading(false);
+          setLoading(false);
         }
       }
     );
@@ -98,10 +115,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    toast.success(t("Signed Out Successfully! 👋"), {
-      description: t("See you next time!"),
-      duration: 3000,
-    });
     navigate("/");
   };
 

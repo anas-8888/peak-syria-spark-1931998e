@@ -4,7 +4,6 @@ import { LayoutDashboard, Package, ShoppingBag, CreditCard, Settings, ChevronLef
 import { Button } from "@/components/ui/button";
 import peakLogo from "@/assets/peak-logo-new.png";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePermissions } from "@/hooks/usePermissions";
 // Menu items with their required permissions
@@ -157,13 +156,7 @@ const DashboardSidebar = () => {
   } = useAuth();
   const { hasPermission } = usePermissions();
   const handleLogout = async () => {
-    try {
-      await signOut();
-      toast.success(t("Logged out successfully"));
-      navigate("/");
-    } catch (error) {
-      toast.error(t("Failed to logout"));
-    }
+    await signOut();
   };
   const toggleLanguage = () => {
     setLanguage(language === "en" ? "ar" : "en");
@@ -202,10 +195,16 @@ const DashboardSidebar = () => {
 
         {/* Browse Website Link */}
         <div className="p-4 pb-2">
-          <NavLink to="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-muted-foreground hover:bg-accent hover:text-accent-foreground">
+          <a 
+            href="/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            onClick={() => setMobileOpen(false)} 
+            className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          >
             <ExternalLink className="h-5 w-5 flex-shrink-0" />
             {!collapsed && <span className="font-medium whitespace-nowrap">{t("Browse Website")}</span>}
-          </NavLink>
+          </a>
         </div>
 
         {/* Menu Items */}
@@ -230,8 +229,23 @@ const DashboardSidebar = () => {
         <div className="p-4 border-t border-border space-y-3">
           {/* Language Toggle Button */}
           <Button onClick={toggleLanguage} variant="outline" className={`w-full gap-3 ${collapsed ? 'px-0 justify-center' : 'justify-start'}`}>
-            <Languages className="h-5 w-5 flex-shrink-0" />
-            {!collapsed && <span className="font-medium">{language === "en" ? "العربية" : "English"}</span>}
+            {!collapsed && (
+              <span className="font-medium flex items-center gap-2">
+                <img 
+                  src={language === "en" ? "https://flagcdn.com/16x12/sy.png" : "https://flagcdn.com/16x12/us.png"} 
+                  alt={language === "en" ? "Syria" : "United States"} 
+                  className="h-4 w-5 object-cover rounded-sm"
+                />
+                {language === "en" ? "العربية" : "English"}
+              </span>
+            )}
+            {collapsed && (
+              <img 
+                src={language === "en" ? "https://flagcdn.com/16x12/sy.png" : "https://flagcdn.com/16x12/us.png"} 
+                alt={language === "en" ? "Syria" : "United States"} 
+                className="h-5 w-6 object-cover rounded-sm"
+              />
+            )}
           </Button>
           
           {/* Logout Button */}

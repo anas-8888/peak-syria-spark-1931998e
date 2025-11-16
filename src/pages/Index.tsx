@@ -291,7 +291,7 @@ const Index = () => {
                           <div className="absolute inset-0 bg-gradient-to-t from-secondary/90 via-secondary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                         </div>
                       ) : (
-                        <div className="h-[140px] sm:aspect-video md:w-[320px] overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                        <div className="h-[140px] sm:aspect-video w-full overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
                           <Icon className="h-10 w-10 sm:h-16 sm:w-16 text-primary/40" />
                         </div>
                       )}

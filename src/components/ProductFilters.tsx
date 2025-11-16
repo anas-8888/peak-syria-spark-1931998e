@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, SlidersHorizontal } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -30,22 +30,54 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
   const [localFilters, setLocalFilters] = useState(filters);
-  // Separate state for price slider - this is what the slider displays
-  const [sliderValue, setSliderValue] = useState<[number, number]>(filters.priceRange);
+  // Use refs for uncontrolled inputs to prevent re-renders that cause scroll
+  const minPriceInputRef = useRef<HTMLInputElement>(null);
+  const maxPriceInputRef = useRef<HTMLInputElement>(null);
+  // Track if user is currently editing price inputs
+  const isEditingPriceRef = useRef(false);
+  // Track last known parent filters to detect changes
+  const lastParentFiltersRef = useRef(filters);
+  // Track initial values for inputs
+  const [inputKey, setInputKey] = useState(0);
 
-  // Update local state when parent filters change (but preserve price range during updates)
+  // Update local state when parent filters change (but don't update price inputs if user is editing)
   useEffect(() => {
-    setLocalFilters(prevLocal => {
-      // Check if price range actually changed from parent
-      const priceChanged = filters.priceRange[0] !== prevLocal.priceRange[0] || 
-                          filters.priceRange[1] !== prevLocal.priceRange[1];
-      
+    // Skip entirely if user is editing - don't do ANY state updates
+    if (isEditingPriceRef.current) {
+      return;
+    }
+    
+    const priceChanged = filters.priceRange[0] !== lastParentFiltersRef.current.priceRange[0] || 
+                        filters.priceRange[1] !== lastParentFiltersRef.current.priceRange[1];
+    
+    const categoriesChanged = JSON.stringify(filters.categories) !== JSON.stringify(lastParentFiltersRef.current.categories);
+    const colorsChanged = JSON.stringify(filters.colors) !== JSON.stringify(lastParentFiltersRef.current.colors);
+    const sizesChanged = JSON.stringify(filters.sizes) !== JSON.stringify(lastParentFiltersRef.current.sizes);
+    
+    // Only update if something actually changed
+    if (priceChanged || categoriesChanged || colorsChanged || sizesChanged) {
+      // Update price inputs only if price changed - use key to force re-render
       if (priceChanged) {
-        setSliderValue(filters.priceRange);
+        setInputKey(prev => prev + 1);
+        // Update refs after a brief delay to ensure DOM is ready
+        setTimeout(() => {
+          if (minPriceInputRef.current) {
+            minPriceInputRef.current.value = filters.priceRange[0].toString();
+          }
+          if (maxPriceInputRef.current) {
+            maxPriceInputRef.current.value = filters.priceRange[1].toString();
+          }
+        }, 0);
       }
       
-      return filters;
-    });
+      // Update local filters, preserving current price range if user hasn't applied it yet
+      setLocalFilters(prevLocal => ({
+        ...filters,
+        priceRange: priceChanged ? filters.priceRange : prevLocal.priceRange
+      }));
+      
+      lastParentFiltersRef.current = filters;
+    }
   }, [filters]);
 
   const handleCategoryToggle = (category: string) => {
@@ -75,21 +107,61 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
     onFilterChange(newFilters);
   };
 
-  // Handle slider change - apply filter immediately
-  const handleSliderChange = (value: number[]) => {
-    const newPriceRange: [number, number] = [value[0], value[1]];
-    setSliderValue(newPriceRange);
+  // Handle price input changes (only update ref, don't apply filter or cause re-render)
+  const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Set editing flag to prevent useEffect from running
+    isEditingPriceRef.current = true;
+    // No state update - input is uncontrolled, so no re-render happens
+  };
+
+  const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Set editing flag to prevent useEffect from running
+    isEditingPriceRef.current = true;
+    // No state update - input is uncontrolled, so no re-render happens
+  };
+
+  // Apply price filter when button is clicked
+  const handleApplyPriceFilter = () => {
+    const minValueStr = minPriceInputRef.current?.value || filters.priceRange[0].toString();
+    const maxValueStr = maxPriceInputRef.current?.value || filters.priceRange[1].toString();
+    let minValue = parseFloat(minValueStr) || minPrice;
+    let maxValue = parseFloat(maxValueStr) || maxPrice;
     
+    // Clamp values to valid range
+    minValue = Math.max(minPrice, Math.min(minValue, maxPrice));
+    maxValue = Math.max(minPrice, Math.min(maxValue, maxPrice));
+    
+    // Ensure min <= max
+    if (minValue > maxValue) {
+      minValue = maxValue;
+    }
+    if (maxValue < minValue) {
+      maxValue = minValue;
+    }
+    
+    // Update input values in refs
+    if (minPriceInputRef.current) {
+      minPriceInputRef.current.value = minValue.toString();
+    }
+    if (maxPriceInputRef.current) {
+      maxPriceInputRef.current.value = maxValue.toString();
+    }
+    
+    // Mark that we're done editing
+    isEditingPriceRef.current = false;
+    
+    // Apply filter
+    const newPriceRange: [number, number] = [minValue, maxValue];
     const newFilters = {
       ...localFilters,
       priceRange: newPriceRange
     };
-    
     setLocalFilters(newFilters);
     onFilterChange(newFilters);
   };
 
   const clearAllFilters = () => {
+    isEditingPriceRef.current = false;
     const resetFilters: FilterOptions = {
       categories: [],
       colors: [],
@@ -97,7 +169,15 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
       priceRange: [minPrice, maxPrice],
     };
     setLocalFilters(resetFilters);
-    setSliderValue([minPrice, maxPrice]);
+    // Update input refs
+    if (minPriceInputRef.current) {
+      minPriceInputRef.current.value = minPrice.toString();
+    }
+    if (maxPriceInputRef.current) {
+      maxPriceInputRef.current.value = maxPrice.toString();
+    }
+    // Force re-render of inputs
+    setInputKey(prev => prev + 1);
     onFilterChange(resetFilters);
   };
 
@@ -107,8 +187,8 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
       {(localFilters.categories.length > 0 ||
         localFilters.colors.length > 0 ||
         localFilters.sizes.length > 0 ||
-        sliderValue[0] !== minPrice ||
-        sliderValue[1] !== maxPrice) && (
+        localFilters.priceRange[0] !== minPrice ||
+        localFilters.priceRange[1] !== maxPrice) && (
         <Button variant="outline" onClick={clearAllFilters} className="w-full">
           <X className="mr-2 h-4 w-4" />
           {t("Clear All Filters")}
@@ -188,19 +268,65 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
       {/* Price Range */}
       <div className="space-y-3">
         <h3 className="font-bold text-lg">{t("Price Range")}</h3>
-        <div className="px-2">
-          <Slider
-            min={minPrice}
-            max={maxPrice}
-            step={1}
-            value={sliderValue}
-            onValueChange={handleSliderChange}
-            className="mb-4"
-          />
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{formatPrice(sliderValue[0])}</span>
-            <span>{formatPrice(sliderValue[1])}</span>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="min-price" className="text-sm whitespace-nowrap min-w-[60px]">
+              {t("Min")}:
+            </Label>
+            <Input
+              key={`min-price-${inputKey}`}
+              ref={minPriceInputRef}
+              id="min-price"
+              type="number"
+              min={minPrice}
+              max={maxPrice}
+              defaultValue={filters.priceRange[0].toString()}
+              onChange={handleMinPriceChange}
+              onFocus={() => {
+                isEditingPriceRef.current = true;
+              }}
+              onBlur={() => {
+                // Don't reset flag on blur, only on Apply or Clear
+              }}
+              className="flex-1"
+              placeholder={minPrice.toString()}
+            />
+            <span className="text-sm text-muted-foreground whitespace-nowrap">s.p</span>
           </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="max-price" className="text-sm whitespace-nowrap min-w-[60px]">
+              {t("Max")}:
+            </Label>
+            <Input
+              key={`max-price-${inputKey}`}
+              ref={maxPriceInputRef}
+              id="max-price"
+              type="number"
+              min={minPrice}
+              max={maxPrice}
+              defaultValue={filters.priceRange[1].toString()}
+              onChange={handleMaxPriceChange}
+              onFocus={() => {
+                isEditingPriceRef.current = true;
+              }}
+              onBlur={() => {
+                // Don't reset flag on blur, only on Apply or Clear
+              }}
+              className="flex-1"
+              placeholder={maxPrice.toString()}
+            />
+            <span className="text-sm text-muted-foreground whitespace-nowrap">s.p</span>
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground pt-1">
+            <span>{t("Range")}: {formatPrice(minPrice)} - {formatPrice(maxPrice)}</span>
+          </div>
+          <Button 
+            onClick={handleApplyPriceFilter}
+            className="w-full"
+            variant="default"
+          >
+            {t("Apply")}
+          </Button>
         </div>
       </div>
     </div>
@@ -211,7 +337,9 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
       {/* Desktop Filters */}
       <div className="hidden lg:block bg-card rounded-lg shadow-sm sticky top-24">
         <ScrollArea className="h-[calc(100vh-8rem)] p-6">
-          <FilterContent />
+          <div className="pl-2">
+            <FilterContent />
+          </div>
         </ScrollArea>
       </div>
 

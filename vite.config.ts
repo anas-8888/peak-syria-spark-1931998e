@@ -10,6 +10,12 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "::",
       port: 8080,
+      // Fix SPA routing - serve index.html for all routes
+      middlewareMode: false,
+    },
+    preview: {
+      port: 8080,
+      // Fix SPA routing in preview mode
     },
     plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
     resolve: {

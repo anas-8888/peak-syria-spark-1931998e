@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,6 +9,9 @@ import PromoBanner from "@/components/PromoBanner";
 import PercentageLoader from "@/components/PercentageLoader";
 import { Heart } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import GoogleSignInPopup from "@/components/GoogleSignInPopup";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface WishlistProduct {
   id: string;
@@ -33,13 +35,7 @@ interface WishlistProduct {
 const Wishlist = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-    }
-  }, [user, navigate]);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   const { data: wishlistProducts = [], isLoading } = useQuery({
     queryKey: ["wishlist", user?.id],
@@ -133,6 +129,29 @@ const Wishlist = () => {
 
   if (isLoading) {
     return <PercentageLoader message={t("Loading...")} />;
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <PromoBanner />
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center py-12 sm:py-16 md:py-20">
+          <Card className="max-w-md mx-4 my-8 sm:my-12">
+            <CardContent className="pt-6 pb-6 sm:pt-8 sm:pb-8 text-center">
+              <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+              <h2 className="text-2xl font-bold mb-2">{t("My Wishlist")}</h2>
+              <p className="text-muted-foreground mb-6">
+                {t("Please log in to view your wishlist and save your favorite products.")}
+              </p>
+              <Button onClick={() => setLoginModalOpen(true)}>{t("Log In")}</Button>
+              <GoogleSignInPopup open={loginModalOpen} onOpenChange={setLoginModalOpen} />
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   return (

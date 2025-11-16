@@ -271,14 +271,14 @@ const Reviews = () => {
                   <TableCell>
                     <div className="flex items-center gap-1">{renderStars(review.rating)}</div>
                   </TableCell>
-                  <TableCell className="max-w-xs">
-                    <p className="text-sm truncate">{review.comment}</p>
+                  <TableCell className="max-w-md">
+                    <p className="text-sm whitespace-normal break-words">{review.comment}</p>
                   </TableCell>
                   <TableCell>
                     {format(new Date(review.created_at), "MMM dd, yyyy")}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={review.status === "approved" ? "default" : review.status === "rejected" ? "destructive" : "secondary"}>
+                    <Badge variant={review.status === "approved" ? "default" : review.status === "rejected" ? "destructive" : "secondary"} className="flex justify-center items-center text-center">
                       {review.status === "approved" ? t("Approved") : review.status === "rejected" ? t("Rejected") : t("Pending")}
                     </Badge>
                   </TableCell>

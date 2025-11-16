@@ -1,4 +1,4 @@
-import { Save, Shield, Bell, Globe, Palette, User } from "lucide-react";
+import { Save, Shield, Bell, Globe, Palette, User, Plus, Trash2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,11 +13,13 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Settings = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminCheck();
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingStoreSettings, setLoadingStoreSettings] = useState(true);
@@ -37,7 +39,7 @@ const Settings = () => {
   const [instagramUrl, setInstagramUrl] = useState("");
   const [twitterUrl, setTwitterUrl] = useState("");
   const [businessHours, setBusinessHours] = useState("");
-  const [physicalAddress, setPhysicalAddress] = useState("");
+  const [physicalAddresses, setPhysicalAddresses] = useState<string[]>([]);
   const [emailResponseTime, setEmailResponseTime] = useState("");
   const [whatsappDescription, setWhatsappDescription] = useState("");
   const [locationDescription, setLocationDescription] = useState("");
@@ -101,7 +103,26 @@ const Settings = () => {
           setInstagramUrl(data.instagram_url || "");
           setTwitterUrl(data.twitter_url || "");
           setBusinessHours(data.business_hours || "");
-          setPhysicalAddress(data.physical_address || "");
+          // Parse physical_address as JSON array, fallback to single string
+          try {
+            const parsed = data.physical_address ? JSON.parse(data.physical_address) : [];
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setPhysicalAddresses(parsed);
+            } else if (typeof data.physical_address === 'string' && data.physical_address.trim()) {
+              // If it's a plain string (old format), convert to array
+              setPhysicalAddresses([data.physical_address]);
+            } else {
+              setPhysicalAddresses([]);
+            }
+          } catch {
+            // If parsing fails, treat as single string
+            if (data.physical_address && typeof data.physical_address === 'string') {
+              setPhysicalAddresses([data.physical_address]);
+            } else {
+              // Ensure at least one empty address field
+              setPhysicalAddresses([""]);
+            }
+          }
           setEmailResponseTime(data.email_response_time || "");
           setWhatsappDescription(data.whatsapp_description || "");
           setLocationDescription(data.location_description || "");
@@ -236,7 +257,11 @@ const Settings = () => {
           instagram_url: instagramUrl,
           twitter_url: twitterUrl,
           business_hours: businessHours,
-          physical_address: physicalAddress,
+          physical_address: (() => {
+            // Filter out empty addresses before saving
+            const validAddresses = physicalAddresses.filter(addr => addr && addr.trim().length > 0);
+            return validAddresses.length > 0 ? JSON.stringify(validAddresses) : null;
+          })(),
           email_response_time: emailResponseTime,
           whatsapp_description: whatsappDescription,
           location_description: locationDescription,
@@ -245,6 +270,9 @@ const Settings = () => {
 
       if (error) throw error;
 
+      // Invalidate store-settings query to refresh data in Contact page
+      queryClient.invalidateQueries({ queryKey: ["store-settings"] });
+      
       toast.success(t("Store settings updated successfully"));
     } catch (error) {
       if (import.meta.env.DEV) {
@@ -567,16 +595,57 @@ const Settings = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="physicalAddress">{t("Physical Address")}</Label>
-                  <Input 
-                    id="physicalAddress" 
-                    value={physicalAddress}
-                    onChange={(e) => setPhysicalAddress(e.target.value)}
-                    placeholder={t("Damascus, Syria")}
-                  />
+                  <Label>{t("Physical Addresses")}</Label>
+                  <div className="space-y-3">
+                    {physicalAddresses.map((address, index) => (
+                      <div key={index} className="flex gap-2 items-start">
+                        <div className="flex-1">
+                          <Input 
+                            value={address}
+                            onChange={(e) => {
+                              const newAddresses = [...physicalAddresses];
+                              newAddresses[index] = e.target.value;
+                              setPhysicalAddresses(newAddresses);
+                            }}
+                            placeholder={t("Damascus, Syria")}
+                            className="w-full"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => {
+                            const newAddresses = physicalAddresses.filter((_, i) => i !== index);
+                            setPhysicalAddresses(newAddresses);
+                          }}
+                          disabled={physicalAddresses.length === 1}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setPhysicalAddresses([...physicalAddresses, ""])}
+                      className="w-full gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      {t("Add Address")}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t("Add multiple branch locations. Each address will be displayed separately.")}
+                  </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="locationDescription">{t("Location Description")}</Label>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="locationDescription">{t("Location Description")}</Label>
+                    <span className="text-xs text-muted-foreground">
+                      ({t("This description will only appear for the first branch (main branch)")})
+                    </span>
+                  </div>
                   <Input 
                     id="locationDescription" 
                     value={locationDescription}

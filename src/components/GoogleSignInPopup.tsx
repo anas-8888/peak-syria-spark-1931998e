@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import peakLogo from "@/assets/peak-logo-new.png";
 
@@ -14,14 +14,16 @@ interface GoogleSignInPopupProps {
 const GoogleSignInPopup = ({ open, onOpenChange }: GoogleSignInPopupProps) => {
   const { signInWithGoogle } = useAuth();
   const { t } = useLanguage();
+  const { toast } = useToast();
 
   const handleGoogleSignIn = async () => {
     const { error } = await signInWithGoogle();
     
     if (error) {
-      toast.error(t("Sign In Failed"), {
+      toast({
+        title: t("Sign In Failed"),
         description: error.message,
-        duration: 4000,
+        variant: "destructive",
       });
     } else {
       // Close popup on success - the redirect will happen automatically
