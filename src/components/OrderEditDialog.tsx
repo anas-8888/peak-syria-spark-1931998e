@@ -194,15 +194,26 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
               color_id: v.color_id
             })) || [];
 
-            // Get current stock for the item
+            // Get current stock and color from the variant
             let maxStock = 0;
+            let selectedColorName = item.selected_color;
+            
             if (item.variant_id) {
               const variant = sizes.find(s => s.variant_id === item.variant_id);
               maxStock = variant?.stock || 0;
+              
+              // If we have a variant with a color_id, ensure selected_color matches the actual color name
+              if (variant?.color_id) {
+                const matchingColor = colors.find(c => c.id === variant.color_id);
+                if (matchingColor) {
+                  selectedColorName = matchingColor.name;
+                }
+              }
             }
 
             return {
               ...item,
+              selected_color: selectedColorName,
               available_colors: colors,
               available_sizes: sizes,
               max_stock: maxStock
