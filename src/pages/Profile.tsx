@@ -266,6 +266,10 @@ const Profile = () => {
   const handleGetLocation = () => {
     setLoadingLocation(true);
     if ("geolocation" in navigator) {
+      // Clear any cached position first by calling watchPosition briefly
+      const watchId = navigator.geolocation.watchPosition(() => {});
+      navigator.geolocation.clearWatch(watchId);
+      
       // Force fresh location by disabling cache and enabling high accuracy
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -279,6 +283,7 @@ const Profile = () => {
               {
                 headers: {
                   'Cache-Control': 'no-cache',
+                  'Pragma': 'no-cache',
                 }
               }
             );
