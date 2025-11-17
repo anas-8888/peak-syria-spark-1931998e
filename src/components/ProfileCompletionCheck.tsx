@@ -21,9 +21,9 @@ const ProfileCompletionCheck = ({ children }: { children: React.ReactNode }) => 
 
           if (error) throw error;
 
-          // If phone is empty, redirect to profile to complete it
-          // Phone is required for placing orders
-          if (!profile?.phone || profile.phone.trim() === "") {
+          // If phone or region is empty, redirect to profile to complete it
+          // Both are required for placing orders
+          if (!profile?.phone || profile.phone.trim() === "" || !profile?.region_id) {
             navigate("/profile", { replace: true });
           }
         } catch (error) {
