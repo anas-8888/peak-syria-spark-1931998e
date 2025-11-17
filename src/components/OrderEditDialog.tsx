@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Search } from "lucide-react";
+import { Trash2, Plus, Search, AlertCircle } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type OrderItem = {
   id: string;
@@ -23,6 +24,7 @@ type OrderItem = {
   selected_color: string | null;
   selected_size: string | null;
   variant_id: string | null;
+  max_stock?: number;
   products: {
     name: string;
     image_url: string;
@@ -67,6 +69,7 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
   const [items, setItems] = useState<OrderItem[]>([]);
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [productSearch, setProductSearch] = useState("");
+  const [stockErrors, setStockErrors] = useState<Record<string, string>>({});
 
   // Fetch regions
   const { data: regions } = useQuery({
@@ -96,22 +99,56 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
     },
   });
 
-  // Search products
+  // Search products with images
   const { data: searchProducts } = useQuery({
     queryKey: ["products-search", productSearch],
     queryFn: async () => {
       if (!productSearch || productSearch.length < 2) return [];
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, price, image_url")
+        .select(`
+          id, 
+          name, 
+          price, 
+          image_url,
+          product_images!inner(image_url, is_primary)
+        `)
         .ilike("name", `%${productSearch}%`)
         .eq("is_active", true)
         .limit(10);
       if (error) throw error;
-      return data;
+      
+      // Get primary image or first image for each product
+      return data.map(product => {
+        const images = product.product_images as any[];
+        const primaryImage = images.find(img => img.is_primary);
+        return {
+          ...product,
+          image_url: primaryImage?.image_url || images[0]?.image_url || product.image_url
+        };
+      });
     },
     enabled: showProductSearch && productSearch.length >= 2,
   });
+
+  // Fetch colors and sizes for a product
+  const fetchProductVariants = async (productId: string) => {
+    const { data: colors } = await supabase
+      .from("product_colors")
+      .select(`
+        color_id,
+        colors(id, name, hex_code)
+      `)
+      .eq("product_id", productId);
+
+    const { data: variants } = await supabase
+      .from("product_variants")
+      .select("id, size, color_id, price, stock_quantity")
+      .eq("product_id", productId)
+      .eq("is_active", true);
+
+    return { colors, variants };
+  };
 
   // Initialize form with order data
   useEffect(() => {
@@ -131,6 +168,37 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
   const updateOrderMutation = useMutation({
     mutationFn: async () => {
       if (!order) return;
+
+      // Validate stock for all items
+      const errors: Record<string, string> = {};
+      for (const item of items) {
+        if (item.variant_id) {
+          const { data: variant } = await supabase
+            .from("product_variants")
+            .select("stock_quantity")
+            .eq("id", item.variant_id)
+            .single();
+          
+          if (variant && item.quantity > variant.stock_quantity) {
+            errors[item.id] = `Only ${variant.stock_quantity} available`;
+          }
+        } else {
+          const { data: product } = await supabase
+            .from("products")
+            .select("stock_quantity")
+            .eq("id", item.product_id)
+            .single();
+          
+          if (product && item.quantity > (product.stock_quantity || 0)) {
+            errors[item.id] = `Only ${product.stock_quantity || 0} available`;
+          }
+        }
+      }
+
+      if (Object.keys(errors).length > 0) {
+        setStockErrors(errors);
+        throw new Error("Insufficient stock for some items");
+      }
 
       // Calculate new total
       const itemsTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -203,16 +271,33 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      setStockErrors({});
       toast.success(t("Order updated successfully"));
       onOpenChange(false);
     },
     onError: (error: any) => {
       console.error("Update order error:", error);
-      toast.error(t("Failed to update order"));
+      if (error.message === "Insufficient stock for some items") {
+        toast.error(t("Some items have insufficient stock"));
+      } else {
+        toast.error(t("Failed to update order"));
+      }
     },
   });
 
-  const handleAddProduct = (product: any) => {
+  const handleAddProduct = async (product: any) => {
+    // Fetch product image if not available
+    let imageUrl = product.image_url;
+    if (!imageUrl) {
+      const { data: imageData } = await supabase
+        .from("product_images")
+        .select("image_url")
+        .eq("product_id", product.id)
+        .eq("is_primary", true)
+        .maybeSingle();
+      imageUrl = imageData?.image_url || "/placeholder.svg";
+    }
+
     const newItem: OrderItem = {
       id: `new-${Date.now()}`,
       product_id: product.id,
@@ -224,7 +309,7 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
       variant_id: null,
       products: {
         name: product.name,
-        image_url: product.image_url,
+        image_url: imageUrl,
       },
     };
     setItems([...items, newItem]);
@@ -236,10 +321,41 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
     setItems(items.filter(item => item.id !== itemId));
   };
 
-  const handleUpdateItemQuantity = (itemId: string, quantity: number) => {
+  const handleUpdateItemQuantity = async (itemId: string, quantity: number) => {
     if (quantity < 1) return;
-    setItems(items.map(item => 
-      item.id === itemId ? { ...item, quantity } : item
+    
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+
+    // Validate stock
+    let maxStock = 0;
+    if (item.variant_id) {
+      const { data: variant } = await supabase
+        .from("product_variants")
+        .select("stock_quantity")
+        .eq("id", item.variant_id)
+        .single();
+      maxStock = variant?.stock_quantity || 0;
+    } else {
+      const { data: product } = await supabase
+        .from("products")
+        .select("stock_quantity")
+        .eq("id", item.product_id)
+        .single();
+      maxStock = product?.stock_quantity || 0;
+    }
+
+    if (quantity > maxStock) {
+      setStockErrors({ ...stockErrors, [itemId]: `Only ${maxStock} available` });
+      return;
+    } else {
+      const newErrors = { ...stockErrors };
+      delete newErrors[itemId];
+      setStockErrors(newErrors);
+    }
+
+    setItems(items.map(i => 
+      i.id === itemId ? { ...i, quantity, max_stock: maxStock } : i
     ));
   };
 
@@ -248,6 +364,96 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
     setItems(items.map(item => 
       item.id === itemId ? { ...item, price } : item
     ));
+  };
+
+  const handleUpdateItemColor = async (itemId: string, colorName: string) => {
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+
+    // Get color by name
+    const { data: colorData } = await supabase
+      .from("colors")
+      .select("id")
+      .eq("name", colorName)
+      .single();
+
+    if (!colorData) return;
+
+    // Find variant with this color and current size (or any size if no size selected)
+    const { data: variant } = await supabase
+      .from("product_variants")
+      .select("id, price, stock_quantity, size")
+      .eq("product_id", item.product_id)
+      .eq("color_id", colorData.id)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (variant) {
+      setItems(items.map(i => 
+        i.id === itemId 
+          ? { 
+              ...i, 
+              selected_color: colorName,
+              variant_id: variant.id,
+              price: variant.price,
+              selected_size: variant.size,
+              max_stock: variant.stock_quantity 
+            } 
+          : i
+      ));
+    } else {
+      setItems(items.map(i => 
+        i.id === itemId ? { ...i, selected_color: colorName, variant_id: null } : i
+      ));
+    }
+  };
+
+  const handleUpdateItemSize = async (itemId: string, size: string) => {
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+
+    // Get color ID if color is selected
+    let colorId = null;
+    if (item.selected_color) {
+      const { data: colorData } = await supabase
+        .from("colors")
+        .select("id")
+        .eq("name", item.selected_color)
+        .single();
+      colorId = colorData?.id;
+    }
+
+    // Find variant with this size and current color (if any)
+    let query = supabase
+      .from("product_variants")
+      .select("id, price, stock_quantity")
+      .eq("product_id", item.product_id)
+      .eq("size", size)
+      .eq("is_active", true);
+
+    if (colorId) {
+      query = query.eq("color_id", colorId);
+    }
+
+    const { data: variant } = await query.maybeSingle();
+
+    if (variant) {
+      setItems(items.map(i => 
+        i.id === itemId 
+          ? { 
+              ...i, 
+              selected_size: size,
+              variant_id: variant.id,
+              price: variant.price,
+              max_stock: variant.stock_quantity 
+            } 
+          : i
+      ));
+    } else {
+      setItems(items.map(i => 
+        i.id === itemId ? { ...i, selected_size: size, variant_id: null } : i
+      ));
+    }
   };
 
   const itemsTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -423,21 +629,14 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
                       src={item.products.image_url || "/placeholder.svg"} 
                       alt={item.products.name}
                       className="w-16 h-16 object-cover rounded"
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder.svg";
+                      }}
                     />
                     <div className="flex-1 space-y-3">
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-medium">{item.products.name}</p>
-                          {item.selected_color && (
-                            <p className="text-sm text-muted-foreground">
-                              {t("Color")}: {item.selected_color}
-                            </p>
-                          )}
-                          {item.selected_size && (
-                            <p className="text-sm text-muted-foreground">
-                              {t("Size")}: {item.selected_size}
-                            </p>
-                          )}
                         </div>
                         <Button
                           variant="ghost"
@@ -447,6 +646,34 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
+
+                      {/* Color and Size Selection */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">{t("Color")}</Label>
+                          <Input
+                            value={item.selected_color || ""}
+                            onChange={(e) => handleUpdateItemColor(item.id, e.target.value)}
+                            placeholder={t("Enter color")}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">{t("Size")}</Label>
+                          <Input
+                            value={item.selected_size || ""}
+                            onChange={(e) => handleUpdateItemSize(item.id, e.target.value)}
+                            placeholder={t("Enter size")}
+                          />
+                        </div>
+                      </div>
+
+                      {stockErrors[item.id] && (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>{stockErrors[item.id]}</AlertDescription>
+                        </Alert>
+                      )}
+
                       <div className="grid grid-cols-3 gap-3">
                         <div className="space-y-1">
                           <Label className="text-xs">{t("Quantity")}</Label>
@@ -455,7 +682,13 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
                             value={item.quantity}
                             onChange={(e) => handleUpdateItemQuantity(item.id, Number(e.target.value))}
                             min="1"
+                            max={item.max_stock}
                           />
+                          {item.max_stock && (
+                            <p className="text-xs text-muted-foreground">
+                              {t("Available")}: {item.max_stock}
+                            </p>
+                          )}
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs">{t("Price")}</Label>
