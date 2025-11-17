@@ -1706,6 +1706,8 @@ export type Database = {
           id: string
           instagram_url: string | null
           location_description: string | null
+          maintenance_image_url: string | null
+          maintenance_mode: boolean | null
           phone_description: string | null
           physical_address: string | null
           store_email: string | null
@@ -1724,6 +1726,8 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           location_description?: string | null
+          maintenance_image_url?: string | null
+          maintenance_mode?: boolean | null
           phone_description?: string | null
           physical_address?: string | null
           store_email?: string | null
@@ -1742,6 +1746,8 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           location_description?: string | null
+          maintenance_image_url?: string | null
+          maintenance_mode?: boolean | null
           phone_description?: string | null
           physical_address?: string | null
           store_email?: string | null
