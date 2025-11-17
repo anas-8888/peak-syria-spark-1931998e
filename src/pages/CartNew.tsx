@@ -334,13 +334,14 @@ export default function CartNew() {
           if (quantityToApply <= 0) break;
           
           const itemPrice = item.product.offer_price || item.product.price;
-          discountValue += (itemPrice * quantityToApply) * (discount.value / 100);
+          // Calculate percentage discount: (price * quantity) * (percentage / 100)
+          discountValue += (itemPrice * quantityToApply) * (Number(discount.value) / 100);
           totalQuantityProcessed += quantityToApply;
           
           if (totalQuantityProcessed >= perCustomerLimit) break;
         }
       } else if (discount.type === "fixed_amount") {
-        discountValue = discount.value;
+        discountValue = Number(discount.value);
       }
 
       // Apply the discount
@@ -441,13 +442,14 @@ export default function CartNew() {
               if (quantityToApply <= 0) break;
               
               const itemPrice = item.product.offer_price || item.product.price;
-              discountValue += (itemPrice * quantityToApply) * (autoDiscount.value / 100);
+              // Calculate percentage discount: (price * quantity) * (percentage / 100)
+              discountValue += (itemPrice * quantityToApply) * (Number(autoDiscount.value) / 100);
               totalQuantityProcessed += quantityToApply;
               
               if (totalQuantityProcessed >= perCustomerLimit) break;
             }
           } else if (autoDiscount.type === "fixed_amount") {
-            discountValue = autoDiscount.value;
+            discountValue = Number(autoDiscount.value);
           }
         }
 
@@ -567,13 +569,14 @@ export default function CartNew() {
             if (quantityToApply <= 0) break;
             
             const itemPrice = item.product.offer_price || item.product.price;
-            discountValue += (itemPrice * quantityToApply) * (selectedDiscount.value / 100);
+            // Calculate percentage discount: (price * quantity) * (percentage / 100)
+            discountValue += (itemPrice * quantityToApply) * (Number(selectedDiscount.value) / 100);
             totalQuantityProcessed += quantityToApply;
             
             if (totalQuantityProcessed >= perCustomerLimit) break;
           }
         } else if (selectedDiscount.type === "fixed_amount") {
-          discountValue = selectedDiscount.value;
+          discountValue = Number(selectedDiscount.value);
         }
 
         // Update with recalculated amount
@@ -647,13 +650,14 @@ export default function CartNew() {
               if (quantityToApply <= 0) break;
               
               const itemPrice = item.product.offer_price || item.product.price;
-              discountValue += (itemPrice * quantityToApply) * (autoDiscount.value / 100);
+              // Calculate percentage discount: (price * quantity) * (percentage / 100)
+              discountValue += (itemPrice * quantityToApply) * (Number(autoDiscount.value) / 100);
               totalQuantityProcessed += quantityToApply;
               
               if (totalQuantityProcessed >= perCustomerLimit) break;
             }
           } else if (autoDiscount.type === "fixed_amount") {
-            discountValue = autoDiscount.value;
+            discountValue = Number(autoDiscount.value);
           }
 
           if (discountValue > 0) {
@@ -846,13 +850,14 @@ export default function CartNew() {
             if (quantityToApply <= 0) break;
             
             const itemPrice = item.product.offer_price || item.product.price;
-            discountValue += (itemPrice * quantityToApply) * (discount.value / 100);
+            // Calculate percentage discount: (price * quantity) * (percentage / 100)
+            discountValue += (itemPrice * quantityToApply) * (Number(discount.value) / 100);
             totalQuantityProcessed += quantityToApply;
             
             if (totalQuantityProcessed >= perCustomerLimit) break;
           }
         } else if (discount.type === "fixed_amount") {
-          discountValue = discount.value;
+          discountValue = Number(discount.value);
         }
 
         // Restore the discount
@@ -878,6 +883,13 @@ export default function CartNew() {
       restoreSelectedDiscount();
     }
   }, [loading]); // Only depend on loading to run once when cart loads
+
+  // Auto-apply discounts on initial page load
+  useEffect(() => {
+    if (!loading && cartItems.length > 0 && !autoDiscountsDisabled && !appliedDiscount) {
+      checkAutoDiscounts();
+    }
+  }, [loading]);
 
   // Automatically recalculate discounts on cart changes with optimization
   useEffect(() => {

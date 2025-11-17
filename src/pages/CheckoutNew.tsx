@@ -550,13 +550,14 @@ export default function CheckoutNew() {
               if (quantityToApply <= 0) break;
               
               const itemPrice = item.product.offer_price || item.product.price;
-              discountValue += (itemPrice * quantityToApply) * (autoDiscount.value / 100);
+              // Calculate percentage discount: (price * quantity) * (percentage / 100)
+              discountValue += (itemPrice * quantityToApply) * (Number(autoDiscount.value) / 100);
               totalQuantityProcessed += quantityToApply;
               
               if (totalQuantityProcessed >= perCustomerLimit) break;
             }
           } else if (autoDiscount.type === "fixed_amount") {
-            discountValue = autoDiscount.value;
+            discountValue = Number(autoDiscount.value);
           }
 
           if (discountValue > 0) {
@@ -616,10 +617,10 @@ export default function CheckoutNew() {
 
   // Check for auto-apply discounts when cart loads or when returning to checkout
   useEffect(() => {
-    if (cartItems.length > 0 && !appliedDiscount && appliedDiscounts.length === 0) {
+    if (cartItems.length > 0 && !appliedDiscount && appliedDiscounts.length === 0 && !autoDiscountsDisabled) {
       checkAutoDiscounts();
     }
-  }, [cartItems, appliedDiscount, appliedDiscounts]);
+  }, [cartItems, appliedDiscount, appliedDiscounts, autoDiscountsDisabled]);
 
   // Revalidate manual discount code when cart changes
   useEffect(() => {
