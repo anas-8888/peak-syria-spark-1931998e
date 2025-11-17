@@ -831,6 +831,9 @@ export default function CheckoutNew() {
   const total = cartTotal + shippingCost - discountAmount - shippingDiscount;
 
   const onSubmit = async (data: CheckoutFormData) => {
+    // Prevent double submission
+    if (submitting) return;
+    
     if (!user || !profile) {
       toast.error(t("User information not found"));
       return;
