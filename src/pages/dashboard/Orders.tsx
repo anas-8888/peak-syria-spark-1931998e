@@ -79,6 +79,7 @@ type OrderWithDetails = {
     discounts: {
       name: string;
       code: string | null;
+      type: string;
     };
   }>;
   order_reviews: Array<{
@@ -182,7 +183,8 @@ const statusLabels = {
             discount_amount,
             discounts (
               name,
-              code
+              code,
+              type
             )
           ),
           order_reviews (
@@ -744,21 +746,38 @@ const statusLabels = {
                   </div>
                   {selectedOrder.discount_usages && selectedOrder.discount_usages.length > 0 && (
                     <div className="space-y-1">
-                      {selectedOrder.discount_usages.map((usage) => (
-                        <div key={usage.id} className="flex justify-between text-green-600">
-                          <span>
-                            {t("Discount")}: {usage.discounts.name}
-                            {usage.discounts.code && ` (${usage.discounts.code})`}
-                          </span>
-                          <span className="font-medium">-{formatPrice(usage.discount_amount)}</span>
-                        </div>
-                      ))}
+                      {selectedOrder.discount_usages
+                        .filter((usage) => usage.discounts.type !== 'free_shipping')
+                        .map((usage) => (
+                          <div key={usage.id} className="flex justify-between text-green-600">
+                            <span>
+                              {t("Discount")}: {usage.discounts.name}
+                              {usage.discounts.code && ` (${usage.discounts.code})`}
+                            </span>
+                            <span className="font-medium">-{formatPrice(usage.discount_amount)}</span>
+                          </div>
+                        ))}
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("Shipping")}:</span>
                     <span className="font-medium">{formatPrice(selectedOrder.shipping_cost)}</span>
                   </div>
+                  {selectedOrder.discount_usages && selectedOrder.discount_usages.length > 0 && (
+                    <>
+                      {selectedOrder.discount_usages
+                        .filter((usage) => usage.discounts.type === 'free_shipping')
+                        .map((usage) => (
+                          <div key={usage.id} className="flex justify-between text-green-600 text-sm">
+                            <span>
+                              {t("Free Shipping")}: {usage.discounts.name}
+                              {usage.discounts.code && ` (${usage.discounts.code})`}
+                            </span>
+                            <span className="font-medium">-{formatPrice(usage.discount_amount)}</span>
+                          </div>
+                        ))}
+                    </>
+                  )}
                   <div className="flex justify-between text-base font-bold pt-2 border-t">
                     <span>{t("Total")}:</span>
                     <span>{formatPrice(selectedOrder.total_amount)}</span>

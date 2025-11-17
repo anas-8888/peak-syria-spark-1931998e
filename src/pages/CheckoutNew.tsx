@@ -1411,7 +1411,13 @@ export default function CheckoutNew() {
                     {shippingCost > 0 ? formatPrice(shippingCost) : t("Select shipping method")}
                   </span>
                 </div>
-                {discountAmount > 0 && (
+                {appliedDiscount?.free_shipping && shippingCost > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>{t("Free Shipping")}: {appliedDiscount.code || t("Discount")}</span>
+                    <span className="font-medium">-{formatPrice(shippingCost)}</span>
+                  </div>
+                )}
+                {discountAmount > 0 && !appliedDiscount?.free_shipping && (
                   <div className="flex justify-between text-sm text-green-600">
                     <span>{t("Discount")}</span>
                     <span className="font-medium">-{formatPrice(discountAmount)}</span>
