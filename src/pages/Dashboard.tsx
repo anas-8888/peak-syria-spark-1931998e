@@ -14,21 +14,9 @@ const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminCheck();
 
-  // Use refs to track previous values and prevent unnecessary re-renders
-  const hasCheckedRef = useRef(false);
-  const previousUserIdRef = useRef<string | undefined>(undefined);
-  const previousIsAdminRef = useRef<boolean | undefined>(undefined);
-
   useEffect(() => {
-    const currentUserId = user?.id;
-    const currentIsAdmin = isAdmin;
-    
-    // Only check once when loading completes, not on every state change
-    if (!authLoading && !adminLoading && !hasCheckedRef.current) {
-      hasCheckedRef.current = true;
-      previousUserIdRef.current = currentUserId;
-      previousIsAdminRef.current = currentIsAdmin;
-      
+    // Check auth and admin status once loading completes
+    if (!authLoading && !adminLoading) {
       if (!user) {
         toast({
           title: t("Authentication Required"),
@@ -45,18 +33,7 @@ const Dashboard = () => {
         navigate("/");
       }
     }
-    
-    // Only reset check flag if user or admin status actually changed
-    if (previousUserIdRef.current !== currentUserId || previousIsAdminRef.current !== currentIsAdmin) {
-      previousUserIdRef.current = currentUserId;
-      previousIsAdminRef.current = currentIsAdmin;
-      
-      if (!user || !isAdmin) {
-        // Reset flag if user logs out or loses admin status
-        hasCheckedRef.current = false;
-      }
-    }
-  }, [user?.id, isAdmin, authLoading, adminLoading, navigate, t, user]);
+  }, [user, isAdmin, authLoading, adminLoading, navigate, t, toast]);
 
   // Show loading spinner while checking authentication and admin status
   if (authLoading || adminLoading) {
