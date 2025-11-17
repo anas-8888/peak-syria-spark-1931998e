@@ -98,9 +98,20 @@ const [regions, setRegions] = useState<Array<{ id: string; name: string; country
         .from("profiles")
         .select("*")
         .eq("id", user?.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+
+      if (!data) {
+        // No profile yet: show first-time UI, prefill from auth, but don't insert here
+        const googleName = user?.user_metadata?.full_name || user?.user_metadata?.name || "";
+        const googleAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || "";
+        setFullName(googleName);
+        setEmail(user?.email || "");
+        setAvatarUrl(googleAvatar || "");
+        setIsFirstTimeUser(true);
+        return;
+      }
 
       if (data) {
         // Auto-populate from Google profile
@@ -404,22 +415,61 @@ if (!regionTouchedRef.current) {
         });
       }
 
-const { error } = await supabase
+// Ensure profile row exists before update
+const { data: existingProfile, error: fetchProfileError } = await supabase
   .from("profiles")
-  .update(updateData)
-  .eq("id", user?.id);
+  .select("id, role_id")
+  .eq("id", user?.id)
+  .maybeSingle();
 
-if (error) {
-  if (import.meta.env.DEV) {
-    console.error("Profile update error:", error);
+if (fetchProfileError) {
+  if (import.meta.env.DEV) console.error("Fetch profile error:", fetchProfileError);
+  throw fetchProfileError;
+}
+
+if (!existingProfile) {
+  // Create initial profile for this user with customer role
+  const { data: customerRole, error: roleError } = await supabase
+    .from("roles")
+    .select("id")
+    .eq("name", "customer")
+    .maybeSingle();
+  if (roleError) throw roleError;
+  if (!customerRole) throw new Error(t("Unable to find default role to create your profile"));
+
+  const insertData: any = {
+    id: user?.id,
+    role_id: customerRole.id,
+    email,
+    full_name: fullName,
+    phone: formattedPhone,
+    address,
+    region_id: regionId || null,
+  };
+  const { error: insertError } = await supabase.from("profiles").insert(insertData);
+  if (insertError) {
+    if (import.meta.env.DEV) console.error("Profile insert error:", insertError);
+    if (insertError.code === '23505' && insertError.message.includes('profiles_phone_unique')) {
+      throw new Error(t("This phone number is already registered with another account"));
+    }
+    throw insertError;
   }
-  
-  // Handle unique constraint violation for phone number
-  if (error.code === '23505' && error.message.includes('profiles_phone_unique')) {
-    throw new Error(t("This phone number is already registered with another account"));
+} else {
+  // Update existing profile
+  const { error } = await supabase
+    .from("profiles")
+    .update(updateData)
+    .eq("id", user?.id);
+  if (error) {
+    if (import.meta.env.DEV) {
+      console.error("Profile update error:", error);
+    }
+    // Handle unique constraint violation for phone number
+    if (error.code === '23505' && error.message.includes('profiles_phone_unique')) {
+      throw new Error(t("This phone number is already registered with another account"));
+    }
+    throw error;
   }
-  
-  throw error;
 }
 
       if (isFirstTimeUser) {
