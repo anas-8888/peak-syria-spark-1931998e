@@ -57,6 +57,8 @@ import LegalPages from "./pages/dashboard/LegalPages";
 import Translations from "./pages/dashboard/Translations";
 import ScrollToTop from "./components/ScrollToTop";
 import LanguageToggleFloating from "./components/LanguageToggleFloating";
+import Maintenance from "./pages/Maintenance";
+import MaintenanceCheck from "./components/MaintenanceCheck";
 
 // Configure QueryClient with optimal cache settings for maximum caching
 const queryClient = new QueryClient({
@@ -103,11 +105,12 @@ function App() {
               <CurrencyProvider>
                 <CartProvider>
                   <ProfileCompletionCheck>
-                    <TooltipProvider>
-                      <Toaster />
-                      {/* Language Toggle Button - Available on all pages except dashboard */}
-                      <LanguageToggleFloating />
-                      <Routes>
+                    <MaintenanceCheck>
+                      <TooltipProvider>
+                        <Toaster />
+                        {/* Language Toggle Button - Available on all pages except dashboard */}
+                        <LanguageToggleFloating />
+                        <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/products" element={<ProductsEnhanced />} />
                   <Route path="/flag-products" element={<FlagProducts />} />
@@ -157,7 +160,8 @@ function App() {
                   <Route path="*" element={<NotFound />} />
                     </Routes>
                   </TooltipProvider>
-                </ProfileCompletionCheck>
+                </MaintenanceCheck>
+              </ProfileCompletionCheck>
               </CartProvider>
             </CurrencyProvider>
           </AuthProvider>

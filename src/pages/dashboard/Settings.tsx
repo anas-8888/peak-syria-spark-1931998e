@@ -1,4 +1,4 @@
-import { Save, Shield, Bell, Globe, Palette, User, Plus, Trash2, MapPin } from "lucide-react";
+import { Save, Shield, Bell, Globe, Palette, User, Plus, Trash2, MapPin, Wrench, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,6 +23,7 @@ const Settings = () => {
   const [loading, setLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingStoreSettings, setLoadingStoreSettings] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Account Information State
   const [fullName, setFullName] = useState("");
@@ -43,6 +44,11 @@ const Settings = () => {
   const [emailResponseTime, setEmailResponseTime] = useState("");
   const [whatsappDescription, setWhatsappDescription] = useState("");
   const [locationDescription, setLocationDescription] = useState("");
+  
+  // Maintenance Mode State
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceImage, setMaintenanceImage] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   // Security State
   const [currentPassword, setCurrentPassword] = useState("");
@@ -126,6 +132,8 @@ const Settings = () => {
           setEmailResponseTime(data.email_response_time || "");
           setWhatsappDescription(data.whatsapp_description || "");
           setLocationDescription(data.location_description || "");
+          setMaintenanceMode(data.maintenance_mode || false);
+          setMaintenanceImage(data.maintenance_image_url || null);
         }
       } catch (error) {
         if (import.meta.env.DEV) {
@@ -265,6 +273,8 @@ const Settings = () => {
           email_response_time: emailResponseTime,
           whatsapp_description: whatsappDescription,
           location_description: locationDescription,
+          maintenance_mode: maintenanceMode,
+          maintenance_image_url: maintenanceImage,
         })
         .eq('id', storeSettingsId);
 
@@ -281,6 +291,81 @@ const Settings = () => {
       toast.error(t("Failed to update store settings"));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMaintenanceModeToggle = async (enabled: boolean) => {
+    if (!storeSettingsId) return;
+
+    try {
+      const { error } = await supabase
+        .from('store_settings')
+        .update({ maintenance_mode: enabled })
+        .eq('id', storeSettingsId);
+
+      if (error) throw error;
+
+      setMaintenanceMode(enabled);
+      toast.success(t("Maintenance settings updated successfully"));
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Error updating maintenance mode:", error);
+      }
+      toast.error(t("Failed to update maintenance settings"));
+    }
+  };
+
+  const handleMaintenanceImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !storeSettingsId) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error(t("Please select an image file"));
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(t("Image size must be less than 5MB"));
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}-${Date.now()}.${fileExt}`;
+      const filePath = `maintenance/${fileName}`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      // Update database
+      const { error: updateError } = await supabase
+        .from('store_settings')
+        .update({ maintenance_image_url: publicUrl })
+        .eq('id', storeSettingsId);
+
+      if (updateError) throw updateError;
+
+      setMaintenanceImage(publicUrl);
+      toast.success(t("Maintenance settings updated successfully"));
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Error uploading maintenance image:", error);
+      }
+      toast.error(t("Failed to upload maintenance image"));
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -700,6 +785,82 @@ const Settings = () => {
                 </Button>
               </>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Maintenance Mode Settings - Admin Only */}
+      {!loadingStoreSettings && isAdmin && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
+                <Wrench className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle>{t("Maintenance Mode")}</CardTitle>
+                <CardDescription>
+                  {t("Enable maintenance mode to show a maintenance page to visitors")}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Maintenance Mode Toggle */}
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-1">
+                <div className="font-medium">{t("Maintenance Mode")}</div>
+                <div className="text-sm text-muted-foreground">
+                  {t("Maintenance mode is")}: <span className={maintenanceMode ? "text-green-600 font-medium" : "text-muted-foreground"}>{maintenanceMode ? t("Active") : t("Inactive")}</span>
+                </div>
+              </div>
+              <Switch
+                checked={maintenanceMode}
+                onCheckedChange={handleMaintenanceModeToggle}
+              />
+            </div>
+
+            <Separator />
+
+            {/* Maintenance Image Upload */}
+            <div className="space-y-4">
+              <div>
+                <Label>{t("Maintenance Image")}</Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {t("Upload an image to display on the maintenance page")}
+                </p>
+              </div>
+
+              {maintenanceImage && (
+                <div className="relative w-full max-w-sm">
+                  <img
+                    src={maintenanceImage}
+                    alt={t("Current maintenance image")}
+                    className="w-full h-auto rounded-lg border"
+                  />
+                </div>
+              )}
+
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleMaintenanceImageUpload}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="gap-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  {uploadingImage ? t("Uploading...") : maintenanceImage ? t("Change Image") : t("Upload Image")}
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
