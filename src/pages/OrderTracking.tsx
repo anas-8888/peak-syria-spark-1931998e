@@ -729,28 +729,44 @@ const OrderTracking = () => {
                       </div>
                       {(orderDetails as any).discount_usages && (orderDetails as any).discount_usages.length > 0 && (
                         <>
-                          {(orderDetails as any).discount_usages
-                            .filter((usage: any) => usage.discounts.type !== 'free_shipping')
-                            .map((usage: any) => (
-                              <div key={usage.id} className="flex justify-between text-sm text-green-600">
-                                <span>
-                                  {t("Discount")}: {usage.discounts.name}
-                                  {usage.discounts.code && ` (${usage.discounts.code})`}
-                                </span>
-                                <span className="font-medium">-{formatPrice(usage.discount_amount)}</span>
-                              </div>
-                            ))}
+                          {Object.values(
+                            (((orderDetails as any).discount_usages as any[]) || [])
+                              .filter((u: any) => u.discounts?.type !== 'free_shipping')
+                              .reduce((acc: Record<string, any>, u: any) => {
+                                const key = u.discounts?.code || u.discounts?.id || u.id;
+                                if (!acc[key]) acc[key] = { ...u, discount_amount: 0 };
+                                acc[key].discount_amount += Number(u.discount_amount);
+                                return acc;
+                              }, {} as Record<string, any>)
+                          ).map((usage: any) => (
+                            <div key={(usage.discounts?.code || usage.discounts?.id || usage.id)} className="flex justify-between text-sm text-green-600">
+                              <span>
+                                {t("Discount")}: {usage.discounts?.name}
+                                {usage.discounts?.code && ` (${usage.discounts.code})`}
+                              </span>
+                              <span className="font-medium">-{formatPrice(usage.discount_amount)}</span>
+                            </div>
+                          ))}
                         </>
                       )}
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">{t("Shipping")}</span>
                         <span>{formatPrice(orderDetails.shipping_cost)}</span>
                       </div>
-                      {(orderDetails as any).discount_usages?.filter((usage: any) => usage.discounts.type === 'free_shipping').map((usage: any) => (
-                        <div key={usage.id} className="flex justify-between text-sm text-green-600">
+                      {Object.values(
+                        (((orderDetails as any).discount_usages as any[]) || [])
+                          .filter((u: any) => u.discounts?.type === 'free_shipping')
+                          .reduce((acc: Record<string, any>, u: any) => {
+                            const key = u.discounts?.code || u.discounts?.id || u.id;
+                            if (!acc[key]) acc[key] = { ...u, discount_amount: 0 };
+                            acc[key].discount_amount += Number(u.discount_amount);
+                            return acc;
+                          }, {} as Record<string, any>)
+                      ).map((usage: any) => (
+                        <div key={(usage.discounts?.code || usage.discounts?.id || usage.id)} className="flex justify-between text-sm text-green-600">
                           <span>
-                            {t("Free Shipping")}: {usage.discounts.name}
-                            {usage.discounts.code && ` (${usage.discounts.code})`}
+                            {t("Free Shipping")}: {usage.discounts?.name}
+                            {usage.discounts?.code && ` (${usage.discounts.code})`}
                           </span>
                           <span className="font-medium">-{formatPrice(usage.discount_amount)}</span>
                         </div>
