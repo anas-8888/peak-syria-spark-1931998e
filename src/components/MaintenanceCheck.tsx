@@ -30,6 +30,9 @@ const MaintenanceCheck = ({ children }: MaintenanceCheckProps) => {
       if (error) throw error;
       return data;
     },
+    retry: 2,
+    staleTime: 1 * 60 * 1000, // Cache for 1 minute
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
   // Show loading while checking

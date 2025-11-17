@@ -265,4 +265,18 @@ All colors MUST be HSL.
     margin-right: 0;
     margin-left: auto;
   }
+
+  /* Mobile: Smaller color circles in product cards */
+  @media (max-width: 639px) {
+    /* Target color buttons in ProductCardEnhanced - more specific selector */
+    .flex.gap-1 button.rounded-full[style*="background-color"],
+    .flex.gap-1 button.rounded-full[style*="backgroundColor"],
+    .flex.gap-2 button.rounded-full[style*="background-color"],
+    .flex.gap-2 button.rounded-full[style*="backgroundColor"] {
+      width: 25px !important;
+      height: 25px !important;
+      min-width: 4px !important;
+      min-height: 4px !important;
+    }
+  }
 }

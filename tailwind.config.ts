@@ -107,6 +107,10 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-10px)" },
         },
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-20px)" },
+        },
         shimmer: {
           "0%": { backgroundPosition: "-1000px 0" },
           "100%": { backgroundPosition: "1000px 0" },
@@ -123,6 +127,7 @@ export default {
         "glow-pulse": "glow-pulse 2s ease-in-out infinite",
         "slide-up": "slide-up 0.7s ease-out",
         "bounce-slow": "bounce-slow 3s ease-in-out infinite",
+        float: "float 6s ease-in-out infinite",
         shimmer: "shimmer 3s ease-in-out infinite",
       },
     },

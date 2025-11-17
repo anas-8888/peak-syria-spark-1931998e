@@ -247,6 +247,10 @@
   "This will permanently delete this color. If this color is used by any products, deletion will be prevented.": "سيتم حذف هذا اللون نهائياً. إذا كان هذا اللون مستخدماً في أي منتجات، سيتم منع الحذف.",
   "Percent Applied": "النسبة المطبقة",
   "Click on a product to view details": "انقر على منتج لعرض التفاصيل",
+  "We are under maintenance": "نحن قيد الصيانة",
+  "We're currently improving your experience. We'll be back soon!": "نقوم حالياً بتحسين تجربتك. سنعود قريباً!",
+  "We're working on important improvements to provide you with a better experience": "نعمل على تحسينات مهمة لنقدم لك تجربة أفضل",
+  "Thank you for your patience and understanding": "شكراً لصبرك وتفهمك",
   "maintenance.title": "نحن قيد الصيانة",
   "maintenance.description": "نقوم حالياً بتحسين تجربتك. سنعود قريباً!",
   "maintenance.message": "نعمل على تحسينات مهمة لنقدم لك تجربة أفضل",
@@ -264,5 +268,7 @@
   "Current maintenance image": "صورة الصيانة الحالية",
   "Maintenance settings updated successfully": "تم تحديث إعدادات الصيانة بنجاح",
   "Failed to update maintenance settings": "فشل تحديث إعدادات الصيانة",
-  "Failed to upload maintenance image": "فشل رفع صورة الصيانة"
+  "Failed to upload maintenance image": "فشل رفع صورة الصيانة",
+  "Error Loading Page": "خطأ في تحميل الصفحة",
+  "Unable to load maintenance page settings. Please try again later.": "تعذر تحميل إعدادات صفحة الصيانة. يرجى المحاولة مرة أخرى لاحقاً."
 }

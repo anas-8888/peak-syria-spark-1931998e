@@ -57,7 +57,7 @@ const ProductCardEnhanced = ({
   const [currentImage, setCurrentImage] = useState(image);
   const [isLoading, setIsLoading] = useState(false);
   const { formatPrice } = useCurrency();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const { user } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
@@ -282,15 +282,15 @@ const ProductCardEnhanced = ({
           </div>
 
           {/* Colors */}
-          <div className="flex gap-2 sm:gap-3">
+          <div className="flex gap-1 sm:gap-3">
             {colors.slice(0, viewMode === "list" ? 3 : colors.length).map((color) => (
               <button
                 key={color}
                 onClick={() => handleColorChange(color)}
                 className={`rounded-full border transition-all ${
                   viewMode === "list" 
-                    ? `w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-4 md:h-4 ${selectedColor === color ? "border-primary scale-110 ring-1 ring-primary ring-offset-0.5" : "border-border"}`
-                    : `w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-5 md:h-5 ${selectedColor === color ? "border-primary scale-110 ring-1 ring-primary ring-offset-0.5" : "border-border"}`
+                    ? `w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-5 md:h-5 ${selectedColor === color ? "border-primary sm:scale-110 ring-1 ring-primary ring-offset-0.5" : "border-border"}`
+                    : `w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-6 md:h-6 ${selectedColor === color ? "border-primary sm:scale-110 ring-1 ring-primary ring-offset-0.5" : "border-border"}`
                 }`}
                 style={{ backgroundColor: colorMap[color] || color }}
                 title={color}
@@ -323,11 +323,11 @@ const ProductCardEnhanced = ({
           <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 md:gap-3 ${viewMode === "list" ? "justify-between mt-auto pt-1.5 sm:pt-2 md:pt-4 border-t" : "justify-center sm:justify-between pt-0.5 sm:pt-1.5 md:pt-2 border-t"}`}>
             {/* Price Display - Show range if variants exist and prices differ */}
             {minPrice && maxPrice && minPrice !== maxPrice && !unifiedPricing ? (
-              <span className={`font-bold text-primary w-full text-center sm:text-left sm:w-auto ${viewMode === "list" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-base sm:text-sm md:text-xl"}`}>
+              <span className={`font-bold text-primary block w-full sm:w-auto ${isRTL ? 'text-left' : 'text-left'} ${viewMode === "list" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-base sm:text-sm md:text-xl"}`} style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}>
                 {formatPrice(minPrice)} - {formatPrice(maxPrice)}
               </span>
             ) : offerPrice ? (
-              <div className="flex items-center justify-center sm:justify-start gap-1 sm:gap-2 w-full sm:w-auto">
+              <div className={`flex items-center gap-1 sm:gap-2 w-full sm:w-auto ${isRTL ? 'justify-end' : 'justify-start'}`}>
                 <span className={`font-bold text-primary ${viewMode === "list" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-base sm:text-sm md:text-xl"}`}>
                   {formatPrice(offerPrice)}
                 </span>
@@ -336,12 +336,12 @@ const ProductCardEnhanced = ({
                 </span>
               </div>
             ) : (
-              <span className={`font-bold text-primary w-full text-center sm:text-left sm:w-auto ${viewMode === "list" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-base sm:text-sm md:text-xl"}`}>
+              <span className={`font-bold text-primary block w-full sm:w-auto ${isRTL ? 'text-left' : 'text-left'} ${viewMode === "list" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-base sm:text-sm md:text-xl"}`} style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}>
                 {formatPrice(minPrice || price)}
               </span>
             )}
             {viewMode === "list" ? (
-              <div className="flex gap-0.5 sm:gap-1 md:gap-1.5 lg:gap-2 w-full sm:w-auto">
+              <div className="flex gap-2 sm:gap-1 md:gap-1.5 lg:gap-2 w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="iconXs"
@@ -359,10 +359,15 @@ const ProductCardEnhanced = ({
                 >
                   <Heart className={`h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 lg:h-4 lg:w-4 ${isFavorite ? "fill-current" : ""}`} />
                 </Button>
-                <Button variant="hero" size="xs" className="flex-1 sm:flex-initial text-[10px] sm:text-xs md:text-sm lg:text-base h-6 sm:h-7 md:h-8 lg:h-10 px-2 sm:px-3 md:px-4" asChild>
+                <Button 
+                  variant="hero" 
+                  size="xs" 
+                  className="flex-1 sm:flex-initial text-xs sm:text-xs md:text-sm lg:text-base h-9 sm:h-7 md:h-8 lg:h-10 px-4 sm:px-3 md:px-4 rounded-xl sm:rounded-md font-semibold max-w-[110px] sm:max-w-none shadow-md hover:shadow-lg active:scale-[0.98] transition-all duration-200 border-0 sm:border-0" 
+                  asChild
+                >
                   <Link to={`/product/${id}`}>
                     <span className="hidden sm:inline">{t("View Details")}</span>
-                    <span className="sm:hidden">{t("View")}</span>
+                    <span className="sm:hidden font-medium tracking-wide">{t("View")}</span>
                   </Link>
                 </Button>
               </div>
