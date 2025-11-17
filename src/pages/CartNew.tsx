@@ -570,7 +570,7 @@ export default function CartNew() {
             
             if (quantityToApply <= 0) break;
             
-            const itemPrice = item.product.offer_price || item.product.price;
+            const itemPrice = (item.variant_price ?? item.product.offer_price ?? item.product.price) ?? 0;
             // Calculate percentage discount: (price * quantity) * (percentage / 100)
             discountValue += (itemPrice * quantityToApply) * (Number(selectedDiscount.value) / 100);
             totalQuantityProcessed += quantityToApply;
@@ -651,7 +651,7 @@ export default function CartNew() {
               
               if (quantityToApply <= 0) break;
               
-              const itemPrice = item.product.offer_price || item.product.price;
+              const itemPrice = (item.variant_price ?? item.product.offer_price ?? item.product.price) ?? 0;
               // Calculate percentage discount: (price * quantity) * (percentage / 100)
               discountValue += (itemPrice * quantityToApply) * (Number(autoDiscount.value) / 100);
               totalQuantityProcessed += quantityToApply;
@@ -851,9 +851,9 @@ export default function CartNew() {
             
             if (quantityToApply <= 0) break;
             
-            const itemPrice = item.product.offer_price || item.product.price;
-            // Calculate percentage discount: (price * quantity) * (percentage / 100)
-            discountValue += (itemPrice * quantityToApply) * (Number(discount.value) / 100);
+             const itemPrice = (item.variant_price ?? item.product.offer_price ?? item.product.price) ?? 0;
+             // Calculate percentage discount: (price * quantity) * (percentage / 100)
+             discountValue += (itemPrice * quantityToApply) * (Number(discount.value) / 100);
             totalQuantityProcessed += quantityToApply;
             
             if (totalQuantityProcessed >= perCustomerLimit) break;
