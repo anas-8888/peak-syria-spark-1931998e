@@ -429,8 +429,11 @@ const statusLabels = {
       
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    onSuccess: async () => {
+      // Invalidate and refetch orders
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      await queryClient.refetchQueries({ queryKey: ["orders", currentPage] });
+      
       toast({
         title: t("Order deleted successfully"),
       });
