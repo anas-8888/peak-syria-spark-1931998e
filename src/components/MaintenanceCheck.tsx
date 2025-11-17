@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import Maintenance from "@/pages/Maintenance";
 import { Loader2 } from "lucide-react";
 
@@ -13,6 +14,10 @@ interface MaintenanceCheckProps {
 const MaintenanceCheck = ({ children }: MaintenanceCheckProps) => {
   const { user } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminCheck();
+  const location = useLocation();
+  
+  // Allow access to admin routes regardless of maintenance mode
+  const isAdminRoute = location.pathname === '/admin-login' || location.pathname.startsWith('/dashboard');
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["store_settings_maintenance"],
@@ -36,8 +41,8 @@ const MaintenanceCheck = ({ children }: MaintenanceCheckProps) => {
     );
   }
 
-  // If maintenance mode is enabled and user is not an admin, show maintenance page
-  if (settings?.maintenance_mode && !isAdmin) {
+  // If maintenance mode is enabled and user is not an admin and not on admin route, show maintenance page
+  if (settings?.maintenance_mode && !isAdmin && !isAdminRoute) {
     return <Maintenance />;
   }
 
