@@ -44,6 +44,7 @@ type Product = {
   flag?: string | null;
   min_price?: number | null;
   max_price?: number | null;
+  unified_pricing?: boolean;
 };
 type ProductImage = {
   id: string;
@@ -1123,6 +1124,12 @@ const Products = () => {
                   productId={selectedProduct.id}
                   availableColors={colorImageMappings}
                   availableSizes={formData.sizes}
+                  initialProduct={{
+                    price: selectedProduct.price,
+                    stock_quantity: selectedProduct.stock_quantity,
+                    unified_pricing: selectedProduct.unified_pricing || false,
+                    offer_price: selectedProduct.offer_price || null,
+                  }}
                   onSave={() => {
                     // This will be called after successful save
                   }}
@@ -1408,6 +1415,12 @@ const Products = () => {
                   productId={selectedProduct.id}
                   availableColors={colorImageMappings}
                   availableSizes={formData.sizes}
+                  initialProduct={{
+                    price: selectedProduct.price,
+                    stock_quantity: selectedProduct.stock_quantity,
+                    unified_pricing: selectedProduct.unified_pricing || false,
+                    offer_price: selectedProduct.offer_price || null,
+                  }}
                   onSave={() => {
                     // This will be called after successful save
                   }}
@@ -1692,6 +1705,12 @@ const Products = () => {
                   productId={selectedProduct.id}
                   availableColors={colorImageMappings}
                   availableSizes={formData.sizes}
+                  initialProduct={{
+                    price: selectedProduct.price,
+                    stock_quantity: selectedProduct.stock_quantity,
+                    unified_pricing: selectedProduct.unified_pricing || false,
+                    offer_price: selectedProduct.offer_price || null,
+                  }}
                   onSave={() => {
                     // This will be called after successful save
                   }}
