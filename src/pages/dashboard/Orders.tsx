@@ -295,7 +295,7 @@ const statusLabels = {
           return {
             ...order,
             order_items: itemsWithImages,
-            itemCount: order.order_items?.length || 0,
+            itemCount: order.order_items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0,
           };
         })
       );

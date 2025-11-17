@@ -25,6 +25,8 @@ type OrderItem = {
   selected_size: string | null;
   variant_id: string | null;
   max_stock?: number;
+  available_colors?: Array<{ id: string; name: string; hex_code: string }>;
+  available_sizes?: Array<{ size: string; stock: number; price: number; variant_id: string; color_id: string | null }>;
   products: {
     name: string;
     image_url: string;
@@ -150,19 +152,69 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
     return { colors, variants };
   };
 
-  // Initialize form with order data
+  // Initialize form with order data and fetch variants
   useEffect(() => {
-    if (order) {
-      setCustomerName(order.customer_name);
-      setCustomerEmail(order.customer_email);
-      setCustomerPhone(order.customer_phone);
-      setShippingAddress(order.shipping_address);
-      setShippingCost(order.shipping_cost || 0);
-      setStatus(order.status);
-      setRegionId(order.shipping_region_id);
-      setCarrierId(order.shipping_carrier_id);
-      setItems(order.order_items || []);
-    }
+    const initializeOrder = async () => {
+      if (order) {
+        setCustomerName(order.customer_name);
+        setCustomerEmail(order.customer_email);
+        setCustomerPhone(order.customer_phone);
+        setShippingAddress(order.shipping_address);
+        setShippingCost(order.shipping_cost || 0);
+        setStatus(order.status);
+        setRegionId(order.shipping_region_id);
+        setCarrierId(order.shipping_carrier_id);
+        
+        // Fetch colors and sizes for each item
+        const itemsWithVariants = await Promise.all(
+          (order.order_items || []).map(async (item) => {
+            // Fetch available colors
+            const { data: productColors } = await supabase
+              .from("product_colors")
+              .select(`
+                color_id,
+                colors(id, name, hex_code)
+              `)
+              .eq("product_id", item.product_id);
+
+            const colors = productColors?.map((pc: any) => pc.colors).filter(Boolean) || [];
+
+            // Fetch available sizes/variants
+            const { data: variants } = await supabase
+              .from("product_variants")
+              .select("id, size, color_id, price, stock_quantity")
+              .eq("product_id", item.product_id)
+              .eq("is_active", true);
+
+            const sizes = variants?.map((v: any) => ({
+              size: v.size,
+              stock: v.stock_quantity,
+              price: v.price,
+              variant_id: v.id,
+              color_id: v.color_id
+            })) || [];
+
+            // Get current stock for the item
+            let maxStock = 0;
+            if (item.variant_id) {
+              const variant = sizes.find(s => s.variant_id === item.variant_id);
+              maxStock = variant?.stock || 0;
+            }
+
+            return {
+              ...item,
+              available_colors: colors,
+              available_sizes: sizes,
+              max_stock: maxStock
+            };
+          })
+        );
+        
+        setItems(itemsWithVariants);
+      }
+    };
+    
+    initializeOrder();
   }, [order]);
 
   const updateOrderMutation = useMutation({
@@ -298,6 +350,32 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
       imageUrl = imageData?.image_url || "/placeholder.svg";
     }
 
+    // Fetch available colors
+    const { data: productColors } = await supabase
+      .from("product_colors")
+      .select(`
+        color_id,
+        colors(id, name, hex_code)
+      `)
+      .eq("product_id", product.id);
+
+    const colors = productColors?.map((pc: any) => pc.colors).filter(Boolean) || [];
+
+    // Fetch available sizes/variants
+    const { data: variants } = await supabase
+      .from("product_variants")
+      .select("id, size, color_id, price, stock_quantity")
+      .eq("product_id", product.id)
+      .eq("is_active", true);
+
+    const sizes = variants?.map((v: any) => ({
+      size: v.size,
+      stock: v.stock_quantity,
+      price: v.price,
+      variant_id: v.id,
+      color_id: v.color_id
+    })) || [];
+
     const newItem: OrderItem = {
       id: `new-${Date.now()}`,
       product_id: product.id,
@@ -307,6 +385,8 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
       selected_color: null,
       selected_size: null,
       variant_id: null,
+      available_colors: colors,
+      available_sizes: sizes,
       products: {
         name: product.name,
         image_url: imageUrl,
@@ -366,44 +446,49 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
     ));
   };
 
-  const handleUpdateItemColor = async (itemId: string, colorName: string) => {
+  const handleUpdateItemColor = async (itemId: string, colorId: string) => {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
 
-    // Get color by name
-    const { data: colorData } = await supabase
-      .from("colors")
-      .select("id")
-      .eq("name", colorName)
-      .single();
+    const colorName = item.available_colors?.find(c => c.id === colorId)?.name || null;
 
-    if (!colorData) return;
+    // If a size is already selected, find the specific variant
+    if (item.selected_size) {
+      const variant = item.available_sizes?.find(
+        v => v.color_id === colorId && v.size === item.selected_size
+      );
 
-    // Find variant with this color and current size (or any size if no size selected)
-    const { data: variant } = await supabase
-      .from("product_variants")
-      .select("id, price, stock_quantity, size")
-      .eq("product_id", item.product_id)
-      .eq("color_id", colorData.id)
-      .eq("is_active", true)
-      .maybeSingle();
-
-    if (variant) {
-      setItems(items.map(i => 
-        i.id === itemId 
-          ? { 
-              ...i, 
-              selected_color: colorName,
-              variant_id: variant.id,
-              price: variant.price,
-              selected_size: variant.size,
-              max_stock: variant.stock_quantity 
-            } 
-          : i
-      ));
+      if (variant) {
+        setItems(items.map(i => 
+          i.id === itemId 
+            ? { 
+                ...i, 
+                selected_color: colorName,
+                variant_id: variant.variant_id,
+                price: variant.price,
+                max_stock: variant.stock,
+                quantity: Math.min(i.quantity, variant.stock)
+              } 
+            : i
+        ));
+      } else {
+        // Color/size combination not available
+        setItems(items.map(i => 
+          i.id === itemId 
+            ? { 
+                ...i, 
+                selected_color: colorName,
+                selected_size: null,
+                variant_id: null,
+                max_stock: 0
+              } 
+            : i
+        ));
+      }
     } else {
+      // Just update color, no size selected yet
       setItems(items.map(i => 
-        i.id === itemId ? { ...i, selected_color: colorName, variant_id: null } : i
+        i.id === itemId ? { ...i, selected_color: colorName } : i
       ));
     }
   };
@@ -413,29 +498,12 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
     if (!item) return;
 
     // Get color ID if color is selected
-    let colorId = null;
-    if (item.selected_color) {
-      const { data: colorData } = await supabase
-        .from("colors")
-        .select("id")
-        .eq("name", item.selected_color)
-        .single();
-      colorId = colorData?.id;
-    }
+    const colorId = item.available_colors?.find(c => c.name === item.selected_color)?.id || null;
 
-    // Find variant with this size and current color (if any)
-    let query = supabase
-      .from("product_variants")
-      .select("id, price, stock_quantity")
-      .eq("product_id", item.product_id)
-      .eq("size", size)
-      .eq("is_active", true);
-
-    if (colorId) {
-      query = query.eq("color_id", colorId);
-    }
-
-    const { data: variant } = await query.maybeSingle();
+    // Find variant with this size and current color
+    const variant = item.available_sizes?.find(
+      v => v.size === size && (colorId ? v.color_id === colorId : true)
+    );
 
     if (variant) {
       setItems(items.map(i => 
@@ -443,15 +511,16 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
           ? { 
               ...i, 
               selected_size: size,
-              variant_id: variant.id,
+              variant_id: variant.variant_id,
               price: variant.price,
-              max_stock: variant.stock_quantity 
+              max_stock: variant.stock,
+              quantity: Math.min(i.quantity, variant.stock)
             } 
           : i
       ));
     } else {
       setItems(items.map(i => 
-        i.id === itemId ? { ...i, selected_size: size, variant_id: null } : i
+        i.id === itemId ? { ...i, selected_size: size, variant_id: null, max_stock: 0 } : i
       ));
     }
   };
@@ -651,19 +720,68 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <Label className="text-xs">{t("Color")}</Label>
-                          <Input
-                            value={item.selected_color || ""}
-                            onChange={(e) => handleUpdateItemColor(item.id, e.target.value)}
-                            placeholder={t("Enter color")}
-                          />
+                          {item.available_colors && item.available_colors.length > 0 ? (
+                            <Select 
+                              value={item.available_colors.find(c => c.name === item.selected_color)?.id || ""} 
+                              onValueChange={(colorId) => handleUpdateItemColor(item.id, colorId)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder={t("Select color")} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {item.available_colors.map((color) => (
+                                  <SelectItem key={color.id} value={color.id}>
+                                    <div className="flex items-center gap-2">
+                                      <div 
+                                        className="w-4 h-4 rounded border"
+                                        style={{ backgroundColor: color.hex_code }}
+                                      />
+                                      {color.name}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Input
+                              value={item.selected_color || ""}
+                              disabled
+                              placeholder={t("No colors available")}
+                            />
+                          )}
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs">{t("Size")}</Label>
-                          <Input
-                            value={item.selected_size || ""}
-                            onChange={(e) => handleUpdateItemSize(item.id, e.target.value)}
-                            placeholder={t("Enter size")}
-                          />
+                          {item.available_sizes && item.available_sizes.length > 0 ? (
+                            <Select 
+                              value={item.selected_size || ""} 
+                              onValueChange={(size) => handleUpdateItemSize(item.id, size)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder={t("Select size")} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {/* Filter sizes based on selected color */}
+                                {item.available_sizes
+                                  .filter(s => {
+                                    if (!item.selected_color) return true;
+                                    const colorId = item.available_colors?.find(c => c.name === item.selected_color)?.id;
+                                    return !colorId || s.color_id === colorId;
+                                  })
+                                  .map((sizeData, idx) => (
+                                    <SelectItem key={`${sizeData.size}-${idx}`} value={sizeData.size}>
+                                      {sizeData.size} ({t("Stock")}: {sizeData.stock})
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Input
+                              value={item.selected_size || ""}
+                              disabled
+                              placeholder={t("No sizes available")}
+                            />
+                          )}
                         </div>
                       </div>
 
