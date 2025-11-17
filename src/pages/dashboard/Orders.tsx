@@ -332,6 +332,63 @@ const statusLabels = {
       if (!hasPermission('edit_orders')) {
         throw new Error("You don't have permission to edit orders");
       }
+      
+      // If changing from pending to processing, validate stock
+      if (status === 'processing') {
+        const { data: currentOrder } = await supabase
+          .from('orders')
+          .select('status')
+          .eq('id', orderId)
+          .single();
+        
+        if (currentOrder?.status === 'pending') {
+          // Get order items
+          const { data: orderItems, error: itemsError } = await supabase
+            .from('order_items')
+            .select('quantity, variant_id, product_id, products(name)')
+            .eq('order_id', orderId);
+          
+          if (itemsError) throw itemsError;
+          
+          // Check stock for each item
+          const stockErrors: string[] = [];
+          
+          for (const item of orderItems || []) {
+            if (item.variant_id) {
+              // Check variant stock
+              const { data: variant } = await supabase
+                .from('product_variants')
+                .select('stock_quantity')
+                .eq('id', item.variant_id)
+                .single();
+              
+              if (!variant || variant.stock_quantity < item.quantity) {
+                stockErrors.push(
+                  `${item.products?.name}: Insufficient stock (Available: ${variant?.stock_quantity || 0}, Required: ${item.quantity})`
+                );
+              }
+            } else {
+              // Check product stock
+              const { data: product } = await supabase
+                .from('products')
+                .select('stock_quantity')
+                .eq('id', item.product_id)
+                .single();
+              
+              if (!product || product.stock_quantity < item.quantity) {
+                stockErrors.push(
+                  `${item.products?.name}: Insufficient stock (Available: ${product?.stock_quantity || 0}, Required: ${item.quantity})`
+                );
+              }
+            }
+          }
+          
+          if (stockErrors.length > 0) {
+            throw new Error(`Cannot confirm order due to insufficient stock:\n\n${stockErrors.join('\n')}`);
+          }
+        }
+      }
+      
       const { error } = await supabase
         .from("orders")
         .update({ status })
@@ -346,9 +403,10 @@ const statusLabels = {
       setStatusDialogOpen(false);
       setDetailsDialogOpen(false);
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: t("Failed to update order status"),
+        description: error.message,
         variant: "destructive",
       });
     },
