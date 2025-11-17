@@ -404,17 +404,23 @@ if (!regionTouchedRef.current) {
         });
       }
 
-      const { error } = await supabase
-        .from("profiles")
-        .update(updateData)
-        .eq("id", user?.id);
+const { error } = await supabase
+  .from("profiles")
+  .update(updateData)
+  .eq("id", user?.id);
 
-      if (error) {
-        if (import.meta.env.DEV) {
-          console.error("Profile update error:", error);
-        }
-        throw error;
-      }
+if (error) {
+  if (import.meta.env.DEV) {
+    console.error("Profile update error:", error);
+  }
+  
+  // Handle unique constraint violation for phone number
+  if (error.code === '23505' && error.message.includes('profiles_phone_unique')) {
+    throw new Error(t("This phone number is already registered with another account"));
+  }
+  
+  throw error;
+}
 
       if (isFirstTimeUser) {
         toast({
