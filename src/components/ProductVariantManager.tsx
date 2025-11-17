@@ -16,6 +16,12 @@ interface ProductVariantManagerProps {
   productId: string;
   availableColors: { color_id: string; image_id: string | null }[];
   availableSizes: string[];
+  initialProduct?: {
+    price: number;
+    stock_quantity: number;
+    unified_pricing: boolean;
+    offer_price: number | null;
+  };
   onSave?: () => void;
 }
 
@@ -37,18 +43,19 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
   productId, 
   availableColors, 
   availableSizes,
+  initialProduct,
   onSave 
 }, ref) => {
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
   const queryClient = useQueryClient();
-  const [unifiedPricing, setUnifiedPricing] = useState(false);
+  const [unifiedPricing, setUnifiedPricing] = useState(initialProduct?.unified_pricing || false);
   const [unifiedPrice, setUnifiedPrice] = useState<number>(0);
   const [unifiedStock, setUnifiedStock] = useState<number>(0);
   const [variants, setVariants] = useState<Variant[]>([]);
-  const [mainPrice, setMainPrice] = useState<number>(0);
-  const [totalStock, setTotalStock] = useState<number>(0);
-  const [offerPrice, setOfferPrice] = useState<number | null>(null);
+  const [mainPrice, setMainPrice] = useState<number>(initialProduct?.price || 0);
+  const [totalStock, setTotalStock] = useState<number>(initialProduct?.stock_quantity || 0);
+  const [offerPrice, setOfferPrice] = useState<number | null>(initialProduct?.offer_price || null);
 
   // Fetch product details
   const { data: product } = useQuery({
