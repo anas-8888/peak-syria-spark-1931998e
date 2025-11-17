@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Eye, Package, Truck, CheckCircle, XCircle, Edit, Settings, Star } from "lucide-react";
+import { Search, Eye, Package, Truck, CheckCircle, XCircle, Edit, Settings, Star, Trash2 } from "lucide-react";
 import { OrderEditDialog } from "@/components/OrderEditDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -132,6 +142,8 @@ const statusLabels = {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const [newStatus, setNewStatus] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
@@ -386,6 +398,32 @@ const statusLabels = {
     },
   });
 
+  const deleteOrderMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      // Check permission
+      if (!hasPermission('delete_orders')) {
+        throw new Error("You don't have permission to delete orders");
+      }
+      
+      // Delete order (cascade will handle order_items, discount_usages, etc.)
+      const { error } = await supabase
+        .from("orders")
+        .delete()
+        .eq("id", orderId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast.success(t("Order deleted successfully"));
+      setDeleteDialogOpen(false);
+      setOrderToDelete(null);
+    },
+    onError: (error: Error) => {
+      toast.error(t("Failed to delete order") + ": " + error.message);
+    },
+  });
+
   const orders = ordersData || [];
 
   const filteredOrders = orders.filter(
@@ -583,6 +621,18 @@ const statusLabels = {
                               }}
                             >
                               <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {hasPermission('delete_orders') && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => {
+                                setOrderToDelete(order.id);
+                                setDeleteDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           )}
                         </div>
@@ -1055,6 +1105,32 @@ const statusLabels = {
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("Delete Order")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("Are you sure you want to delete this order? This action cannot be undone. All order items and related data will be permanently deleted.")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (orderToDelete) {
+                  deleteOrderMutation.mutate(orderToDelete);
+                }
+              }}
+              disabled={deleteOrderMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteOrderMutation.isPending ? t("Deleting...") : t("Delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
