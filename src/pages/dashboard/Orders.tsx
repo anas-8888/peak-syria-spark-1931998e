@@ -965,7 +965,7 @@ const statusLabels = {
 
                 {/* Customer Receipt Confirmation */}
                 {selectedOrder.status === 'delivered' && (
-                  <div className="mt-4 p-3 rounded-lg bg-muted/50">
+                  <div className="mt-4 mb-6 p-3 rounded-lg bg-muted/50">
                     <div className="flex items-center gap-2 text-sm">
                       {selectedOrder.customer_confirmed_receipt ? (
                         <>
