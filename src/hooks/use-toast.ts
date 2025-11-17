@@ -165,6 +165,15 @@ function toast({ ...props }: Toast) {
   };
 }
 
+// Helper methods for common toast types
+toast.success = (title: string, props?: Omit<Toast, "title" | "variant">) => {
+  return toast({ ...props, title, variant: "default" });
+};
+
+toast.error = (title: string, props?: Omit<Toast, "title" | "variant">) => {
+  return toast({ ...props, title, variant: "destructive" });
+};
+
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState);
 

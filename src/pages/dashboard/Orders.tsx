@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, Eye, Package, Truck, CheckCircle, XCircle, Edit, Settings, Star } from "lucide-react";
+import { OrderEditDialog } from "@/components/OrderEditDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,6 +56,8 @@ type OrderWithDetails = {
   cancelled_at: string | null;
   delivery_latitude: number | null;
   delivery_longitude: number | null;
+  shipping_region_id: string | null;
+  shipping_carrier_id: string | null;
   itemCount: number;
   order_items: Array<{
     id: string;
@@ -127,6 +130,7 @@ const statusLabels = {
   const [selectedOrder, setSelectedOrder] = useState<OrderWithDetails | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
@@ -157,6 +161,8 @@ const statusLabels = {
           cancelled_at,
           delivery_latitude,
           delivery_longitude,
+          shipping_region_id,
+          shipping_carrier_id,
           order_items (
             id,
             quantity,
@@ -1024,6 +1030,13 @@ const statusLabels = {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Order Edit Dialog */}
+      <OrderEditDialog 
+        order={selectedOrder}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      />
     </div>
   );
 };
