@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -33,8 +33,9 @@ const Profile = () => {
   const [phoneLocalNumber, setPhoneLocalNumber] = useState("");
   const [address, setAddress] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
-  const [regionId, setRegionId] = useState<string | undefined>(undefined);
-  const [regions, setRegions] = useState<Array<{ id: string; name: string; country: string }>>([]);
+const [regionId, setRegionId] = useState<string | undefined>(undefined);
+const regionTouchedRef = useRef(false);
+const [regions, setRegions] = useState<Array<{ id: string; name: string; country: string }>>([]);
   const [avatarKey, setAvatarKey] = useState(Date.now());
 
   // Country codes with flags
@@ -163,8 +164,10 @@ const Profile = () => {
         const avatarUrlToUse = data.avatar_url || googleAvatar || "";
         setAvatarUrl(avatarUrlToUse);
         
-        // Set region_id directly from database
-        setRegionId(data.region_id || undefined);
+// Set region_id from database only if user hasn't changed it yet
+if (!regionTouchedRef.current) {
+  setRegionId(data.region_id || undefined);
+}
         
         // Pre-fill form with Google data if profile is empty, but don't auto-save
         // User can review and save explicitly
@@ -659,15 +662,16 @@ const Profile = () => {
                       <MapPin className="h-4 w-4" />
                       {t("Region")}
                     </Label>
-                    <Select 
-                      value={regionId} 
-                      onValueChange={(value) => {
-                        if (import.meta.env.DEV) {
-                          console.log("Region changed - raw value:", value);
-                        }
-                        setRegionId(value);
-                      }}
-                    >
+<Select 
+  value={regionId} 
+  onValueChange={(value) => {
+    if (import.meta.env.DEV) {
+      console.log("Region changed - raw value:", value);
+    }
+    regionTouchedRef.current = true;
+    setRegionId(value);
+  }}
+>
                       <SelectTrigger className="rounded-xl">
                         <SelectValue placeholder={t("Select your region")} />
                       </SelectTrigger>
