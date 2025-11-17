@@ -178,7 +178,8 @@ const OrderTracking = () => {
             discounts (
               name,
               code,
-              type
+              type,
+              value
             )
           ),
           regions (
@@ -708,12 +709,21 @@ const OrderTracking = () => {
                                 {t("Quantity")}: {item.quantity}
                               </p>
                             </div>
-                            <div className="text-right">
-                              <p className="font-semibold">{formatPrice(item.price * item.quantity)}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {formatPrice(item.price)} {t("each")}
-                              </p>
-                            </div>
+                              <div className="text-right">
+                                <p className="font-semibold">{formatPrice(item.price * item.quantity)}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {formatPrice(item.price)} {t("each")}
+                                </p>
+                                {(((orderDetails as any).discount_usages || []).filter((u: any) => u.discounts?.type === 'percentage' && typeof u.discounts?.value === 'number')).length > 0 && (
+                                  <div className="mt-1 flex flex-wrap justify-end gap-1">
+                                    {(((orderDetails as any).discount_usages || []).filter((u: any) => u.discounts?.type === 'percentage' && typeof u.discounts?.value === 'number')).map((u: any) => (
+                                      <Badge key={u.id} variant="secondary" className="text-xs">
+                                        -{u.discounts.value}%
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                           </div>
                         );
                       })}
