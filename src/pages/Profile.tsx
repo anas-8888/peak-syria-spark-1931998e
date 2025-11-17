@@ -163,14 +163,8 @@ const Profile = () => {
         const avatarUrlToUse = data.avatar_url || googleAvatar || "";
         setAvatarUrl(avatarUrlToUse);
         
-        // Ensure region_id is properly set (handle null, undefined, and empty string)
-        if (data.region_id && data.region_id.trim && data.region_id.trim() !== "") {
-          setRegionId(data.region_id.trim());
-        } else if (data.region_id && typeof data.region_id === 'string' && data.region_id !== "") {
-          setRegionId(data.region_id);
-        } else {
-          setRegionId(undefined);
-        }
+        // Set region_id directly from database
+        setRegionId(data.region_id || undefined);
         
         // Pre-fill form with Google data if profile is empty, but don't auto-save
         // User can review and save explicitly
@@ -391,22 +385,18 @@ const Profile = () => {
     try {
       setLoading(true);
 
-      // Ensure region_id is properly formatted (null if empty/undefined)
-      const regionIdToSave = regionId && typeof regionId === 'string' && regionId.trim() !== "" ? regionId.trim() : null;
-
       const updateData: any = {
         full_name: fullName,
         email: email,
         phone: formattedPhone,
         address: address,
-        region_id: regionIdToSave,
+        region_id: regionId || null,
       };
 
       // Log for debugging
       if (import.meta.env.DEV) {
         console.log("Updating profile with:", {
           regionId,
-          regionIdToSave,
           regionIdType: typeof regionId,
         });
       }
@@ -670,13 +660,12 @@ const Profile = () => {
                       {t("Region")}
                     </Label>
                     <Select 
-                      value={regionId || ""} 
+                      value={regionId} 
                       onValueChange={(value) => {
-                        const newRegionId = value && value.trim() !== "" ? value.trim() : undefined;
-                        setRegionId(newRegionId);
                         if (import.meta.env.DEV) {
-                          console.log("Region changed:", { value, newRegionId });
+                          console.log("Region changed - raw value:", value);
                         }
+                        setRegionId(value);
                       }}
                     >
                       <SelectTrigger className="rounded-xl">
