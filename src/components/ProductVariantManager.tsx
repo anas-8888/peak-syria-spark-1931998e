@@ -117,9 +117,9 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
         color_id: v.color_id,
         color_name: v.colors?.name,
         size: v.size,
-        price: v.price,
-        stock_quantity: v.stock_quantity,
-        is_active: v.is_active,
+        price: v.price || 0,
+        stock_quantity: v.stock_quantity || 0,
+        is_active: v.is_active ?? true,
       }));
       setVariants(formattedVariants);
     }
