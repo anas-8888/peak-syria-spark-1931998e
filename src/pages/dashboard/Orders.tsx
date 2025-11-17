@@ -577,8 +577,7 @@ const statusLabels = {
                               size="icon"
                               onClick={() => {
                                 setSelectedOrder(order);
-                                setNewStatus(order.status);
-                                setStatusDialogOpen(true);
+                                setEditDialogOpen(true);
                               }}
                             >
                               <Edit className="h-4 w-4" />
