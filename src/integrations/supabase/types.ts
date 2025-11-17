@@ -965,6 +965,8 @@ export type Database = {
           delivered_at: string | null
           delivery_latitude: number | null
           delivery_longitude: number | null
+          discount_amount: number | null
+          discount_id: string | null
           id: string
           pending_at: string | null
           processing_at: string | null
@@ -992,6 +994,8 @@ export type Database = {
           delivered_at?: string | null
           delivery_latitude?: number | null
           delivery_longitude?: number | null
+          discount_amount?: number | null
+          discount_id?: string | null
           id?: string
           pending_at?: string | null
           processing_at?: string | null
@@ -1019,6 +1023,8 @@ export type Database = {
           delivered_at?: string | null
           delivery_latitude?: number | null
           delivery_longitude?: number | null
+          discount_amount?: number | null
+          discount_id?: string | null
           id?: string
           pending_at?: string | null
           processing_at?: string | null
@@ -1034,6 +1040,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "discounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_shipping_carrier_id_fkey"
             columns: ["shipping_carrier_id"]
