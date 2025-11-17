@@ -125,6 +125,14 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
     }
   }, [existingVariants, colors, unifiedPricing]);
 
+  // Auto-calculate total stock from variants
+  useEffect(() => {
+    if (!unifiedPricing && variants.length > 0) {
+      const total = variants.reduce((sum, variant) => sum + (variant.stock_quantity || 0), 0);
+      setTotalStock(total);
+    }
+  }, [variants, unifiedPricing]);
+
   // Auto-generate variants when unified pricing changes or colors/sizes change
   const generateVariants = () => {
     if (!unifiedPricing || !colors || colors.length === 0 || availableSizes.length === 0) return;
@@ -350,9 +358,13 @@ const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVar
                 value={totalStock}
                 onChange={(e) => setTotalStock(parseInt(e.target.value) || 0)}
                 placeholder={t('Enter total stock')}
+                disabled={!unifiedPricing && variants.length > 0}
               />
               <p className="text-xs text-muted-foreground">
-                {t('Total available stock across all variants')}
+                {!unifiedPricing && variants.length > 0 
+                  ? t('Auto-calculated from variant stocks')
+                  : t('Total available stock across all variants')
+                }
               </p>
             </div>
           </div>
