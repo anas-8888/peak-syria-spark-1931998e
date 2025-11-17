@@ -729,22 +729,38 @@ const OrderTracking = () => {
                       </div>
                       {(orderDetails as any).discount_usages && (orderDetails as any).discount_usages.length > 0 && (
                         <div className="space-y-1">
-                          {(orderDetails as any).discount_usages.map((usage: any) => (
-                            <div key={usage.id} className="flex justify-between text-sm text-green-600">
-                              <span>
-                                {t("Discount")}: {usage.discounts.name}
-                                {usage.discounts.code && ` (${usage.discounts.code})`}
-                                {usage.discounts.type === 'free_shipping' && ` - ${t("Free Shipping")}`}
-                              </span>
-                              <span className="font-medium">-{formatPrice(usage.discount_amount)}</span>
-                            </div>
-                          ))}
+                          {(orderDetails as any).discount_usages
+                            .filter((usage: any) => usage.discounts.type !== 'free_shipping')
+                            .map((usage: any) => (
+                              <div key={usage.id} className="flex justify-between text-sm text-green-600">
+                                <span>
+                                  {t("Discount")}: {usage.discounts.name}
+                                  {usage.discounts.code && ` (${usage.discounts.code})`}
+                                </span>
+                                <span className="font-medium">-{formatPrice(usage.discount_amount)}</span>
+                              </div>
+                            ))}
                         </div>
                       )}
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">{t("Shipping")}</span>
                         <span>{formatPrice(orderDetails.shipping_cost)}</span>
                       </div>
+                      {(orderDetails as any).discount_usages && (orderDetails as any).discount_usages.length > 0 && (
+                        <>
+                          {(orderDetails as any).discount_usages
+                            .filter((usage: any) => usage.discounts.type === 'free_shipping')
+                            .map((usage: any) => (
+                              <div key={usage.id} className="flex justify-between text-sm text-green-600">
+                                <span>
+                                  {t("Free Shipping")}: {usage.discounts.name}
+                                  {usage.discounts.code && ` (${usage.discounts.code})`}
+                                </span>
+                                <span className="font-medium">-{formatPrice(usage.discount_amount)}</span>
+                              </div>
+                            ))}
+                        </>
+                      )}
                       <Separator />
                       <div className="flex justify-between font-bold text-lg">
                         <span>{t("Total")}</span>
