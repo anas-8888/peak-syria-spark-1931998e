@@ -42,7 +42,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import OrderLocationMap from "@/components/OrderLocationMap";
@@ -128,6 +128,7 @@ const Orders = () => {
   const { formatPrice } = useCurrency();
   const { hasPermission } = usePermissions();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
 const statusLabels = {
     delivered: t("Delivered"),
@@ -339,12 +340,17 @@ const statusLabels = {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      toast.success(t("Order status updated successfully"));
+      toast({
+        title: t("Order status updated successfully"),
+      });
       setStatusDialogOpen(false);
       setDetailsDialogOpen(false);
     },
     onError: () => {
-      toast.error(t("Failed to update order status"));
+      toast({
+        title: t("Failed to update order status"),
+        variant: "destructive",
+      });
     },
   });
 
@@ -366,11 +372,16 @@ const statusLabels = {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      toast.success(t("Cancellation request approved"));
+      toast({
+        title: t("Cancellation request approved"),
+      });
       setDetailsDialogOpen(false);
     },
     onError: () => {
-      toast.error(t("Failed to approve cancellation"));
+      toast({
+        title: t("Failed to approve cancellation"),
+        variant: "destructive",
+      });
     },
   });
 
@@ -390,11 +401,16 @@ const statusLabels = {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      toast.success(t("Cancellation request rejected"));
+      toast({
+        title: t("Cancellation request rejected"),
+      });
       setDetailsDialogOpen(false);
     },
     onError: () => {
-      toast.error(t("Failed to reject cancellation"));
+      toast({
+        title: t("Failed to reject cancellation"),
+        variant: "destructive",
+      });
     },
   });
 
@@ -415,12 +431,18 @@ const statusLabels = {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      toast.success(t("Order deleted successfully"));
+      toast({
+        title: t("Order deleted successfully"),
+      });
       setDeleteDialogOpen(false);
       setOrderToDelete(null);
     },
     onError: (error: Error) => {
-      toast.error(t("Failed to delete order") + ": " + error.message);
+      toast({
+        title: t("Failed to delete order"),
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -627,6 +649,7 @@ const statusLabels = {
                             <Button 
                               variant="ghost" 
                               size="icon"
+                              disabled={deleteOrderMutation.isPending && orderToDelete === order.id}
                               onClick={() => {
                                 setOrderToDelete(order.id);
                                 setDeleteDialogOpen(true);
