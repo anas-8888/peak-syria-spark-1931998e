@@ -23,6 +23,7 @@ interface ProductCardEnhancedProps {
   sizes?: string[];
   rating?: number;
   colorImages?: Record<string, string>;
+  colorHexMap?: Record<string, string>;
   viewMode?: "grid" | "list";
   targetGender?: string;
   flag?: string;
@@ -43,6 +44,7 @@ const ProductCardEnhanced = ({
   sizes = ["40", "41", "42", "43"],
   rating = 4.5,
   colorImages,
+  colorHexMap,
   viewMode = "grid",
   targetGender,
   flag,
@@ -183,6 +185,14 @@ const ProductCardEnhanced = ({
     blue: "#0066CC",
   };
 
+  const resolveColorHex = (color: string) => {
+    const hex = colorHexMap?.[color];
+    if (hex) return hex;
+    const mapped = colorMap[color];
+    if (mapped) return mapped;
+    return color;
+  };
+
   return (
     <>
       <div className={`group relative bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 animate-fade-in ${
@@ -292,7 +302,7 @@ const ProductCardEnhanced = ({
                     ? `w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-5 md:h-5 ${selectedColor === color ? "border-primary sm:scale-110 ring-1 ring-primary ring-offset-0.5" : "border-border"}`
                     : `w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-6 md:h-6 ${selectedColor === color ? "border-primary sm:scale-110 ring-1 ring-primary ring-offset-0.5" : "border-border"}`
                 }`}
-                style={{ backgroundColor: colorMap[color] || color }}
+                style={{ backgroundColor: resolveColorHex(color) }}
                 title={color}
               />
             ))}
@@ -464,7 +474,7 @@ const ProductCardEnhanced = ({
                       className={`w-8 h-8 rounded-full border-2 transition-all ${
                         selectedColor === color ? "border-primary scale-110 ring-2 ring-primary ring-offset-2" : "border-border"
                       }`}
-                      style={{ backgroundColor: colorMap[color] || color }}
+                      style={{ backgroundColor: resolveColorHex(color) }}
                       title={color}
                     />
                   ))}

@@ -30,6 +30,7 @@ interface Product {
   sizes: string[];
   rating: number;
   colorImages?: Record<string, string>;
+  colorHexMap?: Record<string, string>;
   targetGender?: string;
   flag?: string | null;
   description?: string | null;
@@ -118,8 +119,14 @@ const Search = () => {
           .filter(Boolean);
 
         const colorImages: Record<string, string> = {};
+      const colorHexMap: Record<string, string> = {};
         for (const pc of productColorsForItem) {
           const colorName = (pc.colors as any)?.name?.toLowerCase();
+        const rawHex = (pc.colors as any)?.hex_code?.trim();
+        if (colorName && rawHex) {
+          const normalizedHex = rawHex.startsWith("#") ? rawHex : `#${rawHex}`;
+          colorHexMap[colorName] = normalizedHex;
+        }
           if (colorName && pc.image_id) {
             const colorImage = allImagesData?.find((img) => img.id === pc.image_id);
             if (colorImage) {
@@ -143,6 +150,7 @@ const Search = () => {
           sizes: product.sizes || [],
           rating: product.rating || 0,
           colorImages: Object.keys(colorImages).length > 0 ? colorImages : undefined,
+        colorHexMap: Object.keys(colorHexMap).length > 0 ? colorHexMap : undefined,
           targetGender: product.target_gender,
           flag: product.flag,
           description: product.description,
@@ -438,6 +446,7 @@ const Search = () => {
                         sizes={product.sizes}
                         rating={product.rating}
                         colorImages={product.colorImages}
+                        colorHexMap={product.colorHexMap}
                       />
                     </div>
                   ))}
