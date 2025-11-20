@@ -73,12 +73,13 @@ const ProductsEnhanced = () => {
         .from("product_images")
         .select("id, product_id, image_url, is_primary");
 
-      // Fetch product colors with images
+      // Fetch product colors with images and display order
       const { data: productColorsData } = await supabase
         .from("product_colors")
         .select(`
           product_id,
           image_id,
+          display_order,
           colors:color_id (
             name,
             hex_code
@@ -94,19 +95,35 @@ const ProductsEnhanced = () => {
           .map((pc) => (pc.colors as any)?.name?.toLowerCase() || '')
           .filter(Boolean);
 
-        // Create color to image mapping
+        // Create color to image mapping - use first image (lowest display_order) for each color
         const colorImages: Record<string, string> = {};
         const colorHexMap: Record<string, string> = {};
+        
+        // Group by color and sort by display_order
+        const colorGroups: Record<string, any[]> = {};
         for (const pc of productColorsForItem) {
           const colorName = (pc.colors as any)?.name?.toLowerCase();
-          const rawHex = (pc.colors as any)?.hex_code?.trim();
-          if (colorName && rawHex) {
+          if (colorName) {
+            if (!colorGroups[colorName]) {
+              colorGroups[colorName] = [];
+            }
+            colorGroups[colorName].push(pc);
+          }
+        }
+        
+        // For each color, get the first image by display_order
+        for (const [colorName, colorItems] of Object.entries(colorGroups)) {
+          const sortedItems = colorItems.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+          const firstItem = sortedItems[0];
+          
+          const rawHex = (firstItem.colors as any)?.hex_code?.trim();
+          if (rawHex) {
             const normalizedHex = rawHex.startsWith("#") ? rawHex : `#${rawHex}`;
             colorHexMap[colorName] = normalizedHex;
           }
-          if (colorName && pc.image_id) {
-            // Find the specific image by image_id
-            const colorImage = allImagesData?.find((img) => img.id === pc.image_id);
+          
+          if (firstItem.image_id) {
+            const colorImage = allImagesData?.find((img) => img.id === firstItem.image_id);
             if (colorImage) {
               colorImages[colorName] = colorImage.image_url;
             }
