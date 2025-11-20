@@ -411,6 +411,17 @@ const ProductDetail = () => {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
+          {/* Mobile / Tablet Title Above Images */}
+          <div className="lg:hidden space-y-2">
+            {product.flag && (
+              <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase">
+                {product.flag}
+              </div>
+            )}
+            <h1 className="text-2xl sm:text-3xl font-bold">
+              {t(product.name)}
+            </h1>
+          </div>
           {/* Product Images */}
           <div className="space-y-4">
             <div 
@@ -493,21 +504,25 @@ const ProductDetail = () => {
 
           {/* Product Info */}
           <div className="space-y-4 sm:space-y-6">
-            <div>
-              {product.flag && (
-                <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase mb-3 sm:mb-4">
-                  {product.flag}
-                </div>
-              )}
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">{t(product.name)}</h1>
-              {product.sku && (
-                <p className="text-muted-foreground text-sm sm:text-base">SKU: {product.sku}</p>
-              )}
-              {product.target_gender && product.target_gender !== 'both' && (
-                <div className="inline-block">
-                  <Badge variant="outline" className="text-xs sm:text-sm">
-                    {product.target_gender === 'men' ? t("Men's") : t("Women's")}
-                  </Badge>
+            <div className="space-y-3">
+              <div className="hidden lg:block">
+                {product.flag && (
+                  <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase mb-3 sm:mb-4">
+                    {product.flag}
+                  </div>
+                )}
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">{t(product.name)}</h1>
+              </div>
+              {(product.sku || (product.target_gender && product.target_gender !== 'both')) && (
+                <div className="flex flex-wrap items-center gap-3 text-sm sm:text-base text-muted-foreground">
+                  {product.sku && (
+                    <span>SKU: {product.sku}</span>
+                  )}
+                  {product.target_gender && product.target_gender !== 'both' && (
+                    <Badge variant="outline" className="text-xs sm:text-sm">
+                      {product.target_gender === 'men' ? t("Men's") : t("Women's")}
+                    </Badge>
+                  )}
                 </div>
               )}
               {averageRating > 0 && (
@@ -541,12 +556,6 @@ const ProductDetail = () => {
                 </div>
               )}
             </div>
-
-            {product.description && (
-              <p className="text-muted-foreground leading-relaxed">
-                {t(product.description)}
-              </p>
-            )}
 
             {/* Automatic Discounts */}
             {applicableDiscounts.length > 0 && (
@@ -962,6 +971,17 @@ const ProductDetail = () => {
             )}
           </div>
         </div>
+
+        {product.description && (
+          <div className="max-w-5xl mx-auto mt-12">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+              {t("Product Description")}
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              {t(product.description)}
+            </p>
+          </div>
+        )}
 
         {/* Reviews Section */}
         <div className="max-w-5xl mx-auto mt-12 space-y-8">
