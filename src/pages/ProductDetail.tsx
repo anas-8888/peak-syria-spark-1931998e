@@ -440,48 +440,55 @@ const ProductDetail = () => {
                 }}
               />
             </div>
-            {images.length > 1 && (
-              <div className="grid grid-cols-4 gap-4">
-                {images.map((image) => (
-                  <div 
-                    key={image.id} 
-                    className={`aspect-square bg-muted rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all ${
-                      selectedImageUrl === image.image_url ? 'ring-2 ring-primary' : ''
-                    }`}
-                    onClick={() => {
-                      setSelectedImageUrl(image.image_url);
-                      // Find and set the color associated with this image
-                      const colorForImage = Object.entries(colorImageMap).find(
-                        ([_, imageUrl]) => imageUrl === image.image_url
-                      );
-                      if (colorForImage) {
-                        setSelectedColor(colorForImage[0]);
-                      }
-                    }}
-                  >
-                    <img 
-                      src={getOptimizedImageUrl(image.image_url, {
-                        width: 200,
-                        quality: 80,
-                        format: 'webp'
-                      })} 
-                      alt="Thumbnail" 
-                      loading="lazy"
-                      decoding="async"
-                      width={200}
-                      height={200}
-                      className="w-full h-full object-cover" 
-                      onError={(e) => {
-                        const target = e.currentTarget as HTMLImageElement;
-                        if (target.src !== '/placeholder.svg') {
-                          target.src = '/placeholder.svg';
-                        }
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Thumbnail Gallery - Show only images for selected color */}
+            {(() => {
+              // Get all image IDs for the selected color
+              const colorImageIds = selectedColorId 
+                ? productColors
+                    .filter((pc: any) => pc.color_id === selectedColorId)
+                    .map((pc: any) => pc.image_id)
+                    .filter(Boolean)
+                : [];
+              
+              // Filter images to only those belonging to the selected color
+              const filteredImages = colorImageIds.length > 0
+                ? images.filter(img => colorImageIds.includes(img.id))
+                : images;
+              
+              return filteredImages.length > 1 && (
+                <div className="grid grid-cols-4 gap-4">
+                  {filteredImages.map((image) => (
+                    <div 
+                      key={image.id} 
+                      className={`aspect-square bg-muted rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all ${
+                        selectedImageUrl === image.image_url ? 'ring-2 ring-primary' : ''
+                      }`}
+                      onClick={() => setSelectedImageUrl(image.image_url)}
+                    >
+                      <img 
+                        src={getOptimizedImageUrl(image.image_url, {
+                          width: 200,
+                          quality: 80,
+                          format: 'webp'
+                        })} 
+                        alt="Thumbnail" 
+                        loading="lazy"
+                        decoding="async"
+                        width={200}
+                        height={200}
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          if (target.src !== '/placeholder.svg') {
+                            target.src = '/placeholder.svg';
+                          }
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Product Info */}
