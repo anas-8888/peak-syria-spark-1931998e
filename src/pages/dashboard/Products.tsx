@@ -1774,6 +1774,16 @@ const Products = () => {
                     toast.error(t("Failed to save color-image mappings: ") + error.message);
                     return;
                   }
+                } else if (selectedProduct?.id && colorImageMappings.length === 0) {
+                  // If no mappings, clear any existing ones
+                  try {
+                    await supabase
+                      .from("product_colors")
+                      .delete()
+                      .eq("product_id", selectedProduct.id);
+                  } catch (error: any) {
+                    console.error("Failed to clear color mappings:", error);
+                  }
                 }
                 setActiveTab("variants");
               }}>
