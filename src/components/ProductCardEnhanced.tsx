@@ -330,14 +330,14 @@ const ProductCardEnhanced = ({
             </div>
           )}
 
-          <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 md:gap-3 ${viewMode === "list" ? "justify-between mt-auto pt-1.5 sm:pt-2 md:pt-4 border-t" : "justify-center sm:justify-between pt-0.5 sm:pt-1.5 md:pt-2 border-t"}`}>
+          <div className={`flex flex-col gap-1 sm:gap-2 md:gap-3 ${viewMode === "list" ? "justify-between mt-auto pt-1.5 sm:pt-2 md:pt-4 border-t" : "justify-center sm:justify-between pt-0.5 sm:pt-1.5 md:pt-2 border-t"}`}>
             {/* Price Display - Show range if variants exist and prices differ */}
             {minPrice && maxPrice && minPrice !== maxPrice && !unifiedPricing ? (
-              <span className={`font-bold text-primary block w-full sm:w-auto ${isRTL ? 'text-left' : 'text-left'} ${viewMode === "list" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-base sm:text-sm md:text-xl"}`} style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}>
+              <span className={`font-bold text-primary block w-full ${isRTL ? 'text-left' : 'text-left'} ${viewMode === "list" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-base sm:text-sm md:text-xl"}`} style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}>
                 {formatPrice(minPrice)} - {formatPrice(maxPrice)}
               </span>
             ) : offerPrice ? (
-              <div className={`flex items-center gap-1 sm:gap-2 w-full sm:w-auto ${isRTL ? 'justify-end' : 'justify-start'}`}>
+              <div className={`flex items-center gap-1 sm:gap-2 w-full ${isRTL ? 'justify-end' : 'justify-start'}`}>
                 <span className={`font-bold text-primary ${viewMode === "list" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-base sm:text-sm md:text-xl"}`}>
                   {formatPrice(offerPrice)}
                 </span>
@@ -346,12 +346,14 @@ const ProductCardEnhanced = ({
                 </span>
               </div>
             ) : (
-              <span className={`font-bold text-primary block w-full sm:w-auto ${isRTL ? 'text-left' : 'text-left'} ${viewMode === "list" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-base sm:text-sm md:text-xl"}`} style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}>
+              <span className={`font-bold text-primary block w-full ${isRTL ? 'text-left' : 'text-left'} ${viewMode === "list" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-base sm:text-sm md:text-xl"}`} style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}>
                 {formatPrice(minPrice || price)}
               </span>
             )}
+            
+            {/* Action Buttons - Always on new line */}
             {viewMode === "list" ? (
-              <div className="flex gap-2 sm:gap-1 md:gap-1.5 lg:gap-2 w-full sm:w-auto">
+              <div className="flex gap-2 sm:gap-1 md:gap-1.5 lg:gap-2 w-full">
                 <Button
                   variant="outline"
                   size="iconXs"
