@@ -249,8 +249,8 @@ export const ColorImageSelector = ({
                                 .filter(img => {
                                   // Show the image if it's the currently selected one
                                   if (img.id === mapping.image_id) return true;
-                                  // Hide if already assigned to this color in another slot
-                                  const isAlreadyAssigned = mappings.some(
+                                  // Hide if already assigned to ANY color (not just this color)
+                                  const isAlreadyAssigned = selectedMappings.some(
                                     m => m !== mapping && m.image_id === img.id
                                   );
                                   return !isAlreadyAssigned;
