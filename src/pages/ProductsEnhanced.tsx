@@ -155,17 +155,17 @@ const ProductsEnhanced = () => {
     },
   });
 
-  // Fetch categories from database
+  // Fetch categories from database with hierarchy
   const { data: categories = [] } = useQuery({
     queryKey: ["categories-active"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
-        .select("name")
+        .select("id, name, parent_id")
         .eq("is_active", true)
         .order("name");
       if (error) throw error;
-      return data.map(c => c.name);
+      return data;
     },
   });
 
@@ -216,15 +216,15 @@ const ProductsEnhanced = () => {
   useEffect(() => {
     const category = searchParams.get('category');
     if (category) {
-      // Find matching category (case-insensitive)
+      // Find matching category by name (case-insensitive)
       const matchingCategory = categories.find(
-        cat => cat.toLowerCase() === category.toLowerCase()
+        cat => cat.name.toLowerCase() === category.toLowerCase()
       );
       
       if (matchingCategory) {
         setFilters(prev => ({
           ...prev,
-          categories: [matchingCategory]
+          categories: [matchingCategory.name]
         }));
       }
     }
