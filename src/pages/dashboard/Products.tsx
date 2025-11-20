@@ -1180,7 +1180,8 @@ const Products = () => {
                       .map(mapping => ({
                         product_id: selectedProduct.id,
                         color_id: mapping.color_id,
-                        image_id: mapping.image_id || null
+                        image_id: mapping.image_id || null,
+                        display_order: mapping.display_order || 0
                       }));
                     
                     if (colorInserts.length > 0) {
@@ -1471,7 +1472,8 @@ const Products = () => {
                       .map(mapping => ({
                         product_id: selectedProduct.id,
                         color_id: mapping.color_id,
-                        image_id: mapping.image_id || null
+                        image_id: mapping.image_id || null,
+                        display_order: mapping.display_order || 0
                       }));
                     
                     if (colorInserts.length > 0) {
@@ -1757,7 +1759,8 @@ const Products = () => {
                       .map(mapping => ({
                         product_id: selectedProduct.id,
                         color_id: mapping.color_id,
-                        image_id: mapping.image_id || null
+                        image_id: mapping.image_id || null,
+                        display_order: mapping.display_order || 0
                       }));
                     
                     if (colorInserts.length > 0) {
