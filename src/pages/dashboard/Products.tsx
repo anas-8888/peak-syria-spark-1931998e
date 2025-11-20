@@ -33,6 +33,7 @@ type Product = {
   stock_quantity: number;
   image_url: string | null;
   is_active: boolean;
+  hidden: boolean;
   colors?: {
     color: string;
     image_id: string;
@@ -221,6 +222,7 @@ const Products = () => {
         stock_quantity: 0, // Will be calculated from variants
         image_url: newProduct.image_url || null,
         is_active: true,
+        hidden: true,
         offer_price: null,
         rating: 0, // Will be calculated from reviews
         sizes: newProduct.sizes,
@@ -427,6 +429,26 @@ const Products = () => {
     },
   });
 
+  // Toggle product hidden status mutation
+  const toggleHiddenMutation = useMutation({
+    mutationFn: async ({ id, hidden }: { id: string; hidden: boolean }) => {
+      const { error } = await supabase
+        .from("products")
+        .update({ hidden: hidden })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success(t("Product visibility updated"));
+    },
+    onError: (error) => {
+      toast.error(t("Failed to update product visibility"), {
+        description: error.message,
+      });
+    },
+  });
+
   // Fetch images for preview
   const {
     data: previewImages = []
@@ -564,6 +586,7 @@ const Products = () => {
         stock_quantity: 0, // Will be calculated from variants
         image_url: formData.image_url || null,
         is_active: true,
+        hidden: true,
         offer_price: null,
         rating: 0, // Will be calculated from reviews
         sizes: formData.sizes,
@@ -821,7 +844,7 @@ const Products = () => {
                   <TableHead>{t("Flag")}</TableHead>
                   <TableHead>{t("Price")}</TableHead>
                   <TableHead>{t("Stock")}</TableHead>
-                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead>{t("Visibility")}</TableHead>
                   <TableHead>{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -878,14 +901,27 @@ const Products = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-2 border-r pr-2">
-                            <Switch
-                              checked={product.is_active}
-                              onCheckedChange={(checked) => {
-                                toggleActiveMutation.mutate({ id: product.id, isActive: checked });
-                              }}
-                              title={product.is_active ? t("Deactivate") : t("Activate")}
-                            />
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1 text-xs">
+                              <Switch
+                                checked={product.is_active}
+                                onCheckedChange={(checked) => {
+                                  toggleActiveMutation.mutate({ id: product.id, isActive: checked });
+                                }}
+                                title={product.is_active ? t("Deactivate") : t("Activate")}
+                              />
+                              <span className="text-muted-foreground">{t("Active")}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-xs">
+                              <Switch
+                                checked={!product.hidden}
+                                onCheckedChange={(checked) => {
+                                  toggleHiddenMutation.mutate({ id: product.id, hidden: !checked });
+                                }}
+                                title={product.hidden ? t("Hidden") : t("Visible")}
+                              />
+                              <span className="text-muted-foreground">{t("Visible")}</span>
+                            </div>
                           </div>
                           {hasPermission('view_products') && (
                             <Button variant="ghost" size="icon" onClick={() => openPreviewDialog(product)} title={t("Preview")}>
