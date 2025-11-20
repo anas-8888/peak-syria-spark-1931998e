@@ -249,19 +249,49 @@ const ProductDetail = () => {
     checkWishlist();
   }, [user, id]);
 
-  // Build color to image mapping
+  // Deduplicate colors for UI and build color → first-image mapping
+  const uniqueProductColors = productColors.reduce((acc: any[], pc: any) => {
+    const name = (pc.colors as any)?.name;
+    if (!name) return acc;
+    if (acc.some((item) => (item.colors as any)?.name === name)) return acc;
+    acc.push(pc);
+    return acc;
+  }, []);
+
   useEffect(() => {
     if (productColors.length > 0 && images.length > 0) {
       const mapping: Record<string, string> = {};
+      const imagesById = new Map(images.map((img) => [img.id, img]));
+
+      // Group productColors by color name so we can pick the first image per color
+      const colorGroups: Record<string, any[]> = {};
       productColors.forEach((pc) => {
         const colorName = (pc.colors as any)?.name?.toLowerCase();
         if (colorName && pc.image_id) {
-          const image = images.find(img => img.id === pc.image_id);
-          if (image) {
-            mapping[colorName] = image.image_url;
+          if (!colorGroups[colorName]) {
+            colorGroups[colorName] = [];
           }
+          colorGroups[colorName].push(pc);
         }
       });
+
+      // For each color, choose the image with the lowest display_order
+      Object.entries(colorGroups).forEach(([colorName, items]) => {
+        let bestImage: ProductImage | null = null;
+
+        items.forEach((pc: any) => {
+          const img = imagesById.get(pc.image_id);
+          if (!img) return;
+          if (!bestImage || (img.display_order ?? 0) < (bestImage.display_order ?? 0)) {
+            bestImage = img;
+          }
+        });
+
+        if (bestImage) {
+          mapping[colorName] = bestImage.image_url;
+        }
+      });
+
       setColorImageMap(mapping);
     }
   }, [productColors, images]);
@@ -558,13 +588,13 @@ const ProductDetail = () => {
             )}
 
             {/* Color Selection - Must select first */}
-            {variants.length > 0 && productColors.length > 0 && (
+            {variants.length > 0 && uniqueProductColors.length > 0 && (
               <div>
                 <label className="block text-sm font-semibold mb-3">
                   {t("Select Color")} <span className="text-destructive">*</span>
                 </label>
                 <div className="flex gap-2 flex-wrap">
-                  {productColors.map((colorData, idx) => {
+                  {uniqueProductColors.map((colorData, idx) => {
                     const colorId = colorData.color_id;
                     const colorName = (colorData.colors as any)?.name || '';
                     const colorHex = (colorData.colors as any)?.hex_code || '#000000';
@@ -644,11 +674,11 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {variants.length === 0 && productColors.length > 0 && (
+            {variants.length === 0 && uniqueProductColors.length > 0 && (
               <div>
                 <label className="block text-sm font-semibold mb-3">{t("Select Color")}</label>
                 <div className="flex gap-2">
-                  {productColors.map((colorData, idx) => {
+                  {uniqueProductColors.map((colorData, idx) => {
                     const colorName = (colorData.colors as any)?.name || '';
                     const colorHex = (colorData.colors as any)?.hex_code || '#000000';
                     return (
