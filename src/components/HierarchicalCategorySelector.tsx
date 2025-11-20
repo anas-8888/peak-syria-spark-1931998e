@@ -132,7 +132,7 @@ export const HierarchicalCategorySelector = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[300px] p-0" align="start">
-          <ScrollArea className="h-[300px]">
+          <ScrollArea className="max-h-[400px]">
             <div className="p-2">
               {renderCategoryTree(null)}
             </div>
