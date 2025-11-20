@@ -93,7 +93,7 @@ const Products = () => {
       image_id: string;
     }[]
   });
-  const [colorImageMappings, setColorImageMappings] = useState<{ color_id: string; image_id: string | null }[]>([]);
+  const [colorImageMappings, setColorImageMappings] = useState<{ color_id: string; image_id: string | null; display_order?: number }[]>([]);
   const [newSize, setNewSize] = useState("");
   const [newFeature, setNewFeature] = useState("");
   const [newColor, setNewColor] = useState({
@@ -327,7 +327,8 @@ const Products = () => {
           .map(mapping => ({
             product_id: id,
             color_id: mapping.color_id,
-            image_id: mapping.image_id || null
+            image_id: mapping.image_id || null,
+            display_order: mapping.display_order || 0
           }));
         
         if (colorInserts.length > 0) {
@@ -577,7 +578,8 @@ const Products = () => {
         const colorInserts = colorImageMappings.map(mapping => ({
           product_id: data.id,
           color_id: mapping.color_id,
-          image_id: mapping.image_id
+          image_id: mapping.image_id,
+          display_order: mapping.display_order || 0
         }));
         const { error: colorError } = await supabase
           .from("product_colors")
@@ -639,8 +641,9 @@ const Products = () => {
       // Load existing color-image associations
       const { data: productColors, error } = await supabase
         .from("product_colors")
-        .select("color_id, image_id")
-        .eq("product_id", product.id);
+        .select("color_id, image_id, display_order")
+        .eq("product_id", product.id)
+        .order("display_order", { ascending: true });
       
       if (error) {
         console.error("Error loading product colors:", error);
@@ -649,7 +652,8 @@ const Products = () => {
 
       setColorImageMappings(productColors?.map(pc => ({
         color_id: pc.color_id,
-        image_id: pc.image_id
+        image_id: pc.image_id,
+        display_order: pc.display_order || 0
       })) || []);
       
       setIsEditDialogOpen(true);
