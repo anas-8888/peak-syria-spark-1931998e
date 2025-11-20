@@ -278,13 +278,42 @@ const ProductsEnhanced = () => {
     setSearchParams(params, { replace: true });
   }, [filters, priceInitialized, minPrice, maxPrice, setSearchParams]);
 
+  // Helper function to get all child category names recursively
+  const getAllChildCategories = (parentName: string, allCategories: any[]): string[] => {
+    const parent = allCategories.find(cat => cat.name.toLowerCase() === parentName.toLowerCase());
+    if (!parent) return [];
+    
+    const children = allCategories.filter(cat => cat.parent_id === parent.id);
+    let allChildren: string[] = [];
+    
+    for (const child of children) {
+      allChildren.push(child.name);
+      // Recursively get children of children
+      allChildren = [...allChildren, ...getAllChildCategories(child.name, allCategories)];
+    }
+    
+    return allChildren;
+  };
+
   // Apply filters
   const filteredProducts = allProducts.filter((product) => {
+    // Category matching: include products from selected categories AND their children
     const categoryMatch = filters.categories.length === 0 || 
-      filters.categories.some(cat => 
-        product.category.toLowerCase() === cat.toLowerCase() ||
-        product.category.toLowerCase().includes(cat.toLowerCase())
-      );
+      filters.categories.some(cat => {
+        // Direct match
+        if (product.category.toLowerCase() === cat.toLowerCase() ||
+            product.category.toLowerCase().includes(cat.toLowerCase())) {
+          return true;
+        }
+        
+        // Check if product category is a child of the selected category
+        const childCategories = getAllChildCategories(cat, categories || []);
+        return childCategories.some(childCat => 
+          product.category.toLowerCase() === childCat.toLowerCase() ||
+          product.category.toLowerCase().includes(childCat.toLowerCase())
+        );
+      });
+      
     const colorMatch = filters.colors.length === 0 || 
       filters.colors.some((c) => product.colors.includes(c.toLowerCase()));
     const sizeMatch = filters.sizes.length === 0 || 
