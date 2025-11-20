@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ColorImageSelector } from "@/components/ColorImageSelector";
 import ProductVariantManager, { ProductVariantManagerHandle } from "@/components/ProductVariantManager";
 import { usePermissions } from "@/hooks/usePermissions";
+import { HierarchicalCategorySelector } from "@/components/HierarchicalCategorySelector";
 type Product = {
   id: string;
   name: string;
@@ -955,22 +956,14 @@ const Products = () => {
               })} placeholder={t("Enter product description")} rows={3} />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="category">{t("Category")} *</Label>
-                <Select value={formData.category} onValueChange={value => setFormData({
-                  ...formData,
-                  category: value
-                })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("Select a category")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>
-                        {cat.name}
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+              <HierarchicalCategorySelector
+                categories={categories}
+                value={formData.category}
+                onChange={(categoryName) => setFormData({ ...formData, category: categoryName })}
+                label="Category"
+                placeholder="Select a category"
+                required
+              />
               <div className="grid gap-2">
                 <Label htmlFor="flag">{t("Product Flag")}</Label>
                 <Select value={formData.flag || undefined} onValueChange={value => setFormData({
@@ -1260,22 +1253,14 @@ const Products = () => {
               })} placeholder={t("Enter product description")} rows={3} />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="copy-category">{t("Category")} *</Label>
-                <Select value={formData.category} onValueChange={value => setFormData({
-                  ...formData,
-                  category: value
-                })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("Select a category")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>
-                        {cat.name}
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+              <HierarchicalCategorySelector
+                categories={categories}
+                value={formData.category}
+                onChange={(categoryName) => setFormData({ ...formData, category: categoryName })}
+                label="Category"
+                placeholder="Select a category"
+                required
+              />
               <div className="grid gap-2">
                 <Label htmlFor="copy-flag">{t("Product Flag")}</Label>
                 <Select value={formData.flag || undefined} onValueChange={value => setFormData({
@@ -1549,22 +1534,14 @@ const Products = () => {
               })} placeholder={t("Enter product description")} rows={3} />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-category">{t("Category")} *</Label>
-                <Select value={formData.category} onValueChange={value => setFormData({
-                  ...formData,
-                  category: value
-                })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("Select a category")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>
-                        {cat.name}
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+              <HierarchicalCategorySelector
+                categories={categories}
+                value={formData.category}
+                onChange={(categoryName) => setFormData({ ...formData, category: categoryName })}
+                label="Category"
+                placeholder="Select a category"
+                required
+              />
               <div className="grid gap-2">
                 <Label htmlFor="edit-flag">{t("Product Flag")}</Label>
                 <Select value={formData.flag || undefined} onValueChange={value => setFormData({
