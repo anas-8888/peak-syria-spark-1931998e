@@ -293,7 +293,7 @@ const ProductCardEnhanced = ({
 
           {/* Colors */}
           <div className="flex gap-1 sm:gap-3">
-            {colors.slice(0, viewMode === "list" ? 3 : colors.length).map((color) => (
+            {[...new Set(colors)].slice(0, viewMode === "list" ? 3 : colors.length).map((color) => (
               <button
                 key={color}
                 onClick={() => handleColorChange(color)}
@@ -306,8 +306,8 @@ const ProductCardEnhanced = ({
                 title={color}
               />
             ))}
-            {viewMode === "list" && colors.length > 3 && (
-              <span className="text-[10px] sm:text-xs text-muted-foreground self-center">+{colors.length - 3}</span>
+            {viewMode === "list" && [...new Set(colors)].length > 3 && (
+              <span className="text-[10px] sm:text-xs text-muted-foreground self-center">+{[...new Set(colors)].length - 3}</span>
             )}
           </div>
 
