@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -33,8 +33,9 @@ const Profile = () => {
   const [phoneLocalNumber, setPhoneLocalNumber] = useState("");
   const [address, setAddress] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
-  const [regionId, setRegionId] = useState<string | undefined>(undefined);
-  const [regions, setRegions] = useState<Array<{ id: string; name: string; country: string }>>([]);
+const [regionId, setRegionId] = useState<string | undefined>(undefined);
+const regionTouchedRef = useRef(false);
+const [regions, setRegions] = useState<Array<{ id: string; name: string; country: string }>>([]);
   const [avatarKey, setAvatarKey] = useState(Date.now());
 
   // Country codes with flags
@@ -97,9 +98,20 @@ const Profile = () => {
         .from("profiles")
         .select("*")
         .eq("id", user?.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+
+      if (!data) {
+        // No profile yet: show first-time UI, prefill from auth, but don't insert here
+        const googleName = user?.user_metadata?.full_name || user?.user_metadata?.name || "";
+        const googleAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || "";
+        setFullName(googleName);
+        setEmail(user?.email || "");
+        setAvatarUrl(googleAvatar || "");
+        setIsFirstTimeUser(true);
+        return;
+      }
 
       if (data) {
         // Auto-populate from Google profile
@@ -163,14 +175,10 @@ const Profile = () => {
         const avatarUrlToUse = data.avatar_url || googleAvatar || "";
         setAvatarUrl(avatarUrlToUse);
         
-        // Ensure region_id is properly set (handle null, undefined, and empty string)
-        if (data.region_id && data.region_id.trim && data.region_id.trim() !== "") {
-          setRegionId(data.region_id.trim());
-        } else if (data.region_id && typeof data.region_id === 'string' && data.region_id !== "") {
-          setRegionId(data.region_id);
-        } else {
-          setRegionId(undefined);
-        }
+// Set region_id from database only if user hasn't changed it yet
+if (!regionTouchedRef.current) {
+  setRegionId(data.region_id || undefined);
+}
         
         // Pre-fill form with Google data if profile is empty, but don't auto-save
         // User can review and save explicitly
@@ -391,37 +399,78 @@ const Profile = () => {
     try {
       setLoading(true);
 
-      // Ensure region_id is properly formatted (null if empty/undefined)
-      const regionIdToSave = regionId && typeof regionId === 'string' && regionId.trim() !== "" ? regionId.trim() : null;
-
       const updateData: any = {
         full_name: fullName,
         email: email,
         phone: formattedPhone,
         address: address,
-        region_id: regionIdToSave,
+        region_id: regionId || null,
       };
 
       // Log for debugging
       if (import.meta.env.DEV) {
         console.log("Updating profile with:", {
           regionId,
-          regionIdToSave,
           regionIdType: typeof regionId,
         });
       }
 
-      const { error } = await supabase
-        .from("profiles")
-        .update(updateData)
-        .eq("id", user?.id);
+// Ensure profile row exists before update
+const { data: existingProfile, error: fetchProfileError } = await supabase
+  .from("profiles")
+  .select("id, role_id")
+  .eq("id", user?.id)
+  .maybeSingle();
 
-      if (error) {
-        if (import.meta.env.DEV) {
-          console.error("Profile update error:", error);
-        }
-        throw error;
-      }
+if (fetchProfileError) {
+  if (import.meta.env.DEV) console.error("Fetch profile error:", fetchProfileError);
+  throw fetchProfileError;
+}
+
+if (!existingProfile) {
+  // Create initial profile for this user with customer role
+  const { data: customerRole, error: roleError } = await supabase
+    .from("roles")
+    .select("id")
+    .eq("name", "customer")
+    .maybeSingle();
+  if (roleError) throw roleError;
+  if (!customerRole) throw new Error(t("Unable to find default role to create your profile"));
+
+  const insertData: any = {
+    id: user?.id,
+    role_id: customerRole.id,
+    email,
+    full_name: fullName,
+    phone: formattedPhone,
+    address,
+    region_id: regionId || null,
+  };
+  const { error: insertError } = await supabase.from("profiles").insert(insertData);
+  if (insertError) {
+    if (import.meta.env.DEV) console.error("Profile insert error:", insertError);
+    if (insertError.code === '23505' && insertError.message.includes('profiles_phone_unique')) {
+      throw new Error(t("This phone number is already registered with another account"));
+    }
+    throw insertError;
+  }
+} else {
+  // Update existing profile
+  const { error } = await supabase
+    .from("profiles")
+    .update(updateData)
+    .eq("id", user?.id);
+  if (error) {
+    if (import.meta.env.DEV) {
+      console.error("Profile update error:", error);
+    }
+    // Handle unique constraint violation for phone number
+    if (error.code === '23505' && error.message.includes('profiles_phone_unique')) {
+      throw new Error(t("This phone number is already registered with another account"));
+    }
+    throw error;
+  }
+}
 
       if (isFirstTimeUser) {
         toast({
@@ -669,16 +718,16 @@ const Profile = () => {
                       <MapPin className="h-4 w-4" />
                       {t("Region")}
                     </Label>
-                    <Select 
-                      value={regionId || ""} 
-                      onValueChange={(value) => {
-                        const newRegionId = value && value.trim() !== "" ? value.trim() : undefined;
-                        setRegionId(newRegionId);
-                        if (import.meta.env.DEV) {
-                          console.log("Region changed:", { value, newRegionId });
-                        }
-                      }}
-                    >
+<Select 
+  value={regionId} 
+  onValueChange={(value) => {
+    if (import.meta.env.DEV) {
+      console.log("Region changed - raw value:", value);
+    }
+    regionTouchedRef.current = true;
+    setRegionId(value);
+  }}
+>
                       <SelectTrigger className="rounded-xl">
                         <SelectValue placeholder={t("Select your region")} />
                       </SelectTrigger>
