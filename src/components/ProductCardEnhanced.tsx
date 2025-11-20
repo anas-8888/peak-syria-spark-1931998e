@@ -193,6 +193,8 @@ const ProductCardEnhanced = ({
     return color;
   };
 
+  const uniqueColors = [...new Set(colors)];
+
   return (
     <>
       <div className={`group relative bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 animate-fade-in ${
@@ -469,7 +471,7 @@ const ProductCardEnhanced = ({
               <div>
                 <h4 className="font-semibold mb-2">{t("Colors")}:</h4>
                 <div className="flex gap-2">
-                  {colors.map((color) => (
+                  {uniqueColors.map((color) => (
                     <button
                       key={color}
                       onClick={() => handleColorChange(color)}
