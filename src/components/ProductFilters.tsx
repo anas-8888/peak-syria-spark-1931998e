@@ -4,8 +4,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, SlidersHorizontal } from "lucide-react";
+import { X, SlidersHorizontal, ChevronRight } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
@@ -16,10 +17,16 @@ interface FilterOptions {
   priceRange: [number, number];
 }
 
+interface Category {
+  id: string;
+  name: string;
+  parent_id: string | null;
+}
+
 interface ProductFiltersProps {
   filters: FilterOptions;
   onFilterChange: (filters: FilterOptions) => void;
-  categories: string[];
+  categories: Category[];
   colors: Array<{ name: string; value: string; hex: string }>;
   sizes: string[];
   minPrice: number;
@@ -30,6 +37,7 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
   const [localFilters, setLocalFilters] = useState(filters);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   // Use refs for uncontrolled inputs to prevent re-renders that cause scroll
   const minPriceInputRef = useRef<HTMLInputElement>(null);
   const maxPriceInputRef = useRef<HTMLInputElement>(null);
@@ -80,13 +88,85 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
     }
   }, [filters]);
 
-  const handleCategoryToggle = (category: string) => {
-    const newCategories = localFilters.categories.includes(category)
-      ? localFilters.categories.filter((c) => c !== category)
-      : [...localFilters.categories, category];
+  // Build category tree
+  const buildCategoryTree = () => {
+    const tree: Map<string | null, Category[]> = new Map();
+    categories.forEach(cat => {
+      const parentId = cat.parent_id;
+      if (!tree.has(parentId)) {
+        tree.set(parentId, []);
+      }
+      tree.get(parentId)!.push(cat);
+    });
+    return tree;
+  };
+
+  const categoryTree = buildCategoryTree();
+
+  const toggleCategory = (categoryId: string) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(categoryId)) {
+      newExpanded.delete(categoryId);
+    } else {
+      newExpanded.add(categoryId);
+    }
+    setExpandedCategories(newExpanded);
+  };
+
+  const handleCategoryToggle = (categoryName: string) => {
+    const newCategories = localFilters.categories.includes(categoryName)
+      ? localFilters.categories.filter((c) => c !== categoryName)
+      : [...localFilters.categories, categoryName];
     const newFilters = { ...localFilters, categories: newCategories };
     setLocalFilters(newFilters);
     onFilterChange(newFilters);
+  };
+
+  const renderCategoryTree = (parentId: string | null, level: number = 0): JSX.Element[] => {
+    const children = categoryTree.get(parentId) || [];
+    
+    return children.map((category) => {
+      const hasChildren = categoryTree.has(category.id);
+      const isExpanded = expandedCategories.has(category.id);
+      
+      return (
+        <div key={category.id} style={{ marginLeft: `${level * 12}px` }}>
+          <div className="flex items-center space-x-1.5 py-1">
+            {hasChildren ? (
+              <button
+                onClick={() => toggleCategory(category.id)}
+                className="p-0.5 hover:bg-muted rounded transition-colors"
+              >
+                <ChevronRight
+                  className={`h-3 w-3 transition-transform ${
+                    isExpanded ? 'rotate-90' : ''
+                  }`}
+                />
+              </button>
+            ) : (
+              <span className="w-4" />
+            )}
+            <Checkbox
+              id={`cat-${category.id}`}
+              checked={localFilters.categories.includes(category.name)}
+              onCheckedChange={() => handleCategoryToggle(category.name)}
+              className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-3.5 md:w-3.5"
+            />
+            <Label
+              htmlFor={`cat-${category.id}`}
+              className="cursor-pointer text-[10px] sm:text-xs flex-1"
+            >
+              {t(category.name)}
+            </Label>
+          </div>
+          {hasChildren && isExpanded && (
+            <div className="mt-1">
+              {renderCategoryTree(category.id, level + 1)}
+            </div>
+          )}
+        </div>
+      );
+    });
   };
 
   const handleColorToggle = (color: string) => {
@@ -199,19 +279,9 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
       <div className="space-y-3">
         <h3 className="font-bold text-lg">{t("Categories")}</h3>
         {categories.length > 0 ? (
-          categories.map((category) => (
-            <div key={category} className="flex items-center space-x-1.5">
-              <Checkbox
-                id={`cat-${category}`}
-                checked={localFilters.categories.includes(category)}
-                onCheckedChange={() => handleCategoryToggle(category)}
-                className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-3.5 md:w-3.5"
-              />
-              <Label htmlFor={`cat-${category}`} className="cursor-pointer text-[10px] sm:text-xs">
-                {t(category)}
-              </Label>
-            </div>
-          ))
+          <div className="space-y-1">
+            {renderCategoryTree(null)}
+          </div>
         ) : (
           <p className="text-sm text-muted-foreground">{t("No categories available")}</p>
         )}
