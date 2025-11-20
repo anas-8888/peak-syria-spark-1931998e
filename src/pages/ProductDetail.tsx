@@ -500,6 +500,38 @@ const ProductDetail = () => {
                 </div>
               );
             })()}
+
+            {/* Color Selection - Must select first */}
+            {variants.length > 0 && uniqueProductColors.length > 0 && (
+              <div>
+                <label className="block text-sm font-semibold mb-3">
+                  {t("Select Color")} <span className="text-destructive">*</span>
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {uniqueProductColors.map((colorData, idx) => {
+                    const colorId = colorData.color_id;
+                    const colorName = (colorData.colors as any)?.name || '';
+                    const colorHex = (colorData.colors as any)?.hex_code || '#000000';
+                    const hasStock = variants.some((v: any) => v.color_id === colorId && v.stock_quantity > 0);
+                    
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => hasStock && handleColorSelect(colorId, colorName)}
+                        disabled={!hasStock}
+                        className={`w-12 h-12 rounded-full border-2 transition-all ${
+                          selectedColorId === colorId
+                            ? "border-primary scale-110 ring-2 ring-primary ring-offset-2"
+                            : "border-border hover:border-primary"
+                        } ${!hasStock ? 'opacity-30 cursor-not-allowed' : ''}`}
+                        style={{ backgroundColor: colorHex }}
+                        title={`${colorName}${!hasStock ? ` (${t("Out of Stock")})` : ''}`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
@@ -603,37 +635,6 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {/* Color Selection - Must select first */}
-            {variants.length > 0 && uniqueProductColors.length > 0 && (
-              <div>
-                <label className="block text-sm font-semibold mb-3">
-                  {t("Select Color")} <span className="text-destructive">*</span>
-                </label>
-                <div className="flex gap-2 flex-wrap">
-                  {uniqueProductColors.map((colorData, idx) => {
-                    const colorId = colorData.color_id;
-                    const colorName = (colorData.colors as any)?.name || '';
-                    const colorHex = (colorData.colors as any)?.hex_code || '#000000';
-                    const hasStock = variants.some((v: any) => v.color_id === colorId && v.stock_quantity > 0);
-                    
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => hasStock && handleColorSelect(colorId, colorName)}
-                        disabled={!hasStock}
-                        className={`w-12 h-12 rounded-full border-2 transition-all ${
-                          selectedColorId === colorId
-                            ? "border-primary scale-110 ring-2 ring-primary ring-offset-2"
-                            : "border-border hover:border-primary"
-                        } ${!hasStock ? 'opacity-30 cursor-not-allowed' : ''}`}
-                        style={{ backgroundColor: colorHex }}
-                        title={`${colorName}${!hasStock ? ` (${t("Out of Stock")})` : ''}`}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* Size Selection - Filtered by color */}
             {variants.length > 0 && availableSizes.length > 0 && (
