@@ -212,35 +212,71 @@ const ProductsEnhanced = () => {
   const minPrice = prices.length > 0 ? Math.floor(Math.min(...prices)) : 0;
   const maxPrice = prices.length > 0 ? Math.ceil(Math.max(...prices)) : 1000;
 
-  // Handle URL query parameters
+  // Initialize filters from URL on mount
   useEffect(() => {
     const category = searchParams.get('category');
-    if (category) {
-      // Find matching category by name (case-insensitive)
-      const matchingCategory = categories.find(
-        cat => cat.name.toLowerCase() === category.toLowerCase()
-      );
-      
-      if (matchingCategory) {
-        setFilters(prev => ({
-          ...prev,
-          categories: [matchingCategory.name]
-        }));
-      }
+    const colors = searchParams.get('colors');
+    const sizes = searchParams.get('sizes');
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+
+    if (category || colors || sizes || minPrice || maxPrice) {
+      setFilters(prev => ({
+        ...prev,
+        categories: category ? category.split(',') : prev.categories,
+        colors: colors ? colors.split(',') : prev.colors,
+        sizes: sizes ? sizes.split(',') : prev.sizes,
+        priceRange: [
+          minPrice ? Number(minPrice) : prev.priceRange[0],
+          maxPrice ? Number(maxPrice) : prev.priceRange[1]
+        ]
+      }));
     }
-  }, [searchParams, categories]);
+  }, [searchParams]);
 
   // Initialize price range filter when data loads (only once)
   useEffect(() => {
     if (allProducts.length > 0 && !priceInitialized) {
-      const initialPriceRange: [number, number] = [minPrice, maxPrice];
+      const urlMinPrice = searchParams.get('minPrice');
+      const urlMaxPrice = searchParams.get('maxPrice');
+      
+      const initialPriceRange: [number, number] = [
+        urlMinPrice ? Number(urlMinPrice) : minPrice,
+        urlMaxPrice ? Number(urlMaxPrice) : maxPrice
+      ];
+      
       setFilters(prev => ({
         ...prev,
         priceRange: initialPriceRange
       }));
       setPriceInitialized(true);
     }
-  }, [allProducts.length, minPrice, maxPrice, priceInitialized]);
+  }, [allProducts.length, minPrice, maxPrice, priceInitialized, searchParams]);
+
+  // Update URL when filters change
+  useEffect(() => {
+    if (!priceInitialized) return;
+
+    const params = new URLSearchParams();
+    
+    if (filters.categories.length > 0) {
+      params.set('category', filters.categories.join(','));
+    }
+    if (filters.colors.length > 0) {
+      params.set('colors', filters.colors.join(','));
+    }
+    if (filters.sizes.length > 0) {
+      params.set('sizes', filters.sizes.join(','));
+    }
+    if (filters.priceRange[0] !== minPrice) {
+      params.set('minPrice', filters.priceRange[0].toString());
+    }
+    if (filters.priceRange[1] !== maxPrice) {
+      params.set('maxPrice', filters.priceRange[1].toString());
+    }
+
+    setSearchParams(params, { replace: true });
+  }, [filters, priceInitialized, minPrice, maxPrice, setSearchParams]);
 
   // Apply filters
   const filteredProducts = allProducts.filter((product) => {
