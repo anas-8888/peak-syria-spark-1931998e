@@ -21,6 +21,7 @@ interface Category {
   id: string;
   name: string;
   parent_id: string | null;
+  display_order: number | null;
 }
 
 interface ProductFiltersProps {
@@ -98,6 +99,12 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
       }
       tree.get(parentId)!.push(cat);
     });
+    
+    // Sort each level by display_order
+    tree.forEach((cats, key) => {
+      tree.set(key, cats.sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
+    });
+    
     return tree;
   };
 
