@@ -1393,6 +1393,7 @@ export type Database = {
           description: string | null
           features: string[] | null
           flag: string | null
+          hidden: boolean
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -1416,6 +1417,7 @@ export type Database = {
           description?: string | null
           features?: string[] | null
           flag?: string | null
+          hidden?: boolean
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -1439,6 +1441,7 @@ export type Database = {
           description?: string | null
           features?: string[] | null
           flag?: string | null
+          hidden?: boolean
           id?: string
           image_url?: string | null
           is_active?: boolean | null
