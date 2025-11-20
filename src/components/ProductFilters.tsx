@@ -35,7 +35,7 @@ interface ProductFiltersProps {
 }
 
 const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, minPrice, maxPrice }: ProductFiltersProps) => {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const { formatPrice } = useCurrency();
   const [localFilters, setLocalFilters] = useState(filters);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
@@ -137,30 +137,36 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
       const isExpanded = expandedCategories.has(category.id);
       
       return (
-        <div key={category.id} style={{ marginLeft: `${level * 12}px` }}>
-          <div className="flex items-center space-x-1.5 py-1">
+        <div
+          key={category.id}
+          style={{
+            marginInlineStart: `calc(${level} * var(--category-indent, 12px))`,
+          }}
+        >
+          <div className="flex items-center space-x-1.5 max-sm:space-x-0.5 py-1">
             {hasChildren ? (
               <button
                 onClick={() => toggleCategory(category.id)}
-                className="p-0.5 hover:bg-muted rounded transition-colors"
+                className="p-0.5 max-sm:p-0 max-sm:h-5 max-sm:w-5 flex items-center justify-center hover:bg-muted rounded transition-colors"
               >
                 <ChevronRight
                   className={`h-3 w-3 transition-transform ${
                     isExpanded ? 'rotate-90' : ''
-                  }`}
+                  } ${isRTL ? 'scale-x-[-1]' : ''}`}
                 />
               </button>
             ) : (
-              <span className="w-4" />
+              <span className="w-4 max-sm:w-3" />
             )}
             <Checkbox
               id={`cat-${category.id}`}
               checked={localFilters.categories.includes(category.name)}
               onCheckedChange={() => handleCategoryToggle(category.name)}
+              className="max-sm:h-4 max-sm:w-4"
             />
             <Label
               htmlFor={`cat-${category.id}`}
-              className="cursor-pointer text-[10px] sm:text-xs flex-1"
+              className="cursor-pointer text-xs sm:text-xs flex-1"
             >
               {t(category.name)}
             </Label>
@@ -427,7 +433,7 @@ const ProductFilters = ({ filters, onFilterChange, categories, colors, sizes, mi
             {t("Filters")}
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="overflow-y-auto">
+        <SheetContent side={isRTL ? "right" : "left"} className="overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{t("Filters")}</SheetTitle>
           </SheetHeader>

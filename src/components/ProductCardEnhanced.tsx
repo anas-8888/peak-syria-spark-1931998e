@@ -360,18 +360,18 @@ const ProductCardEnhanced = ({
                   variant="outline"
                   size="iconXs"
                   onClick={() => setQuickViewOpen(true)}
-                  className="hidden sm:flex flex-shrink-0 h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 p-0"
+                  className="hidden sm:flex flex-shrink-0 h-9 w-9 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-10 lg:w-10 p-0"
                 >
-                  <Eye className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 lg:h-4 lg:w-4" />
+                  <Eye className="h-4 w-4 sm:h-3.5 sm:w-3.5 md:h-3 md:w-3 lg:h-4 lg:w-4" />
                 </Button>
                 <Button
                   variant={isFavorite ? "hero" : "outline"}
                   size="iconXs"
                   onClick={handleToggleFavorite}
                   disabled={isLoading}
-                  className="flex-shrink-0 h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 p-0"
+                  className="flex-shrink-0 h-9 w-9 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-10 lg:w-10 p-0"
                 >
-                  <Heart className={`h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 lg:h-4 lg:w-4 ${isFavorite ? "fill-current" : ""}`} />
+                  <Heart className={`h-4 w-4 sm:h-3.5 sm:w-3.5 md:h-3 md:w-3 lg:h-4 lg:w-4 ${isFavorite ? "fill-current" : ""}`} />
                 </Button>
                 <Button 
                   variant="hero" 

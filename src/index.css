@@ -58,6 +58,7 @@ All colors MUST be HSL.
     --shadow-glow: 0 0 40px hsl(0 82% 51% / 0.3);
     --shadow-card: 0 4px 20px hsl(0 0% 0% / 0.1);
     --shadow-elevation: 0 10px 40px hsl(0 0% 0% / 0.15);
+    --category-indent: 12px;
   }
 
   .dark {
@@ -177,14 +178,14 @@ All colors MUST be HSL.
     .container, .max-w-4xl, .max-w-7xl {
       padding-right: 8px;
     }
+    :root {
+      --category-indent: 12px;
+    }
   }
 
   /* Better touch targets for mobile */
   @media (max-width: 768px) {
-    button, a {
-      min-height: 44px;
-      min-width: 44px;
-    }
+
     
     /* Mobile hero section improvements */
     .hero-section {

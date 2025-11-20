@@ -12,8 +12,9 @@ import PercentageLoader from "@/components/PercentageLoader";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
-import { LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List, SlidersHorizontal } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 interface Product {
   id: string;
@@ -36,7 +37,7 @@ interface Product {
 }
 
 const ProductsEnhanced = () => {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   // Set default view mode to list on mobile, grid on desktop
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
@@ -432,21 +433,190 @@ const ProductsEnhanced = () => {
       <section className="py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
-            {/* Sidebar Filters */}
-            <div className="lg:col-span-1">
-              <ProductFilters 
-                filters={filters} 
-                onFilterChange={setFilters} 
-                categories={categories}
-                colors={availableColors}
-                sizes={availableSizes}
-                minPrice={minPrice}
-                maxPrice={maxPrice}
-              />
-            </div>
+            {isRTL ? (
+              <>
+                {/* Sidebar Filters */}
+                <div className="lg:col-span-1">
+                  <ProductFilters 
+                    filters={filters} 
+                    onFilterChange={setFilters} 
+                    categories={categories}
+                    colors={availableColors}
+                    sizes={availableSizes}
+                    minPrice={minPrice}
+                    maxPrice={maxPrice}
+                  />
+                </div>
 
-            {/* Products Area */}
-            <div className="lg:col-span-3 space-y-6">
+                {/* Products Area */}
+                <div className="lg:col-span-3 space-y-6">
+                  {/* Controls Bar */}
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between bg-card p-3 sm:p-4 rounded-lg shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs sm:text-sm text-muted-foreground">
+                        {t("Showing")} {sortedProducts.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, sortedProducts.length)} {t("of")} {sortedProducts.length} {t("products").toLowerCase()}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      {/* View Mode Toggle */}
+                      <div className="flex gap-1 bg-muted p-1 rounded-lg">
+                        <Button
+                          variant={viewMode === "grid" ? "default" : "ghost"}
+                          size="sm"
+                          onClick={() => setViewMode("grid")}
+                          className="h-8 w-8 p-0"
+                        >
+                          <LayoutGrid className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                        <Button
+                          variant={viewMode === "list" ? "default" : "ghost"}
+                          size="sm"
+                          onClick={() => setViewMode("list")}
+                          className="h-8 w-8 p-0"
+                        >
+                          <List className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                      </div>
+
+                      {/* Sort Dropdown */}
+                      <Select value={sortBy} onValueChange={setSortBy}>
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder={t("Sort by")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="featured">{t("Featured")}</SelectItem>
+                          <SelectItem value="rating">{t("Top Rated")}</SelectItem>
+                          <SelectItem value="price-low">{t("Price: Low to High")}</SelectItem>
+                          <SelectItem value="price-high">{t("Price: High to Low")}</SelectItem>
+                          <SelectItem value="name">{t("Name")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Products Grid/List */}
+                  {sortedProducts.length > 0 ? (
+                    <>
+                      <div
+                        className={
+                          viewMode === "grid"
+                            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                            : "space-y-3 sm:space-y-4"
+                        }
+                      >
+                        {paginatedProducts.map((product, index) => (
+                          <div
+                            key={product.id}
+                            style={{ animationDelay: `${index * 50}ms` }}
+                            className="animate-fade-in"
+                          >
+                            <ProductCardEnhanced 
+                              id={product.id}
+                              name={product.name}
+                              price={product.price}
+                              offerPrice={product.offer_price}
+                              minPrice={product.minPrice}
+                              maxPrice={product.maxPrice}
+                              unifiedPricing={product.unifiedPricing}
+                              image={product.image}
+                              category={product.category}
+                              isNew={product.isNew}
+                              colors={product.colors}
+                              sizes={product.sizes}
+                              rating={product.rating}
+                              colorImages={product.colorImages}
+                              viewMode={viewMode}
+                              targetGender={product.target_gender}
+                              flag={product.flag}
+                            />
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Pagination */}
+                      {totalPages > 1 && (
+                        <Pagination className="mt-8">
+                          <PaginationContent className="flex-wrap gap-2">
+                            <PaginationItem>
+                              <PaginationPrevious
+                                href="#"
+                                onClick={(e) => { e.preventDefault(); setCurrentPage(prev => Math.max(1, prev - 1)); }}
+                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+
+                            {getPageNumbers().map((pageNum, idx) => (
+                              <PaginationItem key={idx}>
+                                {pageNum === 'ellipsis' ? (
+                                  <PaginationEllipsis />
+                                ) : (
+                                  <PaginationLink
+                                    href="#"
+                                    size="default"
+                                    onClick={(e) => { e.preventDefault(); setCurrentPage(pageNum as number); }}
+                                    isActive={currentPage === pageNum}
+                                    className="cursor-pointer"
+                                    aria-label={t("Go to page") + ` ${pageNum}`}
+                                  >
+                                    {pageNum}
+                                  </PaginationLink>
+                                )}
+                              </PaginationItem>
+                            ))}
+
+                            <PaginationItem>
+                              <PaginationNext
+                                href="#"
+                                onClick={(e) => { e.preventDefault(); setCurrentPage(prev => Math.min(totalPages, prev + 1)); }}
+                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-12 sm:py-16 bg-card rounded-lg">
+                      <p className="text-muted-foreground text-base sm:text-lg mb-4">
+                        {t("No products match your filters")}
+                      </p>
+                       <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setPriceInitialized(false);
+                          setFilters({
+                            categories: [],
+                            colors: [],
+                            sizes: [],
+                            priceRange: [minPrice, maxPrice],
+                          });
+                        }}
+                        className="text-sm sm:text-base"
+                      >
+                        {t("Clear All Filters")}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Sidebar Filters */}
+                <div className="lg:col-span-1">
+                  <ProductFilters 
+                    filters={filters} 
+                    onFilterChange={setFilters} 
+                    categories={categories}
+                    colors={availableColors}
+                    sizes={availableSizes}
+                    minPrice={minPrice}
+                    maxPrice={maxPrice}
+                  />
+                </div>
+
+                {/* Products Area */}
+                <div className="lg:col-span-3 space-y-6">
               {/* Controls Bar */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between bg-card p-3 sm:p-4 rounded-lg shadow-sm">
                 <div className="flex items-center gap-2">
@@ -596,7 +766,9 @@ const ProductsEnhanced = () => {
                   </Button>
                 </div>
               )}
-            </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>
