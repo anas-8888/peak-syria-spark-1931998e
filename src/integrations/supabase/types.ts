@@ -1207,6 +1207,7 @@ export type Database = {
         Row: {
           color_id: string
           created_at: string | null
+          display_order: number | null
           id: string
           image_id: string | null
           product_id: string
@@ -1214,6 +1215,7 @@ export type Database = {
         Insert: {
           color_id: string
           created_at?: string | null
+          display_order?: number | null
           id?: string
           image_id?: string | null
           product_id: string
@@ -1221,6 +1223,7 @@ export type Database = {
         Update: {
           color_id?: string
           created_at?: string | null
+          display_order?: number | null
           id?: string
           image_id?: string | null
           product_id?: string
