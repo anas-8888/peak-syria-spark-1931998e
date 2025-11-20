@@ -161,9 +161,9 @@ const ProductsEnhanced = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
-        .select("id, name, parent_id")
+        .select("id, name, parent_id, display_order")
         .eq("is_active", true)
-        .order("name");
+        .order("display_order");
       if (error) throw error;
       return data;
     },
