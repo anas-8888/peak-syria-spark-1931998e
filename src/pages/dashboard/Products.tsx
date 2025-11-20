@@ -563,7 +563,7 @@ const Products = () => {
         price: 0, // Will be set by variants
         stock_quantity: 0, // Will be calculated from variants
         image_url: formData.image_url || null,
-        is_active: true,
+        is_active: false,
         offer_price: null,
         rating: 0, // Will be calculated from reviews
         sizes: formData.sizes,
