@@ -227,11 +227,6 @@ All colors MUST be HSL.
     display: none;
   }
 
-  /* Carousel container hover state for navigation arrows */
-  .carousel-container:hover .opacity-0 {
-    opacity: 1;
-  }
-
   /* Performance optimization - content-visibility for off-screen content */
   section {
     content-visibility: auto;
