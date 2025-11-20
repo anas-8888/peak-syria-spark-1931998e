@@ -245,22 +245,32 @@ export const ColorImageSelector = ({
                               <SelectItem value="none">
                                 <span className="text-muted-foreground">No image</span>
                               </SelectItem>
-                              {productImages.map((img) => (
-                                <SelectItem key={img.id} value={img.id}>
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded border overflow-hidden bg-muted">
-                                      <img
-                                        src={img.image_url}
-                                        alt=""
-                                        className="w-full h-full object-cover"
-                                      />
+                              {productImages
+                                .filter(img => {
+                                  // Show the image if it's the currently selected one
+                                  if (img.id === mapping.image_id) return true;
+                                  // Hide if already assigned to this color in another slot
+                                  const isAlreadyAssigned = mappings.some(
+                                    m => m !== mapping && m.image_id === img.id
+                                  );
+                                  return !isAlreadyAssigned;
+                                })
+                                .map((img) => (
+                                  <SelectItem key={img.id} value={img.id}>
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-8 h-8 rounded border overflow-hidden bg-muted">
+                                        <img
+                                          src={img.image_url}
+                                          alt=""
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </div>
+                                      <span className="text-xs">
+                                        {img.is_primary ? 'Primary' : 'Image'}
+                                      </span>
                                     </div>
-                                    <span className="text-xs">
-                                      {img.is_primary ? 'Primary' : 'Image'}
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              ))}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                         ) : (
