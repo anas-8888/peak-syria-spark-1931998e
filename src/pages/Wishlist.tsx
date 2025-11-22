@@ -60,7 +60,7 @@ const Wishlist = () => {
         .from("products")
         .select("*")
         .in("id", productIds)
-        .eq("is_active", true);
+        .eq("hidden", false);
 
       if (productsError) throw productsError;
 

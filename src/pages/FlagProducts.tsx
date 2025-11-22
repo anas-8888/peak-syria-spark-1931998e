@@ -19,7 +19,7 @@ type Product = {
   offer_price?: number | null;
   stock_quantity: number;
   image_url: string | null;
-  is_active: boolean;
+  hidden: boolean;
   rating?: number;
   sizes?: string[];
   flag?: string | null;
@@ -59,7 +59,7 @@ const FlagProducts = () => {
         .from("products")
         .select("*")
         .eq("flag", flagFromUrl)
-        .eq("is_active", true)
+        .eq("hidden", false)
         .order("created_at", { ascending: false });
 
       if (productsError) throw productsError;

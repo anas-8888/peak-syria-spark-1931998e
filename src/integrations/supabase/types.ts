@@ -1396,7 +1396,6 @@ export type Database = {
           hidden: boolean
           id: string
           image_url: string | null
-          is_active: boolean | null
           max_price: number | null
           min_price: number | null
           name: string
@@ -1420,7 +1419,6 @@ export type Database = {
           hidden?: boolean
           id?: string
           image_url?: string | null
-          is_active?: boolean | null
           max_price?: number | null
           min_price?: number | null
           name: string
@@ -1444,7 +1442,6 @@ export type Database = {
           hidden?: boolean
           id?: string
           image_url?: string | null
-          is_active?: boolean | null
           max_price?: number | null
           min_price?: number | null
           name?: string

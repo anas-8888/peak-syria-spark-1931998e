@@ -37,7 +37,7 @@ type Product = {
   category: string;
   price: number;
   stock_quantity: number;
-  is_active: boolean;
+  hidden: boolean;
   colors?: { color: string; image_id: string }[];
   offer_price?: number | null;
   rating?: number;
