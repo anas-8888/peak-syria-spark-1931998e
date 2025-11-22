@@ -26,7 +26,7 @@ const Index = () => {
       const { data: productsData, error: productsError } = await supabase
         .from("products")
         .select("*")
-        .eq("is_active", true)
+        .eq("hidden", false)
         .eq("flag", "New Arrival")
         .order("created_at", { ascending: false })
         .limit(8);

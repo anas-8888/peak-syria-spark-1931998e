@@ -64,7 +64,7 @@ const ProductsEnhanced = () => {
       const { data: productsData, error: productsError } = await supabase
         .from("products")
         .select("*")
-        .eq("is_active", true)
+        .eq("hidden", false)
         .order("created_at", { ascending: false });
 
       if (productsError) throw productsError;

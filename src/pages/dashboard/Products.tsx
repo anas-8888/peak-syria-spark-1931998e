@@ -32,7 +32,7 @@ type Product = {
   price: number;
   stock_quantity: number;
   image_url: string | null;
-  is_active: boolean;
+  hidden: boolean;
   colors?: {
     color: string;
     image_id: string;
@@ -407,21 +407,21 @@ const Products = () => {
     }
   });
 
-  // Toggle product active status mutation
-  const toggleActiveMutation = useMutation({
-    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+  // Toggle product hidden status mutation
+  const toggleHiddenMutation = useMutation({
+    mutationFn: async ({ id, hidden }: { id: string; hidden: boolean }) => {
       const { error } = await supabase
         .from("products")
-        .update({ is_active: isActive })
+        .update({ hidden: hidden })
         .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast.success(t("Product status updated"));
+      toast.success(t("Product visibility updated"));
     },
     onError: (error) => {
-      toast.error(t("Failed to update product status"), {
+      toast.error(t("Failed to update product visibility"), {
         description: error.message,
       });
     },
@@ -563,7 +563,7 @@ const Products = () => {
         price: 0, // Will be set by variants
         stock_quantity: 0, // Will be calculated from variants
         image_url: formData.image_url || null,
-        is_active: false,
+        hidden: true,
         offer_price: null,
         rating: 0, // Will be calculated from reviews
         sizes: formData.sizes,
@@ -880,11 +880,11 @@ const Products = () => {
                         <div className="flex items-center gap-2">
                           <div className="flex items-center gap-2 border-r pr-2">
                             <Switch
-                              checked={product.is_active}
+                              checked={!product.hidden}
                               onCheckedChange={(checked) => {
-                                toggleActiveMutation.mutate({ id: product.id, isActive: checked });
+                                toggleHiddenMutation.mutate({ id: product.id, hidden: !checked });
                               }}
-                              title={product.is_active ? t("Deactivate") : t("Activate")}
+                              title={!product.hidden ? t("Hide") : t("Show")}
                             />
                           </div>
                           {hasPermission('view_products') && (
@@ -2028,9 +2028,9 @@ const Products = () => {
                     </Badge>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">{t("Active")}</Label>
-                    <Badge variant={selectedProduct.is_active ? "default" : "secondary"} className="mx-[20px]">
-                      {selectedProduct.is_active ? t("Active") : t("Inactive")}
+                    <Label className="text-muted-foreground">{t("Visible")}</Label>
+                    <Badge variant={!selectedProduct.hidden ? "default" : "secondary"} className="mx-[20px]">
+                      {!selectedProduct.hidden ? t("Visible") : t("Hidden")}
                     </Badge>
                   </div>
                 </div>
