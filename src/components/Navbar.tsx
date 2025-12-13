@@ -55,7 +55,7 @@ const Navbar = () => {
     latestOrder.status !== "cancelled"
   );
 
-  // Fetch hero slides that should show in navbar
+  // Fetch flags that should show in navbar
   const {
     data: navbarFlags = []
   } = useQuery({
@@ -64,12 +64,12 @@ const Navbar = () => {
       const {
         data,
         error
-      } = await supabase.from("hero_slides").select("flag_name, button_url").eq("is_active", true).eq("show_in_navbar", true).order("display_order");
+      } = await supabase.from("flags").select("name").eq("is_active", true).eq("show_in_navbar", true).order("display_order");
       if (error) throw error;
-      // Transform button_url to use /flag-products route with query param
+      // Transform to use /flag-products route with query param
       return (data || []).map(flag => ({
-        ...flag,
-        button_url: `/flag-products?flag=${encodeURIComponent(flag.flag_name)}`
+        flag_name: flag.name,
+        button_url: `/flag-products?flag=${encodeURIComponent(flag.name)}`
       }));
     },
     staleTime: 1000 * 60 * 10, // Cache for 10 minutes

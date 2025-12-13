@@ -34,14 +34,14 @@ const FlagProducts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
   
-  // Fetch hero slide info for this flag
-  const { data: heroSlide } = useQuery({
-    queryKey: ["hero-slide", flagFromUrl],
+  // Fetch flag info
+  const { data: flagInfo } = useQuery({
+    queryKey: ["flag-info", flagFromUrl],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("hero_slides")
+        .from("flags")
         .select("*")
-        .eq("flag_name", flagFromUrl)
+        .eq("name", flagFromUrl)
         .eq("is_active", true)
         .maybeSingle();
 
@@ -153,7 +153,7 @@ const FlagProducts = () => {
   });
 
   const pageTitle = flagFromUrl || "Products";
-  const pageDescription = heroSlide?.subtitle || `Browse our ${flagFromUrl} collection`;
+  const pageDescription = flagInfo?.description || `Browse our ${flagFromUrl} collection`;
 
   // Calculate pagination
   const totalPages = Math.ceil(products.length / itemsPerPage);
@@ -211,31 +211,25 @@ const FlagProducts = () => {
         <Navbar />
 
         {/* Hero Section */}
-        {heroSlide && (
-          <section 
-            className="relative h-[300px] md:h-[400px] bg-cover bg-center"
-            style={{
-              backgroundImage: heroSlide.image_url ? `url(${heroSlide.image_url})` : 'none',
-              backgroundColor: heroSlide.image_url ? 'transparent' : 'hsl(var(--secondary))'
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30" />
-            <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
-              <div className="max-w-2xl space-y-4">
-                <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-4 py-2 text-primary text-sm font-semibold">
-                  <span className="text-xs">✨</span>
-                  {t(flagFromUrl)}
-                </div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
-                  {t(heroSlide.title)}
-                </h1>
-                <p className="text-lg md:text-xl text-white/90">
-                  {t(heroSlide.subtitle)}
-                </p>
+        <section className="relative h-[200px] md:h-[280px] bg-gradient-to-r from-primary/20 via-primary/10 to-background">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent" />
+          <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
+            <div className="max-w-2xl space-y-4">
+              <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-4 py-2 text-primary text-sm font-semibold">
+                <span className="text-xs">✨</span>
+                {t(flagFromUrl)}
               </div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground leading-tight">
+                {t(flagFromUrl)} {t("Collection")}
+              </h1>
+              {flagInfo?.description && (
+                <p className="text-lg md:text-xl text-muted-foreground">
+                  {t(flagInfo.description)}
+                </p>
+              )}
             </div>
-          </section>
-        )}
+          </div>
+        </section>
 
         {/* Products Section */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
