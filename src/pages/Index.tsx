@@ -278,8 +278,8 @@ const Index = () => {
               <ArrowRight className="h-6 w-6" />
             </button>
 
-            <div id="categories-scroll" className="overflow-x-auto scrollbar-hide">
-              <div className="flex gap-4 sm:gap-6 md:gap-8 pb-4" style={{ width: 'max-content' }}>
+            <div id="categories-scroll" className={`overflow-x-auto scrollbar-hide ${categories.length <= 3 ? 'flex justify-center' : ''}`}>
+              <div className={`flex gap-4 sm:gap-6 md:gap-8 pb-4 ${categories.length <= 3 ? 'justify-center' : ''}`} style={{ width: categories.length <= 3 ? 'auto' : 'max-content' }}>
                 {categories.map((category, index) => {
                   const Icon = category.icon;
                   return (
