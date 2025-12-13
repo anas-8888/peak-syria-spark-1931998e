@@ -420,11 +420,11 @@ const ProductsEnhanced = () => {
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 animate-fade-in">
-            {searchParams.get('category') ? `${searchParams.get('category')} ${t("Collection")}` : t("Our Collection")}
+            {searchParams.get('category') ? `${t(searchParams.get('category') || '')} ${t("Collection")}` : t("Our Collection")}
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-secondary-foreground/80 animate-slide-in-left">
             {sortedProducts.length} {t("Premium PEAK Products")}
-            {searchParams.get('category') && ` ${t("in")} ${searchParams.get('category')}`}
+            {searchParams.get('category') && ` ${t("in")} ${t(searchParams.get('category') || '')}`}
           </p>
         </div>
       </section>
