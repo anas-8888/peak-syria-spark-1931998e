@@ -1263,15 +1263,15 @@ const Products = () => {
               />
               <div className="grid gap-2">
                 <Label htmlFor="copy-flag">{t("Product Flag")}</Label>
-                <Select value={formData.flag || undefined} onValueChange={value => setFormData({
+                <Select value={formData.flag || "__none__"} onValueChange={value => setFormData({
                   ...formData,
-                  flag: value
+                  flag: value === "__none__" ? "" : value
                 })}>
                   <SelectTrigger>
                     <SelectValue placeholder={t("No flag")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t("No flag")}</SelectItem>
+                    <SelectItem value="__none__">{t("No flag")}</SelectItem>
                     {productFlags.map((flag) => (
                       <SelectItem key={flag} value={flag}>{t(flag)}</SelectItem>
                     ))}
@@ -1544,15 +1544,15 @@ const Products = () => {
               />
               <div className="grid gap-2">
                 <Label htmlFor="edit-flag">{t("Product Flag")}</Label>
-                <Select value={formData.flag || undefined} onValueChange={value => setFormData({
+                <Select value={formData.flag || "__none__"} onValueChange={value => setFormData({
                   ...formData,
-                  flag: value
+                  flag: value === "__none__" ? "" : value
                 })}>
                   <SelectTrigger>
                     <SelectValue placeholder={t("No flag")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t("No flag")}</SelectItem>
+                    <SelectItem value="__none__">{t("No flag")}</SelectItem>
                     {productFlags.map((flag) => (
                       <SelectItem key={flag} value={flag}>{t(flag)}</SelectItem>
                     ))}
