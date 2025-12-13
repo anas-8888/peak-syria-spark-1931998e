@@ -116,7 +116,7 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
           product_images!inner(image_url, is_primary)
         `)
         .ilike("name", `%${productSearch}%`)
-        .eq("is_active", true)
+        .eq("hidden", false)
         .limit(10);
       if (error) throw error;
       

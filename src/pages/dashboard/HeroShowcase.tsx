@@ -63,7 +63,7 @@ const HeroShowcase = () => {
       const { data: productsData, error: productsError } = await supabase
         .from("products")
         .select("id, name, image_url")
-        .eq("is_active", true)
+        .eq("hidden", false)
         .limit(50);
       if (productsError) throw productsError;
 
