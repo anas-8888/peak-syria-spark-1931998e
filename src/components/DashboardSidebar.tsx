@@ -56,6 +56,12 @@ permission: "view_users"
   end: false,
   permission: "view_products"
 }, {
+  title: "Flags",
+  path: "/dashboard/flags",
+  icon: Tag,
+  end: false,
+  permission: "view_products"
+}, {
   title: "Discounts",
   path: "/dashboard/discounts",
   icon: Tag,

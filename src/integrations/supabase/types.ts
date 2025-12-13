@@ -624,6 +624,39 @@ export type Database = {
         }
         Relationships: []
       }
+      flags: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          show_in_navbar: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          show_in_navbar?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          show_in_navbar?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hero_showcase: {
         Row: {
           created_at: string
@@ -672,7 +705,7 @@ export type Database = {
           button_url: string
           created_at: string
           display_order: number
-          flag_name: string
+          flag_name: string | null
           id: string
           image_height: number
           image_url: string
@@ -688,7 +721,7 @@ export type Database = {
           button_url: string
           created_at?: string
           display_order?: number
-          flag_name: string
+          flag_name?: string | null
           id?: string
           image_height?: number
           image_url: string
@@ -704,7 +737,7 @@ export type Database = {
           button_url?: string
           created_at?: string
           display_order?: number
-          flag_name?: string
+          flag_name?: string | null
           id?: string
           image_height?: number
           image_url?: string
