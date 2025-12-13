@@ -1271,6 +1271,7 @@ const Products = () => {
                     <SelectValue placeholder={t("No flag")} />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">{t("No flag")}</SelectItem>
                     {productFlags.map((flag) => (
                       <SelectItem key={flag} value={flag}>{t(flag)}</SelectItem>
                     ))}
@@ -1551,6 +1552,7 @@ const Products = () => {
                     <SelectValue placeholder={t("No flag")} />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">{t("No flag")}</SelectItem>
                     {productFlags.map((flag) => (
                       <SelectItem key={flag} value={flag}>{t(flag)}</SelectItem>
                     ))}
