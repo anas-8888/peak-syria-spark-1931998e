@@ -124,22 +124,23 @@ const Products = () => {
     }
   });
 
-  // Fetch product flags from hero_slides
+  // Fetch product flags from flags table
   const {
-    data: productFlags = []
+    data: productFlags = [],
   } = useQuery({
     queryKey: ["product-flags"],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from("hero_slides").select("flag_name").eq("is_active", true);
+      const { data, error } = await supabase
+        .from("flags")
+        .select("name, is_active, display_order")
+        .eq("is_active", true)
+        .order("display_order");
+
       if (error) throw error;
-      
-      // Get unique flag names
-      const uniqueFlags = [...new Set(data.map(item => item.flag_name))];
-      return uniqueFlags;
-    }
+
+      // Return active flag names ordered by display_order
+      return (data ?? []).map((flag) => flag.name as string);
+    },
   });
 
   // Fetch products with their primary images and variant data
