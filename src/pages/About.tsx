@@ -61,11 +61,11 @@ const About = () => {
           </div>
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 sm:mb-8 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent animate-fade-in-up">
-            {aboutData?.hero_title || "About PEAK Syria"}
+            {t(aboutData?.hero_title || "About PEAK Syria")}
           </h1>
           
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-            {aboutData?.hero_subtitle || "The official and exclusive distributor of PEAK sportswear in Syria"}
+            {t(aboutData?.hero_subtitle || "The official and exclusive distributor of PEAK sportswear in Syria")}
           </p>
         </div>
       </section>
@@ -76,7 +76,7 @@ const About = () => {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12 sm:mb-16">
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                {aboutData?.story_title || "Our Story"}
+                {t(aboutData?.story_title || "Our Story")}
               </h2>
               <div className="w-24 h-1 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto"></div>
             </div>
@@ -88,7 +88,7 @@ const About = () => {
                   className="bg-card/50 backdrop-blur-sm p-6 sm:p-8 rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary/20"
                 >
                   <p className="text-muted-foreground text-base sm:text-lg md:text-xl leading-relaxed">
-                    {paragraph}
+                    {t(paragraph)}
                   </p>
                 </div>
               ))}
@@ -128,10 +128,10 @@ const About = () => {
                         <IconComponent className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
                       </div>
                       <h3 className="text-xl sm:text-2xl font-bold mb-3 group-hover:text-primary transition-colors duration-300">
-                        {value.title}
+                        {t(value.title)}
                       </h3>
                       <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
-                        {value.description}
+                        {t(value.description)}
                       </p>
                     </div>
                   </div>
@@ -158,13 +158,13 @@ const About = () => {
                   <Target className="h-8 w-8 text-primary" />
                 </div>
                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                  {aboutData?.mission_title || "Our Mission"}
+                  {t(aboutData?.mission_title || "Our Mission")}
                 </h2>
                 <div className="w-24 h-1 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto"></div>
               </div>
               
               <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed text-center">
-                {aboutData?.mission_content}
+                {t(aboutData?.mission_content || "")}
               </p>
             </div>
           </div>
