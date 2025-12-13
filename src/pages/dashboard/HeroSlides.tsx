@@ -29,7 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type HeroSlide = {
   id: string;
-  flag_name: string;
+  flag_name: string | null;
   title: string;
   subtitle: string;
   button_text: string;
@@ -217,7 +217,7 @@ const HeroSlides = () => {
         <div>
           <h1 className="text-3xl font-bold">{t("Hero Slides")}</h1>
           <p className="text-muted-foreground mt-1">
-            {t("Manage hero section slides with product flags")}
+            {t("Manage hero section carousel slides")}
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -236,18 +236,6 @@ const HeroSlides = () => {
                 <DialogDescription>{editingSlide ? t("Update slide details") : t("Create a new hero carousel slide")}</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="flag-name">{t("Flag Name")} *</Label>
-                  <Input
-                    id="flag-name"
-                    value={slideForm.flag_name}
-                    onChange={(e) => setSlideForm({ ...slideForm, flag_name: e.target.value })}
-                    placeholder={t("e.g. New Arrival, Offer, Best Seller")}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {t("Common examples: New Arrival, Offer, Best Seller, Limited Edition")}
-                  </p>
-                </div>
 
                 <div>
                   <Label htmlFor="title">{t("Title")} *</Label>
@@ -381,7 +369,6 @@ const HeroSlides = () => {
                   <Button
                     onClick={() => saveSlide.mutate(slideForm)}
                     disabled={
-                      !slideForm.flag_name ||
                       !slideForm.title ||
                       !slideForm.subtitle ||
                       !slideForm.button_text ||

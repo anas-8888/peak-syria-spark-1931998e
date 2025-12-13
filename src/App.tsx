@@ -55,6 +55,7 @@ import Privacy from "./pages/Privacy";
 import Refund from "./pages/Refund";
 import LegalPages from "./pages/dashboard/LegalPages";
 import Translations from "./pages/dashboard/Translations";
+import Flags from "./pages/dashboard/Flags";
 import ScrollToTop from "./components/ScrollToTop";
 import LanguageToggleFloating from "./components/LanguageToggleFloating";
 import Maintenance from "./pages/Maintenance";
@@ -137,6 +138,7 @@ function App() {
                     <Route path="banners" element={<Banners />} />
                     <Route path="showcase" element={<HeroShowcase />} />
                     <Route path="products" element={<Products />} />
+                    <Route path="flags" element={<Flags />} />
                   <Route path="categories" element={<Categories />} />
                   <Route path="colors" element={<Colors />} />
                   <Route path="regions" element={<Regions />} />

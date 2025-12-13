@@ -152,7 +152,7 @@ export function DiscountForm({ initialData, onSubmit, isLoading }: DiscountFormP
       const { data, error } = await supabase
         .from("products")
         .select("id, name, category, price")
-        .eq("is_active", true)
+        .eq("hidden", false)
         .order("name");
       if (error) throw error;
       return data;
