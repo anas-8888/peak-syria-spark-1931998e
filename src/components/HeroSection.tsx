@@ -197,10 +197,6 @@ const HeroSection = () => {
 
           <div className="relative h-full w-full px-3 sm:px-6 md:px-8 lg:px-12 flex items-center">
             <div className="w-full max-w-3xl lg:max-w-4xl space-y-1.5 sm:space-y-12 md:space-y-5 lg:space-y-7 text-center md:text-left md:ml-8 lg:ml-12">
-              <div className="inline-flex items-center gap-1 sm:gap-1.5 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-2 py-0.5 text-primary text-[10px] sm:text-sm font-semibold animate-slide-in-left mx-auto md:mx-0">
-                <span className="text-[10px] sm:text-sm">✨</span>
-                <span className="text-[10px] sm:text-sm">{t(slide.flag_name)}</span>
-              </div>
               <h1 className="text-3xl sm:text-5xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white leading-tight animate-slide-up">
                 {t(slide.title)}
               </h1>
