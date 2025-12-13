@@ -1271,10 +1271,9 @@ const Products = () => {
                     <SelectValue placeholder={t("No flag")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="New Arrival">{t("New Arrival")}</SelectItem>
-                    <SelectItem value="Offer">{t("Offer")}</SelectItem>
-                    <SelectItem value="Best Seller">{t("Best Seller")}</SelectItem>
-                    <SelectItem value="Limited Edition">{t("Limited Edition")}</SelectItem>
+                    {productFlags.map((flag) => (
+                      <SelectItem key={flag} value={flag}>{t(flag)}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -1552,10 +1551,9 @@ const Products = () => {
                     <SelectValue placeholder={t("No flag")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="New Arrival">{t("New Arrival")}</SelectItem>
-                    <SelectItem value="Offer">{t("Offer")}</SelectItem>
-                    <SelectItem value="Best Seller">{t("Best Seller")}</SelectItem>
-                    <SelectItem value="Limited Edition">{t("Limited Edition")}</SelectItem>
+                    {productFlags.map((flag) => (
+                      <SelectItem key={flag} value={flag}>{t(flag)}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
