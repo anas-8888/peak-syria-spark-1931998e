@@ -29,7 +29,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type HeroSlide = {
   id: string;
-  flag_name: string | null;
   title: string;
   subtitle: string;
   button_text: string;
@@ -39,7 +38,6 @@ type HeroSlide = {
   image_height: number;
   display_order: number;
   is_active: boolean;
-  show_in_navbar: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -53,7 +51,6 @@ const HeroSlides = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const [slideForm, setSlideForm] = useState({
-    flag_name: "",
     title: "",
     subtitle: "",
     button_text: "",
@@ -63,7 +60,6 @@ const HeroSlides = () => {
     image_height: 1080,
     display_order: 0,
     is_active: true,
-    show_in_navbar: false,
   });
 
   // Fetch hero slides
@@ -177,7 +173,6 @@ const HeroSlides = () => {
 
   const resetForm = () => {
     setSlideForm({
-      flag_name: "",
       title: "",
       subtitle: "",
       button_text: "",
@@ -187,7 +182,6 @@ const HeroSlides = () => {
       image_height: 1080,
       display_order: 0,
       is_active: true,
-      show_in_navbar: false,
     });
     setEditingSlide(null);
     setImageFile(null);
@@ -196,7 +190,6 @@ const HeroSlides = () => {
   const openEditSlide = (slide: HeroSlide) => {
     setEditingSlide(slide);
     setSlideForm({
-      flag_name: slide.flag_name,
       title: slide.title,
       subtitle: slide.subtitle,
       button_text: slide.button_text,
@@ -206,7 +199,6 @@ const HeroSlides = () => {
       image_height: slide.image_height,
       display_order: slide.display_order,
       is_active: slide.is_active,
-      show_in_navbar: slide.show_in_navbar,
     });
     setIsDialogOpen(true);
   };
@@ -342,19 +334,6 @@ const HeroSlides = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="show-in-navbar">{t("Show in Navbar")}</Label>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {t("Display this flag as a navigation link")}
-                    </p>
-                  </div>
-                  <Switch
-                    id="show-in-navbar"
-                    checked={slideForm.show_in_navbar}
-                    onCheckedChange={(checked) => setSlideForm({ ...slideForm, show_in_navbar: checked })}
-                  />
-                </div>
 
                 <div className="flex justify-end gap-2 pt-4">
                   <Button
@@ -396,11 +375,9 @@ const HeroSlides = () => {
                 <TableRow>
                   <TableHead>{t("Image")}</TableHead>
                   <TableHead>{t("Order")}</TableHead>
-                  <TableHead>{t("Flag")}</TableHead>
                   <TableHead>{t("Title")}</TableHead>
                   <TableHead>{t("Button Text")}</TableHead>
                   <TableHead>{t("Status")}</TableHead>
-                  <TableHead>{t("In Navbar")}</TableHead>
                   <TableHead>{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -409,14 +386,11 @@ const HeroSlides = () => {
                   <TableRow key={i}>
                     <TableCell><Skeleton className="h-20 w-32 rounded-lg" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-12" /></TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Skeleton className="h-8 w-8" />
                         <Skeleton className="h-8 w-8" />
                         <Skeleton className="h-8 w-8" />
                       </div>
@@ -435,11 +409,9 @@ const HeroSlides = () => {
                 <TableRow>
                   <TableHead>{t("Image")}</TableHead>
                   <TableHead>{t("Order")}</TableHead>
-                  <TableHead>{t("Flag")}</TableHead>
                   <TableHead>{t("Title")}</TableHead>
                   <TableHead>{t("Button Text")}</TableHead>
                   <TableHead>{t("Status")}</TableHead>
-                  <TableHead>{t("In Navbar")}</TableHead>
                   <TableHead>{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -460,11 +432,6 @@ const HeroSlides = () => {
                       )}
                     </TableCell>
                     <TableCell>{slide.display_order}</TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                        {slide.flag_name}
-                      </span>
-                    </TableCell>
                     <TableCell className="font-medium">{slide.title}</TableCell>
                     <TableCell>{slide.button_text}</TableCell>
                     <TableCell>
@@ -472,13 +439,6 @@ const HeroSlides = () => {
                         slide.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
                       }`}>
                         {slide.is_active ? t("Active") : t("Inactive")}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                        slide.show_in_navbar ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
-                      }`}>
-                        {slide.show_in_navbar ? t("Yes") : t("No")}
                       </span>
                     </TableCell>
                     <TableCell>
