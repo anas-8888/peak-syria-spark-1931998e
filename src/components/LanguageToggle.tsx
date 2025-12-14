@@ -11,26 +11,22 @@ const LanguageToggle = () => {
   // Show the language that will be switched TO (not current)
   const targetLanguage = language === "en" ? "ar" : "en";
   const targetFlag = targetLanguage === "ar" 
-    ? "https://flagcdn.com/16x12/sy.png" 
-    : "https://flagcdn.com/16x12/us.png";
-  const targetText = targetLanguage === "ar" ? "العربية" : "English";
-  const targetTextShort = targetLanguage === "ar" ? "AR" : "EN";
+    ? "https://flagcdn.com/24x18/sy.png" 
+    : "https://flagcdn.com/24x18/us.png";
 
   return (
     <Button
-      variant="outline"
-      size="sm"
+      variant="ghost"
+      size="icon"
       onClick={toggleLanguage}
-      className="h-8 px-2 text-xs flex items-center gap-1"
+      className="h-9 w-9 lg:h-10 lg:w-10 rounded-full hover:bg-accent/50 transition-all duration-300 hover:scale-110"
       aria-label="Toggle language"
     >
       <img 
         src={targetFlag} 
-        alt={targetLanguage === "ar" ? "Syria" : "United States"} 
-        className="h-3 w-4 object-cover rounded-sm flex-shrink-0"
+        alt={targetLanguage === "ar" ? "العربية" : "English"} 
+        className="h-5 w-7 object-cover rounded-sm"
       />
-      <span className="hidden sm:inline text-xs">{targetText}</span>
-      <span className="sm:hidden text-xs">{targetTextShort}</span>
     </Button>
   );
 };

@@ -109,8 +109,6 @@ function App() {
                     <MaintenanceCheck>
                       <TooltipProvider>
                         <Toaster />
-                        {/* Language Toggle Button - Available on all pages except dashboard */}
-                        <LanguageToggleFloating />
                         <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/products" element={<ProductsEnhanced />} />
