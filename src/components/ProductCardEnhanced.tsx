@@ -31,7 +31,9 @@ interface ProductCardEnhancedProps {
   minPrice?: number;
   maxPrice?: number;
   unifiedPricing?: boolean;
+  fromPage?: number;
 }
+
 
 const ProductCardEnhanced = ({
   id,
@@ -52,6 +54,7 @@ const ProductCardEnhanced = ({
   minPrice,
   maxPrice,
   unifiedPricing,
+  fromPage,
 }: ProductCardEnhancedProps) => {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState(colors[0]);
@@ -130,9 +133,11 @@ const ProductCardEnhanced = ({
     }
   };
 
+  const productLinkState = fromPage ? { fromPage } : undefined;
+
   const handleAddToCart = async () => {
     // Always navigate to product detail page for variant selection
-    navigate(`/product/${id}`);
+    navigate(`/product/${id}`, { state: productLinkState });
   };
 
   const handleToggleFavorite = async () => {
@@ -176,7 +181,6 @@ const ProductCardEnhanced = ({
       setIsLoading(false);
     }
   };
-
   const colorMap: Record<string, string> = {
     black: "#000000",
     white: "#FFFFFF",
@@ -279,7 +283,7 @@ const ProductCardEnhanced = ({
         <div className={`space-y-1 sm:space-y-1.5 md:space-y-2 ${viewMode === "list" ? "flex-1 p-1.5 sm:p-2 md:p-4 lg:p-6 flex flex-col" : "p-2 sm:p-3 md:p-4"}`}>
           <div className={viewMode === "list" ? "flex-1" : ""}>
             <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">{t(category)}</p>
-            <Link to={`/product/${id}`}>
+            <Link to={`/product/${id}`} state={productLinkState}>
               <h3 className={`font-semibold text-card-foreground hover:text-primary transition-colors ${
                 viewMode === "list" ? "text-sm sm:text-base md:text-lg mt-1 line-clamp-2" : "text-xs sm:text-base min-h-[2.5rem] sm:min-h-[3rem] line-clamp-2"
               }`}>
@@ -379,7 +383,7 @@ const ProductCardEnhanced = ({
                   className="flex-1 sm:flex-initial text-xs sm:text-xs md:text-sm lg:text-base h-9 sm:h-7 md:h-8 lg:h-10 px-4 sm:px-3 md:px-4 rounded-xl sm:rounded-md font-semibold max-w-[110px] sm:max-w-none shadow-md hover:shadow-lg active:scale-[0.98] transition-all duration-200 border-0 sm:border-0" 
                   asChild
                 >
-                  <Link to={`/product/${id}`}>
+                  <Link to={`/product/${id}`} state={productLinkState}>
                     <span className="hidden sm:inline">{t("View Details")}</span>
                     <span className="sm:hidden font-medium tracking-wide">{t("View")}</span>
                   </Link>
@@ -387,7 +391,7 @@ const ProductCardEnhanced = ({
               </div>
             ) : (
               <Button size="xs" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10 text-sm sm:text-xs md:text-sm h-8 sm:h-7 md:h-9 px-4 sm:px-3 md:px-4 w-full sm:w-auto" asChild>
-                <Link to={`/product/${id}`}>
+                <Link to={`/product/${id}`} state={productLinkState}>
                   {t("View Details")}
                 </Link>
               </Button>
@@ -494,7 +498,7 @@ const ProductCardEnhanced = ({
                   ))}
                 </div>
               </div>
-              <Link to={`/product/${id}`}>
+              <Link to={`/product/${id}`} state={productLinkState}>
                 <Button variant="hero" size="lg" className="w-full mt-6">
                   {t("View Full Details")}
                 </Button>
