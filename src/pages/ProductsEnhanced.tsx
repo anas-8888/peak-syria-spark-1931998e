@@ -540,6 +540,7 @@ const ProductsEnhanced = () => {
                               viewMode={viewMode}
                               targetGender={product.target_gender}
                               flag={product.flag}
+                              fromPage={currentPage}
                             />
                           </div>
                         ))}
@@ -708,6 +709,7 @@ const ProductsEnhanced = () => {
                           viewMode={viewMode}
                           targetGender={product.target_gender}
                           flag={product.flag}
+                          fromPage={currentPage}
                         />
                       </div>
                     ))}

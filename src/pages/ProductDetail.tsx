@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -51,6 +51,9 @@ type Product = {
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromState = location.state as { fromPage?: number } | null;
+  const fromPage = fromState?.fromPage;
   const { addToCart } = useCart();
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -406,7 +409,13 @@ const ProductDetail = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <button 
-          onClick={() => navigate(-1)} 
+          onClick={() => {
+            if (fromPage && Number.isFinite(fromPage)) {
+              navigate(`/products?page=${fromPage}`);
+            } else {
+              navigate(-1);
+            }
+          }} 
           className="inline-flex items-center text-primary hover:text-primary/80 mb-4 sm:mb-6 text-sm sm:text-base"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
