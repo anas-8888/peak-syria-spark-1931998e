@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getOptimizedImageUrl } from "@/utils/imageCache";
 
 const Index = () => {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
 
   // Fetch latest 8 products from database
   const { data: featuredProducts = [], isLoading } = useQuery({
@@ -184,33 +184,28 @@ const Index = () => {
           </div>
 
           {/* Featured Products Carousel */}
-          <div className="relative carousel-container mb-8">
-            {/* Left Arrow */}
+          <div className="relative mb-8 group/carousel">
+            {/* Navigation Arrows - Desktop only */}
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+              onClick={() => {
                 const container = document.getElementById('featured-scroll');
-                if (container) container.scrollBy({ left: -320, behavior: 'smooth' });
+                if (container) container.scrollBy({ left: isRTL ? 320 : -320, behavior: 'smooth' });
               }}
-              className="hidden sm:block absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 carousel-container:hover:opacity-100 transition-opacity pointer-events-auto"
-              aria-label="Scroll left"
+              className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 items-center justify-center bg-background border border-border rounded-full shadow-sm hover:shadow-md hover:bg-muted transition-all opacity-0 group-hover/carousel:opacity-100"
+              aria-label={isRTL ? "التالي" : "Previous"}
             >
-              <ArrowRight className="h-6 w-6 rotate-180" />
+              <ArrowRight className={`h-5 w-5 text-foreground ${isRTL ? '' : 'rotate-180'}`} />
             </button>
 
-            {/* Right Arrow */}
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+              onClick={() => {
                 const container = document.getElementById('featured-scroll');
-                if (container) container.scrollBy({ left: 320, behavior: 'smooth' });
+                if (container) container.scrollBy({ left: isRTL ? -320 : 320, behavior: 'smooth' });
               }}
-              className="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-background/90 hover:bg-background shadow-lg rounded-full p-3 opacity-0 carousel-container:hover:opacity-100 transition-opacity pointer-events-auto"
-              aria-label="Scroll right"
+              className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 items-center justify-center bg-background border border-border rounded-full shadow-sm hover:shadow-md hover:bg-muted transition-all opacity-0 group-hover/carousel:opacity-100"
+              aria-label={isRTL ? "السابق" : "Next"}
             >
-              <ArrowRight className="h-6 w-6" />
+              <ArrowRight className={`h-5 w-5 text-foreground ${isRTL ? 'rotate-180' : ''}`} />
             </button>
 
             <div id="featured-scroll" className="overflow-x-auto scrollbar-hide">
