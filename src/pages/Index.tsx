@@ -19,7 +19,7 @@ import { getOptimizedImageUrl } from "@/utils/imageCache";
 const Index = () => {
   const { t } = useLanguage();
 
-  // Fetch featured products from database (New Arrivals only)
+  // Fetch latest 8 products from database
   const { data: featuredProducts = [], isLoading } = useQuery({
     queryKey: ["featured-products"],
     queryFn: async () => {
@@ -27,7 +27,6 @@ const Index = () => {
         .from("products")
         .select("*")
         .eq("hidden", false)
-        .eq("flag", "New Arrival")
         .order("created_at", { ascending: false })
         .limit(8);
 
