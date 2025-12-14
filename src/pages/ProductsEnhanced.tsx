@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,11 +54,12 @@ const ProductsEnhanced = () => {
   const itemsPerPage = 12;
   const [priceInitialized, setPriceInitialized] = useState(false);
   const [filters, setFilters] = useState({
-    categories: [] as string[],
-    colors: [] as string[],
-    sizes: [] as string[],
-    priceRange: [0, 1000] as [number, number],
-  });
+     categories: [] as string[],
+     colors: [] as string[],
+     sizes: [] as string[],
+     priceRange: [0, 1000] as [number, number],
+   });
+   const hasInitializedPageReset = useRef(false);
 
   // Fetch products from database
   const { data: allProducts = [], isLoading } = useQuery({
@@ -368,10 +369,22 @@ const ProductsEnhanced = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedProducts = sortedProducts.slice(startIndex, endIndex);
 
-  // Reset to page 1 when filters change
+  // Sync currentPage with URL (e.g. when using browser back/forward)
   useEffect(() => {
-    setCurrentPage(1);
-  }, [filters, sortBy]);
+    const pageParam = searchParams.get('page');
+    const pageFromUrl = pageParam ? parseInt(pageParam, 10) : 1;
+    if (!Number.isNaN(pageFromUrl) && pageFromUrl !== currentPage) {
+      setCurrentPage(pageFromUrl);
+    }
+  }, [searchParams, currentPage]);
+  // Reset to page 1 when filters or sort change, but skip first run (when loading from URL)
+   useEffect(() => {
+     if (!hasInitializedPageReset.current) {
+       hasInitializedPageReset.current = true;
+       return;
+     }
+     setCurrentPage(1);
+   }, [filters, sortBy]);
 
   // Generate page numbers for pagination
   const getPageNumbers = () => {
