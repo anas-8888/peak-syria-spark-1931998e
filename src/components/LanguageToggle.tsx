@@ -25,7 +25,7 @@ const LanguageToggle = () => {
       <img 
         src={targetFlag} 
         alt={targetLanguage === "ar" ? "العربية" : "English"} 
-        className="h-5 w-7 object-cover rounded-sm"
+        className="h-4 w-5 object-cover rounded-sm"
       />
     </Button>
   );
