@@ -47,7 +47,10 @@ const ProductsEnhanced = () => {
     return "grid";
   });
   const [sortBy, setSortBy] = useState("featured");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const pageParam = searchParams.get('page');
+    return pageParam ? parseInt(pageParam, 10) : 1;
+  });
   const itemsPerPage = 12;
   const [priceInitialized, setPriceInitialized] = useState(false);
   const [filters, setFilters] = useState({
@@ -275,9 +278,12 @@ const ProductsEnhanced = () => {
     if (filters.priceRange[1] !== maxPrice) {
       params.set('maxPrice', filters.priceRange[1].toString());
     }
+    if (currentPage > 1) {
+      params.set('page', currentPage.toString());
+    }
 
     setSearchParams(params, { replace: true });
-  }, [filters, priceInitialized, minPrice, maxPrice, setSearchParams]);
+  }, [filters, priceInitialized, minPrice, maxPrice, currentPage, setSearchParams]);
 
   // Helper function to get all child category names recursively
   const getAllChildCategories = (parentName: string, allCategories: any[]): string[] => {
