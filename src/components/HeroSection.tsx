@@ -8,7 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { preloadImage, getOptimizedImageUrl } from "@/utils/imageCache";
 
 const HeroSection = () => {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
@@ -218,7 +218,7 @@ const HeroSection = () => {
                 >
                   <Link to={slide.button_url}>
                     {t(slide.button_text)}
-                    <ArrowRight className="ml-0.5 sm:ml-1.5 h-2 w-2 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className={`h-2 w-2 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 transition-transform ${isRTL ? 'mr-0.5 sm:mr-1.5 rotate-180 group-hover:-translate-x-1' : 'ml-0.5 sm:ml-1.5 group-hover:translate-x-1'}`} />
                   </Link>
                 </Button>
                 <Button
