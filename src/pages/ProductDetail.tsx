@@ -405,10 +405,13 @@ const ProductDetail = () => {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <Link to="/products" className="inline-flex items-center text-primary hover:text-primary/80 mb-4 sm:mb-6 text-sm sm:text-base">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="inline-flex items-center text-primary hover:text-primary/80 mb-4 sm:mb-6 text-sm sm:text-base"
+        >
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t("Back to Products")}
-        </Link>
+        </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
           {/* Mobile / Tablet Title Above Images */}
