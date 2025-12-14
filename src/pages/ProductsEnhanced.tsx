@@ -369,14 +369,6 @@ const ProductsEnhanced = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedProducts = sortedProducts.slice(startIndex, endIndex);
 
-  // Sync currentPage with URL (e.g. when using browser back/forward)
-  useEffect(() => {
-    const pageParam = searchParams.get('page');
-    const pageFromUrl = pageParam ? parseInt(pageParam, 10) : 1;
-    if (!Number.isNaN(pageFromUrl) && pageFromUrl !== currentPage) {
-      setCurrentPage(pageFromUrl);
-    }
-  }, [searchParams, currentPage]);
   // Reset to page 1 when filters or sort change, but skip first run (when loading from URL)
    useEffect(() => {
      if (!hasInitializedPageReset.current) {
