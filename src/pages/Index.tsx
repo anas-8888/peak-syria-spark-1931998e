@@ -191,7 +191,7 @@ const Index = () => {
                 const container = document.getElementById('featured-scroll');
                 if (container) container.scrollBy({ left: isRTL ? 320 : -320, behavior: 'smooth' });
               }}
-              className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 items-center justify-center bg-background border border-border rounded-full shadow-sm hover:shadow-md hover:bg-muted transition-all opacity-0 group-hover/carousel:opacity-100"
+              className={`hidden md:flex absolute top-1/2 -translate-y-1/2 z-20 w-10 h-10 items-center justify-center bg-background border border-border rounded-full shadow-sm hover:shadow-md hover:bg-muted transition-all opacity-0 group-hover/carousel:opacity-100 ${isRTL ? '-right-4' : '-left-4'}`}
               aria-label={isRTL ? "التالي" : "Previous"}
             >
               <ArrowRight className={`h-5 w-5 text-foreground ${isRTL ? '' : 'rotate-180'}`} />
@@ -202,7 +202,7 @@ const Index = () => {
                 const container = document.getElementById('featured-scroll');
                 if (container) container.scrollBy({ left: isRTL ? -320 : 320, behavior: 'smooth' });
               }}
-              className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 items-center justify-center bg-background border border-border rounded-full shadow-sm hover:shadow-md hover:bg-muted transition-all opacity-0 group-hover/carousel:opacity-100"
+              className={`hidden md:flex absolute top-1/2 -translate-y-1/2 z-20 w-10 h-10 items-center justify-center bg-background border border-border rounded-full shadow-sm hover:shadow-md hover:bg-muted transition-all opacity-0 group-hover/carousel:opacity-100 ${isRTL ? '-left-4' : '-right-4'}`}
               aria-label={isRTL ? "السابق" : "Next"}
             >
               <ArrowRight className={`h-5 w-5 text-foreground ${isRTL ? 'rotate-180' : ''}`} />
