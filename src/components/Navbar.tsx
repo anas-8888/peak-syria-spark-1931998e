@@ -214,7 +214,7 @@ const Navbar = () => {
                     <div className="relative">
                       <Avatar className={`h-8 w-8 border-2 transition-all duration-300 ${
                         hasPendingOrder 
-                          ? "border-blue-500/60 animate-pulse shadow-lg shadow-blue-500/30" 
+                          ? "border-blue-500/60 animate-pulse-slow shadow-lg shadow-blue-500/30" 
                           : "border-primary/20"
                       }`}>
                         <AvatarImage 
@@ -236,7 +236,7 @@ const Navbar = () => {
                           </AvatarFallback>}
                       </Avatar>
                       {hasPendingOrder && (
-                        <span className="absolute -top-1 -right-1 h-3 w-3 bg-blue-500 rounded-full border-2 border-background animate-ping"></span>
+                        <span className="absolute -top-1 -right-1 h-3 w-3 bg-blue-500 rounded-full border-2 border-background animate-ping-slow"></span>
                       )}
                       {hasPendingOrder && (
                         <span className="absolute -top-1 -right-1 h-3 w-3 bg-blue-500 rounded-full border-2 border-background"></span>
@@ -332,7 +332,7 @@ const Navbar = () => {
                     <div className="relative">
                       <Avatar className={`h-6 w-6 sm:h-7 sm:w-7 border transition-all duration-300 ${
                         hasPendingOrder 
-                          ? "border-blue-500/60 animate-pulse shadow-lg shadow-blue-500/30" 
+                          ? "border-blue-500/60 animate-pulse-slow shadow-lg shadow-blue-500/30" 
                           : "border-primary/20"
                       }`}>
                         <AvatarImage 
@@ -354,7 +354,7 @@ const Navbar = () => {
                           </AvatarFallback>}
                       </Avatar>
                       {hasPendingOrder && (
-                        <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-blue-500 rounded-full border-2 border-background animate-ping"></span>
+                        <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-blue-500 rounded-full border-2 border-background animate-ping-slow"></span>
                       )}
                       {hasPendingOrder && (
                         <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-blue-500 rounded-full border-2 border-background"></span>
