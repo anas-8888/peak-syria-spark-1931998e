@@ -10,6 +10,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import GoogleSignInButton from "./GoogleSignInButton";
+import LanguageToggle from "./LanguageToggle";
 import peakLogo from "@/assets/peak-logo-new.png";
 import { getOptimizedImageUrl } from "@/utils/imageCache";
 const Navbar = () => {
@@ -188,6 +189,7 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-2 xl:gap-3">
+            <LanguageToggle />
             {user && userRole && userRole !== "customer" && <Link to="/dashboard">
                 <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-accent/50 transition-all duration-300 hover:scale-110" title={t("Dashboard")}>
                   <LayoutDashboard className="h-5 w-5" />
@@ -298,7 +300,8 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Actions - Search, Cart, and Menu Button */}
-          <div className="lg:hidden flex items-center gap-2">
+          <div className="lg:hidden flex items-center gap-1.5">
+            <LanguageToggle />
             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-accent/50 transition-all" asChild>
               <Link to="/search">
                 <SearchIcon className="h-4 w-4" />
