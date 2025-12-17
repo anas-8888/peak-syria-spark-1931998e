@@ -32,7 +32,7 @@ interface ProductCardEnhancedProps {
   maxPrice?: number;
   unifiedPricing?: boolean;
   fromPage?: number;
-  filterColor?: string;
+  filterColors?: string[];
 }
 
 
@@ -56,12 +56,18 @@ const ProductCardEnhanced = ({
   maxPrice,
   unifiedPricing,
   fromPage,
-  filterColor,
+  filterColors = [],
 }: ProductCardEnhancedProps) => {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
-  // If filterColor is provided and product has that color, use it; otherwise use first color
-  const initialColor = filterColor && colors.includes(filterColor) ? filterColor : colors[0];
-  const [selectedColor, setSelectedColor] = useState(initialColor);
+  // Find first matching color from filter colors that the product has
+  const getInitialColor = () => {
+    if (filterColors.length > 0) {
+      const matchingColor = filterColors.find(fc => colors.includes(fc));
+      if (matchingColor) return matchingColor;
+    }
+    return colors[0];
+  };
+  const [selectedColor, setSelectedColor] = useState(getInitialColor);
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentImage, setCurrentImage] = useState(image);
   const [isLoading, setIsLoading] = useState(false);
@@ -109,16 +115,18 @@ const ProductCardEnhanced = ({
     }
   }, [image, colorImages]);
 
-  // Update selected color when filter color changes
+  // Update selected color when filter colors change
   useEffect(() => {
-    if (filterColor && colors.includes(filterColor)) {
-      setSelectedColor(filterColor);
-      // Update image to match the filter color
-      if (colorImages && colorImages[filterColor]) {
-        setCurrentImage(colorImages[filterColor]);
+    if (filterColors.length > 0) {
+      const matchingColor = filterColors.find(fc => colors.includes(fc));
+      if (matchingColor) {
+        setSelectedColor(matchingColor);
+        if (colorImages && colorImages[matchingColor]) {
+          setCurrentImage(colorImages[matchingColor]);
+        }
       }
     }
-  }, [filterColor, colors, colorImages]);
+  }, [filterColors, colors, colorImages]);
 
   // Check if product is in wishlist
   useEffect(() => {

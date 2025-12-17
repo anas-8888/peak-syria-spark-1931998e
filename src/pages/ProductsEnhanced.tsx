@@ -541,7 +541,7 @@ const ProductsEnhanced = () => {
                               targetGender={product.target_gender}
                               flag={product.flag}
                               fromPage={currentPage}
-                              filterColor={filters.colors[0]}
+                              filterColors={filters.colors}
                             />
                           </div>
                         ))}
@@ -711,7 +711,7 @@ const ProductsEnhanced = () => {
                           targetGender={product.target_gender}
                           flag={product.flag}
                           fromPage={currentPage}
-                          filterColor={filters.colors[0]}
+                          filterColors={filters.colors}
                         />
                       </div>
                     ))}
