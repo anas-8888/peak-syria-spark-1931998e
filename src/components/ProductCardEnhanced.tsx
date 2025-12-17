@@ -11,6 +11,7 @@ import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { getOptimizedImageUrl } from "@/utils/imageCache";
+import GoogleSignInPopup from "@/components/GoogleSignInPopup";
 
 interface ProductCardEnhancedProps {
   id: string;
@@ -71,6 +72,7 @@ const ProductCardEnhanced = ({
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentImage, setCurrentImage] = useState(image);
   const [isLoading, setIsLoading] = useState(false);
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
   const { formatPrice } = useCurrency();
   const { t, isRTL } = useLanguage();
   const { user } = useAuth();
@@ -165,8 +167,7 @@ const ProductCardEnhanced = ({
 
   const handleToggleFavorite = async () => {
     if (!user) {
-      toast.error(t("Please log in to add items to your wishlist"));
-      navigate('/login');
+      setShowLoginPopup(true);
       return;
     }
 
@@ -530,6 +531,9 @@ const ProductCardEnhanced = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Login Popup */}
+      <GoogleSignInPopup open={showLoginPopup} onOpenChange={setShowLoginPopup} />
     </>
   );
 };
