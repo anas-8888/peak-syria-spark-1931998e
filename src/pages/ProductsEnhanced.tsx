@@ -537,6 +537,7 @@ const ProductsEnhanced = () => {
                               sizes={product.sizes}
                               rating={product.rating}
                               colorImages={product.colorImages}
+                              colorHexMap={product.colorHexMap}
                               viewMode={viewMode}
                               targetGender={product.target_gender}
                               flag={product.flag}
