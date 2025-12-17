@@ -32,6 +32,7 @@ interface ProductCardEnhancedProps {
   maxPrice?: number;
   unifiedPricing?: boolean;
   fromPage?: number;
+  filterColor?: string;
 }
 
 
@@ -55,9 +56,12 @@ const ProductCardEnhanced = ({
   maxPrice,
   unifiedPricing,
   fromPage,
+  filterColor,
 }: ProductCardEnhancedProps) => {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
-  const [selectedColor, setSelectedColor] = useState(colors[0]);
+  // If filterColor is provided and product has that color, use it; otherwise use first color
+  const initialColor = filterColor && colors.includes(filterColor) ? filterColor : colors[0];
+  const [selectedColor, setSelectedColor] = useState(initialColor);
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentImage, setCurrentImage] = useState(image);
   const [isLoading, setIsLoading] = useState(false);
@@ -104,6 +108,17 @@ const ProductCardEnhanced = ({
       }
     }
   }, [image, colorImages]);
+
+  // Update selected color when filter color changes
+  useEffect(() => {
+    if (filterColor && colors.includes(filterColor)) {
+      setSelectedColor(filterColor);
+      // Update image to match the filter color
+      if (colorImages && colorImages[filterColor]) {
+        setCurrentImage(colorImages[filterColor]);
+      }
+    }
+  }, [filterColor, colors, colorImages]);
 
   // Check if product is in wishlist
   useEffect(() => {
