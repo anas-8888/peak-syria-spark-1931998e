@@ -773,8 +773,6 @@ const Overview = () => {
                     data={categoryDistribution}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
-                    label={({ name, value }) => `${name}: ${value}%`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
@@ -783,7 +781,27 @@ const Overview = () => {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip 
+                    formatter={(value: number, payload: any) => {
+                      if (payload && payload[0]) {
+                        return [`${value}%`, t(payload[0].payload.name)];
+                      }
+                      return [`${value}%`, ""];
+                    }}
+                    labelFormatter={(label: string) => ""}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length > 0) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-background border rounded-lg p-3 shadow-lg">
+                            <p className="font-semibold">{t(data.name)}</p>
+                            <p className="text-sm text-muted-foreground">{data.value}%</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             ) : (

@@ -214,7 +214,7 @@ const HeroSection = () => {
                   asChild
                   variant="hero"
                   size="sm"
-                  className="group w-auto max-w-[230px] sm:max-w-[240px] md:max-w-none sm:w-auto text-[10px] sm:text-sm md:text-sm !h-3 sm:!h-6 md:!h-10 !px-3 sm:!px-5 md:!px-4 !py-0 sm:!py-1 md:!py-2 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  className="group w-auto max-w-[230px] sm:max-w-[240px] md:max-w-none sm:w-auto text-[10px] sm:text-sm md:text-sm !h-6 sm:!h-6 md:!h-10 !px-3 sm:!px-5 md:!px-4 !py-0 sm:!py-1 md:!py-2 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 >
                   <Link to={slide.button_url}>
                     {t(slide.button_text)}
@@ -225,7 +225,7 @@ const HeroSection = () => {
                   asChild
                   variant="outlineWhite"
                   size="sm"
-                  className="w-auto max-w-[175px] sm:max-w-[195px] md:max-w-none sm:w-auto text-[10px] sm:text-sm md:text-sm !h-3 sm:!h-6 md:!h-10 !px-3 sm:!px-5 md:!px-4 !py-0 sm:!py-1 md:!py-2 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                  className="w-auto max-w-[175px] sm:max-w-[195px] md:max-w-none sm:w-auto text-[10px] sm:text-sm md:text-sm !h-6 sm:!h-6 md:!h-10 !px-3 sm:!px-5 md:!px-4 !py-0 sm:!py-1 md:!py-2 font-semibold rounded-full backdrop-blur-sm transition-all duration-300 hover:scale-105"
                 >
                   <Link to="/products">{t("View All Products")}</Link>
                 </Button>

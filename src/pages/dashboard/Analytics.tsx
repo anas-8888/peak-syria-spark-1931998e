@@ -18,6 +18,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Label,
 } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,10 +48,11 @@ type PeriodOption =
   | "custom";
 
 const Analytics = () => {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const { formatPrice } = useCurrency();
   const [period, setPeriod] = useState<PeriodOption>("all");
   const [dateRange, setDateRange] = useState<DateRange>({ from: null, to: null });
+  const [activePieIndex, setActivePieIndex] = useState<number | null>(null);
   // Fetch completed payments first
   const { data: completedPayments, isLoading: paymentsLoading } = useQuery({
     queryKey: ["analytics-completed-payments"],
@@ -688,22 +690,60 @@ const Analytics = () => {
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
+                <PieChart className={isRTL ? "rtl" : "ltr"}>
                   <Pie
                     data={categoryPercentages}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
-                    label={({ name, value }) => `${name}: ${value}%`}
                     outerRadius={100}
                     fill="#8884d8"
                     dataKey="value"
+                    activeIndex={activePieIndex ?? undefined}
+                    activeShape={(props: any) => {
+                      const { cx, cy } = props;
+                      const entry = categoryPercentages[props.index];
+                      if (!entry) return null;
+                      return (
+                        <g>
+                          <text
+                            x={cx}
+                            y={cy}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: "bold",
+                              fill: "#fff",
+                              textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
+                              direction: isRTL ? "rtl" : "ltr",
+                            }}
+                          >
+                            <tspan x={cx} dy="-8" style={{ display: "block" }}>
+                              {t(entry.name)}
+                            </tspan>
+                            <tspan x={cx} dy="16" style={{ display: "block" }}>
+                              {entry.value}%
+                            </tspan>
+                          </text>
+                        </g>
+                      );
+                    }}
+                    onMouseEnter={(_, index) => setActivePieIndex(index)}
+                    onMouseLeave={() => setActivePieIndex(null)}
                   >
                     {categoryPercentages.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip
+                    wrapperClassName={isRTL ? "rtl" : "ltr"}
+                    contentStyle={{
+                      direction: isRTL ? "rtl" : "ltr",
+                      textAlign: isRTL ? "right" : "left",
+                    }}
+                    formatter={(value: number) => [`${value}%`, ""]}
+                    labelFormatter={(label: string) => t(label)}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             )}

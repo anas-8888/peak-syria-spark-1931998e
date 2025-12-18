@@ -740,7 +740,12 @@ export function OrderEditDialog({ order, open, onOpenChange }: OrderEditDialogPr
                                 <SelectValue placeholder={t("Select color")} />
                               </SelectTrigger>
                               <SelectContent>
-                                {item.available_colors.map((color) => (
+                                {/* Remove duplicate colors by using a Map with color.id as key */}
+                                {Array.from(
+                                  new Map(
+                                    item.available_colors.map((color) => [color.id, color])
+                                  ).values()
+                                ).map((color) => (
                                   <SelectItem key={color.id} value={color.id}>
                                     <div className="flex items-center gap-2">
                                       <div 
